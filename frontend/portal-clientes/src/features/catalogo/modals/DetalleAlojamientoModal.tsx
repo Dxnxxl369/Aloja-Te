@@ -81,7 +81,7 @@ export const DetalleAlojamientoModal: React.FC<DetalleAlojamientoModalProps> = (
             </div>
 
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-black/70 backdrop-blur-md border border-white/20 text-white text-xs font-bold shrink-0">
-              <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
               <span>
                 {typeof alojamiento.calificacionPromedio === 'number'
                   ? alojamiento.calificacionPromedio.toFixed(2)

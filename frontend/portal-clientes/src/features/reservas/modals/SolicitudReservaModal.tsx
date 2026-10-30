@@ -234,7 +234,7 @@ export const SolicitudReservaModal: React.FC<SolicitudReservaModalProps> = ({
                   onClose();
                   openAuthModal('login');
                 }}
-                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-brand-600 to-blue-600 hover:from-brand-500 hover:to-blue-500 text-white font-bold text-xs shadow-lg shadow-brand-600/30 transition flex items-center justify-center gap-2"
+                className="w-full py-3.5 rounded-xl btn-primary flex items-center justify-center gap-2 text-xs"
               >
                 <span>Inicia Sesión para Confirmar tu Reserva</span>
                 <ArrowRight className="w-4 h-4" />
@@ -247,7 +247,7 @@ export const SolicitudReservaModal: React.FC<SolicitudReservaModalProps> = ({
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-brand-600 to-blue-600 hover:from-brand-500 hover:to-blue-500 text-white font-bold text-xs shadow-lg shadow-brand-600/30 transition flex items-center justify-center gap-2 disabled:opacity-50"
+              className="w-full py-3.5 rounded-xl btn-primary flex items-center justify-center gap-2 text-xs disabled:opacity-50"
             >
               {loading ? (
                 <>

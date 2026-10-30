@@ -123,7 +123,7 @@ export const DetalleAlojamientoView: React.FC<DetalleAlojamientoViewProps> = ({
             </span>
             <span className="text-slate-400">•</span>
             <div className="flex items-center gap-1 text-xs font-bold text-slate-700 dark:text-slate-300">
-              <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
               <span>{alojamiento.calificacionPromedio ? alojamiento.calificacionPromedio.toFixed(2) : '4.95'}</span>
               <span className="text-slate-400 font-normal">({alojamiento.totalResenas || 24} reseñas verificadas)</span>
             </div>

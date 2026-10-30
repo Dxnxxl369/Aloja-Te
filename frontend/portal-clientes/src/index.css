@@ -2,10 +2,76 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  /* ======================================================== */
+  /* CONSTANTES GLOBALES DE COLOR - ROYAL BLUE & CRISP WHITE  */
+  /* ======================================================== */
+  --color-primary: #2563eb;
+  --color-primary-hover: #1d4ed8;
+  --color-primary-light: #eff6ff;
+  --color-primary-border: #93c5fd;
+  --color-accent: #3b82f6;
+  
+  --bg-body-light: #f8fafc;
+  --bg-card-light: #ffffff;
+  --text-main-light: #0f172a;
+  --text-muted-light: #64748b;
+
+  --bg-body-dark: #0b0f17;
+  --bg-card-dark: #111827;
+  --text-main-dark: #f8fafc;
+  --text-muted-dark: #94a3b8;
+}
+
 @layer base {
   body {
     @apply bg-[#f8fafc] dark:bg-[#0b0f17] text-[#0f172a] dark:text-[#f8fafc] font-sans antialiased transition-colors duration-300;
   }
+}
+
+@layer components {
+  /* Botón Primario Oficial Azul Real */
+  .btn-primary {
+    background: linear-gradient(to right, #2563eb, #1d4ed8);
+    color: #ffffff;
+    font-weight: 700;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+  }
+  .btn-primary:hover {
+    background: linear-gradient(to right, #1d4ed8, #1e40af);
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+  }
+
+  /* Chip / Filtro Activo Oficial Azul */
+  .pill-active {
+    background-color: #2563eb !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35) !important;
+    border-color: #2563eb !important;
+  }
+}
+
+/* ======================================================== */
+/* SOBREESCRITURAS DEFENSIVAS: GARANTÍA CERO TONOS NARANJAS */
+/* ======================================================== */
+.bg-brand-600, .bg-brand-500, [class*="bg-amber-600"], [class*="bg-orange-"] {
+  background-color: #2563eb !important;
+}
+
+.text-brand-600, .text-brand-500, [class*="text-amber-600"], [class*="text-orange-"] {
+  color: #2563eb !important;
+}
+
+.border-brand-600, .border-brand-500, [class*="border-amber-"], [class*="border-orange-"] {
+  border-color: #3b82f6 !important;
+}
+
+[class*="from-brand-600"][class*="to-amber-"], 
+[class*="from-brand-600"][class*="to-orange-"] {
+  --tw-gradient-from: #2563eb !important;
+  --tw-gradient-to: #1d4ed8 !important;
+  --tw-gradient-stops: var(--tw-gradient-from), #3b82f6, var(--tw-gradient-to) !important;
 }
 
 @layer utilities {

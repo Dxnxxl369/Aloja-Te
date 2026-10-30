@@ -41,7 +41,7 @@ export const AlojamientoCard: React.FC<AlojamientoCardProps> = ({
 
         {/* Rating Badge */}
         <div className="absolute top-3.5 right-3.5 px-2.5 py-1 rounded-xl bg-black/60 backdrop-blur-md border border-white/20 text-white text-xs font-bold flex items-center gap-1 shadow-md">
-          <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+          <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
           <span>{calificacion}</span>
           <span className="text-[10px] text-slate-300 font-normal">({resenas})</span>
         </div>

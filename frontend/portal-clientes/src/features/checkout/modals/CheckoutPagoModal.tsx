@@ -171,7 +171,7 @@ export const CheckoutPagoModal: React.FC<CheckoutPagoModalProps> = ({
                 <div className="p-3 rounded-2xl bg-white shadow-inner mb-3">
                   <div className="w-36 h-36 bg-gradient-to-br from-slate-900 to-slate-800 rounded-xl p-2 flex flex-col items-center justify-center relative">
                     <QrCode className="w-28 h-28 text-cyan-400 opacity-90" />
-                    <span className="text-[9px] font-black text-amber-400 tracking-wider">BNB SIMPLE</span>
+                    <span className="text-[9px] font-black text-cyan-400 tracking-wider">BNB SIMPLE</span>
                   </div>
                 </div>
 
