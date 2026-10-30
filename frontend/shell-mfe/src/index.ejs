@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Aloja-Te | Shell Microfrontends</title>
+  
+  <script src="https://cdn.jsdelivr.net/npm/systemjs/dist/system.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/systemjs/dist/extras/amd.min.js"></script>
+
+  <script type="systemjs-importmap">
+    {
+      "imports": {
+        "single-spa": "https://cdn.jsdelivr.net/npm/single-spa@6.0.3/lib/system/single-spa.min.js"
+      }
+    }
+  </script>
+</head>
+<body class="bg-gray-50 m-0 p-0 font-sans">
+  <div id="single-spa-application:@alojate/portal-clientes"></div>
+  <div id="single-spa-application:@alojate/portal-admin"></div>
+</body>
+</html>

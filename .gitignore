@@ -1,0 +1,57 @@
+# Dependencies
+node_modules/
+vendor/
+.pnp
+.pnp.js
+
+# Python
+.venv/
+venv/
+ENV/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Build and compilation outputs
+dist/
+dist-ssr/
+build/
+target/
+.angular/
+out/
+.next/
+*.class
+
+# Environment and secrets
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# IDE and Editor files
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+Thumbs.db
+
+# Laravel
+storage/*.key
+.phpunit.result.cache
+
+# Temporary / OS
+tmp/
+temp/
+temp_repo/
+aux-*/

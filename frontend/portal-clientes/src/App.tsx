@@ -1,0 +1,374 @@
+import React, { useState, useEffect } from 'react';
+import { AuthProvider, useAuth } from './core/auth/AuthContext';
+import { Navbar } from './shared/layout/Navbar';
+import { Footer } from './shared/layout/Footer';
+import { HeroSection } from './features/catalogo/components/HeroSection';
+import { FiltrosDepartamentos } from './features/catalogo/components/FiltrosDepartamentos';
+import { AlojamientoGrid } from './features/catalogo/components/AlojamientoGrid';
+import { DetalleAlojamientoView } from './features/catalogo/components/DetalleAlojamientoView';
+import { SolicitudReservaModal } from './features/reservas/modals/SolicitudReservaModal';
+import { CheckoutPagoModal } from './features/checkout/modals/CheckoutPagoModal';
+import { PagoExitosoModal } from './features/checkout/modals/PagoExitosoModal';
+import { AuthLiquidModal } from './features/auth/modals/AuthLiquidModal';
+import { MisViajesView } from './features/mis-viajes/components/MisViajesView';
+import { ValidadorPinCheckin } from './features/anfitrion/components/ValidadorPinCheckin';
+import { LiquidacionesResumen } from './features/anfitrion/components/LiquidacionesResumen';
+import { ListingWizardModal } from './features/anfitrion/modals/ListingWizardModal';
+import { catalogoService } from './features/catalogo/services/catalogoService';
+import { Alojamiento, UnidadReservable } from './features/catalogo/types/catalogo.types';
+import { ReservaResponse } from './features/reservas/types/reserva.types';
+import { httpClient } from './core/api/httpClient';
+import { ENDPOINTS } from './core/api/apiEndpoints';
+import { Plus, Building2, Home, Hotel, Eye, ShieldCheck } from 'lucide-react';
+
+export const AppContent: React.FC = () => {
+  const { user } = useAuth();
+
+  // Navigation & UI States
+  const [currentView, setCurrentView] = useState<'catalogo' | 'mis-viajes' | 'anfitrion' | 'detalle'>('catalogo');
+  const [darkMode, setDarkMode] = useState(true);
+
+  // Proteger vista de Anfitrión: Si el usuario es Cliente o no está autenticado, redirigir a catálogo
+  useEffect(() => {
+    if (currentView === 'anfitrion' && user?.rol !== 'ANFITRION') {
+      setCurrentView('catalogo');
+    }
+  }, [user, currentView]);
+  
+  // Data States
+  const [alojamientos, setAlojamientos] = useState<Alojamiento[]>([]);
+  const [departamento, setDepartamento] = useState('Todos');
+  const [loading, setLoading] = useState(true);
+  const [misReservas, setMisReservas] = useState<ReservaResponse[]>(() => {
+    try {
+      const saved = localStorage.getItem('alojate_mis_reservas');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Modal Flow States
+  const [detalleAlojamiento, setDetalleAlojamiento] = useState<Alojamiento | null>(null);
+  const [unidadSeleccionada, setUnidadSeleccionada] = useState<UnidadReservable | null>(null);
+  const [reservaAlojamiento, setReservaAlojamiento] = useState<Alojamiento | null>(null);
+  const [reservaActiva, setReservaActiva] = useState<ReservaResponse | null>(null);
+  const [pagoCompletadoData, setPagoCompletadoData] = useState<any | null>(null);
+  const [pinConfirmado, setPinConfirmado] = useState<string>('');
+  const [wizardAbierto, setWizardAbierto] = useState(false);
+
+  // Sincronizar Modo Oscuro con clase 'dark' en el elemento HTML
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [darkMode]);
+
+  // Cargar Catálogo de Alojamientos
+  useEffect(() => {
+    const cargar = async () => {
+      setLoading(true);
+      const data = await catalogoService.listarAlojamientos(departamento);
+      setAlojamientos(data);
+      setLoading(false);
+    };
+    cargar();
+  }, [departamento]);
+
+  // Sincronizar Reservas del Cliente (MS-02 y LocalStorage)
+  useEffect(() => {
+    const cargarReservas = async () => {
+      try {
+        const clienteId = user?.id || '12e9afda-0a98-4a40-80fb-88794b383a8e';
+        let reservasServidor: ReservaResponse[] = [];
+        
+        try {
+          const resp = await httpClient.get<ReservaResponse[]>(ENDPOINTS.RESERVAS.CLIENTE_HISTORIAL(clienteId));
+          if (Array.isArray(resp.data)) {
+            reservasServidor = resp.data;
+          }
+        } catch (e) {
+          console.warn('Fallo al obtener historial por cliente, consultando endpoint general', e);
+        }
+
+        if (reservasServidor.length === 0) {
+          try {
+            const respGeneral = await httpClient.get<ReservaResponse[]>(ENDPOINTS.RESERVAS.CREAR);
+            if (Array.isArray(respGeneral.data)) {
+              reservasServidor = respGeneral.data.filter(
+                (r: any) => r.idCliente === clienteId || (user && r.nombreCliente?.toLowerCase().includes(user.nombre.toLowerCase()))
+              );
+            }
+          } catch (e) {
+            console.warn('Error al consultar reservas generales', e);
+          }
+        }
+
+        // Combinar con localStorage
+        setMisReservas((prev) => {
+          const map = new Map<string, ReservaResponse>();
+          // primero las de local
+          prev.forEach((r) => map.set(r.idReserva, r));
+          // luego servidor (tienen estado actualizado de check-in / confirmación)
+          reservasServidor.forEach((r) => map.set(r.idReserva, r));
+          const combinadas = Array.from(map.values());
+          localStorage.setItem('alojate_mis_reservas', JSON.stringify(combinadas));
+          return combinadas;
+        });
+      } catch (err) {
+        console.error('Error al sincronizar reservas:', err);
+      }
+    };
+
+    cargarReservas();
+  }, [user]);
+
+  // Manejador de flujo de Reserva -> Checkout
+  const handleReservaCreada = (reserva: ReservaResponse) => {
+    setReservaAlojamiento(null);
+    setReservaActiva(reserva);
+  };
+
+  // Manejador de Pago Completado -> Modal Celebración con PIN
+  const handlePagoExitoso = (pagoResultado: any, codigoCheckin: string) => {
+    setReservaActiva(null);
+    setPagoCompletadoData(pagoResultado);
+    setPinConfirmado(codigoCheckin);
+    
+    // Guardar en la lista de reservas activas del cliente
+    if (reservaActiva) {
+      const confirmada: ReservaResponse = {
+        ...reservaActiva,
+        estado: 'CONFIRMADA' as const,
+        codigoCheckin: codigoCheckin || reservaActiva.codigoCheckin
+      };
+      setMisReservas((prev) => {
+        const actualizadas = [confirmada, ...prev.filter(r => r.idReserva !== confirmada.idReserva)];
+        localStorage.setItem('alojate_mis_reservas', JSON.stringify(actualizadas));
+        return actualizadas;
+      });
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col bg-[#f8fafc] dark:bg-[#0b0f17] text-slate-900 dark:text-slate-100 transition-colors duration-300">
+      
+      {/* 1. Header con Navbar */}
+      <Navbar
+        currentView={currentView}
+        onChangeView={setCurrentView}
+        darkMode={darkMode}
+        onToggleDarkMode={() => setDarkMode(!darkMode)}
+      />
+
+      {/* 2. Contenido Dinámico según la Vista */}
+      <main className="flex-1">
+        {currentView === 'catalogo' && (
+          <div className="space-y-8 pb-16">
+            <HeroSection onSearch={(q) => console.log('Búsqueda:', q)} />
+            
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-stone-200 dark:border-stone-800 pb-3">
+                <div>
+                  <h2 className="font-serif text-2xl sm:text-3xl font-bold text-stone-900 dark:text-white">
+                    Alojamientos Disponibles en Bolivia
+                  </h2>
+                  <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5">
+                    Propiedades verificadas con bloqueo de inventario en tiempo real
+                  </p>
+                </div>
+              </div>
+
+              <FiltrosDepartamentos
+                departamentoSeleccionado={departamento}
+                onSelect={setDepartamento}
+              />
+
+              <AlojamientoGrid
+                alojamientos={alojamientos}
+                loading={loading}
+                onSelect={(a) => {
+                  setDetalleAlojamiento(a);
+                  setCurrentView('detalle');
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                onReservarDirecto={(a) => {
+                  setUnidadSeleccionada(a.unidades?.[0] || null);
+                  setReservaAlojamiento(a);
+                }}
+              />
+            </div>
+          </div>
+        )}
+
+        {currentView === 'detalle' && detalleAlojamiento && (
+          <DetalleAlojamientoView
+            alojamiento={detalleAlojamiento}
+            onVolver={() => setCurrentView('catalogo')}
+            onReservar={(a, u) => {
+              setUnidadSeleccionada(u);
+              setReservaAlojamiento(a);
+            }}
+          />
+        )}
+
+        {currentView === 'mis-viajes' && (
+          <MisViajesView
+            reservas={misReservas}
+            onNuevaReserva={() => setCurrentView('catalogo')}
+          />
+        )}
+
+        {currentView === 'anfitrion' && user?.rol === 'ANFITRION' && (
+          <div className="max-w-4xl mx-auto py-8 px-4 space-y-6">
+            <div className="border-b border-slate-200 dark:border-slate-800 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-brand-600 dark:text-brand-400 block mb-1">
+                  GESTIÓN DE ALOJAMIENTOS &amp; RECEPCIÓN
+                </span>
+                <h2 className="font-serif text-3xl font-bold text-slate-900 dark:text-white">
+                  Panel de Control del Anfitrión
+                </h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  Publica casas u hoteles con gestión de habitaciones y valida el ingreso de huéspedes.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setWizardAbierto(true)}
+                className="px-5 py-2.5 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs shadow-lg shadow-brand-600/25 transition flex items-center gap-2 self-start sm:self-auto"
+              >
+                <Plus className="w-4 h-4" />
+                <span>+ Publicar Nuevo Alojamiento</span>
+              </button>
+            </div>
+
+            {/* Alojamientos del Anfitrión */}
+            <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-serif text-lg font-bold text-slate-900 dark:text-white">
+                    Tus Propiedades Registradas ({alojamientos.length})
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Propiedades en catálogo o en espera de aprobación
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setWizardAbierto(true)}
+                  className="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Añadir</span>
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {alojamientos.map((a) => (
+                  <div
+                    key={a.idAlojamiento}
+                    className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/40 hover:border-brand-400 transition flex items-center justify-between gap-3"
+                  >
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={a.fotografias?.[0]?.url || 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=400&q=80'}
+                        alt={a.titulo}
+                        className="w-16 h-14 object-cover rounded-xl shrink-0"
+                      />
+                      <div>
+                        <h4 className="font-bold text-xs text-slate-900 dark:text-white line-clamp-1">{a.titulo}</h4>
+                        <div className="flex items-center gap-2 text-[10px] text-slate-500 mt-0.5">
+                          <span>{a.ciudad}, {a.departamento}</span>
+                          <span>•</span>
+                          <span className="font-semibold">{a.modalidad === 'HOTEL_HOSTAL' ? '🏨 Hotel' : '🏡 Casa'}</span>
+                        </div>
+                        <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-[9px] font-bold ${
+                          a.estadoPublicacion === 'PUBLICADO'
+                            ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400'
+                            : 'bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300'
+                        }`}>
+                          {a.estadoPublicacion || 'PUBLICADO'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDetalleAlojamiento(a);
+                        setCurrentView('detalle');
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      className="p-2 rounded-xl text-slate-400 hover:text-blue-600 hover:bg-white dark:hover:bg-slate-800 transition"
+                      title="Ver Pantalla Completa"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-6">
+              <ValidadorPinCheckin reservaIdDefecto={misReservas[0]?.idReserva} />
+              <LiquidacionesResumen />
+            </div>
+          </div>
+        )}
+      </main>
+
+      {/* 3. Footer */}
+      <Footer />
+
+      {/* 4. Modales Desacoplados (Liquid Glass) */}
+      <AuthLiquidModal />
+
+      <SolicitudReservaModal
+        alojamiento={reservaAlojamiento}
+        unidadPreseleccionada={unidadSeleccionada}
+        onClose={() => {
+          setReservaAlojamiento(null);
+          setUnidadSeleccionada(null);
+        }}
+        onReservaCreada={handleReservaCreada}
+      />
+
+      <CheckoutPagoModal
+        reserva={reservaActiva}
+        onClose={() => setReservaActiva(null)}
+        onPagoCompletado={handlePagoExitoso}
+      />
+
+      <PagoExitosoModal
+        isOpen={!!pagoCompletadoData}
+        onClose={() => {
+          setPagoCompletadoData(null);
+          setCurrentView('mis-viajes');
+        }}
+        pagoResultado={pagoCompletadoData}
+        codigoCheckin={pinConfirmado}
+      />
+
+      <ListingWizardModal
+        isOpen={wizardAbierto}
+        onClose={() => setWizardAbierto(false)}
+        onAlojamientoCreado={(nuevo) => {
+          setAlojamientos((prev) => [nuevo, ...prev]);
+        }}
+      />
+
+    </div>
+  );
+};
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
+  );
+}

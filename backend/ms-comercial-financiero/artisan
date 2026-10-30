@@ -1,0 +1,33 @@
+#!/usr/bin/env php
+<?php
+
+require_once __DIR__ . '/vendor/autoload.php';
+
+$command = $argv[1] ?? 'help';
+
+if ($command === 'serve') {
+    $port = 3003;
+    foreach ($argv as $arg) {
+        if (str_starts_with($arg, '--port=')) {
+            $port = (int) substr($arg, 7);
+        }
+    }
+    echo "=========================================================\n";
+    echo "  Aloja-Te: MS-03 Comercial y Financiero (Laravel DDD)\n";
+    echo "  Servidor de desarrollo activo en http://127.0.0.1:{$port}\n";
+    echo "  Enrutado a través de API Gateway en http://localhost:8080\n";
+    echo "=========================================================\n";
+    passthru(PHP_BINARY . " -S 0.0.0.0:{$port} server.php");
+    exit(0);
+}
+
+if ($command === 'migrate') {
+    echo "Inicializando esquema de base de datos relacional...\n";
+    \App\Infrastructure\Persistence\PdoDatabase::getInstance();
+    echo "¡Esquema de base de datos (18 tablas) inicializado con éxito!\n";
+    exit(0);
+}
+
+echo "Comandos disponibles:\n";
+echo "  php artisan serve [--port=3003]  - Iniciar microservicio financiero\n";
+echo "  php artisan migrate              - Inicializar las 18 tablas del esquema\n";

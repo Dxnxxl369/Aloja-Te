@@ -1,0 +1,22 @@
+{
+  "name": "shell-mfe",
+  "version": "1.0.0",
+  "description": "Microfrontend Shell (single-spa) para Aloja-Te",
+  "scripts": {
+    "start": "webpack serve --port 9000 --open",
+    "build": "webpack --mode=production"
+  },
+  "dependencies": {
+    "single-spa": "^6.0.3",
+    "single-spa-layout": "^3.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.4",
+    "html-webpack-plugin": "^5.6.3",
+    "ts-loader": "^9.5.2",
+    "typescript": "^5.7.3",
+    "webpack": "^5.98.0",
+    "webpack-cli": "^6.0.1",
+    "webpack-dev-server": "^5.2.0"
+  }
+}
