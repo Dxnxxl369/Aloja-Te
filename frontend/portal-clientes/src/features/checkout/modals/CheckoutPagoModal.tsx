@@ -3,7 +3,7 @@ import { ReservaResponse } from '../../reservas/types/reserva.types';
 import { pagosService } from '../services/pagosService';
 import { reservasService } from '../../reservas/services/reservasService';
 import { PagoResponseData } from '../types/checkout.types';
-import { X, QrCode, Clock, ShieldCheck, Tag, Check, Loader2, AlertCircle, Sparkles } from 'lucide-react';
+import { X, QrCode, Clock, ShieldCheck, Tag, Check, Loader2, AlertCircle, Sparkles, Building2 } from 'lucide-react';
 
 interface CheckoutPagoModalProps {
   reserva: ReservaResponse | null;
@@ -19,7 +19,6 @@ export const CheckoutPagoModal: React.FC<CheckoutPagoModalProps> = ({
   const [pago, setPago] = useState<PagoResponseData | null>(null);
   const [cupon, setCupon] = useState('BIENVENIDO2026');
   const [cuponAplicado, setCuponAplicado] = useState(false);
-  const [descuentoPorcentaje, setDescuentoPorcentaje] = useState(10);
   const [loading, setLoading] = useState(false);
   const [confirmando, setConfirmando] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -102,174 +101,186 @@ export const CheckoutPagoModal: React.FC<CheckoutPagoModalProps> = ({
   const segundos = timeLeft % 60;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md transition-all duration-300 animate-fade-in overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/60 backdrop-blur-md transition-all duration-300 animate-fade-in overflow-y-auto">
+      {/* Click outside backdrop */}
       <div className="absolute inset-0" onClick={onClose} />
 
-      {/* Blue Liquid Glass Modal Container */}
-      <div className="relative w-full max-w-xl my-8 p-6 sm:p-8 rounded-3xl liquid-glass-blue text-white shadow-2xl z-10 animate-modal-in border border-cyan-500/30 overflow-hidden">
+      {/* Main Container - Royal Blue & White / Dark Slate matching image.png */}
+      <div className="relative w-full max-w-xl my-6 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 rounded-3xl shadow-2xl border border-slate-200/80 dark:border-slate-800 z-10 overflow-hidden animate-modal-in flex flex-col">
         
-        {/* Decorative Glow */}
-        <div className="absolute -top-20 -right-20 w-64 h-64 bg-cyan-500/15 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-brand-500/15 rounded-full blur-3xl pointer-events-none" />
-
-        {/* Header */}
-        <div className="flex items-start justify-between mb-4">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-              <span className="text-[10px] font-bold uppercase tracking-widest text-cyan-300">
-                PAGO SEGURO • QR SIMPLE BANCARIO (BNB)
-              </span>
+        {/* Header con Badge Circular y Barra de Progreso Azul */}
+        <div className="px-6 sm:px-8 pt-6 pb-4 border-b border-slate-100 dark:border-slate-800/80">
+          <div className="flex items-start justify-between">
+            <div className="flex items-start gap-3.5">
+              <div className="w-10 h-10 rounded-2xl bg-blue-600 text-white font-bold flex items-center justify-center text-sm shadow-md shadow-blue-500/25 shrink-0 mt-0.5">
+                2
+              </div>
+              <div>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 block">
+                  PASARELA DE PAGO • PASO 2 DE 2
+                </span>
+                <h3 className="font-serif text-2xl font-bold text-slate-900 dark:text-white leading-tight">
+                  Pago Seguro con QR Simple
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  Escanea desde la app de cualquier banco boliviano autorizado
+                </p>
+              </div>
             </div>
-            <h3 className="font-serif text-2xl font-bold text-white tracking-tight">
-              Pagar con QR Simple
-            </h3>
-            <p className="text-xs text-slate-300">
-              Escanea desde la aplicación de cualquier banco de Bolivia habilitado
+
+            <button
+              onClick={onClose}
+              className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-700 dark:hover:text-white transition"
+              title="Cerrar modal"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Step Progress Bar - 100% width */}
+          <div className="h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden mt-4">
+            <div className="h-full bg-blue-600 transition-all duration-300 w-full" />
+          </div>
+        </div>
+
+        {/* Modal Body */}
+        <div className="px-6 sm:px-8 py-5 space-y-4 overflow-y-auto max-h-[75vh]">
+          {error && (
+            <div className="p-3.5 rounded-2xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50 text-red-700 dark:text-red-300 text-xs flex items-center gap-2.5">
+              <AlertCircle className="w-4 h-4 shrink-0 text-red-500" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          {/* Timer Countdown Bar */}
+          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200/70 dark:border-blue-900/50 text-xs text-slate-700 dark:text-slate-300">
+            <div className="flex items-center gap-2 text-blue-700 dark:text-blue-400 font-medium">
+              <Clock className="w-4 h-4 text-blue-600 dark:text-blue-400 animate-pulse" />
+              <span>Tiempo restante para completar el pago:</span>
+            </div>
+            <span className="font-mono font-bold text-sm text-blue-700 dark:text-blue-300 px-2.5 py-0.5 rounded-lg bg-white dark:bg-slate-800 shadow-sm border border-blue-100 dark:border-blue-900/60">
+              {minutos.toString().padStart(2, '0')}:{segundos.toString().padStart(2, '0')}
+            </span>
+          </div>
+
+          {/* Main Grid: QR & Financial Details */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            
+            {/* QR Card */}
+            <div className="p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/40 flex flex-col items-center justify-center text-center">
+              {loading ? (
+                <div className="py-14 flex flex-col items-center gap-2 text-slate-400">
+                  <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+                  <span className="text-xs">Generando QR Simple oficial...</span>
+                </div>
+              ) : (
+                <>
+                  <div className="p-3.5 rounded-2xl bg-white shadow-md border border-slate-200/60 mb-3">
+                    <div className="w-36 h-36 bg-gradient-to-br from-slate-900 to-slate-800 rounded-xl p-2.5 flex flex-col items-center justify-center relative shadow-inner">
+                      <QrCode className="w-28 h-28 text-white" />
+                      <span className="text-[9px] font-black text-blue-400 tracking-wider">BNB SIMPLE QR</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-0.5">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Red de Pagos Bancarios BNB</span>
+                    <span className="text-xs font-bold text-slate-900 dark:text-white">ALOJATE-BOLIVIA OFICIAL</span>
+                    <span className="text-[10px] text-blue-600 dark:text-blue-400 font-mono font-semibold block">Válido en cualquier banca móvil</span>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Details & Promo */}
+            <div className="flex flex-col justify-between space-y-3 text-xs">
+              
+              {/* Promo Code Input */}
+              <form onSubmit={aplicarCupon} className="space-y-1.5">
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                  Cupón de Descuento
+                </label>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Tag className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <input
+                      type="text"
+                      value={cupon}
+                      onChange={(e) => setCupon(e.target.value.toUpperCase())}
+                      placeholder="BIENVENIDO2026"
+                      className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-mono text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition shadow-sm"
+                  >
+                    Aplicar
+                  </button>
+                </div>
+                {cuponAplicado && (
+                  <span className="text-[11px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-semibold">
+                    <Check className="w-3.5 h-3.5" /> Cupón del 10% aplicado exitosamente
+                  </span>
+                )}
+              </form>
+
+              {/* Financial Breakdown */}
+              <div className="p-3.5 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/50 space-y-1.5 text-slate-600 dark:text-slate-300">
+                <div className="flex justify-between items-center">
+                  <span>Subtotal estadía:</span>
+                  <span className="font-semibold text-slate-900 dark:text-white">{pago?.subtotalAlojamiento || reserva.importeTotal} BOB</span>
+                </div>
+
+                {pago && pago.descuento > 0 && (
+                  <div className="flex justify-between items-center text-emerald-600 dark:text-emerald-400">
+                    <span>Descuento aplicado:</span>
+                    <span className="font-semibold">-{pago.descuento} BOB</span>
+                  </div>
+                )}
+
+                <div className="flex justify-between items-center text-slate-400 text-[11px]">
+                  <span>Cargo por servicio plataforma (5%):</span>
+                  <span>+{pago?.cargoServicio || 0} BOB</span>
+                </div>
+
+                <div className="pt-2 border-t border-slate-200 dark:border-slate-700/80 flex justify-between items-baseline font-bold text-slate-900 dark:text-white">
+                  <span>Total a Pagar:</span>
+                  <span className="text-2xl text-blue-600 dark:text-blue-400 font-black font-mono">
+                    {pago?.montoTotal || reserva.importeTotal} BOB
+                  </span>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
+          {/* Action Button & Disclaimer */}
+          <div className="space-y-2 pt-2">
+            <button
+              onClick={simularPagoBNB}
+              disabled={confirmando || loading}
+              className="w-full py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm shadow-lg shadow-blue-600/25 transition flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+            >
+              {confirmando ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Confirmando transferencia bancaria y emitiendo factura...</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-4 h-4 text-blue-200" />
+                  <span>Confirmar Pago desde Banca Móvil</span>
+                </>
+              )}
+            </button>
+
+            <p className="text-[11px] text-center text-slate-400">
+              Al confirmar, tu reserva queda garantizada de forma inmediata y se emite tu factura computarizada oficial con código QR.
             </p>
           </div>
 
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white transition"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-
-        {error && (
-          <div className="p-3 mb-4 rounded-xl bg-red-500/20 border border-red-500/40 text-red-300 text-xs flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0" />
-            <span>{error}</span>
-          </div>
-        )}
-
-        {/* Timer Bar */}
-        <div className="flex items-center justify-between p-3 rounded-2xl bg-cyan-950/60 border border-cyan-500/30 mb-5 text-xs">
-          <div className="flex items-center gap-2 text-cyan-300">
-            <Clock className="w-4 h-4 text-cyan-400 animate-pulse" />
-            <span className="font-semibold">Tiempo para completar el pago:</span>
-          </div>
-          <span className="font-mono font-bold text-sm text-cyan-200">
-            {minutos.toString().padStart(2, '0')}:{segundos.toString().padStart(2, '0')}
-          </span>
-        </div>
-
-        {/* Main Content: QR & Details */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
-          
-          {/* QR Display */}
-          <div className="p-4 rounded-2xl bg-slate-900/90 border border-cyan-500/30 flex flex-col items-center justify-center text-center">
-            {loading ? (
-              <div className="py-16 flex flex-col items-center gap-2 text-slate-400">
-                <Loader2 className="w-8 h-8 animate-spin text-cyan-400" />
-                <span className="text-xs">Generando QR Simple...</span>
-              </div>
-            ) : (
-              <>
-                {/* Simulated Official QR Frame */}
-                <div className="p-3 rounded-2xl bg-white shadow-inner mb-3">
-                  <div className="w-36 h-36 bg-gradient-to-br from-slate-900 to-slate-800 rounded-xl p-2 flex flex-col items-center justify-center relative">
-                    <QrCode className="w-28 h-28 text-cyan-400 opacity-90" />
-                    <span className="text-[9px] font-black text-cyan-400 tracking-wider">BNB SIMPLE</span>
-                  </div>
-                </div>
-
-                <div className="space-y-0.5">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase block">Banco Nacional de Bolivia</span>
-                  <span className="text-xs font-bold text-white">ALOJATE-BOLIVIA</span>
-                  <span className="text-[10px] text-cyan-300 font-mono block">TTL: 900s</span>
-                </div>
-              </>
-            )}
-          </div>
-
-          {/* Details & Promo */}
-          <div className="flex flex-col justify-between space-y-3 text-xs">
-            
-            {/* Promo Code Input */}
-            <form onSubmit={aplicarCupon} className="space-y-1.5">
-              <label className="block text-[11px] font-semibold text-slate-300">¿Tienes un cupón de descuento?</label>
-              <div className="flex gap-1.5">
-                <div className="relative flex-1">
-                  <Tag className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="text"
-                    value={cupon}
-                    onChange={(e) => setCupon(e.target.value.toUpperCase())}
-                    placeholder="BIENVENIDO2026"
-                    className="w-full pl-8 pr-2 py-2 rounded-xl bg-slate-900/80 border border-slate-700 text-white font-mono text-xs focus:outline-none focus:border-cyan-400 transition"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="px-3 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs transition"
-                >
-                  Aplicar
-                </button>
-              </div>
-              {cuponAplicado && (
-                <span className="text-[10px] text-emerald-400 flex items-center gap-1 font-semibold">
-                  <Check className="w-3 h-3" /> Cupón del 10% aplicado correctamente
-                </span>
-              )}
-            </form>
-
-            {/* Breakdown */}
-            <div className="p-3.5 rounded-2xl bg-slate-900/60 border border-cyan-500/20 space-y-1.5 text-slate-300">
-              <div className="flex justify-between">
-                <span>Subtotal estadía:</span>
-                <span className="font-semibold text-white">{pago?.subtotalAlojamiento || reserva.importeTotal} BOB</span>
-              </div>
-
-              {pago && pago.descuento > 0 && (
-                <div className="flex justify-between text-emerald-400">
-                  <span>Descuento promoción:</span>
-                  <span className="font-semibold">-{pago.descuento} BOB</span>
-                </div>
-              )}
-
-              <div className="flex justify-between text-slate-400 text-[11px]">
-                <span>Cargo por servicio (5%):</span>
-                <span>+{pago?.cargoServicio || 0} BOB</span>
-              </div>
-
-              <div className="pt-2 border-t border-slate-800 flex justify-between items-baseline font-bold text-white">
-                <span>Total a Cobrar:</span>
-                <span className="text-xl text-brand-400 font-black">
-                  {pago?.montoTotal || reserva.importeTotal} BOB
-                </span>
-              </div>
-            </div>
-
-          </div>
-
-        </div>
-
-        {/* Simulation Action Bar */}
-        <div className="space-y-2">
-          <button
-            onClick={simularPagoBNB}
-            disabled={confirmando || loading}
-            className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white font-bold text-xs shadow-xl shadow-teal-600/30 transition flex items-center justify-center gap-2 disabled:opacity-50"
-          >
-            {confirmando ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Confirmando transferencia bancaria y emitiendo factura...</span>
-              </>
-            ) : (
-              <>
-                <Sparkles className="w-4 h-4 text-cyan-200" />
-                <span>Confirmar Pago desde Banca Móvil</span>
-              </>
-            )}
-          </button>
-
-          <p className="text-[11px] text-center text-slate-400">
-            Al confirmar, tu reserva queda garantizada y se emite tu factura computarizada oficial con código QR.
-          </p>
         </div>
 
       </div>

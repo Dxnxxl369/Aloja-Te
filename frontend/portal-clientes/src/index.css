@@ -55,20 +55,30 @@
 /* ======================================================== */
 /* SOBREESCRITURAS DEFENSIVAS: GARANTÍA CERO TONOS NARANJAS */
 /* ======================================================== */
-.bg-brand-600, .bg-brand-500, [class*="bg-amber-600"], [class*="bg-orange-"] {
+.bg-brand-600, .bg-brand-500, [class*="bg-amber"], [class*="bg-orange"] {
   background-color: #2563eb !important;
 }
 
-.text-brand-600, .text-brand-500, [class*="text-amber-600"], [class*="text-orange-"] {
+.text-brand-600, .text-brand-500, [class*="text-amber"], [class*="text-orange"] {
   color: #2563eb !important;
 }
 
-.border-brand-600, .border-brand-500, [class*="border-amber-"], [class*="border-orange-"] {
+.border-brand-600, .border-brand-500, [class*="border-amber"], [class*="border-orange"] {
   border-color: #3b82f6 !important;
 }
 
-[class*="from-brand-600"][class*="to-amber-"], 
-[class*="from-brand-600"][class*="to-orange-"] {
+[class*="shadow-brand"], [class*="shadow-orange"], [class*="shadow-amber"] {
+  --tw-shadow-color: rgba(37, 99, 235, 0.25) !important;
+}
+
+[class*="ring-brand"], [class*="ring-orange"], [class*="ring-amber"] {
+  --tw-ring-color: rgba(37, 99, 235, 0.35) !important;
+}
+
+[class*="from-brand"][class*="to-amber"], 
+[class*="from-brand"][class*="to-orange"],
+[class*="from-orange"], [class*="to-orange"],
+[class*="from-amber"], [class*="to-amber"] {
   --tw-gradient-from: #2563eb !important;
   --tw-gradient-to: #1d4ed8 !important;
   --tw-gradient-stops: var(--tw-gradient-from), #3b82f6, var(--tw-gradient-to) !important;

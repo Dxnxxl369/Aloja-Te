@@ -13,6 +13,21 @@ export const reservasService = {
     return response.data;
   },
 
+  async listarTodas(): Promise<ReservaResponse[]> {
+    const response = await httpClient.get<ReservaResponse[]>(ENDPOINTS.RESERVAS.LISTAR_TODAS);
+    return response.data;
+  },
+
+  async listarPorAnfitrion(anfitrionId: string): Promise<ReservaResponse[]> {
+    const response = await httpClient.get<ReservaResponse[]>(ENDPOINTS.RESERVAS.ANFITRION_HISTORIAL(anfitrionId));
+    return response.data;
+  },
+
+  async listarPorCliente(clienteId: string): Promise<ReservaResponse[]> {
+    const response = await httpClient.get<ReservaResponse[]>(ENDPOINTS.RESERVAS.CLIENTE_HISTORIAL(clienteId));
+    return response.data;
+  },
+
   async confirmarPagoSaga(idReserva: string, pagoId: string, transaccionBancariaRef: string): Promise<ReservaResponse> {
     const response = await httpClient.post<ReservaResponse>(ENDPOINTS.RESERVAS.CONFIRMAR_PAGO(idReserva), {
       pagoId,

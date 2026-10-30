@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './core/auth/AuthContext';
+import { useAppRouter } from './core/router/useAppRouter';
 import { Navbar } from './shared/layout/Navbar';
 import { Footer } from './shared/layout/Footer';
 import { HeroSection } from './features/catalogo/components/HeroSection';
@@ -19,25 +20,35 @@ import { Alojamiento, UnidadReservable } from './features/catalogo/types/catalog
 import { ReservaResponse } from './features/reservas/types/reserva.types';
 import { httpClient } from './core/api/httpClient';
 import { ENDPOINTS } from './core/api/apiEndpoints';
-import { Plus, Building2, Home, Hotel, Eye, ShieldCheck } from 'lucide-react';
+import { Plus, Building2, Home, Hotel, Eye, ShieldCheck, AlertCircle, ArrowLeft, Loader2 } from 'lucide-react';
 
 export const AppContent: React.FC = () => {
   const { user } = useAuth();
+  const { currentView, params, navigate } = useAppRouter();
 
-  // Navigation & UI States
-  const [currentView, setCurrentView] = useState<'catalogo' | 'mis-viajes' | 'anfitrion' | 'detalle'>('catalogo');
-  const [darkMode, setDarkMode] = useState(true);
+  // Theme State con persistencia en LocalStorage
+  const [darkMode, setDarkMode] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('alojate_theme_mode');
+      if (saved !== null) {
+        return saved === 'dark';
+      }
+      return true;
+    } catch {
+      return true;
+    }
+  });
 
   // Proteger vista de Anfitrión: Si el usuario es Cliente o no está autenticado, redirigir a catálogo
   useEffect(() => {
     if (currentView === 'anfitrion' && user?.rol !== 'ANFITRION') {
-      setCurrentView('catalogo');
+      navigate.catalogo();
     }
-  }, [user, currentView]);
+  }, [user, currentView, navigate]);
   
   // Data States
   const [alojamientos, setAlojamientos] = useState<Alojamiento[]>([]);
-  const [departamento, setDepartamento] = useState('Todos');
+  const [departamento, setDepartamento] = useState(params.depto || 'Todos');
   const [loading, setLoading] = useState(true);
   const [misReservas, setMisReservas] = useState<ReservaResponse[]>(() => {
     try {
@@ -48,21 +59,75 @@ export const AppContent: React.FC = () => {
     }
   });
 
-  // Modal Flow States
+  // Modal & Detalle Flow States
   const [detalleAlojamiento, setDetalleAlojamiento] = useState<Alojamiento | null>(null);
+  const [cargandoDetalle, setCargandoDetalle] = useState(false);
+  const [errorDetalle, setErrorDetalle] = useState<string | null>(null);
+
   const [unidadSeleccionada, setUnidadSeleccionada] = useState<UnidadReservable | null>(null);
+  const [datosReservaPrevia, setDatosReservaPrevia] = useState<{
+    checkIn: string;
+    checkOut: string;
+    huespedes: number;
+  } | null>(null);
   const [reservaAlojamiento, setReservaAlojamiento] = useState<Alojamiento | null>(null);
   const [reservaActiva, setReservaActiva] = useState<ReservaResponse | null>(null);
   const [pagoCompletadoData, setPagoCompletadoData] = useState<any | null>(null);
   const [pinConfirmado, setPinConfirmado] = useState<string>('');
   const [wizardAbierto, setWizardAbierto] = useState(false);
 
-  // Sincronizar Modo Oscuro con clase 'dark' en el elemento HTML
+  // Sincronizar parámetro de departamento si viene en la URL
   useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
+    if (params.depto && params.depto !== departamento) {
+      setDepartamento(params.depto);
+    }
+  }, [params.depto]);
+
+  // Carga reactiva de Detalle por URL [id] al recargar con F5 o acceder directamente
+  useEffect(() => {
+    if (currentView === 'detalle' && params.id) {
+      // Si ya está en memoria y coincide el ID, no recargar
+      if (detalleAlojamiento && detalleAlojamiento.idAlojamiento === params.id) {
+        return;
+      }
+
+      let isMounted = true;
+      setCargandoDetalle(true);
+      setErrorDetalle(null);
+
+      catalogoService.obtenerPorId(params.id)
+        .then((alojamiento) => {
+          if (isMounted) {
+            setDetalleAlojamiento(alojamiento);
+            setCargandoDetalle(false);
+          }
+        })
+        .catch((err) => {
+          if (isMounted) {
+            console.error('Error al resolver alojamiento por ID en ruta:', err);
+            setErrorDetalle(err.message || 'No se encontró el alojamiento solicitado.');
+            setCargandoDetalle(false);
+          }
+        });
+
+      return () => {
+        isMounted = false;
+      };
+    }
+  }, [currentView, params.id, detalleAlojamiento]);
+
+  // Sincronizar Modo Oscuro con clase 'dark' en el elemento HTML y persistir en LocalStorage
+  useEffect(() => {
+    try {
+      if (darkMode) {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('alojate_theme_mode', 'dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem('alojate_theme_mode', 'light');
+      }
+    } catch (e) {
+      console.warn('Error al persistir tema:', e);
     }
   }, [darkMode]);
 
@@ -109,9 +174,7 @@ export const AppContent: React.FC = () => {
         // Combinar con localStorage
         setMisReservas((prev) => {
           const map = new Map<string, ReservaResponse>();
-          // primero las de local
           prev.forEach((r) => map.set(r.idReserva, r));
-          // luego servidor (tienen estado actualizado de check-in / confirmación)
           reservasServidor.forEach((r) => map.set(r.idReserva, r));
           const combinadas = Array.from(map.values());
           localStorage.setItem('alojate_mis_reservas', JSON.stringify(combinadas));
@@ -155,15 +218,19 @@ export const AppContent: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col bg-[#f8fafc] dark:bg-[#0b0f17] text-slate-900 dark:text-slate-100 transition-colors duration-300">
       
-      {/* 1. Header con Navbar */}
+      {/* 1. Header con Navbar Conectada a Rutas */}
       <Navbar
         currentView={currentView}
-        onChangeView={setCurrentView}
+        onChangeView={(view) => {
+          if (view === 'catalogo') navigate.catalogo();
+          else if (view === 'mis-viajes') navigate.misViajes();
+          else if (view === 'anfitrion') navigate.anfitrion();
+        }}
         darkMode={darkMode}
         onToggleDarkMode={() => setDarkMode(!darkMode)}
       />
 
-      {/* 2. Contenido Dinámico según la Vista */}
+      {/* 2. Contenido Dinámico según la Ruta */}
       <main className="flex-1">
         {currentView === 'catalogo' && (
           <div className="space-y-8 pb-16">
@@ -183,7 +250,10 @@ export const AppContent: React.FC = () => {
 
               <FiltrosDepartamentos
                 departamentoSeleccionado={departamento}
-                onSelect={setDepartamento}
+                onSelect={(d) => {
+                  setDepartamento(d);
+                  navigate.catalogo(d);
+                }}
               />
 
               <AlojamientoGrid
@@ -191,11 +261,12 @@ export const AppContent: React.FC = () => {
                 loading={loading}
                 onSelect={(a) => {
                   setDetalleAlojamiento(a);
-                  setCurrentView('detalle');
+                  navigate.detalle(a.idAlojamiento);
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
                 onReservarDirecto={(a) => {
                   setUnidadSeleccionada(a.unidades?.[0] || null);
+                  setDatosReservaPrevia(null);
                   setReservaAlojamiento(a);
                 }}
               />
@@ -203,21 +274,66 @@ export const AppContent: React.FC = () => {
           </div>
         )}
 
-        {currentView === 'detalle' && detalleAlojamiento && (
-          <DetalleAlojamientoView
-            alojamiento={detalleAlojamiento}
-            onVolver={() => setCurrentView('catalogo')}
-            onReservar={(a, u) => {
-              setUnidadSeleccionada(u);
-              setReservaAlojamiento(a);
-            }}
-          />
+        {currentView === 'detalle' && (
+          <>
+            {cargandoDetalle && (
+              <div className="max-w-7xl mx-auto px-4 py-24 flex flex-col items-center justify-center text-center space-y-4 animate-fade-in">
+                <div className="w-16 h-16 rounded-3xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-600 shadow-lg shadow-blue-500/10 animate-pulse">
+                  <Building2 className="w-8 h-8 animate-bounce" />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="font-serif text-2xl font-bold text-slate-900 dark:text-white">
+                    Cargando alojamiento...
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Sincronizando información y disponibilidad desde la red nacional
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {!cargandoDetalle && errorDetalle && (
+              <div className="max-w-xl mx-auto px-4 py-24 text-center space-y-6 animate-fade-in">
+                <div className="w-16 h-16 rounded-3xl bg-red-500/10 border border-red-500/30 flex items-center justify-center text-red-500 mx-auto shadow-lg shadow-red-500/10">
+                  <AlertCircle className="w-8 h-8" />
+                </div>
+                <div>
+                  <h3 className="font-serif text-2xl font-bold text-slate-900 dark:text-white">
+                    Alojamiento no encontrado
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
+                    {errorDetalle}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => navigate.catalogo()}
+                  className="px-6 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-lg shadow-blue-600/25 transition inline-flex items-center gap-2"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  <span>Volver al Catálogo Nacional</span>
+                </button>
+              </div>
+            )}
+
+            {!cargandoDetalle && !errorDetalle && detalleAlojamiento && (
+              <DetalleAlojamientoView
+                alojamiento={detalleAlojamiento}
+                onVolver={() => navigate.back()}
+                onReservar={(a, u, ci, co, h) => {
+                  setUnidadSeleccionada(u);
+                  setDatosReservaPrevia({ checkIn: ci, checkOut: co, huespedes: h });
+                  setReservaAlojamiento(a);
+                }}
+              />
+            )}
+          </>
         )}
 
         {currentView === 'mis-viajes' && (
           <MisViajesView
             reservas={misReservas}
-            onNuevaReserva={() => setCurrentView('catalogo')}
+            onNuevaReserva={() => navigate.catalogo()}
           />
         )}
 
@@ -225,7 +341,7 @@ export const AppContent: React.FC = () => {
           <div className="max-w-4xl mx-auto py-8 px-4 space-y-6">
             <div className="border-b border-slate-200 dark:border-slate-800 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-brand-600 dark:text-brand-400 block mb-1">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400 block mb-1">
                   GESTIÓN DE ALOJAMIENTOS &amp; RECEPCIÓN
                 </span>
                 <h2 className="font-serif text-3xl font-bold text-slate-900 dark:text-white">
@@ -239,7 +355,7 @@ export const AppContent: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setWizardAbierto(true)}
-                className="px-5 py-2.5 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs shadow-lg shadow-brand-600/25 transition flex items-center gap-2 self-start sm:self-auto"
+                className="px-5 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-lg shadow-blue-500/25 transition flex items-center gap-2 self-start sm:self-auto"
               >
                 <Plus className="w-4 h-4" />
                 <span>+ Publicar Nuevo Alojamiento</span>
@@ -260,7 +376,7 @@ export const AppContent: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setWizardAbierto(true)}
-                  className="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1"
+                  className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>Añadir</span>
@@ -271,7 +387,7 @@ export const AppContent: React.FC = () => {
                 {alojamientos.map((a) => (
                   <div
                     key={a.idAlojamiento}
-                    className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/40 hover:border-brand-400 transition flex items-center justify-between gap-3"
+                    className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/40 hover:border-blue-400 transition flex items-center justify-between gap-3"
                   >
                     <div className="flex items-center gap-3">
                       <img
@@ -300,7 +416,7 @@ export const AppContent: React.FC = () => {
                       type="button"
                       onClick={() => {
                         setDetalleAlojamiento(a);
-                        setCurrentView('detalle');
+                        navigate.detalle(a.idAlojamiento);
                         window.scrollTo({ top: 0, behavior: 'smooth' });
                       }}
                       className="p-2 rounded-xl text-slate-400 hover:text-blue-600 hover:bg-white dark:hover:bg-slate-800 transition"
@@ -330,9 +446,11 @@ export const AppContent: React.FC = () => {
       <SolicitudReservaModal
         alojamiento={reservaAlojamiento}
         unidadPreseleccionada={unidadSeleccionada}
+        fechasIniciales={datosReservaPrevia}
         onClose={() => {
           setReservaAlojamiento(null);
           setUnidadSeleccionada(null);
+          setDatosReservaPrevia(null);
         }}
         onReservaCreada={handleReservaCreada}
       />
@@ -347,7 +465,7 @@ export const AppContent: React.FC = () => {
         isOpen={!!pagoCompletadoData}
         onClose={() => {
           setPagoCompletadoData(null);
-          setCurrentView('mis-viajes');
+          navigate.misViajes();
         }}
         pagoResultado={pagoCompletadoData}
         codigoCheckin={pinConfirmado}
@@ -357,6 +475,7 @@ export const AppContent: React.FC = () => {
         isOpen={wizardAbierto}
         onClose={() => setWizardAbierto(false)}
         onAlojamientoCreado={(nuevo) => {
+          catalogoService.guardarAlojamientoLocal(nuevo);
           setAlojamientos((prev) => [nuevo, ...prev]);
         }}
       />

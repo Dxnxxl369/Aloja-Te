@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   X, Home, Hotel, Building2, MapPin, Sparkles, ImagePlus, Star, 
   Trash2, Plus, BedDouble, Users, Bath, Check, ArrowRight, ArrowLeft, 
-  ShieldCheck, Clock, Loader2, DollarSign
+  ShieldCheck, Clock, Loader2, DollarSign, UploadCloud, Edit3
 } from 'lucide-react';
 import { Alojamiento, UnidadReservable } from '../../catalogo/types/catalogo.types';
 import { httpClient } from '../../../core/api/httpClient';
@@ -33,6 +33,7 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
   onAlojamientoCreado,
 }) => {
   const { user } = useAuth();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Wizard Step (1 to 5)
   const [currentStep, setCurrentStep] = useState(1);
@@ -59,7 +60,7 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
     'Estacionamiento Gratuito'
   ]);
 
-  // Step 4: Fotos múltiples con Portada
+  // Step 4: Fotos múltiples con Portada & Drag & Drop
   const [fotos, setFotos] = useState<{ id: string; url: string; esPrincipal: boolean }[]>([
     {
       id: 'f-1',
@@ -68,6 +69,7 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
     }
   ]);
   const [nuevaFotoUrl, setNuevaFotoUrl] = useState('');
+  const [isDragging, setIsDragging] = useState(false);
 
   // Step 5: Casa (datos de unidad única)
   const [capacidadCasa, setCapacidadCasa] = useState(4);
@@ -91,8 +93,9 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
     }
   ]);
 
-  // Sub-modal para agregar habitación en Hotel
+  // Sub-modal para crear o editar habitación en Hotel
   const [creandoHabitacion, setCreandoHabitacion] = useState(false);
+  const [editandoHabId, setEditandoHabId] = useState<string | null>(null);
   const [habNombre, setHabNombre] = useState('Habitación Doble Twin');
   const [habCapacidad, setHabCapacidad] = useState(2);
   const [habCamas, setHabCamas] = useState(2);
@@ -130,7 +133,29 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
     }
   };
 
-  // Manejo de Fotos
+  // Manejo de Fotos (Drag & Drop, Selector Local y URL)
+  const handleArchivosLocales = (archivos: FileList | null) => {
+    if (!archivos || archivos.length === 0) return;
+    const filesArray = Array.from(archivos);
+    filesArray.forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const dataUrl = e.target?.result as string;
+        if (dataUrl) {
+          setFotos(prev => [
+            ...prev,
+            {
+              id: `f-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+              url: dataUrl,
+              esPrincipal: prev.length === 0
+            }
+          ]);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
   const agregarFoto = () => {
     if (!nuevaFotoUrl.trim()) return;
     const esPrimera = fotos.length === 0;
@@ -159,21 +184,66 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
     });
   };
 
-  // Manejo de Habitaciones en Hotel
-  const agregarHabitacionHotel = () => {
+  // Manejo de Habitaciones en Hotel (Creación y Edición Completa)
+  const iniciarEdicionHabitacion = (h: HabitacionDraft) => {
+    setEditandoHabId(h.id);
+    setHabNombre(h.nombre);
+    setHabCapacidad(h.capacidad);
+    setHabCamas(h.camas);
+    setHabBanos(h.banos);
+    setHabInventario(h.inventarioTotal);
+    setHabPrecio(h.precioNoche);
+    setHabFoto(h.fotoUrl);
+    setCreandoHabitacion(true);
+  };
+
+  const abrirCrearHabitacion = () => {
+    setEditandoHabId(null);
+    setHabNombre('Habitación Estándar');
+    setHabCapacidad(2);
+    setHabCamas(1);
+    setHabBanos(1);
+    setHabInventario(5);
+    setHabPrecio(320);
+    setHabFoto('https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80');
+    setCreandoHabitacion(true);
+  };
+
+  const guardarHabitacionHotel = () => {
     if (!habNombre.trim()) return;
-    const nueva: HabitacionDraft = {
-      id: `hab-${Date.now()}`,
-      nombre: habNombre.trim(),
-      capacidad: habCapacidad,
-      camas: habCamas,
-      banos: habBanos,
-      inventarioTotal: habInventario,
-      precioNoche: habPrecio,
-      fotoUrl: habFoto,
-      servicios: ['Wifi Starlink', 'Baño Privado']
-    };
-    setHabitacionesHotel(prev => [...prev, nueva]);
+
+    if (editandoHabId) {
+      setHabitacionesHotel(prev => prev.map(h => {
+        if (h.id === editandoHabId) {
+          return {
+            ...h,
+            nombre: habNombre.trim(),
+            capacidad: habCapacidad,
+            camas: habCamas,
+            banos: habBanos,
+            inventarioTotal: habInventario,
+            precioNoche: habPrecio,
+            fotoUrl: habFoto,
+          };
+        }
+        return h;
+      }));
+    } else {
+      const nueva: HabitacionDraft = {
+        id: `hab-${Date.now()}`,
+        nombre: habNombre.trim(),
+        capacidad: habCapacidad,
+        camas: habCamas,
+        banos: habBanos,
+        inventarioTotal: habInventario,
+        precioNoche: habPrecio,
+        fotoUrl: habFoto,
+        servicios: ['Wifi Starlink', 'Baño Privado']
+      };
+      setHabitacionesHotel(prev => [...prev, nueva]);
+    }
+
+    setEditandoHabId(null);
     setCreandoHabitacion(false);
   };
 
@@ -328,50 +398,53 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/75 backdrop-blur-md transition-all duration-300 animate-fade-in overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/60 backdrop-blur-md transition-all duration-300 animate-fade-in overflow-y-auto">
       <div className="absolute inset-0" onClick={onClose} />
 
-      {/* Main Container - Royal Blue & Clean White / Dark Slate */}
-      <div className="relative w-full max-w-3xl my-6 bg-white dark:bg-[#0f172a] text-slate-900 dark:text-slate-100 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 z-10 overflow-hidden animate-modal-in flex flex-col max-h-[90vh]">
+      {/* Main Container - Royal Blue & Clean White / Dark Slate matching image.png */}
+      <div className="relative w-full max-w-3xl my-6 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 rounded-3xl shadow-2xl border border-slate-200/80 dark:border-slate-800 z-10 overflow-hidden animate-modal-in flex flex-col max-h-[90vh]">
         
-        {/* Header con Barra de Progreso Azul */}
-        <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between shrink-0 bg-slate-50/70 dark:bg-slate-900/50">
-          <div className="flex items-center gap-3">
-            <span className="w-8 h-8 rounded-xl bg-brand-600 text-white flex items-center justify-center font-bold text-xs shadow-md shadow-brand-600/30">
-              {currentStep}
-            </span>
-            <div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400 block">
-                WIZARD DE PUBLICACIÓN • PASO {currentStep} DE 5
-              </span>
-              <h3 className="font-serif text-lg font-bold text-slate-900 dark:text-white leading-tight">
-                {currentStep === 1 && 'Selecciona la Modalidad de Hospedaje'}
-                {currentStep === 2 && 'Datos Generales & Ubicación en Bolivia'}
-                {currentStep === 3 && 'Amenidades & Servicios Disponibles'}
-                {currentStep === 4 && 'Galería de Fotos & Portada Principal'}
-                {currentStep === 5 && (modalidad === 'CASA_DEPARTAMENTO' ? 'Capacidad & Tarifa de la Casa' : 'Gestor de Habitaciones del Hotel')}
-              </h3>
+        {/* Header con Badge Circular y Barra de Progreso Azul */}
+        <div className="px-6 sm:px-8 pt-6 pb-4 border-b border-slate-100 dark:border-slate-800/80">
+          <div className="flex items-start justify-between">
+            <div className="flex items-start gap-3.5">
+              <div className="w-10 h-10 rounded-2xl bg-blue-600 text-white font-bold flex items-center justify-center text-sm shadow-md shadow-blue-500/25 shrink-0 mt-0.5">
+                {currentStep}
+              </div>
+              <div>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 block">
+                  WIZARD DE PUBLICACIÓN • PASO {currentStep} DE 5
+                </span>
+                <h3 className="font-serif text-2xl font-bold text-slate-900 dark:text-white leading-tight">
+                  {currentStep === 1 && 'Selecciona la Modalidad de Hospedaje'}
+                  {currentStep === 2 && 'Datos Generales & Ubicación en Bolivia'}
+                  {currentStep === 3 && 'Amenidades & Servicios Disponibles'}
+                  {currentStep === 4 && 'Galería de Fotos & Portada Principal'}
+                  {currentStep === 5 && (modalidad === 'CASA_DEPARTAMENTO' ? 'Capacidad & Tarifa de la Casa' : 'Gestor de Habitaciones del Hotel')}
+                </h3>
+              </div>
             </div>
+
+            <button
+              onClick={onClose}
+              className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-700 dark:hover:text-white transition"
+              title="Cerrar modal"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
 
-          <button
-            onClick={onClose}
-            className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-800 transition"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Barra Visual de Avance */}
-        <div className="w-full bg-slate-200 dark:bg-slate-800 h-1.5 shrink-0">
-          <div 
-            className="bg-brand-600 h-1.5 transition-all duration-300 rounded-r-full"
-            style={{ width: `${(currentStep / 5) * 100}%` }}
-          />
+          {/* Barra Visual de Avance Horizontal */}
+          <div className="h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden mt-4">
+            <div 
+              className="h-full bg-blue-600 transition-all duration-300"
+              style={{ width: `${(currentStep / 5) * 100}%` }}
+            />
+          </div>
         </div>
 
         {/* Body Dinámico con Scroll */}
-        <div className="p-6 overflow-y-auto flex-1 space-y-6">
+        <div className="p-6 sm:p-8 overflow-y-auto flex-1 space-y-6">
           {error && (
             <div className="p-3.5 rounded-2xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 text-red-600 dark:text-red-400 text-xs">
               {error}
@@ -394,11 +467,11 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
                   }}
                   className={`p-5 rounded-2xl border-2 cursor-pointer transition-all ${
                     modalidad === 'CASA_DEPARTAMENTO'
-                      ? 'border-brand-600 bg-brand-50/60 dark:bg-brand-950/40 shadow-md shadow-brand-600/10'
-                      : 'border-slate-200 dark:border-slate-800 hover:border-brand-300 dark:hover:border-slate-700 bg-white dark:bg-slate-900'
+                      ? 'border-blue-600 bg-blue-50/70 dark:bg-blue-950/40 shadow-md shadow-blue-500/10'
+                      : 'border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-slate-700 bg-white dark:bg-slate-900'
                   }`}
                 >
-                  <div className="w-12 h-12 rounded-2xl bg-brand-100 dark:bg-brand-900/50 text-brand-600 dark:text-brand-400 flex items-center justify-center mb-4">
+                  <div className="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-4">
                     <Home className="w-6 h-6" />
                   </div>
                   <div className="flex items-center gap-2 mb-1">
@@ -422,18 +495,18 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
                   }}
                   className={`p-5 rounded-2xl border-2 cursor-pointer transition-all ${
                     modalidad === 'HOTEL_HOSTAL'
-                      ? 'border-brand-600 bg-brand-50/60 dark:bg-brand-950/40 shadow-md shadow-brand-600/10'
-                      : 'border-slate-200 dark:border-slate-800 hover:border-brand-300 dark:hover:border-slate-700 bg-white dark:bg-slate-900'
+                      ? 'border-blue-600 bg-blue-50/70 dark:bg-blue-950/40 shadow-md shadow-blue-500/10'
+                      : 'border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-slate-700 bg-white dark:bg-slate-900'
                   }`}
                 >
-                  <div className="w-12 h-12 rounded-2xl bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-4">
+                  <div className="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-4">
                     <Hotel className="w-6 h-6" />
                   </div>
                   <div className="flex items-center gap-2 mb-1">
                     <h4 className="font-bold text-sm text-slate-900 dark:text-white">
                       Hotel / Hostal / Resort
                     </h4>
-                    <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-800">
+                    <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-800">
                       Multihabitación
                     </span>
                   </div>
@@ -457,7 +530,7 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
                   value={titulo}
                   onChange={(e) => setTitulo(e.target.value)}
                   placeholder="Ej. Cabaña Chiquitana Los Cántaros con Piscina"
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 />
               </div>
 
@@ -470,7 +543,7 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
                   value={descripcion}
                   onChange={(e) => setDescripcion(e.target.value)}
                   placeholder="Describe la vista, el entorno, atractivos cercanos y comodidades destacadas..."
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 />
               </div>
 
@@ -482,7 +555,7 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
                   <select
                     value={departamento}
                     onChange={(e) => setDepartamento(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   >
                     {departamentosBolivia.map(d => (
                       <option key={d} value={d}>{d}</option>
@@ -499,7 +572,7 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
                     value={ciudad}
                     onChange={(e) => setCiudad(e.target.value)}
                     placeholder="Ej. Samaipata, Coroico, San José"
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   />
                 </div>
               </div>
@@ -513,7 +586,7 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
                   value={direccion}
                   onChange={(e) => setDireccion(e.target.value)}
                   placeholder="Ej. Km 5 Camino a La Pajcha, cerca del mirador"
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 />
               </div>
 
@@ -526,7 +599,7 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
                     type="time"
                     value={horarioEntrada}
                     onChange={(e) => setHorarioEntrada(e.target.value)}
-                    className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-900 dark:text-white focus:outline-none"
+                    className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
                 <div>
@@ -537,7 +610,7 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
                     type="time"
                     value={horarioSalida}
                     onChange={(e) => setHorarioSalida(e.target.value)}
-                    className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-900 dark:text-white focus:outline-none"
+                    className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
               </div>
@@ -561,13 +634,13 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
                       onClick={() => toggleServicio(servicio)}
                       className={`p-3 rounded-2xl border text-left flex items-center justify-between text-xs font-semibold transition ${
                         activo
-                          ? 'border-brand-600 bg-brand-50 dark:bg-brand-950/40 text-brand-700 dark:text-brand-300 shadow-sm'
+                          ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 shadow-sm'
                           : 'border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900'
                       }`}
                     >
                       <span>{servicio}</span>
                       <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                        activo ? 'bg-brand-600 text-white' : 'border border-slate-300 dark:border-slate-700'
+                        activo ? 'bg-blue-600 text-white' : 'border border-slate-300 dark:border-slate-700'
                       }`}>
                         {activo && <Check className="w-3.5 h-3.5" />}
                       </div>
@@ -582,25 +655,66 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
           {currentStep === 4 && (
             <div className="space-y-4">
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Agrega las fotografías del establecimiento. La foto marcada con <span className="font-bold text-brand-600">estrella</span> será la portada principal que verán los viajeros:
+                Agrega las fotografías del establecimiento. Puedes arrastrar imágenes desde tu computadora o buscar archivos locales. La foto con <span className="font-bold text-blue-600 dark:text-blue-400">estrella</span> será la portada principal:
               </p>
 
-              {/* Agregar Foto por URL o Archivo */}
-              <div className="flex gap-2">
+              {/* Zona Interactiva de Drag & Drop y Subida de Archivos */}
+              <div
+                onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                onDragLeave={() => setIsDragging(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setIsDragging(false);
+                  if (e.dataTransfer.files) {
+                    handleArchivosLocales(e.dataTransfer.files);
+                  }
+                }}
+                onClick={() => fileInputRef.current?.click()}
+                className={`border-2 border-dashed rounded-3xl p-6 text-center cursor-pointer transition-all ${
+                  isDragging 
+                    ? 'border-blue-600 bg-blue-50/70 dark:bg-blue-950/40 scale-[1.01]' 
+                    : 'border-slate-300 dark:border-slate-700 hover:border-blue-500 bg-slate-50/50 dark:bg-slate-900/40'
+                }`}
+              >
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="hidden"
+                  onChange={(e) => {
+                    if (e.target.files) {
+                      handleArchivosLocales(e.target.files);
+                    }
+                  }}
+                />
+                <div className="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center mx-auto mb-2 shadow-sm">
+                  <UploadCloud className="w-6 h-6" />
+                </div>
+                <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                  Arrastra tus fotos aquí o <span className="text-blue-600 dark:text-blue-400 underline">haz clic para buscarlas en tu equipo</span>
+                </p>
+                <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">
+                  Admite archivos JPG, PNG o WEBP locales (subida múltiple simultánea)
+                </p>
+              </div>
+
+              {/* Opción Alternativa: Agregar por URL web */}
+              <div className="flex gap-2 pt-1">
                 <input
                   type="url"
                   value={nuevaFotoUrl}
                   onChange={(e) => setNuevaFotoUrl(e.target.value)}
-                  placeholder="Pega la URL de una fotografía (ej. Unsplash o Cloud)"
-                  className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  placeholder="O pega aquí la URL web de una foto (ej. Unsplash o CDN)"
+                  className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 <button
                   type="button"
                   onClick={agregarFoto}
-                  className="px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-brand-600/20"
+                  className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-blue-500/20 shrink-0"
                 >
                   <Plus className="w-4 h-4" />
-                  <span>Añadir</span>
+                  <span>Añadir URL</span>
                 </button>
               </div>
 
@@ -611,7 +725,7 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
                     key={foto.id}
                     className={`relative rounded-2xl overflow-hidden aspect-video border-2 group transition-all ${
                       foto.esPrincipal 
-                        ? 'border-brand-600 ring-2 ring-brand-500/30' 
+                        ? 'border-blue-600 ring-2 ring-blue-500/30' 
                         : 'border-slate-200 dark:border-slate-800'
                     }`}
                   >
@@ -619,7 +733,7 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
                     
                     {/* Badge Portada */}
                     {foto.esPrincipal ? (
-                      <span className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-brand-600 text-white text-[10px] font-bold flex items-center gap-1 shadow-md">
+                      <span className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-blue-600 text-white text-[10px] font-bold flex items-center gap-1 shadow-md">
                         <Star className="w-3 h-3 fill-white" />
                         <span>Portada Principal</span>
                       </span>
@@ -627,7 +741,7 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
                       <button
                         type="button"
                         onClick={() => seleccionarFotoPrincipal(foto.id)}
-                        className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-black/60 hover:bg-brand-600 text-white text-[10px] font-bold opacity-0 group-hover:opacity-100 transition flex items-center gap-1 backdrop-blur-sm"
+                        className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-black/60 hover:bg-blue-600 text-white text-[10px] font-bold opacity-0 group-hover:opacity-100 transition flex items-center gap-1 backdrop-blur-sm"
                       >
                         <Star className="w-3 h-3" />
                         <span>Hacer Portada</span>
@@ -725,8 +839,8 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
                 </div>
               </div>
 
-              <div className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-brand-50/40 dark:bg-brand-950/20">
-                <label className="block text-xs font-bold text-brand-700 dark:text-brand-300 uppercase tracking-wider mb-1.5">
+              <div className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-blue-50/40 dark:bg-blue-950/20">
+                <label className="block text-xs font-bold text-blue-700 dark:text-blue-300 uppercase tracking-wider mb-1.5">
                   Tarifa por Noche (Bolivianos - BOB) *
                 </label>
                 <div className="relative">
@@ -735,7 +849,7 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
                     type="number"
                     value={precioCasa}
                     onChange={(e) => setPrecioCasa(Number(e.target.value))}
-                    className="w-full pl-12 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-lg font-black text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    className="w-full pl-12 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-lg font-black text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
                   />
                 </div>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
@@ -759,22 +873,22 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
                 </div>
                 <button
                   type="button"
-                  onClick={() => setCreandoHabitacion(true)}
-                  className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-indigo-600/20"
+                  onClick={abrirCrearHabitacion}
+                  className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-blue-500/20"
                 >
                   <Plus className="w-4 h-4" />
                   <span>+ Agregar Habitación</span>
                 </button>
               </div>
 
-              {/* Sub-formulario para nueva habitación */}
+              {/* Sub-formulario para nueva habitación o edición */}
               {creandoHabitacion && (
-                <div className="p-5 rounded-2xl border-2 border-indigo-400 dark:border-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/30 space-y-4 animate-fade-in">
+                <div className="p-5 rounded-2xl border-2 border-blue-400 dark:border-blue-600 bg-blue-50/50 dark:bg-blue-950/30 space-y-4 animate-fade-in">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-300">
-                      Nueva Habitación para el Hotel
+                    <span className="text-xs font-bold uppercase tracking-wider text-blue-700 dark:text-blue-300">
+                      {editandoHabId ? 'Editar Habitación del Hotel' : 'Nueva Habitación para el Hotel'}
                     </span>
-                    <button type="button" onClick={() => setCreandoHabitacion(false)}>
+                    <button type="button" onClick={() => { setCreandoHabitacion(false); setEditandoHabId(null); }}>
                       <X className="w-4 h-4 text-slate-400 hover:text-slate-600" />
                     </button>
                   </div>
@@ -787,16 +901,17 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
                         value={habNombre}
                         onChange={(e) => setHabNombre(e.target.value)}
                         placeholder="Ej. Habitación Doble Twin"
-                        className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-white focus:outline-none"
+                        className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">Foto Exclusiva de esta Habitación (URL)</label>
+                      <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">Foto de la Habitación (URL o local)</label>
                       <input
                         type="url"
                         value={habFoto}
                         onChange={(e) => setHabFoto(e.target.value)}
-                        className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-white focus:outline-none"
+                        placeholder="https://..."
+                        className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
                   </div>
@@ -806,36 +921,40 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
                       <label className="block text-[9px] font-bold uppercase text-slate-500 mb-1">Capacidad</label>
                       <input
                         type="number"
+                        min="1"
                         value={habCapacidad}
                         onChange={(e) => setHabCapacidad(Number(e.target.value))}
-                        className="w-full px-2 py-1.5 rounded-lg border text-xs text-center font-bold bg-white dark:bg-slate-900"
+                        className="w-full px-2 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 text-xs text-center font-bold bg-white dark:bg-slate-900"
                       />
                     </div>
                     <div>
                       <label className="block text-[9px] font-bold uppercase text-slate-500 mb-1">Camas</label>
                       <input
                         type="number"
+                        min="1"
                         value={habCamas}
                         onChange={(e) => setHabCamas(Number(e.target.value))}
-                        className="w-full px-2 py-1.5 rounded-lg border text-xs text-center font-bold bg-white dark:bg-slate-900"
+                        className="w-full px-2 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 text-xs text-center font-bold bg-white dark:bg-slate-900"
                       />
                     </div>
                     <div>
                       <label className="block text-[9px] font-bold uppercase text-slate-500 mb-1">Inventario</label>
                       <input
                         type="number"
+                        min="1"
                         value={habInventario}
                         onChange={(e) => setHabInventario(Number(e.target.value))}
-                        className="w-full px-2 py-1.5 rounded-lg border text-xs text-center font-bold bg-white dark:bg-slate-900"
+                        className="w-full px-2 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 text-xs text-center font-bold bg-white dark:bg-slate-900"
                       />
                     </div>
                     <div>
                       <label className="block text-[9px] font-bold uppercase text-slate-500 mb-1">Precio Bs.</label>
                       <input
                         type="number"
+                        min="10"
                         value={habPrecio}
                         onChange={(e) => setHabPrecio(Number(e.target.value))}
-                        className="w-full px-2 py-1.5 rounded-lg border text-xs text-center font-bold bg-white dark:bg-slate-900 text-indigo-600"
+                        className="w-full px-2 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 text-xs text-center font-bold bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 font-mono"
                       />
                     </div>
                   </div>
@@ -843,17 +962,17 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
                   <div className="flex justify-end gap-2">
                     <button
                       type="button"
-                      onClick={() => setCreandoHabitacion(false)}
-                      className="px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-semibold"
+                      onClick={() => { setCreandoHabitacion(false); setEditandoHabId(null); }}
+                      className="px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 transition"
                     >
                       Cancelar
                     </button>
                     <button
                       type="button"
-                      onClick={agregarHabitacionHotel}
-                      className="px-4 py-1.5 rounded-xl bg-indigo-600 text-white text-xs font-bold"
+                      onClick={guardarHabitacionHotel}
+                      className="px-4 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition shadow-sm"
                     >
-                      Guardar Habitación
+                      {editandoHabId ? 'Actualizar Habitación' : 'Guardar Habitación'}
                     </button>
                   </div>
                 </div>
@@ -864,10 +983,10 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
                 {habitacionesHotel.map((h) => (
                   <div
                     key={h.id}
-                    className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-between gap-4 shadow-sm"
+                    className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-between gap-4 shadow-sm hover:border-blue-500/50 transition-colors"
                   >
                     <div className="flex items-center gap-3">
-                      <img src={h.fotoUrl} alt={h.nombre} className="w-16 h-14 object-cover rounded-xl shrink-0" />
+                      <img src={h.fotoUrl} alt={h.nombre} className="w-16 h-14 object-cover rounded-xl shrink-0 border border-slate-200 dark:border-slate-800" />
                       <div>
                         <h5 className="font-bold text-xs text-slate-900 dark:text-white">{h.nombre}</h5>
                         <div className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
@@ -880,17 +999,26 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
-                      <div className="text-right">
+                    <div className="flex items-center gap-2">
+                      <div className="text-right mr-2">
                         <span className="text-[10px] text-slate-400 block uppercase font-bold">Por noche</span>
-                        <span className="font-mono font-black text-sm text-slate-900 dark:text-white">
+                        <span className="font-mono font-black text-sm text-blue-600 dark:text-blue-400">
                           Bs. {h.precioNoche}
                         </span>
                       </div>
                       <button
                         type="button"
+                        onClick={() => iniciarEdicionHabitacion(h)}
+                        className="p-2 rounded-xl text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40 transition"
+                        title="Editar precio e inventario"
+                      >
+                        <Edit3 className="w-4 h-4" />
+                      </button>
+                      <button
+                        type="button"
                         onClick={() => eliminarHabitacionHotel(h.id)}
-                        className="p-1.5 text-slate-400 hover:text-red-500 transition"
+                        className="p-2 rounded-xl text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 transition"
+                        title="Eliminar habitación"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -919,7 +1047,7 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
               type="button"
               onClick={() => setCurrentStep(prev => Math.min(5, prev + 1))}
               disabled={!puedeAvanzar()}
-              className="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold shadow-md shadow-brand-600/20 disabled:opacity-40 transition flex items-center gap-1.5"
+              className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/20 disabled:opacity-40 transition flex items-center gap-1.5"
             >
               <span>Continuar</span>
               <ArrowRight className="w-4 h-4" />
@@ -929,7 +1057,7 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
               type="button"
               onClick={handleGuardarAlojamiento}
               disabled={loading || !puedeAvanzar()}
-              className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white text-xs font-bold shadow-lg shadow-brand-600/25 disabled:opacity-50 transition flex items-center gap-2"
+              className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-lg shadow-blue-500/25 disabled:opacity-50 transition flex items-center gap-2"
             >
               {loading && <Loader2 className="w-4 h-4 animate-spin" />}
               <span>{modalidad === 'CASA_DEPARTAMENTO' ? 'Publicar Casa en Catálogo' : 'Finalizar y Publicar Hotel'}</span>

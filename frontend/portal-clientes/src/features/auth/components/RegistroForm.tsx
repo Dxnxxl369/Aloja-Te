@@ -83,11 +83,11 @@ export const RegistroForm: React.FC = () => {
             onClick={() => setRol('CLIENTE')}
             className={`p-2.5 rounded-2xl border text-center transition flex flex-col items-center gap-1.5 ${
               rol === 'CLIENTE'
-                ? 'bg-brand-50 dark:bg-brand-600/30 border-brand-500 text-brand-700 dark:text-brand-300 shadow-sm font-semibold'
+                ? 'bg-blue-50 dark:bg-blue-900/40 border-blue-500 text-blue-700 dark:text-blue-300 shadow-sm font-semibold'
                 : 'bg-stone-50 dark:bg-slate-900/60 border-stone-200 dark:border-slate-800 text-stone-600 dark:text-slate-400 hover:text-stone-900 dark:hover:text-white'
             }`}
           >
-            <Compass className="w-5 h-5 text-brand-600 dark:text-brand-400" />
+            <Compass className="w-5 h-5 text-blue-600 dark:text-blue-400" />
             <span className="text-xs font-bold">Huésped / Viajero</span>
             <span className="text-[10px] text-stone-400 dark:text-slate-400">Buscar y reservar</span>
           </button>
@@ -97,11 +97,11 @@ export const RegistroForm: React.FC = () => {
             onClick={() => setRol('ANFITRION')}
             className={`p-2.5 rounded-2xl border text-center transition flex flex-col items-center gap-1.5 ${
               rol === 'ANFITRION'
-                ? 'bg-brand-50 dark:bg-brand-600/30 border-brand-500 text-brand-700 dark:text-brand-300 shadow-sm font-semibold'
+                ? 'bg-blue-50 dark:bg-blue-900/40 border-blue-500 text-blue-700 dark:text-blue-300 shadow-sm font-semibold'
                 : 'bg-stone-50 dark:bg-slate-900/60 border-stone-200 dark:border-slate-800 text-stone-600 dark:text-slate-400 hover:text-stone-900 dark:hover:text-white'
             }`}
           >
-            <Home className="w-5 h-5 text-brand-600 dark:text-brand-400" />
+            <Home className="w-5 h-5 text-blue-600 dark:text-blue-400" />
             <span className="text-xs font-bold">Anfitrión Propietario</span>
             <span className="text-[10px] text-stone-400 dark:text-slate-400">Publicar hospedajes</span>
           </button>
@@ -120,7 +120,7 @@ export const RegistroForm: React.FC = () => {
               onChange={(e) => setNombre(e.target.value)}
               required
               placeholder="Juan"
-              className="w-full pl-8 pr-3 py-2 rounded-xl bg-stone-50 dark:bg-slate-900/80 border border-stone-200 dark:border-slate-700/80 text-stone-900 dark:text-white placeholder-stone-400 dark:placeholder-slate-500 text-xs focus:outline-none focus:border-brand-500 transition"
+              className="w-full pl-8 pr-3 py-2 rounded-xl bg-stone-50 dark:bg-slate-900/80 border border-stone-200 dark:border-slate-700/80 text-stone-900 dark:text-white placeholder-stone-400 dark:placeholder-slate-500 text-xs focus:outline-none focus:border-blue-500 transition"
             />
           </div>
         </div>
@@ -133,7 +133,7 @@ export const RegistroForm: React.FC = () => {
             onChange={(e) => setApellido(e.target.value)}
             required
             placeholder="Perez"
-            className="w-full px-3 py-2 rounded-xl bg-stone-50 dark:bg-slate-900/80 border border-stone-200 dark:border-slate-700/80 text-stone-900 dark:text-white placeholder-stone-400 dark:placeholder-slate-500 text-xs focus:outline-none focus:border-brand-500 transition"
+            className="w-full px-3 py-2 rounded-xl bg-stone-50 dark:bg-slate-900/80 border border-stone-200 dark:border-slate-700/80 text-stone-900 dark:text-white placeholder-stone-400 dark:placeholder-slate-500 text-xs focus:outline-none focus:border-blue-500 transition"
           />
         </div>
       </div>
@@ -149,7 +149,7 @@ export const RegistroForm: React.FC = () => {
             onChange={(e) => setEmail(e.target.value)}
             required
             placeholder="tu-correo@ejemplo.bo"
-            className="w-full pl-8 pr-3 py-2 rounded-xl bg-stone-50 dark:bg-slate-900/80 border border-stone-200 dark:border-slate-700/80 text-stone-900 dark:text-white placeholder-stone-400 dark:placeholder-slate-500 text-xs focus:outline-none focus:border-brand-500 transition"
+            className="w-full pl-8 pr-3 py-2 rounded-xl bg-stone-50 dark:bg-slate-900/80 border border-stone-200 dark:border-slate-700/80 text-stone-900 dark:text-white placeholder-stone-400 dark:placeholder-slate-500 text-xs focus:outline-none focus:border-blue-500 transition"
           />
         </div>
       </div>
@@ -166,14 +166,14 @@ export const RegistroForm: React.FC = () => {
               onChange={(e) => setTelefono(e.target.value)}
               required
               placeholder="+591 70012345"
-              className="w-full pl-8 pr-3 py-2 rounded-xl bg-stone-50 dark:bg-slate-900/80 border border-stone-200 dark:border-slate-700/80 text-stone-900 dark:text-white placeholder-stone-400 dark:placeholder-slate-500 text-xs focus:outline-none focus:border-brand-500 transition"
+              className="w-full pl-8 pr-3 py-2 rounded-xl bg-stone-50 dark:bg-slate-900/80 border border-stone-200 dark:border-slate-700/80 text-stone-900 dark:text-white placeholder-stone-400 dark:placeholder-slate-500 text-xs focus:outline-none focus:border-blue-500 transition"
             />
           </div>
         </div>
 
         <div>
           <label className="block text-[11px] font-semibold text-stone-700 dark:text-slate-300 mb-1">
-            C.I. / NIT {rol === 'ANFITRION' && <span className="text-brand-600 font-bold">*</span>}
+            C.I. / NIT {rol === 'ANFITRION' && <span className="text-blue-600 font-bold">*</span>}
           </label>
           <input
             type="text"
@@ -181,22 +181,22 @@ export const RegistroForm: React.FC = () => {
             onChange={(e) => setCi(e.target.value)}
             required={rol === 'ANFITRION'}
             placeholder="8492019"
-            className="w-full px-3 py-2 rounded-xl bg-stone-50 dark:bg-slate-900/80 border border-stone-200 dark:border-slate-700/80 text-stone-900 dark:text-white placeholder-stone-400 dark:placeholder-slate-500 text-xs focus:outline-none focus:border-brand-500 transition"
+            className="w-full px-3 py-2 rounded-xl bg-stone-50 dark:bg-slate-900/80 border border-stone-200 dark:border-slate-700/80 text-stone-900 dark:text-white placeholder-stone-400 dark:placeholder-slate-500 text-xs focus:outline-none focus:border-blue-500 transition"
           />
         </div>
       </div>
 
       {/* Bloque Especial para Anfitriones */}
       {rol === 'ANFITRION' && (
-        <div className="p-3.5 rounded-2xl bg-brand-500/10 border border-brand-500/25 space-y-3 animate-fade-in text-xs">
+        <div className="p-3.5 rounded-2xl bg-blue-50/60 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/50 space-y-3 animate-fade-in text-xs">
           
           <div className="flex items-start gap-2">
-            <ShieldCheck className="w-4 h-4 text-brand-600 dark:text-brand-400 shrink-0 mt-0.5" />
+            <ShieldCheck className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
             <div>
-              <span className="font-bold text-brand-900 dark:text-brand-300 block">
+              <span className="font-bold text-blue-900 dark:text-blue-300 block">
                 Garantía de Seguridad para tus Huéspedes
               </span>
-              <p className="text-[11px] text-brand-800 dark:text-brand-200/90 leading-relaxed mt-0.5">
+              <p className="text-[11px] text-blue-800 dark:text-blue-200/90 leading-relaxed mt-0.5">
                 Tu perfil iniciará en estado <strong className="font-bold underline">Pendiente de Verificación</strong>. Los siguientes datos son opcionales en este momento; podrás completarlos luego desde tu panel antes de publicar alojamientos.
               </p>
             </div>
@@ -211,7 +211,7 @@ export const RegistroForm: React.FC = () => {
               <select
                 value={ciExpedido}
                 onChange={(e) => setCiExpedido(e.target.value)}
-                className="w-full px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-stone-200 dark:border-slate-700 text-stone-900 dark:text-white text-xs focus:outline-none focus:border-brand-500 transition"
+                className="w-full px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-stone-200 dark:border-slate-700 text-stone-900 dark:text-white text-xs focus:outline-none focus:border-blue-500 transition"
               >
                 <option value="SC">Santa Cruz (SC)</option>
                 <option value="LP">La Paz (LP)</option>
@@ -234,7 +234,7 @@ export const RegistroForm: React.FC = () => {
                 value={ciComplemento}
                 onChange={(e) => setCiComplemento(e.target.value)}
                 placeholder="Ej: 1A"
-                className="w-full px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-stone-200 dark:border-slate-700 text-stone-900 dark:text-white placeholder-stone-400 text-xs focus:outline-none focus:border-brand-500 transition"
+                className="w-full px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-stone-200 dark:border-slate-700 text-stone-900 dark:text-white placeholder-stone-400 text-xs focus:outline-none focus:border-blue-500 transition"
               />
             </div>
           </div>
@@ -244,14 +244,14 @@ export const RegistroForm: React.FC = () => {
             <button
               type="button"
               onClick={() => setMostrarOpcionales(!mostrarOpcionales)}
-              className="text-[11px] font-bold text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1 transition"
+              className="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 transition"
             >
               <span>{mostrarOpcionales ? 'Ocultar datos bancarios y de respaldo' : '+ Añadir cuenta bancaria y contacto de respaldo ahora'}</span>
               {mostrarOpcionales ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
             </button>
 
             {mostrarOpcionales && (
-              <div className="space-y-2.5 mt-2.5 pt-2 border-t border-brand-500/20">
+              <div className="space-y-2.5 mt-2.5 pt-2 border-t border-blue-200 dark:border-blue-900/50">
                 <div>
                   <label className="block text-[10px] font-semibold text-stone-700 dark:text-slate-300 mb-1">
                     Entidad Bancaria para Liquidaciones
@@ -259,7 +259,7 @@ export const RegistroForm: React.FC = () => {
                   <select
                     value={bancoNombre}
                     onChange={(e) => setBancoNombre(e.target.value)}
-                    className="w-full px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-stone-200 dark:border-slate-700 text-stone-900 dark:text-white text-xs focus:outline-none focus:border-brand-500 transition"
+                    className="w-full px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-stone-200 dark:border-slate-700 text-stone-900 dark:text-white text-xs focus:outline-none focus:border-blue-500 transition"
                   >
                     <option value="Banco Nacional de Bolivia (BNB)">Banco Nacional de Bolivia (BNB)</option>
                     <option value="Banco Unión">Banco Unión S.A.</option>
@@ -279,7 +279,7 @@ export const RegistroForm: React.FC = () => {
                     value={numeroCuentaBancaria}
                     onChange={(e) => setNumeroCuentaBancaria(e.target.value)}
                     placeholder="2000-1928371-01"
-                    className="w-full px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-stone-200 dark:border-slate-700 text-stone-900 dark:text-white placeholder-stone-400 text-xs focus:outline-none focus:border-brand-500 transition"
+                    className="w-full px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-stone-200 dark:border-slate-700 text-stone-900 dark:text-white placeholder-stone-400 text-xs focus:outline-none focus:border-blue-500 transition"
                   />
                 </div>
 
@@ -292,7 +292,7 @@ export const RegistroForm: React.FC = () => {
                     value={telefonoEmergencia}
                     onChange={(e) => setTelefonoEmergencia(e.target.value)}
                     placeholder="+591 71098765"
-                    className="w-full px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-stone-200 dark:border-slate-700 text-stone-900 dark:text-white placeholder-stone-400 text-xs focus:outline-none focus:border-brand-500 transition"
+                    className="w-full px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-stone-200 dark:border-slate-700 text-stone-900 dark:text-white placeholder-stone-400 text-xs focus:outline-none focus:border-blue-500 transition"
                   />
                 </div>
 
@@ -305,7 +305,7 @@ export const RegistroForm: React.FC = () => {
                     value={direccionDomicilio}
                     onChange={(e) => setDireccionDomicilio(e.target.value)}
                     placeholder="Calle o Av. donde resides habitualmente"
-                    className="w-full px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-stone-200 dark:border-slate-700 text-stone-900 dark:text-white placeholder-stone-400 text-xs focus:outline-none focus:border-brand-500 transition"
+                    className="w-full px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-stone-200 dark:border-slate-700 text-stone-900 dark:text-white placeholder-stone-400 text-xs focus:outline-none focus:border-blue-500 transition"
                   />
                 </div>
               </div>
@@ -327,7 +327,7 @@ export const RegistroForm: React.FC = () => {
             required
             minLength={6}
             placeholder="Mínimo 6 caracteres"
-            className="w-full pl-8 pr-3 py-2 rounded-xl bg-stone-50 dark:bg-slate-900/80 border border-stone-200 dark:border-slate-700/80 text-stone-900 dark:text-white placeholder-stone-400 dark:placeholder-slate-500 text-xs focus:outline-none focus:border-brand-500 transition"
+            className="w-full pl-8 pr-3 py-2 rounded-xl bg-stone-50 dark:bg-slate-900/80 border border-stone-200 dark:border-slate-700/80 text-stone-900 dark:text-white placeholder-stone-400 dark:placeholder-slate-500 text-xs focus:outline-none focus:border-blue-500 transition"
           />
         </div>
       </div>
@@ -335,7 +335,7 @@ export const RegistroForm: React.FC = () => {
       <button
         type="submit"
         disabled={loading}
-        className="w-full py-3 rounded-xl bg-gradient-to-r from-brand-600 to-blue-600 hover:from-brand-500 hover:to-blue-500 text-white font-bold text-xs shadow-md shadow-brand-600/30 transition flex items-center justify-center gap-2 disabled:opacity-50 mt-1"
+        className="w-full py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-500/25 transition flex items-center justify-center gap-2 disabled:opacity-50 mt-1 cursor-pointer"
       >
         {loading ? (
           <>

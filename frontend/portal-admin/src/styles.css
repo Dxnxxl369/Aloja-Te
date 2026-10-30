@@ -7,21 +7,256 @@
   --color-card-dark: #111827;
 }
 
+body {
+  margin: 0;
+  padding: 0;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+/* ======================================================== */
+/* SOPORTE DE MODO CLARO INSTITUCIONAL (CRISP WHITE & BLUE) */
+/* ======================================================== */
+body.theme-light {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+body.theme-light aside {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* Hover perfecto en pestañas del sidebar en modo claro */
+body.theme-light aside button:not([class*="bg-gradient"]) {
+  color: #475569 !important;
+}
+
+body.theme-light aside button:not([class*="bg-gradient"]):hover {
+  background-color: #eff6ff !important;
+  color: #2563eb !important;
+}
+
+body.theme-light header {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  border-color: #e2e8f0 !important;
+}
+
+body.theme-light header h1 {
+  color: #0f172a !important;
+}
+
+body.theme-light header p {
+  color: #64748b !important;
+}
+
+body.theme-light aside span.font-serif {
+  color: #0f172a !important;
+}
+
+body.theme-light aside p {
+  color: #64748b !important;
+}
+
+body.theme-light .liquid-card {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 4px 14px -2px rgba(15, 23, 42, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.02) !important;
+}
+
+body.theme-light .liquid-card-hover:hover {
+  background: #ffffff !important;
+  border-color: rgba(37, 99, 235, 0.5) !important;
+  box-shadow: 0 12px 24px -4px rgba(37, 99, 235, 0.12) !important;
+}
+
+/* ======================================================== */
+/* ADAPTACIÓN EXHAUSTIVA DE CONTENEDORES Y MODALES EN CLARO */
+/* ======================================================== */
+body.theme-light .bg-carbon-950,
+body.theme-light .bg-carbon-900,
+body.theme-light .bg-carbon-900\/95,
+body.theme-light .bg-carbon-900\/80,
+body.theme-light .bg-carbon-950\/80 {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+body.theme-light .bg-stone-950,
+body.theme-light .bg-stone-950\/80,
+body.theme-light .bg-stone-900,
+body.theme-light .bg-stone-900\/90,
+body.theme-light .bg-stone-900\/80,
+body.theme-light .bg-stone-900\/60,
+body.theme-light .bg-stone-900\/50,
+body.theme-light .bg-stone-800 {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+body.theme-light .bg-blue-950\/60,
+body.theme-light .bg-blue-950\/40,
+body.theme-light .bg-cyan-950\/60 {
+  background-color: #eff6ff !important;
+  border-color: #bfdbfe !important;
+  color: #1e40af !important;
+}
+
+body.theme-light .text-stone-100,
+body.theme-light .text-white {
+  color: #0f172a !important;
+}
+
+body.theme-light .text-stone-200,
+body.theme-light .text-stone-300 {
+  color: #334155 !important;
+}
+
+body.theme-light .text-stone-400 {
+  color: #64748b !important;
+}
+
+body.theme-light .text-stone-500 {
+  color: #94a3b8 !important;
+}
+
+body.theme-light .border-stone-800,
+body.theme-light .border-stone-800\/80,
+body.theme-light .border-stone-800\/60,
+body.theme-light .border-stone-700 {
+  border-color: #e2e8f0 !important;
+}
+
+/* Botones secundarios en modo claro */
+body.theme-light button.bg-stone-800,
+body.theme-light button.bg-stone-900 {
+  background-color: #f1f5f9 !important;
+  color: #334155 !important;
+  border-color: #e2e8f0 !important;
+}
+
+body.theme-light button.bg-stone-800:hover,
+body.theme-light button.bg-stone-900:hover {
+  background-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+body.theme-light table {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+body.theme-light th {
+  background-color: #f8fafc !important;
+  color: #475569 !important;
+  border-color: #e2e8f0 !important;
+}
+
+body.theme-light td {
+  border-color: #e2e8f0 !important;
+  color: #1e293b !important;
+}
+
+body.theme-light tr:hover td {
+  background-color: #f8fafc !important;
+}
+
+body.theme-light select,
+body.theme-light input,
+body.theme-light textarea {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+/* ======================================================== */
+/* SOBREESCRITURAS DEFENSIVAS: CERO NARANJA / AMBER EN ADMIN*/
+/* ======================================================== */
+[class*="bg-amber"], [class*="bg-orange"] {
+  background-color: #2563eb !important;
+}
+
+[class*="text-amber"], [class*="text-orange"] {
+  color: #3b82f6 !important;
+}
+
+[class*="border-amber"], [class*="border-orange"] {
+  border-color: #3b82f6 !important;
+}
+
+/* ======================================================== */
+/* ANIMACIONES FLUIDAS & MICRO-INTERACCIONES                */
+/* ======================================================== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes modalPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.96) translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes pulseGlowBlue {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(37, 99, 235, 0.25);
+  }
+  50% {
+    box-shadow: 0 0 28px rgba(37, 99, 235, 0.55);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-modal-in {
+  animation: modalPop 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.glow-blue {
+  animation: pulseGlowBlue 3s infinite;
+}
+
 @layer utilities {
   .liquid-card {
-    background: rgba(15, 23, 42, 0.85);
+    background: linear-gradient(135deg, rgba(17, 24, 39, 0.85) 0%, rgba(11, 15, 23, 0.92) 100%);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5), 0 0 20px -5px rgba(37, 99, 235, 0.05);
   }
 
   .liquid-card-hover {
     transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   }
   .liquid-card-hover:hover {
-    border-color: rgba(37, 99, 235, 0.4);
-    background: rgba(30, 41, 59, 0.9);
-    transform: translateY(-2px);
+    border-color: rgba(37, 99, 235, 0.45);
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.95) 100%);
+    transform: translateY(-3px);
+    box-shadow: 0 16px 32px -8px rgba(37, 99, 235, 0.18), 0 4px 12px rgba(0, 0, 0, 0.2);
   }
 
   .glow-brand {
@@ -41,5 +276,12 @@
   }
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: rgba(37, 99, 235, 0.5);
+  }
+
+  body.theme-light .custom-scrollbar::-webkit-scrollbar-track {
+    background: #f1f5f9;
+  }
+  body.theme-light .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
   }
 }

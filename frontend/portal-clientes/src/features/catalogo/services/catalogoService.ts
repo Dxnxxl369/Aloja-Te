@@ -242,31 +242,78 @@ function normalizarAlojamiento(raw: any): Alojamiento {
 
 export const catalogoService = {
   async listarAlojamientos(departamento?: string): Promise<Alojamiento[]> {
+    let baseList: Alojamiento[] = [];
     try {
       const response = await httpClient.get<any[]>(ENDPOINTS.ALOJAMIENTOS.LISTAR);
       if (response.data && response.data.length > 0) {
-        const normalizados = response.data.map(normalizarAlojamiento);
-        if (!departamento || departamento === 'Todos') return normalizados;
-        return normalizados.filter(a => a.departamento.toLowerCase() === departamento.toLowerCase());
+        baseList = response.data.map(normalizarAlojamiento);
       }
     } catch {
       // Fallback a demo con datos sembrados
+      baseList = ALOJAMIENTOS_DEMO;
     }
 
-    if (!departamento || departamento === 'Todos') return ALOJAMIENTOS_DEMO;
-    return ALOJAMIENTOS_DEMO.filter(a => a.departamento.toLowerCase() === departamento.toLowerCase());
+    if (baseList.length === 0) {
+      baseList = ALOJAMIENTOS_DEMO;
+    }
+
+    // Agregar alojamientos personalizados creados por el anfitrión (persistencia local)
+    try {
+      const customRaw = localStorage.getItem('alojate_alojamientos_custom');
+      if (customRaw) {
+        const customItems: Alojamiento[] = JSON.parse(customRaw);
+        // Filtrar duplicados por idAlojamiento
+        const map = new Map<string, Alojamiento>();
+        baseList.forEach(item => map.set(item.idAlojamiento, item));
+        customItems.forEach(item => map.set(item.idAlojamiento, item));
+        baseList = Array.from(map.values());
+      }
+    } catch (e) {
+      console.warn('Error al leer alojamientos locales:', e);
+    }
+
+    if (!departamento || departamento === 'Todos') return baseList;
+    return baseList.filter(a => a.departamento.toLowerCase() === departamento.toLowerCase());
   },
 
   async obtenerPorId(id: string): Promise<Alojamiento> {
+    // 1. Intentar obtener desde la API Gateway (MS-01)
     try {
       const response = await httpClient.get<any>(ENDPOINTS.ALOJAMIENTOS.DETALLE(id));
-      if (response.data) return normalizarAlojamiento(response.data);
-    } catch {
-      // Fallback
+      if (response.data && response.data.idAlojamiento) {
+        return normalizarAlojamiento(response.data);
+      }
+    } catch (e) {
+      // No encontrado en backend, buscar en cache local o demo
     }
 
+    // 2. Buscar en almacenamiento local personalizado
+    try {
+      const customRaw = localStorage.getItem('alojate_alojamientos_custom');
+      if (customRaw) {
+        const customItems: Alojamiento[] = JSON.parse(customRaw);
+        const foundCustom = customItems.find(a => a.idAlojamiento === id);
+        if (foundCustom) return foundCustom;
+      }
+    } catch {
+      // Ignorar error de parsing
+    }
+
+    // 3. Buscar en dataset demo sembrado
     const found = ALOJAMIENTOS_DEMO.find(a => a.idAlojamiento === id);
-    if (!found) throw new Error('Alojamiento no encontrado');
-    return found;
+    if (found) return found;
+
+    throw new Error(`Alojamiento con ID ${id} no encontrado`);
+  },
+
+  guardarAlojamientoLocal(alojamiento: Alojamiento): void {
+    try {
+      const customRaw = localStorage.getItem('alojate_alojamientos_custom');
+      const customItems: Alojamiento[] = customRaw ? JSON.parse(customRaw) : [];
+      const actualizados = [alojamiento, ...customItems.filter(a => a.idAlojamiento !== alojamiento.idAlojamiento)];
+      localStorage.setItem('alojate_alojamientos_custom', JSON.stringify(actualizados));
+    } catch (e) {
+      console.warn('No se pudo guardar en localStorage:', e);
+    }
   }
 };

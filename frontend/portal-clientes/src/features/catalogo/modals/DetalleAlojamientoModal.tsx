@@ -26,20 +26,17 @@ export const DetalleAlojamientoModal: React.FC<DetalleAlojamientoModalProps> = (
   const esHotel = alojamiento.modalidad === 'HOTEL_HOSTAL';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 backdrop-blur-md transition-all duration-300 animate-fade-in overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/60 backdrop-blur-md transition-all duration-300 animate-fade-in overflow-y-auto">
       <div className="absolute inset-0" onClick={onClose} />
 
-      {/* Blue Liquid Glass Modal Container */}
-      <div className="relative w-full max-w-4xl my-8 p-6 sm:p-8 rounded-3xl liquid-glass-blue text-white shadow-2xl z-10 animate-modal-in border border-cyan-500/30 overflow-hidden">
+      {/* Main Container - Royal Blue & White / Dark Slate matching image.png */}
+      <div className="relative w-full max-w-4xl my-8 p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-2xl z-10 animate-modal-in border border-slate-200/80 dark:border-slate-800 overflow-hidden">
         
-        {/* Glow Effects */}
-        <div className="absolute -top-20 -right-20 w-64 h-64 bg-cyan-500/15 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-brand-500/15 rounded-full blur-3xl pointer-events-none" />
-
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 p-2 rounded-full bg-black/40 hover:bg-black/60 text-slate-300 hover:text-white transition z-20 backdrop-blur-md"
+          className="absolute top-5 right-5 p-2 rounded-xl bg-black/40 hover:bg-black/60 text-white transition z-20 backdrop-blur-md"
+          title="Cerrar modal"
         >
           <X className="w-5 h-5" />
         </button>
@@ -56,7 +53,7 @@ export const DetalleAlojamientoModal: React.FC<DetalleAlojamientoModalProps> = (
           <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between">
             <div>
               <div className="flex items-center gap-2 mb-2 flex-wrap">
-                <span className="px-3 py-1 rounded-full bg-brand-600/90 text-white text-[11px] font-bold uppercase tracking-wider backdrop-blur-md inline-block">
+                <span className="px-3 py-1 rounded-full bg-blue-600/90 text-white text-[11px] font-bold uppercase tracking-wider backdrop-blur-md inline-block">
                   {(alojamiento.tipoPropiedad || 'Alojamiento').replace('_', ' ')}
                 </span>
                 
@@ -75,7 +72,7 @@ export const DetalleAlojamientoModal: React.FC<DetalleAlojamientoModalProps> = (
                 {alojamiento.titulo}
               </h2>
               <div className="flex items-center gap-2 text-xs text-slate-300 mt-1">
-                <MapPin className="w-4 h-4 text-brand-400 shrink-0" />
+                <MapPin className="w-4 h-4 text-blue-400 shrink-0" />
                 <span>{alojamiento.direccion}, {alojamiento.ciudad} - {alojamiento.departamento}</span>
               </div>
             </div>
@@ -97,8 +94,8 @@ export const DetalleAlojamientoModal: React.FC<DetalleAlojamientoModalProps> = (
           {/* Left Column: Description, Rooms & Services */}
           <div className="md:col-span-2 space-y-5">
             <div>
-              <h4 className="font-bold text-cyan-300 uppercase tracking-wider text-[11px] mb-2">Acerca del Alojamiento</h4>
-              <p className="text-slate-200 leading-relaxed text-xs font-normal">
+              <h4 className="font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider text-[11px] mb-2">Acerca del Alojamiento</h4>
+              <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-xs font-normal">
                 {alojamiento.descripcion}
               </p>
             </div>
@@ -107,7 +104,7 @@ export const DetalleAlojamientoModal: React.FC<DetalleAlojamientoModalProps> = (
             {esHotel && alojamiento.unidades && alojamiento.unidades.length > 0 && (
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <h4 className="font-bold text-cyan-300 uppercase tracking-wider text-[11px]">
+                  <h4 className="font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider text-[11px]">
                     Selecciona tu Tipo de Habitación
                   </h4>
                   <span className="text-[10px] text-slate-400 font-medium">
@@ -124,36 +121,36 @@ export const DetalleAlojamientoModal: React.FC<DetalleAlojamientoModalProps> = (
                         onClick={() => setSelectedUnidadId(u.idUnidad)}
                         className={`p-3.5 rounded-2xl cursor-pointer transition-all border ${
                           isSelected
-                            ? 'bg-brand-950/70 border-brand-400 shadow-md shadow-brand-500/20'
-                            : 'bg-slate-900/60 border-slate-700/60 hover:border-slate-500'
+                            ? 'bg-blue-50/80 dark:bg-blue-950/60 border-blue-500 shadow-md shadow-blue-500/20'
+                            : 'bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800 hover:border-blue-400'
                         }`}
                       >
                         <div className="flex items-start justify-between">
                           <div>
                             <div className="flex items-center gap-2">
-                              <span className="font-semibold text-white text-xs">{u.nombre}</span>
-                              <span className="px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 text-[10px] font-bold">
+                              <span className="font-semibold text-slate-900 dark:text-white text-xs">{u.nombre}</span>
+                              <span className="px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-[10px] font-bold">
                                 {u.inventarioTotal} disponibles
                               </span>
                             </div>
-                            <div className="flex items-center gap-3 text-[11px] text-slate-300 mt-1.5">
+                            <div className="flex items-center gap-3 text-[11px] text-slate-500 dark:text-slate-400 mt-1.5">
                               <span className="flex items-center gap-1">
-                                <Users className="w-3.5 h-3.5 text-cyan-400" />
+                                <Users className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                                 {u.capacidadPersonas} huéspedes
                               </span>
                               <span className="flex items-center gap-1">
-                                <Bed className="w-3.5 h-3.5 text-cyan-400" />
+                                <Bed className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                                 {u.cantidadCamas} camas
                               </span>
                               <span className="flex items-center gap-1">
-                                <Bath className="w-3.5 h-3.5 text-cyan-400" />
+                                <Bath className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                                 {u.cantidadBanios} baño
                               </span>
                             </div>
                           </div>
 
                           <div className="text-right">
-                            <span className="font-mono text-base font-bold text-brand-300">{u.precioNoche} BOB</span>
+                            <span className="font-mono text-base font-bold text-blue-600 dark:text-blue-400">{u.precioNoche} BOB</span>
                             <span className="block text-[10px] text-slate-400">/ noche</span>
                           </div>
                         </div>
@@ -165,31 +162,31 @@ export const DetalleAlojamientoModal: React.FC<DetalleAlojamientoModalProps> = (
             )}
 
             {/* Políticas y Horarios */}
-            <div className="p-3.5 rounded-2xl bg-slate-900/60 border border-cyan-500/20 space-y-2">
-              <div className="flex items-center gap-4 text-slate-300">
+            <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-800 space-y-2">
+              <div className="flex items-center gap-4 text-slate-600 dark:text-slate-300">
                 <div className="flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5 text-cyan-400" />
-                  <span>Check-in: <strong className="text-white">{alojamiento.horarioEntrada || '14:00'}</strong></span>
+                  <Clock className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                  <span>Check-in: <strong className="text-slate-900 dark:text-white">{alojamiento.horarioEntrada || '14:00'}</strong></span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5 text-cyan-400" />
-                  <span>Check-out: <strong className="text-white">{alojamiento.horarioSalida || '11:00'}</strong></span>
+                  <Clock className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                  <span>Check-out: <strong className="text-slate-900 dark:text-white">{alojamiento.horarioSalida || '11:00'}</strong></span>
                 </div>
               </div>
 
               {alojamiento.politicas && (
-                <p className="text-[11px] text-slate-300 pt-1.5 border-t border-slate-800">
-                  <strong className="text-cyan-300">Normas del Hospedaje:</strong> {alojamiento.politicas}
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 pt-1.5 border-t border-slate-200 dark:border-slate-700/80">
+                  <strong className="text-blue-600 dark:text-blue-400">Normas del Hospedaje:</strong> {alojamiento.politicas}
                 </p>
               )}
             </div>
 
             <div>
-              <h4 className="font-bold text-cyan-300 uppercase tracking-wider text-[11px] mb-2">Servicios &amp; Amenidades</h4>
+              <h4 className="font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider text-[11px] mb-2">Servicios &amp; Amenidades</h4>
               <div className="grid grid-cols-2 gap-2">
                 {alojamiento.servicios.map((s) => (
-                  <div key={s.idServicio} className="flex items-center gap-2 p-2 rounded-xl bg-slate-900/60 border border-slate-700/50 text-slate-200">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                  <div key={s.idServicio} className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
                     <span>{s.nombre}</span>
                   </div>
                 ))}
@@ -197,12 +194,12 @@ export const DetalleAlojamientoModal: React.FC<DetalleAlojamientoModalProps> = (
             </div>
 
             {alojamiento.nombreAnfitrion && (
-              <div className="p-3 rounded-2xl bg-slate-900/50 border border-cyan-500/20 flex items-center justify-between">
+              <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
                 <div>
                   <span className="text-[10px] text-slate-400 uppercase font-bold block">Anfitrión Responsable</span>
-                  <span className="text-xs font-bold text-white">{alojamiento.nombreAnfitrion}</span>
+                  <span className="text-xs font-bold text-slate-900 dark:text-white">{alojamiento.nombreAnfitrion}</span>
                 </div>
-                <span className="px-2.5 py-1 rounded-full bg-cyan-500/20 text-cyan-300 text-[10px] font-bold">
+                <span className="px-2.5 py-1 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-[10px] font-bold">
                   Verificado
                 </span>
               </div>
@@ -210,31 +207,31 @@ export const DetalleAlojamientoModal: React.FC<DetalleAlojamientoModalProps> = (
           </div>
 
           {/* Right Column: Units & Booking Box */}
-          <div className="p-5 rounded-2xl bg-slate-900/80 border border-cyan-500/30 flex flex-col justify-between space-y-4">
+          <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-800 flex flex-col justify-between space-y-4">
             <div>
               <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">
                 {esHotel ? 'Habitación Elegida' : 'Propiedad Seleccionada'}
               </span>
-              <h5 className="font-serif text-lg font-bold text-white mb-2">
+              <h5 className="font-serif text-lg font-bold text-slate-900 dark:text-white mb-2">
                 {unidadActiva?.nombre || alojamiento.unidades[0]?.nombre || 'Hospedaje Completo'}
               </h5>
               
-              <div className="space-y-2 text-slate-300 text-[11px]">
+              <div className="space-y-2 text-slate-600 dark:text-slate-300 text-[11px]">
                 <div className="flex items-center gap-2">
-                  <Users className="w-3.5 h-3.5 text-cyan-400" />
+                  <Users className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                   <span>Capacidad: {unidadActiva?.capacidadPersonas || 4} personas</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Bed className="w-3.5 h-3.5 text-cyan-400" />
+                  <Bed className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                   <span>Camas: {unidadActiva?.cantidadCamas || 2}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Bath className="w-3.5 h-3.5 text-cyan-400" />
+                  <Bath className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                   <span>Baños: {unidadActiva?.cantidadBanios || 1}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-                  <span className="text-emerald-300 font-medium">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                  <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
                     {esHotel
                       ? `${unidadActiva?.inventarioTotal || 1} unidades disponibles`
                       : 'Oferta exclusiva (1 unidad única)'}
@@ -243,17 +240,17 @@ export const DetalleAlojamientoModal: React.FC<DetalleAlojamientoModalProps> = (
               </div>
             </div>
 
-            <div className="pt-4 border-t border-slate-800">
+            <div className="pt-4 border-t border-slate-200 dark:border-slate-700/80">
               <div className="flex items-baseline justify-between mb-3">
-                <span className="text-slate-400 text-xs">Tarifa por noche:</span>
-                <span className="text-2xl font-black text-white">
-                  {unidadActiva?.precioNoche ?? alojamiento.precioBaseNoche ?? 650} <span className="text-xs text-brand-400">BOB</span>
+                <span className="text-slate-500 dark:text-slate-400 text-xs">Tarifa por noche:</span>
+                <span className="text-2xl font-black text-slate-900 dark:text-white">
+                  {unidadActiva?.precioNoche ?? alojamiento.precioBaseNoche ?? 650} <span className="text-xs text-blue-600 dark:text-blue-400 font-mono">BOB</span>
                 </span>
               </div>
 
               <button
                 onClick={() => onIniciarReserva(alojamiento, unidadActiva)}
-                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-brand-600 to-blue-600 hover:from-brand-500 hover:to-blue-500 text-white font-bold text-xs shadow-lg shadow-brand-600/30 transition flex items-center justify-center gap-2"
+                className="w-full py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-lg shadow-blue-600/25 transition flex items-center justify-center gap-2 cursor-pointer"
               >
                 <span>Configurar Reserva</span>
                 <ArrowRight className="w-4 h-4" />

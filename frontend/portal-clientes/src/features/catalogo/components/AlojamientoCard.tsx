@@ -71,7 +71,7 @@ export const AlojamientoCard: React.FC<AlojamientoCardProps> = ({
 
           <h3
             onClick={() => onSelect(alojamiento)}
-            className="font-serif text-xl font-bold text-stone-900 dark:text-white line-clamp-1 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition cursor-pointer"
+            className="font-serif text-xl font-bold text-stone-900 dark:text-white line-clamp-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition cursor-pointer"
           >
             {alojamiento.titulo}
           </h3>

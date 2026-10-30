@@ -26,15 +26,15 @@ export const Navbar: React.FC<NavbarProps> = ({
           onClick={() => onChangeView('catalogo')}
           className="flex items-center gap-3 cursor-pointer group"
         >
-          <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-brand-700 via-brand-600 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-brand-600/30 group-hover:scale-105 transition-transform">
+          <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-blue-700 via-blue-600 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-blue-500/25 group-hover:scale-105 transition-transform">
             <Sun className="w-6 h-6" />
           </div>
           <div>
             <div className="flex items-center gap-1.5">
               <span className="font-serif text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-                Aloja<span className="text-brand-600 dark:text-brand-400">-Te</span>
+                Aloja<span className="text-blue-600 dark:text-blue-400">-Te</span>
               </span>
-              <span className="text-[10px] uppercase font-bold tracking-widest bg-brand-100 dark:bg-brand-950 text-brand-800 dark:text-brand-300 px-2 py-0.5 rounded-full border border-brand-200 dark:border-brand-800">
+              <span className="text-[10px] uppercase font-bold tracking-widest bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-800">
                 Bolivia
               </span>
             </div>
@@ -50,8 +50,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             onClick={() => onChangeView('catalogo')}
             className={`px-4 py-2 rounded-xl transition flex items-center gap-1.5 ${
               currentView === 'catalogo'
-                ? 'bg-white dark:bg-stone-800 text-brand-700 dark:text-brand-400 shadow-sm'
-                : 'text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-white'
+                ? 'bg-white dark:bg-slate-800 text-blue-700 dark:text-blue-400 shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             <Compass className="w-4 h-4" />
@@ -62,8 +62,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             onClick={() => onChangeView('mis-viajes')}
             className={`px-4 py-2 rounded-xl transition flex items-center gap-1.5 ${
               currentView === 'mis-viajes'
-                ? 'bg-white dark:bg-stone-800 text-brand-700 dark:text-brand-400 shadow-sm'
-                : 'text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-white'
+                ? 'bg-white dark:bg-slate-800 text-blue-700 dark:text-blue-400 shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             <KeyRound className="w-4 h-4" />
@@ -76,8 +76,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={() => onChangeView('anfitrion')}
               className={`px-4 py-2 rounded-xl transition flex items-center gap-1.5 ${
                 currentView === 'anfitrion'
-                  ? 'bg-white dark:bg-stone-800 text-brand-700 dark:text-brand-400 shadow-sm'
-                  : 'text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-white'
+                  ? 'bg-white dark:bg-slate-800 text-blue-700 dark:text-blue-400 shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               <DollarSign className="w-4 h-4" />

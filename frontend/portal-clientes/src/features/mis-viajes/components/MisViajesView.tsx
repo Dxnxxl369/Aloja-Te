@@ -78,7 +78,7 @@ export const MisViajesView: React.FC<MisViajesViewProps> = ({ reservas, onNuevaR
 
               <div className="flex flex-wrap items-center gap-4 text-xs text-stone-500 dark:text-stone-400 pt-1">
                 <span className="flex items-center gap-1">
-                  <Calendar className="w-3.5 h-3.5 text-brand-600" />
+                  <Calendar className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                   {reserva.checkIn} al {reserva.checkOut} ({reserva.nochesEstadia} noches)
                 </span>
                 <span className="font-bold text-stone-900 dark:text-white">

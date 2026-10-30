@@ -1,57 +1,37 @@
-# Dependencies
+# Exclusiones de carpetas auxiliares (solo backend, frontend y README en el repo)
+/aux-frontendMs1/
+/diagramas/
+/docs/
+/flujos-n8n/
+/nada/
+/scripts/
+/.github/
+
+# Dependencias y entornos
 node_modules/
 vendor/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
 .pnp
 .pnp.js
 
-# Python
-.venv/
-venv/
-ENV/
-env/
-__pycache__/
-*.py[cod]
-*$py.class
-
-# Build and compilation outputs
+# Salidas de compilación
+target/
 dist/
 dist-ssr/
 build/
-target/
 .angular/
 out/
-.next/
 *.class
 
-# Environment and secrets
-.env.local
-.env.*.local
-
-# Logs
-logs/
+# Logs y temporales
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-
-# IDE and Editor files
-.idea/
-.vscode/
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-.DS_Store
-Thumbs.db
-
-# Laravel
-storage/*.key
-.phpunit.result.cache
-
-# Temporary / OS
+logs/
 tmp/
 temp/
-temp_repo/
-aux-*/
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

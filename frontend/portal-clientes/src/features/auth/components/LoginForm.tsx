@@ -52,7 +52,7 @@ export const LoginForm: React.FC = () => {
             onChange={(e) => setEmail(e.target.value)}
             required
             placeholder="ejemplo@alojate.bo"
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-stone-50 dark:bg-slate-900/80 border border-stone-200 dark:border-slate-700/80 text-stone-900 dark:text-white placeholder-stone-400 dark:placeholder-slate-500 text-xs focus:outline-none focus:border-brand-500 transition"
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-stone-50 dark:bg-slate-900/80 border border-stone-200 dark:border-slate-700/80 text-stone-900 dark:text-white placeholder-stone-400 dark:placeholder-slate-500 text-xs focus:outline-none focus:border-blue-500 transition"
           />
         </div>
       </div>
@@ -67,14 +67,14 @@ export const LoginForm: React.FC = () => {
             onChange={(e) => setPassword(e.target.value)}
             required
             placeholder="••••••••"
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-stone-50 dark:bg-slate-900/80 border border-stone-200 dark:border-slate-700/80 text-stone-900 dark:text-white placeholder-stone-400 dark:placeholder-slate-500 text-xs focus:outline-none focus:border-brand-500 transition"
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-stone-50 dark:bg-slate-900/80 border border-stone-200 dark:border-slate-700/80 text-stone-900 dark:text-white placeholder-stone-400 dark:placeholder-slate-500 text-xs focus:outline-none focus:border-blue-500 transition"
           />
         </div>
       </div>
 
       <div className="flex items-center justify-between text-[11px] text-stone-500 dark:text-slate-400 pt-1">
         <span>¿Olvidaste tu contraseña?</span>
-        <span className="text-brand-600 dark:text-brand-400 font-semibold cursor-pointer hover:underline">
+        <span className="text-blue-600 dark:text-blue-400 font-semibold cursor-pointer hover:underline">
           Recuperar acceso
         </span>
       </div>
@@ -82,7 +82,7 @@ export const LoginForm: React.FC = () => {
       <button
         type="submit"
         disabled={loading}
-        className="w-full py-3 rounded-xl bg-gradient-to-r from-brand-600 to-blue-600 hover:from-brand-500 hover:to-blue-500 text-white font-bold text-xs shadow-md shadow-brand-600/30 transition flex items-center justify-center gap-2 disabled:opacity-50"
+        className="w-full py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-500/25 transition flex items-center justify-center gap-2 disabled:opacity-50"
       >
         {loading ? (
           <>
@@ -108,7 +108,7 @@ export const LoginForm: React.FC = () => {
               setEmail('lucia.suarez@alojate.bo');
               setPassword('Bolivia2026!');
             }}
-            className="p-2 rounded-xl border border-stone-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 hover:border-brand-500 text-left transition"
+            className="p-2 rounded-xl border border-stone-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 hover:border-blue-500 text-left transition"
           >
             <span className="font-bold text-stone-900 dark:text-white block">Huésped / Viajero</span>
             <span className="text-stone-500 dark:text-slate-400 font-mono text-[9px] truncate block">lucia.suarez@alojate.bo</span>
@@ -120,14 +120,14 @@ export const LoginForm: React.FC = () => {
               setEmail('anfitrion@alojate.bo');
               setPassword('Anfitrion1234!');
             }}
-            className="p-2 rounded-xl border border-stone-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 hover:border-brand-500 text-left transition"
+            className="p-2 rounded-xl border border-stone-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 hover:border-blue-500 text-left transition"
           >
-            <span className="font-bold text-brand-600 dark:text-brand-400 block">Anfitrión Propietario</span>
+            <span className="font-bold text-blue-600 dark:text-blue-400 block">Anfitrión Propietario</span>
             <span className="text-stone-500 dark:text-slate-400 font-mono text-[9px] truncate block">anfitrion@alojate.bo</span>
           </button>
         </div>
         <p className="text-[10px] text-stone-500 dark:text-slate-400 italic">
-          💡 Puedes consultar todas las cuentas de prueba en el archivo <code className="font-mono text-brand-600 dark:text-brand-400">usuarios.txt</code>.
+          💡 Puedes consultar todas las cuentas de prueba en el archivo <code className="font-mono text-blue-600 dark:text-blue-400">usuarios.txt</code>.
         </p>
       </div>
     </form>

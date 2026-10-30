@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../../../core/auth/AuthContext';
 import { LoginForm } from '../components/LoginForm';
 import { RegistroForm } from '../components/RegistroForm';
-import { X, Sparkles } from 'lucide-react';
+import { X, Sparkles, KeyRound } from 'lucide-react';
 
 export const AuthLiquidModal: React.FC = () => {
   const { isAuthModalOpen, closeAuthModal, authModalMode } = useAuth();
@@ -11,69 +11,68 @@ export const AuthLiquidModal: React.FC = () => {
   if (!isAuthModalOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/75 backdrop-blur-md transition-all duration-300 animate-fade-in overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/60 backdrop-blur-md transition-all duration-300 animate-fade-in overflow-y-auto">
       {/* Click outside backdrop */}
       <div className="absolute inset-0" onClick={closeAuthModal} />
 
-      {/* Bimodal Liquid Glass Modal Container */}
-      <div className="relative w-full max-w-lg my-6 p-6 sm:p-8 rounded-3xl bg-white/95 dark:bg-[#111722]/95 text-stone-900 dark:text-white shadow-2xl z-10 animate-modal-in overflow-hidden border border-stone-200/90 dark:border-cyan-500/30 backdrop-blur-2xl transition-colors duration-300">
+      {/* Main Container - Royal Blue & White / Dark Slate matching image.png */}
+      <div className="relative w-full max-w-lg my-6 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 rounded-3xl shadow-2xl border border-slate-200/80 dark:border-slate-800 z-10 overflow-hidden animate-modal-in flex flex-col p-6 sm:p-8">
         
-        {/* Glow decoration */}
-        <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-brand-500/10 dark:bg-cyan-500/10 blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-16 -left-16 w-48 h-48 rounded-full bg-blue-500/10 dark:bg-brand-500/15 blur-3xl pointer-events-none" />
-
         {/* Header */}
-        <div className="flex items-start justify-between mb-6">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="w-2 h-2 rounded-full bg-brand-600 dark:bg-cyan-400 animate-pulse" />
-              <span className="text-[10px] font-bold uppercase tracking-widest text-brand-700 dark:text-cyan-300 flex items-center gap-1">
-                <Sparkles className="w-3 h-3 text-brand-600 dark:text-cyan-400" /> Aloja-Te Bolivia
-              </span>
+        <div className="flex items-start justify-between mb-5">
+          <div className="flex items-start gap-3.5">
+            <div className="w-10 h-10 rounded-2xl bg-blue-600 text-white font-bold flex items-center justify-center text-sm shadow-md shadow-blue-500/25 shrink-0 mt-0.5">
+              <Sparkles className="w-5 h-5 text-white" />
             </div>
-            <h3 className="font-serif text-2xl font-bold text-stone-900 dark:text-white tracking-tight">
-              {tab === 'login' ? 'Bienvenido de Vuelta' : 'Crear tu Cuenta'}
-            </h3>
-            <p className="text-xs text-stone-500 dark:text-slate-300 mt-0.5">
-              {tab === 'login'
-                ? 'Accede para gestionar tus reservas o tus alojamientos'
-                : 'Únete a la red nacional de hospitalidad boliviana'}
-            </p>
+            <div>
+              <span className="text-[11px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 block">
+                ALOJA-TE BOLIVIA • ACCESO SEGURO
+              </span>
+              <h3 className="font-serif text-2xl font-bold text-slate-900 dark:text-white leading-tight">
+                {tab === 'login' ? 'Bienvenido de Vuelta' : 'Crea tu Cuenta'}
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                {tab === 'login'
+                  ? 'Accede para gestionar tus reservas o tus alojamientos'
+                  : 'Únete a la red nacional de hospitalidad boliviana'}
+              </p>
+            </div>
           </div>
 
           <button
             onClick={closeAuthModal}
-            className="p-1.5 rounded-full bg-stone-100 hover:bg-stone-200 dark:bg-white/10 dark:hover:bg-white/20 text-stone-500 dark:text-slate-300 hover:text-stone-900 dark:hover:text-white transition"
+            className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-700 dark:hover:text-white transition"
+            title="Cerrar modal"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Tabs switcher */}
-        <div className="flex items-center p-1 rounded-2xl bg-stone-100 dark:bg-slate-900/80 border border-stone-200 dark:border-slate-700/60 mb-5 text-xs font-semibold">
+        {/* Tabs Switcher */}
+        <div className="flex items-center p-1 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/60 mb-5 text-xs font-semibold">
           <button
             onClick={() => setTab('login')}
-            className={`flex-1 py-2 rounded-xl transition ${
+            className={`flex-1 py-2.5 rounded-xl transition ${
               tab === 'login'
-                ? 'bg-gradient-to-r from-brand-600 to-blue-600 text-white shadow-sm'
-                : 'text-stone-600 dark:text-slate-400 hover:text-stone-900 dark:hover:text-white'
+                ? 'bg-blue-600 text-white shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             Iniciar Sesión
           </button>
           <button
             onClick={() => setTab('register')}
-            className={`flex-1 py-2 rounded-xl transition ${
+            className={`flex-1 py-2.5 rounded-xl transition ${
               tab === 'register'
-                ? 'bg-gradient-to-r from-brand-600 to-blue-600 text-white shadow-sm'
-                : 'text-stone-600 dark:text-slate-400 hover:text-stone-900 dark:hover:text-white'
+                ? 'bg-blue-600 text-white shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             Registrarse
           </button>
         </div>
 
-        {/* Dynamic form */}
+        {/* Dynamic Form */}
         <div className="transition-all duration-300">
           {tab === 'login' ? <LoginForm /> : <RegistroForm />}
         </div>

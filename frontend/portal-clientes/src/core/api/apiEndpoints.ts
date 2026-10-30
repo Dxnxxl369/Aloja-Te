@@ -16,11 +16,13 @@ export const ENDPOINTS = {
   // MS-02: Reservas y Estadías (DynamoDB NoSQL)
   RESERVAS: {
     CREAR: `${API_BASE_URL}/api/v1/reservas`,
+    LISTAR_TODAS: `${API_BASE_URL}/api/v1/reservas`,
     OBTENER: (id: string) => `${API_BASE_URL}/api/v1/reservas/${id}`,
     CONFIRMAR_PAGO: (id: string) => `${API_BASE_URL}/api/v1/reservas/${id}/confirmar-pago`,
     CHECK_IN: (id: string) => `${API_BASE_URL}/api/v1/reservas/${id}/check-in`,
     CHECK_OUT: (id: string) => `${API_BASE_URL}/api/v1/reservas/${id}/check-out`,
     CLIENTE_HISTORIAL: (clienteId: string) => `${API_BASE_URL}/api/v1/reservas/cliente/${clienteId}`,
+    ANFITRION_HISTORIAL: (anfitrionId: string) => `${API_BASE_URL}/api/v1/reservas/anfitrion/${anfitrionId}`,
   },
 
   // MS-03: Comercial y Financiero (Laravel DDD)

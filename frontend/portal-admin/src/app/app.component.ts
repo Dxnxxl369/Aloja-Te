@@ -80,39 +80,39 @@ export interface ReporteGenerativo {
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div class="min-h-screen flex bg-carbon-950 text-stone-100 font-sans selection:bg-brand-500/30 selection:text-white">
+    <div class="min-h-screen flex bg-slate-50 dark:bg-carbon-950 text-slate-900 dark:text-stone-100 font-sans selection:bg-blue-600/30 selection:text-white transition-colors duration-300">
       
       <!-- ========================================== -->
       <!-- BARRA LATERAL (SIDEBAR INSTITUCIONAL)      -->
       <!-- ========================================== -->
-      <aside class="w-72 border-r border-stone-800/80 bg-carbon-900/95 flex flex-col justify-between shrink-0 relative z-20">
+      <aside class="w-72 border-r border-slate-200/80 dark:border-stone-800/80 bg-white dark:bg-carbon-900/95 flex flex-col justify-between shrink-0 relative z-20 transition-colors">
         <div>
           <!-- Logotipo Institucional -->
-          <div class="h-20 px-6 border-b border-stone-800/80 flex items-center gap-3">
-            <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-brand-600 to-blue-500 flex items-center justify-center text-white font-serif font-black text-xl shadow-lg shadow-brand-600/30">
+          <div class="h-20 px-6 border-b border-slate-200/80 dark:border-stone-800/80 flex items-center gap-3.5">
+            <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-blue-700 via-blue-600 to-indigo-500 flex items-center justify-center text-white font-serif font-black text-xl shadow-lg shadow-blue-500/25 shrink-0">
               A
             </div>
             <div>
               <div class="flex items-center gap-2">
-                <span class="font-serif text-xl font-bold tracking-tight text-white">Aloja-Te</span>
-                <span class="text-[9px] uppercase font-bold tracking-widest bg-brand-500/20 text-brand-300 px-2 py-0.5 rounded-full border border-brand-500/30">
+                <span class="font-serif text-xl font-bold tracking-tight text-slate-900 dark:text-white">Aloja-Te</span>
+                <span class="text-[9px] uppercase font-bold tracking-widest bg-blue-500/10 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded-full border border-blue-500/30">
                   NACIONAL
                 </span>
               </div>
-              <p class="text-[10px] text-stone-400 font-medium tracking-wide">Dirección de Auditoría & Control</p>
+              <p class="text-[10px] text-slate-500 dark:text-stone-400 font-medium tracking-wide">Dirección de Auditoría & Control</p>
             </div>
           </div>
 
           <!-- Navegación Principal -->
-          <div class="p-4 space-y-1">
-            <span class="text-[10px] font-bold text-stone-500 uppercase tracking-wider px-3 mb-2 block">
+          <div class="p-4 space-y-1.5">
+            <span class="text-[10px] font-bold text-slate-400 dark:text-stone-500 uppercase tracking-wider px-3 mb-2 block">
               Módulos de Gestión
             </span>
 
             <!-- Tab 1: Dashboard -->
             <button
-              (click)="activeTab = 'dashboard'"
-              [class]="activeTab === 'dashboard' ? 'w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-blue-600 text-white font-semibold text-xs shadow-md shadow-brand-600/30 transition-all' : 'w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-stone-400 hover:text-white hover:bg-stone-800/50 font-medium text-xs transition-all'"
+              (click)="cambiarTab('dashboard')"
+              [class]="activeTab === 'dashboard' ? 'w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold text-xs shadow-lg shadow-blue-500/25 scale-[1.01] transition-all' : 'w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-600 dark:text-stone-400 hover:text-blue-600 dark:hover:text-white hover:bg-blue-50 dark:hover:bg-stone-800/50 font-medium text-xs transition-all'"
             >
               <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
@@ -122,8 +122,8 @@ export interface ReporteGenerativo {
 
             <!-- Tab 2: Contabilidad -->
             <button
-              (click)="activeTab = 'contabilidad'"
-              [class]="activeTab === 'contabilidad' ? 'w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-blue-600 text-white font-semibold text-xs shadow-md shadow-brand-600/30 transition-all' : 'w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-stone-400 hover:text-white hover:bg-stone-800/50 font-medium text-xs transition-all'"
+              (click)="cambiarTab('contabilidad')"
+              [class]="activeTab === 'contabilidad' ? 'w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold text-xs shadow-lg shadow-blue-500/25 scale-[1.01] transition-all' : 'w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-600 dark:text-stone-400 hover:text-blue-600 dark:hover:text-white hover:bg-blue-50 dark:hover:bg-stone-800/50 font-medium text-xs transition-all'"
             >
               <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
@@ -133,22 +133,22 @@ export interface ReporteGenerativo {
 
             <!-- Tab 3: Alojamientos -->
             <button
-              (click)="activeTab = 'alojamientos'"
-              [class]="activeTab === 'alojamientos' ? 'w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-blue-600 text-white font-semibold text-xs shadow-md shadow-brand-600/30 transition-all' : 'w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-stone-400 hover:text-white hover:bg-stone-800/50 font-medium text-xs transition-all'"
+              (click)="cambiarTab('alojamientos')"
+              [class]="activeTab === 'alojamientos' ? 'w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold text-xs shadow-lg shadow-blue-500/25 scale-[1.01] transition-all' : 'w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-600 dark:text-stone-400 hover:text-blue-600 dark:hover:text-white hover:bg-blue-50 dark:hover:bg-stone-800/50 font-medium text-xs transition-all'"
             >
               <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
               </svg>
               <div class="flex-1 flex items-center justify-between">
                 <span>Verificación de Alojamientos</span>
-                <span class="px-1.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 text-[10px] font-bold">{{ conteoPendientes() }} pend.</span>
+                <span class="px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 text-[10px] font-bold border border-blue-200 dark:border-blue-800">{{ conteoPendientes() }} pend.</span>
               </div>
             </button>
 
             <!-- Tab 4: Liquidaciones -->
             <button
-              (click)="activeTab = 'liquidaciones'"
-              [class]="activeTab === 'liquidaciones' ? 'w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-blue-600 text-white font-semibold text-xs shadow-md shadow-brand-600/30 transition-all' : 'w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-stone-400 hover:text-white hover:bg-stone-800/50 font-medium text-xs transition-all'"
+              (click)="cambiarTab('liquidaciones')"
+              [class]="activeTab === 'liquidaciones' ? 'w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold text-xs shadow-lg shadow-blue-500/25 scale-[1.01] transition-all' : 'w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-600 dark:text-stone-400 hover:text-blue-600 dark:hover:text-white hover:bg-blue-50 dark:hover:bg-stone-800/50 font-medium text-xs transition-all'"
             >
               <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -158,37 +158,40 @@ export interface ReporteGenerativo {
 
             <!-- Tab 5: Reportes IA -->
             <button
-              (click)="activeTab = 'reportes-ia'"
-              [class]="activeTab === 'reportes-ia' ? 'w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 text-white font-semibold text-xs shadow-md shadow-indigo-600/30 transition-all' : 'w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-stone-400 hover:text-white hover:bg-stone-800/50 font-medium text-xs transition-all'"
+              (click)="cambiarTab('reportes-ia')"
+              [class]="activeTab === 'reportes-ia' ? 'w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold text-xs shadow-lg shadow-indigo-600/30 scale-[1.01] transition-all' : 'w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-600 dark:text-stone-400 hover:text-blue-600 dark:hover:text-white hover:bg-blue-50 dark:hover:bg-stone-800/50 font-medium text-xs transition-all'"
             >
-              <svg class="w-4 h-4 shrink-0 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4 shrink-0 text-cyan-500 dark:text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
               <div class="flex-1 flex items-center justify-between">
                 <span>Reportes Inteligentes</span>
-                <span class="px-1.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 text-[10px] font-bold">IA</span>
+                <span class="px-2 py-0.5 rounded-full bg-cyan-100 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300 text-[10px] font-bold border border-cyan-200 dark:border-cyan-800">IA</span>
               </div>
             </button>
           </div>
         </div>
 
         <!-- Perfil Administrativo & Enlace de Retorno -->
-        <div class="p-4 border-t border-stone-800/80 space-y-3">
-          <div class="p-3 rounded-2xl bg-stone-900/80 border border-stone-800/80 flex items-center gap-3">
-            <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-stone-700 to-stone-600 border border-white/10 flex items-center justify-center font-bold text-xs text-white">
-              AQ
+        <div class="p-4 border-t border-slate-200/80 dark:border-stone-800/80 space-y-3">
+          <div class="p-3 rounded-2xl bg-slate-50 dark:bg-stone-900/80 border border-slate-200 dark:border-stone-800/80 flex items-center gap-3">
+            <div class="relative">
+              <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-700 to-indigo-600 border border-white/10 flex items-center justify-center font-bold text-xs text-white shadow-md">
+                AQ
+              </div>
+              <span class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-white dark:border-stone-900 animate-pulse"></span>
             </div>
             <div class="overflow-hidden">
-              <h5 class="text-xs font-bold text-white truncate">Lic. Andrea Quiroga</h5>
-              <p class="text-[10px] text-chiquitania-400 truncate">Auditora General</p>
+              <h5 class="text-xs font-bold text-slate-900 dark:text-white truncate">Lic. Andrea Quiroga</h5>
+              <p class="text-[10px] text-blue-600 dark:text-blue-400 truncate font-medium">Auditora General</p>
             </div>
           </div>
 
           <a
             href="http://localhost:3000"
-            class="w-full py-2 px-3 rounded-xl bg-stone-900/60 hover:bg-stone-800/80 border border-stone-800 text-[11px] text-stone-400 hover:text-stone-200 font-semibold flex items-center justify-center gap-2 transition"
+            class="w-full py-2.5 px-3 rounded-xl bg-slate-50 dark:bg-stone-900/60 hover:bg-blue-50 dark:hover:bg-blue-600/10 border border-slate-200 dark:border-stone-800 text-[11px] text-slate-600 dark:text-stone-400 hover:text-blue-600 dark:hover:text-blue-400 font-semibold flex items-center justify-center gap-2 transition group"
           >
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
             <span>Ir al Catálogo Público</span>
@@ -202,30 +205,47 @@ export interface ReporteGenerativo {
       <div class="flex-1 flex flex-col min-w-0 overflow-y-auto custom-scrollbar">
         
         <!-- Barra Superior (Header Ejecutivo) -->
-        <header class="h-20 border-b border-stone-800/80 bg-carbon-900/80 backdrop-blur-md px-8 flex items-center justify-between sticky top-0 z-10">
+        <header class="h-20 border-b border-slate-200/80 dark:border-stone-800/80 bg-white/90 dark:bg-carbon-900/80 backdrop-blur-md px-8 flex items-center justify-between sticky top-0 z-10 transition-colors">
           <div>
-            <h1 class="font-serif text-xl font-bold text-white tracking-tight">
+            <h1 class="font-serif text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
               {{ obtenerTituloVista() }}
             </h1>
-            <p class="text-xs text-stone-400 mt-0.5">
+            <p class="text-xs text-slate-500 dark:text-stone-400 mt-0.5">
               {{ obtenerSubtituloVista() }}
             </p>
           </div>
 
-          <div class="flex items-center gap-4">
+          <div class="flex items-center gap-3">
             <!-- Indicador Operativo -->
-            <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs font-semibold">
-              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <div class="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-600 dark:text-emerald-400 text-xs font-semibold shadow-sm">
+              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
               <span>Operaciones en Línea</span>
             </div>
 
             <!-- Selector de Período Fiscal -->
-            <div class="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-stone-900 border border-stone-800 text-xs text-stone-300">
-              <svg class="w-3.5 h-3.5 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-50 dark:bg-stone-900/90 border border-slate-200 dark:border-stone-800 text-xs text-slate-700 dark:text-stone-300">
+              <svg class="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
               <span class="font-medium">Gestión Fiscal 2026 — Octubre</span>
             </div>
+
+            <!-- Selector de Modo Claro / Modo Oscuro con Persistencia -->
+            <button
+              type="button"
+              (click)="toggleTheme()"
+              [title]="isDarkMode ? 'Cambiar a Modo Claro' : 'Cambiar a Modo Oscuro'"
+              class="px-3.5 py-1.5 rounded-xl border transition flex items-center gap-2 text-xs font-semibold shadow-sm cursor-pointer"
+              [class]="isDarkMode ? 'bg-stone-900 border-stone-800 text-stone-300 hover:text-white hover:bg-stone-800' : 'bg-white border-slate-300 text-slate-700 hover:text-slate-900 hover:bg-slate-100'"
+            >
+              <svg *ngIf="isDarkMode" class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+              <svg *ngIf="!isDarkMode" class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+              </svg>
+              <span>{{ isDarkMode ? 'Modo Oscuro' : 'Modo Claro' }}</span>
+            </button>
           </div>
         </header>
 
@@ -235,7 +255,7 @@ export interface ReporteGenerativo {
           <!-- ======================================================== -->
           <!-- VISTA 1: PANEL GENERAL (DASHBOARD EJECUTIVO)             -->
           <!-- ======================================================== -->
-          <div *ngIf="activeTab === 'dashboard'" class="space-y-8">
+          <div *ngIf="activeTab === 'dashboard'" class="space-y-8 animate-fade-in">
             
             <!-- Tarjetas de Métricas Principales -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -243,18 +263,18 @@ export interface ReporteGenerativo {
               <!-- Tarjeta 1: Volumen Transaccional -->
               <div class="p-5 rounded-2xl liquid-card liquid-card-hover space-y-3">
                 <div class="flex items-center justify-between">
-                  <span class="text-[11px] font-bold text-stone-400 uppercase tracking-wider">Volumen Bruto Procesado</span>
-                  <div class="w-8 h-8 rounded-xl bg-brand-500/15 border border-brand-500/30 flex items-center justify-center text-brand-400">
+                  <span class="text-[11px] font-bold text-slate-500 dark:text-stone-400 uppercase tracking-wider">Volumen Bruto Procesado</span>
+                  <div class="w-9 h-9 rounded-xl bg-blue-500/15 border border-blue-500/30 flex items-center justify-center text-blue-600 dark:text-blue-400 shadow-sm">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
                 </div>
                 <div>
-                  <div class="text-2xl font-black text-white font-sans tracking-tight">184,250.00 BOB</div>
-                  <div class="flex items-center gap-1.5 mt-1 text-[11px] text-emerald-400 font-semibold">
-                    <span>↑ +14.2%</span>
-                    <span class="text-stone-500 font-normal">respecto al mes anterior</span>
+                  <div class="text-3xl font-black text-slate-900 dark:text-white font-sans tracking-tight">184,250.00 BOB</div>
+                  <div class="flex items-center gap-1.5 mt-1.5 text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">
+                    <span class="px-1.5 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/30">↑ +14.2%</span>
+                    <span class="text-slate-500 dark:text-stone-500 font-normal">respecto al mes anterior</span>
                   </div>
                 </div>
               </div>
@@ -262,18 +282,18 @@ export interface ReporteGenerativo {
               <!-- Tarjeta 2: Ingresos por Comisiones -->
               <div class="p-5 rounded-2xl liquid-card liquid-card-hover space-y-3">
                 <div class="flex items-center justify-between">
-                  <span class="text-[11px] font-bold text-stone-400 uppercase tracking-wider">Ingresos por Comisiones</span>
-                  <div class="w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                  <span class="text-[11px] font-bold text-slate-500 dark:text-stone-400 uppercase tracking-wider">Ingresos por Comisiones</span>
+                  <div class="w-9 h-9 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shadow-sm">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                     </svg>
                   </div>
                 </div>
                 <div>
-                  <div class="text-2xl font-black text-emerald-400 font-sans tracking-tight">+18,425.00 BOB</div>
-                  <div class="flex items-center gap-1.5 mt-1 text-[11px] text-emerald-400 font-semibold">
-                    <span>10% tasa estándar</span>
-                    <span class="text-stone-500 font-normal">ingreso neto</span>
+                  <div class="text-3xl font-black text-emerald-600 dark:text-emerald-400 font-sans tracking-tight">+18,425.00 BOB</div>
+                  <div class="flex items-center gap-1.5 mt-1.5 text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">
+                    <span class="px-1.5 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/30">10% estándar</span>
+                    <span class="text-slate-500 dark:text-stone-500 font-normal">ingreso neto</span>
                   </div>
                 </div>
               </div>
@@ -281,18 +301,18 @@ export interface ReporteGenerativo {
               <!-- Tarjeta 3: Liquidaciones Pagadas -->
               <div class="p-5 rounded-2xl liquid-card liquid-card-hover space-y-3">
                 <div class="flex items-center justify-between">
-                  <span class="text-[11px] font-bold text-stone-400 uppercase tracking-wider">Liquidado a Anfitriones</span>
-                  <div class="w-8 h-8 rounded-xl bg-chiquitania-500/15 border border-chiquitania-500/30 flex items-center justify-center text-chiquitania-400">
+                  <span class="text-[11px] font-bold text-slate-500 dark:text-stone-400 uppercase tracking-wider">Liquidado a Anfitriones</span>
+                  <div class="w-9 h-9 rounded-xl bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-sm">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
                 </div>
                 <div>
-                  <div class="text-2xl font-black text-chiquitania-300 font-sans tracking-tight">157,950.00 BOB</div>
-                  <div class="flex items-center gap-1.5 mt-1 text-[11px] text-stone-400 font-semibold">
-                    <span class="text-emerald-400">98.4%</span>
-                    <span class="text-stone-500 font-normal">pagado a tiempo</span>
+                  <div class="text-3xl font-black text-indigo-600 dark:text-indigo-300 font-sans tracking-tight">157,950.00 BOB</div>
+                  <div class="flex items-center gap-1.5 mt-1.5 text-[11px] text-slate-600 dark:text-stone-400 font-semibold">
+                    <span class="px-1.5 py-0.5 rounded-md bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border border-indigo-500/30">98.4%</span>
+                    <span class="text-slate-500 dark:text-stone-500 font-normal">pagado a tiempo</span>
                   </div>
                 </div>
               </div>
@@ -300,18 +320,18 @@ export interface ReporteGenerativo {
               <!-- Tarjeta 4: Alojamientos Registrados -->
               <div class="p-5 rounded-2xl liquid-card liquid-card-hover space-y-3">
                 <div class="flex items-center justify-between">
-                  <span class="text-[11px] font-bold text-stone-400 uppercase tracking-wider">Alojamientos Habilitados</span>
-                  <div class="w-8 h-8 rounded-xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+                  <span class="text-[11px] font-bold text-slate-500 dark:text-stone-400 uppercase tracking-wider">Alojamientos Habilitados</span>
+                  <div class="w-9 h-9 rounded-xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-cyan-600 dark:text-cyan-400 shadow-sm">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                     </svg>
                   </div>
                 </div>
                 <div>
-                  <div class="text-2xl font-black text-white font-sans tracking-tight">342 Propiedades</div>
-                  <div class="flex items-center gap-1.5 mt-1 text-[11px] text-cyan-300 font-semibold">
-                    <span>9 Departamentos</span>
-                    <span class="text-stone-500 font-normal">cobertura país</span>
+                  <div class="text-3xl font-black text-slate-900 dark:text-white font-sans tracking-tight">342 Propiedades</div>
+                  <div class="flex items-center gap-1.5 mt-1.5 text-[11px] text-cyan-600 dark:text-cyan-300 font-semibold">
+                    <span class="px-1.5 py-0.5 rounded-md bg-cyan-500/15 border border-cyan-500/30">9 Departamentos</span>
+                    <span class="text-slate-500 dark:text-stone-500 font-normal">cobertura país</span>
                   </div>
                 </div>
               </div>
@@ -325,62 +345,62 @@ export interface ReporteGenerativo {
               <div class="lg:col-span-2 p-6 rounded-3xl liquid-card space-y-5">
                 <div class="flex items-center justify-between">
                   <div>
-                    <h3 class="font-serif text-lg font-bold text-white">Distribución de Reservas por Departamento</h3>
-                    <p class="text-xs text-stone-400 mt-0.5">Demanda turística consolidada en la plataforma nacional</p>
+                    <h3 class="font-serif text-lg font-bold text-slate-900 dark:text-white">Distribución de Reservas por Departamento</h3>
+                    <p class="text-xs text-slate-500 dark:text-stone-400 mt-0.5">Demanda turística consolidada en la plataforma nacional</p>
                   </div>
-                  <span class="px-2.5 py-1 rounded-lg bg-stone-800 text-[11px] text-stone-300 font-semibold">
-                    Tiempo Real
+                  <span class="px-3 py-1 rounded-xl bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 text-[11px] font-semibold">
+                    ● En Tiempo Real
                   </span>
                 </div>
 
                 <div class="space-y-4 pt-2">
                   <div>
                     <div class="flex justify-between text-xs font-semibold mb-1.5">
-                      <span class="text-stone-200">Santa Cruz (Chiquitanía, Metrópolis y Valles)</span>
-                      <span class="text-brand-400 font-mono">38% (69,800 BOB)</span>
+                      <span class="text-slate-700 dark:text-stone-200">Santa Cruz (Chiquitanía, Metrópolis y Valles)</span>
+                      <span class="text-blue-600 dark:text-blue-400 font-mono font-bold">38% (69,800 BOB)</span>
                     </div>
-                    <div class="w-full h-2.5 rounded-full bg-stone-800 overflow-hidden">
-                      <div class="h-full rounded-full bg-gradient-to-r from-brand-600 to-blue-400" style="width: 38%"></div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <div class="flex justify-between text-xs font-semibold mb-1.5">
-                      <span class="text-stone-200">La Paz (Lago Titicaca, Ciudad y Yungas)</span>
-                      <span class="text-chiquitania-400 font-mono">26% (48,100 BOB)</span>
-                    </div>
-                    <div class="w-full h-2.5 rounded-full bg-stone-800 overflow-hidden">
-                      <div class="h-full rounded-full bg-gradient-to-r from-chiquitania-600 to-chiquitania-400" style="width: 26%"></div>
+                    <div class="w-full h-2.5 rounded-full bg-slate-100 dark:bg-stone-800/80 overflow-hidden">
+                      <div class="h-full rounded-full bg-gradient-to-r from-blue-600 to-indigo-500 transition-all duration-500" style="width: 38%"></div>
                     </div>
                   </div>
 
                   <div>
                     <div class="flex justify-between text-xs font-semibold mb-1.5">
-                      <span class="text-stone-200">Cochabamba (Valle Alto, Chapare y Gastronomía)</span>
-                      <span class="text-amber-400 font-mono">18% (33,165 BOB)</span>
+                      <span class="text-slate-700 dark:text-stone-200">La Paz (Lago Titicaca, Ciudad y Yungas)</span>
+                      <span class="text-sky-600 dark:text-sky-400 font-mono font-bold">26% (48,100 BOB)</span>
                     </div>
-                    <div class="w-full h-2.5 rounded-full bg-stone-800 overflow-hidden">
-                      <div class="h-full rounded-full bg-amber-500" style="width: 18%"></div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <div class="flex justify-between text-xs font-semibold mb-1.5">
-                      <span class="text-stone-200">Potosí (Salar de Uyuni y Casco Colonial)</span>
-                      <span class="text-cyan-400 font-mono">11% (20,267 BOB)</span>
-                    </div>
-                    <div class="w-full h-2.5 rounded-full bg-stone-800 overflow-hidden">
-                      <div class="h-full rounded-full bg-cyan-500" style="width: 11%"></div>
+                    <div class="w-full h-2.5 rounded-full bg-slate-100 dark:bg-stone-800/80 overflow-hidden">
+                      <div class="h-full rounded-full bg-gradient-to-r from-sky-500 to-blue-500 transition-all duration-500" style="width: 26%"></div>
                     </div>
                   </div>
 
                   <div>
                     <div class="flex justify-between text-xs font-semibold mb-1.5">
-                      <span class="text-stone-200">Beni, Chuquisaca, Tarija, Oruro y Pando</span>
-                      <span class="text-emerald-400 font-mono">7% (12,918 BOB)</span>
+                      <span class="text-slate-700 dark:text-stone-200">Cochabamba (Valle Alto, Chapare y Gastronomía)</span>
+                      <span class="text-indigo-600 dark:text-indigo-400 font-mono font-bold">18% (33,165 BOB)</span>
                     </div>
-                    <div class="w-full h-2.5 rounded-full bg-stone-800 overflow-hidden">
-                      <div class="h-full rounded-full bg-emerald-500" style="width: 7%"></div>
+                    <div class="w-full h-2.5 rounded-full bg-slate-100 dark:bg-stone-800/80 overflow-hidden">
+                      <div class="h-full rounded-full bg-gradient-to-r from-indigo-500 to-blue-600 transition-all duration-500" style="width: 18%"></div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div class="flex justify-between text-xs font-semibold mb-1.5">
+                      <span class="text-slate-700 dark:text-stone-200">Potosí (Salar de Uyuni y Casco Colonial)</span>
+                      <span class="text-cyan-600 dark:text-cyan-400 font-mono font-bold">11% (20,267 BOB)</span>
+                    </div>
+                    <div class="w-full h-2.5 rounded-full bg-slate-100 dark:bg-stone-800/80 overflow-hidden">
+                      <div class="h-full rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 transition-all duration-500" style="width: 11%"></div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div class="flex justify-between text-xs font-semibold mb-1.5">
+                      <span class="text-slate-700 dark:text-stone-200">Beni, Chuquisaca, Tarija, Oruro y Pando</span>
+                      <span class="text-emerald-600 dark:text-emerald-400 font-mono font-bold">7% (12,918 BOB)</span>
+                    </div>
+                    <div class="w-full h-2.5 rounded-full bg-slate-100 dark:bg-stone-800/80 overflow-hidden">
+                      <div class="h-full rounded-full bg-gradient-to-r from-teal-500 to-emerald-500 transition-all duration-500" style="width: 7%"></div>
                     </div>
                   </div>
                 </div>
@@ -388,32 +408,41 @@ export interface ReporteGenerativo {
 
               <!-- Registro de Auditoría y Eventos Recientes -->
               <div class="p-6 rounded-3xl liquid-card space-y-4">
-                <h3 class="font-serif text-lg font-bold text-white">Eventos Recientes</h3>
-                <p class="text-xs text-stone-400">Trazabilidad de operaciones en plataforma</p>
+                <h3 class="font-serif text-lg font-bold text-slate-900 dark:text-white">Eventos Recientes</h3>
+                <p class="text-xs text-slate-500 dark:text-stone-400">Trazabilidad de operaciones en plataforma</p>
 
                 <div class="space-y-3 pt-2 text-xs">
-                  <div class="p-3 rounded-xl bg-stone-900/80 border border-stone-800/80 space-y-1">
+                  <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-stone-900/80 border border-slate-200 dark:border-stone-800/80 space-y-1 hover:border-emerald-500/30 transition">
                     <div class="flex items-center justify-between">
-                      <span class="text-emerald-400 font-semibold text-[11px]">Cobro QR Confirmado</span>
-                      <span class="text-[10px] text-stone-500">Hace 4 min</span>
+                      <span class="text-emerald-600 dark:text-emerald-400 font-semibold text-[11px] flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                        Cobro QR Confirmado
+                      </span>
+                      <span class="text-[10px] text-slate-400 dark:text-stone-500 font-mono">Hace 4 min</span>
                     </div>
-                    <p class="text-stone-300">Reserva de 3 noches en Cabaña Chiquitana por 1,950 BOB.</p>
+                    <p class="text-slate-700 dark:text-stone-300">Reserva de 3 noches en Cabaña Chiquitana por 1,950 BOB.</p>
                   </div>
 
-                  <div class="p-3 rounded-xl bg-stone-900/80 border border-stone-800/80 space-y-1">
+                  <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-stone-900/80 border border-slate-200 dark:border-stone-800/80 space-y-1 hover:border-blue-500/30 transition">
                     <div class="flex items-center justify-between">
-                      <span class="text-cyan-400 font-semibold text-[11px]">Asiento Contable Generado</span>
-                      <span class="text-[10px] text-stone-500">Hace 12 min</span>
+                      <span class="text-blue-600 dark:text-blue-400 font-semibold text-[11px] flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                        Asiento Contable Generado
+                      </span>
+                      <span class="text-[10px] text-slate-400 dark:text-stone-500 font-mono">Hace 12 min</span>
                     </div>
-                    <p class="text-stone-300">Folio contable #d3d94209 con débito en Banco BNB y retención de comisión.</p>
+                    <p class="text-slate-700 dark:text-stone-300">Folio contable #d3d94209 con débito en Banco BNB y retención de comisión.</p>
                   </div>
 
-                  <div class="p-3 rounded-xl bg-stone-900/80 border border-stone-800/80 space-y-1">
+                  <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-stone-900/80 border border-slate-200 dark:border-stone-800/80 space-y-1 hover:border-indigo-500/30 transition">
                     <div class="flex items-center justify-between">
-                      <span class="text-amber-400 font-semibold text-[11px]">Solicitud de Alojamiento</span>
-                      <span class="text-[10px] text-stone-500">Hace 1 hora</span>
+                      <span class="text-indigo-600 dark:text-indigo-400 font-semibold text-[11px] flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+                        Solicitud de Alojamiento
+                      </span>
+                      <span class="text-[10px] text-slate-400 dark:text-stone-500 font-mono">Hace 1 hora</span>
                     </div>
-                    <p class="text-stone-300">Cabaña Ecológica Samaipata registrada por anfitrión y en espera de revisión.</p>
+                    <p class="text-slate-700 dark:text-stone-300">Cabaña Ecológica Samaipata registrada por anfitrión y en espera de revisión.</p>
                   </div>
                 </div>
               </div>
@@ -424,33 +453,33 @@ export interface ReporteGenerativo {
           <!-- ======================================================== -->
           <!-- VISTA 2: AUDITORÍA CONTABLE (LIBRO DIARIO)               -->
           <!-- ======================================================== -->
-          <div *ngIf="activeTab === 'contabilidad'" class="space-y-6">
+          <div *ngIf="activeTab === 'contabilidad'" class="space-y-6 animate-fade-in">
             
             <!-- Resumen Financiero en Tiempo Real -->
-            <div class="p-6 rounded-3xl liquid-card border-brand-500/30 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="p-6 rounded-3xl liquid-card border-blue-500/30 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div class="space-y-1">
-                <span class="text-[11px] font-bold text-brand-400 uppercase tracking-widest">
+                <span class="text-[11px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest block">
                   Conciliación Bancaria y Recaudación
                 </span>
-                <h3 class="font-serif text-xl font-bold text-white">Registro de Transacciones &amp; Liquidaciones</h3>
-                <p class="text-xs text-stone-400">Auditoría de cobros QR Simple BNB, comisiones de plataforma (10%) y pagos a anfitriones</p>
+                <h3 class="font-serif text-2xl font-bold text-slate-900 dark:text-white">Registro de Transacciones &amp; Liquidaciones</h3>
+                <p class="text-xs text-slate-500 dark:text-stone-400">Auditoría de cobros QR Simple BNB, comisiones de plataforma (10%) y pagos a anfitriones</p>
               </div>
 
               <!-- Indicador de Conciliación -->
-              <div class="flex items-center gap-6 p-3 rounded-2xl bg-stone-900/90 border border-stone-800 px-5">
+              <div class="flex items-center gap-6 p-3.5 rounded-2xl bg-slate-50 dark:bg-stone-900/90 border border-slate-200 dark:border-stone-800 px-5 shadow-sm">
                 <div>
-                  <span class="text-[10px] text-stone-400 block font-semibold">TOTAL RECAUDADO</span>
-                  <span class="font-mono text-base font-bold text-emerald-400">{{ calcularTotalDebito().toFixed(2) }} BOB</span>
+                  <span class="text-[10px] text-slate-500 dark:text-stone-400 block font-semibold uppercase">TOTAL RECAUDADO</span>
+                  <span class="font-mono text-base font-black text-emerald-600 dark:text-emerald-400">{{ calcularTotalDebito().toFixed(2) }} BOB</span>
                 </div>
-                <div class="w-px h-8 bg-stone-800"></div>
+                <div class="w-px h-8 bg-slate-200 dark:bg-stone-800"></div>
                 <div>
-                  <span class="text-[10px] text-stone-400 block font-semibold">TOTAL DISTRIBUIDO</span>
-                  <span class="font-mono text-base font-bold text-amber-400">{{ calcularTotalCredito().toFixed(2) }} BOB</span>
+                  <span class="text-[10px] text-slate-500 dark:text-stone-400 block font-semibold uppercase">TOTAL DISTRIBUIDO</span>
+                  <span class="font-mono text-base font-black text-blue-600 dark:text-blue-400">{{ calcularTotalCredito().toFixed(2) }} BOB</span>
                 </div>
-                <div class="w-px h-8 bg-stone-800"></div>
+                <div class="w-px h-8 bg-slate-200 dark:bg-stone-800"></div>
                 <div class="flex items-center gap-2">
-                  <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
-                  <span class="text-xs font-bold text-emerald-300">CONCILIADO BNB</span>
+                  <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                  <span class="text-xs font-bold text-emerald-600 dark:text-emerald-300">CONCILIADO BNB</span>
                 </div>
               </div>
             </div>
@@ -460,19 +489,19 @@ export interface ReporteGenerativo {
               <div class="flex items-center gap-2 w-full sm:w-auto">
                 <button
                   (click)="filtroTipo = 'TODOS'"
-                  [class]="filtroTipo === 'TODOS' ? 'px-3.5 py-1.5 rounded-xl bg-brand-600 text-white font-semibold' : 'px-3.5 py-1.5 rounded-xl bg-stone-900 text-stone-400 hover:text-white border border-stone-800 font-medium'"
+                  [class]="filtroTipo === 'TODOS' ? 'px-4 py-2 rounded-xl bg-blue-600 text-white font-semibold shadow-md shadow-blue-500/20' : 'px-4 py-2 rounded-xl bg-slate-100 dark:bg-stone-900 text-slate-600 dark:text-stone-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-stone-800 border border-slate-200 dark:border-stone-800 font-medium transition'"
                 >
                   Todos los Movimientos
                 </button>
                 <button
                   (click)="filtroTipo = 'DEBITO'"
-                  [class]="filtroTipo === 'DEBITO' ? 'px-3.5 py-1.5 rounded-xl bg-emerald-600 text-white font-semibold' : 'px-3.5 py-1.5 rounded-xl bg-stone-900 text-stone-400 hover:text-white border border-stone-800 font-medium'"
+                  [class]="filtroTipo === 'DEBITO' ? 'px-4 py-2 rounded-xl bg-emerald-600 text-white font-semibold shadow-md shadow-emerald-500/20' : 'px-4 py-2 rounded-xl bg-slate-100 dark:bg-stone-900 text-slate-600 dark:text-stone-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-stone-800 border border-slate-200 dark:border-stone-800 font-medium transition'"
                 >
                   Ingresos (Cobros QR)
                 </button>
                 <button
                   (click)="filtroTipo = 'CREDITO'"
-                  [class]="filtroTipo === 'CREDITO' ? 'px-3.5 py-1.5 rounded-xl bg-amber-600 text-white font-semibold' : 'px-3.5 py-1.5 rounded-xl bg-stone-900 text-stone-400 hover:text-white border border-stone-800 font-medium'"
+                  [class]="filtroTipo === 'CREDITO' ? 'px-4 py-2 rounded-xl bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-500/20' : 'px-4 py-2 rounded-xl bg-slate-100 dark:bg-stone-900 text-slate-600 dark:text-stone-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-stone-800 border border-slate-200 dark:border-stone-800 font-medium transition'"
                 >
                   Distribución &amp; Comisiones
                 </button>
@@ -483,11 +512,11 @@ export interface ReporteGenerativo {
                   type="text"
                   [(ngModel)]="busquedaContable"
                   placeholder="Buscar cuenta o folio..."
-                  class="px-3.5 py-1.5 rounded-xl bg-stone-900 border border-stone-800 text-white placeholder-stone-500 focus:outline-none focus:border-brand-400 transition w-full sm:w-64"
+                  class="px-4 py-2 rounded-xl bg-white dark:bg-stone-900 border border-slate-300 dark:border-stone-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-stone-500 focus:outline-none focus:border-blue-500 transition w-full sm:w-64 text-xs"
                 />
                 <button
                   (click)="cargarMovimientos()"
-                  class="px-3.5 py-1.5 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 font-semibold transition shrink-0"
+                  class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-stone-800 dark:hover:bg-stone-700 text-slate-700 hover:text-slate-900 dark:text-stone-300 dark:hover:text-white font-semibold transition shrink-0 border border-slate-200 dark:border-stone-700"
                 >
                   Actualizar
                 </button>
@@ -495,42 +524,42 @@ export interface ReporteGenerativo {
             </div>
 
             <!-- Tabla de Transacciones Financieras -->
-            <div class="overflow-x-auto rounded-2xl border border-stone-800/80 liquid-card">
+            <div class="overflow-x-auto rounded-3xl border border-slate-200 dark:border-stone-800/80 liquid-card">
               <table class="w-full text-left text-xs">
-                <thead class="bg-carbon-950 text-stone-400 uppercase text-[10px] tracking-wider border-b border-stone-800">
+                <thead class="bg-slate-100 dark:bg-carbon-950/80 text-slate-600 dark:text-stone-400 uppercase text-[10px] tracking-wider border-b border-slate-200 dark:border-stone-800">
                   <tr>
-                    <th class="py-3.5 px-5">Referencia</th>
-                    <th class="py-3.5 px-5">Concepto Financiero</th>
-                    <th class="py-3.5 px-5">Tipo</th>
-                    <th class="py-3.5 px-5 text-right">Ingreso QR (BOB)</th>
-                    <th class="py-3.5 px-5 text-right">Distribución (BOB)</th>
-                    <th class="py-3.5 px-5">Origen</th>
-                    <th class="py-3.5 px-5">Fecha y Hora</th>
+                    <th class="py-4 px-5">Referencia</th>
+                    <th class="py-4 px-5">Concepto Financiero</th>
+                    <th class="py-4 px-5">Tipo</th>
+                    <th class="py-4 px-5 text-right">Ingreso QR (BOB)</th>
+                    <th class="py-4 px-5 text-right">Distribución (BOB)</th>
+                    <th class="py-4 px-5">Origen</th>
+                    <th class="py-4 px-5">Fecha y Hora</th>
                   </tr>
                 </thead>
-                <tbody class="divide-y divide-stone-800/60 text-stone-300">
-                  <tr *ngFor="let m of movimientosFiltrados()" class="hover:bg-white/5 transition">
-                    <td class="py-3 px-5 font-mono text-[11px] text-chiquitania-400">
+                <tbody class="divide-y divide-slate-200 dark:divide-stone-800/60 text-slate-700 dark:text-stone-300">
+                  <tr *ngFor="let m of movimientosFiltrados()" class="hover:bg-blue-50/50 dark:hover:bg-blue-950/20 transition">
+                    <td class="py-3.5 px-5 font-mono text-[11px] text-blue-600 dark:text-blue-400 font-semibold">
                       {{ m.asientoId.substring(0, 13) }}...
                     </td>
-                    <td class="py-3 px-5 font-semibold text-white">
+                    <td class="py-3.5 px-5 font-semibold text-slate-900 dark:text-white">
                       {{ m.cuenta }}
                     </td>
-                    <td class="py-3 px-5">
-                      <span [class]="m.tipo === 'DEBITO' ? 'px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 text-[10px] font-bold border border-emerald-500/30' : 'px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 text-[10px] font-bold border border-amber-500/30'">
+                    <td class="py-3.5 px-5">
+                      <span [class]="m.tipo === 'DEBITO' ? 'px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold border border-emerald-200 dark:border-emerald-800' : 'px-2.5 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-[10px] font-bold border border-indigo-200 dark:border-indigo-800'">
                         {{ m.tipo }}
                       </span>
                     </td>
-                    <td class="py-3 px-5 font-mono font-bold text-emerald-400 text-right">
+                    <td class="py-3.5 px-5 font-mono font-bold text-emerald-600 dark:text-emerald-400 text-right">
                       {{ m.tipo === 'DEBITO' ? m.monto.toFixed(2) : '-' }}
                     </td>
-                    <td class="py-3 px-5 font-mono font-bold text-amber-400 text-right">
+                    <td class="py-3.5 px-5 font-mono font-bold text-blue-600 dark:text-blue-400 text-right">
                       {{ m.tipo === 'CREDITO' ? m.monto.toFixed(2) : '-' }}
                     </td>
-                    <td class="py-3 px-5 text-stone-400 text-[11px]">
+                    <td class="py-3.5 px-5 text-slate-500 dark:text-stone-400 text-[11px]">
                       {{ m.origenTipo }}
                     </td>
-                    <td class="py-3 px-5 text-stone-400 text-[11px] font-mono">
+                    <td class="py-3.5 px-5 text-slate-500 dark:text-stone-400 text-[11px] font-mono">
                       {{ m.createdAt | date:'dd/MM/yyyy HH:mm' }}
                     </td>
                   </tr>
@@ -543,20 +572,20 @@ export interface ReporteGenerativo {
           <!-- ======================================================== -->
           <!-- VISTA 3: VERIFICACIÓN Y CALIFICACIÓN DE ALOJAMIENTOS     -->
           <!-- ======================================================== -->
-          <div *ngIf="activeTab === 'alojamientos'" class="space-y-6">
+          <div *ngIf="activeTab === 'alojamientos'" class="space-y-6 animate-fade-in">
             
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h3 class="font-serif text-xl font-bold text-white">Bandeja de Aprobación &amp; Moderación</h3>
-                <p class="text-xs text-stone-400 mt-0.5">Control de calidad técnica, validación de licencias y moderación de ofertas únicas vs. establecimientos hoteleros</p>
+                <h3 class="font-serif text-2xl font-bold text-slate-900 dark:text-white">Bandeja de Aprobación &amp; Moderación</h3>
+                <p class="text-xs text-slate-500 dark:text-stone-400 mt-0.5">Control de calidad técnica, validación de licencias y moderación de ofertas únicas vs. establecimientos hoteleros</p>
               </div>
 
               <div class="flex items-center gap-2">
                 <button
                   (click)="cargarAlojamientos()"
-                  class="px-3 py-1.5 rounded-xl bg-stone-900 border border-stone-800 hover:bg-stone-800 text-stone-300 text-xs font-medium transition flex items-center gap-1.5"
+                  class="px-4 py-2 rounded-xl bg-slate-100 dark:bg-stone-900 border border-slate-200 dark:border-stone-800 hover:bg-slate-200 dark:hover:bg-stone-800 hover:border-blue-500/30 text-slate-700 dark:text-stone-300 hover:text-slate-900 dark:hover:text-white text-xs font-medium transition flex items-center gap-2 shadow-sm"
                 >
-                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg class="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                   </svg>
                   <span>Sincronizar MS-01</span>
@@ -568,110 +597,110 @@ export interface ReporteGenerativo {
             <div class="flex flex-wrap items-center gap-2 text-xs">
               <button
                 (click)="filtroAlojamientos = 'TODOS'"
-                [class]="filtroAlojamientos === 'TODOS' ? 'px-3.5 py-1.5 rounded-xl bg-brand-600 text-white font-semibold shadow-md shadow-brand-600/20' : 'px-3.5 py-1.5 rounded-xl bg-stone-900 text-stone-400 hover:text-white border border-stone-800 font-medium'"
+                [class]="filtroAlojamientos === 'TODOS' ? 'px-4 py-2 rounded-xl bg-blue-600 text-white font-semibold shadow-md shadow-blue-500/20' : 'px-4 py-2 rounded-xl bg-slate-100 dark:bg-stone-900 text-slate-600 dark:text-stone-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-stone-800 border border-slate-200 dark:border-stone-800 font-medium transition'"
               >
                 Todos ({{ alojamientos.length }})
               </button>
               <button
                 (click)="filtroAlojamientos = 'PENDIENTES'"
-                [class]="filtroAlojamientos === 'PENDIENTES' ? 'px-3.5 py-1.5 rounded-xl bg-amber-600 text-white font-semibold shadow-md shadow-amber-600/20' : 'px-3.5 py-1.5 rounded-xl bg-stone-900 text-stone-400 hover:text-white border border-stone-800 font-medium'"
+                [class]="filtroAlojamientos === 'PENDIENTES' ? 'px-4 py-2 rounded-xl bg-blue-600 text-white font-semibold shadow-md shadow-blue-500/20' : 'px-4 py-2 rounded-xl bg-slate-100 dark:bg-stone-900 text-slate-600 dark:text-stone-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-stone-800 border border-slate-200 dark:border-stone-800 font-medium transition'"
               >
                 Pendientes de Moderación ({{ conteoPendientes() }})
               </button>
               <button
                 (click)="filtroAlojamientos = 'PUBLICADOS'"
-                [class]="filtroAlojamientos === 'PUBLICADOS' ? 'px-3.5 py-1.5 rounded-xl bg-emerald-600 text-white font-semibold shadow-md shadow-emerald-600/20' : 'px-3.5 py-1.5 rounded-xl bg-stone-900 text-stone-400 hover:text-white border border-stone-800 font-medium'"
+                [class]="filtroAlojamientos === 'PUBLICADOS' ? 'px-4 py-2 rounded-xl bg-emerald-600 text-white font-semibold shadow-md shadow-emerald-500/20' : 'px-4 py-2 rounded-xl bg-slate-100 dark:bg-stone-900 text-slate-600 dark:text-stone-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-stone-800 border border-slate-200 dark:border-stone-800 font-medium transition'"
               >
                 Publicados en Catálogo ({{ conteoPublicados() }})
               </button>
               <button
                 (click)="filtroAlojamientos = 'OBSERVADOS'"
-                [class]="filtroAlojamientos === 'OBSERVADOS' ? 'px-3.5 py-1.5 rounded-xl bg-rose-700 text-white font-semibold shadow-md shadow-rose-700/20' : 'px-3.5 py-1.5 rounded-xl bg-stone-900 text-stone-400 hover:text-white border border-stone-800 font-medium'"
+                [class]="filtroAlojamientos === 'OBSERVADOS' ? 'px-4 py-2 rounded-xl bg-rose-700 text-white font-semibold shadow-md shadow-rose-700/20' : 'px-4 py-2 rounded-xl bg-slate-100 dark:bg-stone-900 text-slate-600 dark:text-stone-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-stone-800 border border-slate-200 dark:border-stone-800 font-medium transition'"
               >
                 Observados ({{ conteoObservados() }})
               </button>
             </div>
 
             <!-- Listado de Alojamientos -->
-            <div *ngIf="alojamientosFiltrados().length === 0" class="p-12 text-center rounded-3xl liquid-card border-dashed border-stone-800 text-stone-400 text-xs">
+            <div *ngIf="alojamientosFiltrados().length === 0" class="p-12 text-center rounded-3xl liquid-card border-dashed border-slate-300 dark:border-stone-800 text-slate-500 dark:text-stone-400 text-xs">
               No hay alojamientos registrados en esta categoría de moderación.
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div *ngFor="let a of alojamientosFiltrados()" class="p-5 rounded-3xl liquid-card space-y-4 flex flex-col justify-between">
+              <div *ngFor="let a of alojamientosFiltrados()" class="p-5 rounded-3xl liquid-card liquid-card-hover space-y-4 flex flex-col justify-between">
                 
                 <div class="space-y-3">
                   <!-- Header con Estado & Modalidad -->
                   <div class="flex items-start justify-between gap-2">
                     <div>
                       <div class="flex items-center gap-2 mb-1 flex-wrap">
-                        <span class="text-[10px] font-bold text-chiquitania-400 uppercase tracking-widest">
+                        <span class="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest">
                           {{ a.departamento }} • {{ a.tipoPropiedad }}
                         </span>
                         
                         <!-- Badge Modalidad (Casa vs Hotel) -->
-                        <span *ngIf="a.modalidad === 'HOTEL_HOSTAL'" class="px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-300 text-[10px] font-bold border border-indigo-500/30">
-                          🏨 Hotel / Hostal (Múltiples Hab.)
+                        <span *ngIf="a.modalidad === 'HOTEL_HOSTAL'" class="px-2.5 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-[10px] font-bold border border-indigo-200 dark:border-indigo-800">
+                          🏨 Hotel / Hostal (Multihabitación)
                         </span>
-                        <span *ngIf="a.modalidad !== 'HOTEL_HOSTAL'" class="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 text-[10px] font-bold border border-emerald-500/30">
+                        <span *ngIf="a.modalidad !== 'HOTEL_HOSTAL'" class="px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold border border-emerald-200 dark:border-emerald-800">
                           🏡 Casa / Depto (Oferta Única)
                         </span>
                       </div>
 
-                      <h4 class="font-serif text-lg font-bold text-white">{{ a.titulo }}</h4>
-                      <p class="text-xs text-stone-400">Anfitrión: <strong class="text-stone-300">{{ a.anfitrion }}</strong> • {{ a.ciudad }}</p>
+                      <h4 class="font-serif text-lg font-bold text-slate-900 dark:text-white">{{ a.titulo }}</h4>
+                      <p class="text-xs text-slate-500 dark:text-stone-400">Anfitrión: <strong class="text-slate-700 dark:text-stone-300">{{ a.anfitrion }}</strong> • {{ a.ciudad }}</p>
                     </div>
 
                     <!-- Badge Estado -->
-                    <span [class]="a.estado === 'PUBLICADO' ? 'px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 text-[11px] font-bold border border-emerald-500/30 shrink-0' : (a.estado === 'EN_REVISION' ? 'px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 text-[11px] font-bold border border-amber-500/30 shrink-0' : 'px-2.5 py-1 rounded-lg bg-rose-500/20 text-rose-300 text-[11px] font-bold border border-rose-500/30 shrink-0')">
-                      {{ a.estado === 'PUBLICADO' ? 'Publicado' : (a.estado === 'EN_REVISION' ? 'Por Revisar' : (a.estado === 'SUSPENDIDO' ? 'Suspendido' : 'Observado')) }}
+                    <span [class]="a.estado === 'PUBLICADO' ? 'px-2.5 py-1 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold border border-emerald-200 dark:border-emerald-800 shrink-0' : (a.estado === 'EN_REVISION' ? 'px-2.5 py-1 rounded-xl bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 text-[11px] font-bold border border-blue-200 dark:border-blue-800 shrink-0' : 'px-2.5 py-1 rounded-xl bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 text-[11px] font-bold border border-rose-200 dark:border-rose-800 shrink-0')">
+                      {{ a.estado === 'PUBLICADO' ? '● Publicado' : (a.estado === 'EN_REVISION' ? '⏳ Por Revisar' : (a.estado === 'SUSPENDIDO' ? 'Suspendido' : '✕ Observado')) }}
                     </span>
                   </div>
 
                   <!-- Imagen de Portada -->
-                  <div class="h-44 rounded-2xl overflow-hidden relative">
-                    <img [src]="a.imagen" [alt]="a.titulo" class="w-full h-full object-cover" />
-                    <div class="absolute bottom-2 right-2 px-2.5 py-1 rounded-lg bg-black/75 backdrop-blur text-white text-xs font-bold font-mono border border-white/10">
+                  <div class="h-48 rounded-2xl overflow-hidden relative border border-slate-200 dark:border-stone-800 group">
+                    <img [src]="a.imagen" [alt]="a.titulo" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <div class="absolute bottom-2.5 right-2.5 px-3 py-1 rounded-xl bg-black/80 backdrop-blur-md text-white text-xs font-bold font-mono border border-white/10 shadow-lg">
                       {{ a.precioNoche }} BOB / noche
                     </div>
                   </div>
 
-                  <p class="text-xs text-stone-300 line-clamp-2">
+                  <p class="text-xs text-slate-600 dark:text-stone-300 line-clamp-2 leading-relaxed">
                     {{ a.descripcion }}
                   </p>
 
                   <!-- Motivo de Rechazo / Observación (si aplica) -->
-                  <div *ngIf="a.motivoRechazo" class="p-2.5 rounded-xl bg-rose-950/40 border border-rose-500/30 text-rose-300 text-[11px]">
-                    <strong class="font-semibold block mb-0.5">Observación Registrada:</strong>
+                  <div *ngIf="a.motivoRechazo" class="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-500/30 text-rose-700 dark:text-rose-300 text-[11px]">
+                    <strong class="font-semibold block mb-0.5 text-rose-800 dark:text-rose-200">Observación Registrada:</strong>
                     {{ a.motivoRechazo }}
                   </div>
 
                   <!-- Ficha de Modalidad, Capacidad y Horarios -->
-                  <div class="flex flex-col gap-1.5 text-xs text-stone-400 pt-1 border-t border-stone-800">
+                  <div class="flex flex-col gap-1.5 text-xs text-slate-500 dark:text-stone-400 pt-2 border-t border-slate-200 dark:border-stone-800">
                     <div class="flex items-center justify-between">
-                      <span *ngIf="a.modalidad === 'HOTEL_HOSTAL'" class="text-indigo-300 font-medium">
+                      <span *ngIf="a.modalidad === 'HOTEL_HOSTAL'" class="text-indigo-600 dark:text-indigo-300 font-medium">
                         🏨 {{ a.unidades?.length || 1 }} Tipos de habitación configurados
                       </span>
                       <span *ngIf="a.modalidad !== 'HOTEL_HOSTAL'">
                         👥 {{ a.capacidad }} Huéspedes • 🛏️ {{ a.habitaciones }} Dormitorios
                       </span>
-                      <span class="text-[11px] font-mono text-stone-500">
+                      <span class="text-[11px] font-mono text-slate-400 dark:text-stone-500">
                         Reg: {{ a.fechaRegistro | date:'dd/MM/yyyy' }}
                       </span>
                     </div>
                     
-                    <div class="text-[11px] text-stone-400">
-                      ⏰ Check-in: <strong class="text-stone-300">{{ a.horarioEntrada || '14:00' }}</strong> | Check-out: <strong class="text-stone-300">{{ a.horarioSalida || '11:00' }}</strong>
+                    <div class="text-[11px] text-slate-500 dark:text-stone-400">
+                      ⏰ Check-in: <strong class="text-slate-700 dark:text-stone-300">{{ a.horarioEntrada || '14:00' }}</strong> | Check-out: <strong class="text-slate-700 dark:text-stone-300">{{ a.horarioSalida || '11:00' }}</strong>
                     </div>
                   </div>
                 </div>
 
                 <!-- Botonera de Decisiones -->
-                <div class="pt-3 border-t border-stone-800/80 flex items-center gap-2">
+                <div class="pt-3 border-t border-slate-200/80 dark:border-stone-800/80 flex items-center gap-2">
                   <button
                     *ngIf="a.estado === 'EN_REVISION' || a.estado === 'RECHAZADO'"
                     (click)="aprobarAlojamiento(a.id)"
-                    class="flex-1 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-md shadow-emerald-600/20 transition flex items-center justify-center gap-1.5"
+                    class="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs shadow-md shadow-blue-500/20 transition flex items-center justify-center gap-1.5"
                   >
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
@@ -682,7 +711,7 @@ export interface ReporteGenerativo {
                   <button
                     *ngIf="a.estado === 'EN_REVISION'"
                     (click)="abrirModalRechazo(a)"
-                    class="flex-1 py-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-rose-300 hover:text-rose-200 font-semibold text-xs border border-rose-500/30 transition flex items-center justify-center gap-1.5"
+                    class="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-rose-50 dark:bg-stone-800 dark:hover:bg-stone-700 text-rose-600 dark:text-rose-300 hover:text-rose-700 font-semibold text-xs border border-rose-200 dark:border-rose-500/30 transition flex items-center justify-center gap-1.5"
                   >
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -693,14 +722,14 @@ export interface ReporteGenerativo {
                   <button
                     *ngIf="a.estado === 'PUBLICADO'"
                     (click)="suspenderAlojamiento(a.id)"
-                    class="flex-1 py-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-amber-300 font-semibold text-xs border border-amber-500/30 transition"
+                    class="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-stone-800 dark:hover:bg-stone-700 text-blue-600 dark:text-blue-300 font-semibold text-xs border border-blue-200 dark:border-blue-500/30 transition"
                   >
                     Suspender
                   </button>
 
                   <button
                     (click)="inspeccionarAlojamiento(a)"
-                    class="px-3.5 py-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 hover:text-white text-xs font-medium border border-stone-700 transition"
+                    class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-stone-800 dark:hover:bg-stone-700 text-slate-700 hover:text-slate-900 dark:text-stone-300 dark:hover:text-white text-xs font-semibold border border-slate-200 dark:border-stone-700 hover:border-blue-500/40 transition"
                   >
                     Detalles
                   </button>
@@ -714,17 +743,17 @@ export interface ReporteGenerativo {
           <!-- ======================================================== -->
           <!-- VISTA 4: LIQUIDACIONES Y DESEMBOLSOS A ANFITRIONES       -->
           <!-- ======================================================== -->
-          <div *ngIf="activeTab === 'liquidaciones'" class="space-y-6">
+          <div *ngIf="activeTab === 'liquidaciones'" class="space-y-6 animate-fade-in">
             
             <div class="flex items-center justify-between">
               <div>
-                <h3 class="font-serif text-xl font-bold text-white">Gestión de Transferencias y Desembolsos ACH</h3>
-                <p class="text-xs text-stone-400 mt-0.5">Pago de ingresos netos a cuentas bancarias acreditadas en el sistema financiero boliviano</p>
+                <h3 class="font-serif text-2xl font-bold text-slate-900 dark:text-white">Gestión de Transferencias y Desembolsos ACH</h3>
+                <p class="text-xs text-slate-500 dark:text-stone-400 mt-0.5">Pago de ingresos netos a cuentas bancarias acreditadas en el sistema financiero boliviano</p>
               </div>
 
               <button
                 (click)="autorizarLotePagos()"
-                class="px-4 py-2 rounded-xl bg-gradient-to-r from-brand-600 to-blue-600 text-white font-bold text-xs shadow-md shadow-brand-600/30 hover:opacity-90 transition flex items-center gap-2"
+                class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-xs shadow-lg shadow-blue-500/25 hover:opacity-95 transition flex items-center gap-2"
               >
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
@@ -734,43 +763,43 @@ export interface ReporteGenerativo {
             </div>
 
             <!-- Tabla de Liquidaciones -->
-            <div class="overflow-x-auto rounded-2xl border border-stone-800/80 liquid-card">
+            <div class="overflow-x-auto rounded-3xl border border-slate-200 dark:border-stone-800/80 liquid-card">
               <table class="w-full text-left text-xs">
-                <thead class="bg-carbon-950 text-stone-400 uppercase text-[10px] tracking-wider border-b border-stone-800">
+                <thead class="bg-slate-100 dark:bg-carbon-950/80 text-slate-600 dark:text-stone-400 uppercase text-[10px] tracking-wider border-b border-slate-200 dark:border-stone-800">
                   <tr>
-                    <th class="py-3.5 px-5">Anfitrión / Propiedad</th>
-                    <th class="py-3.5 px-5">Entidad Financiera</th>
-                    <th class="py-3.5 px-5 text-right">Importe Bruto</th>
-                    <th class="py-3.5 px-5 text-right">Comisión Plataforma (10%)</th>
-                    <th class="py-3.5 px-5 text-right">Retención SIN</th>
-                    <th class="py-3.5 px-5 text-right">Neto a Transferir</th>
-                    <th class="py-3.5 px-5 text-center">Estado</th>
+                    <th class="py-4 px-5">Anfitrión / Propiedad</th>
+                    <th class="py-4 px-5">Entidad Financiera</th>
+                    <th class="py-4 px-5 text-right">Importe Bruto</th>
+                    <th class="py-4 px-5 text-right">Comisión Plataforma (10%)</th>
+                    <th class="py-4 px-5 text-right">Retención SIN</th>
+                    <th class="py-4 px-5 text-right">Neto a Transferir</th>
+                    <th class="py-4 px-5 text-center">Estado</th>
                   </tr>
                 </thead>
-                <tbody class="divide-y divide-stone-800/60 text-stone-300">
-                  <tr *ngFor="let l of liquidaciones" class="hover:bg-white/5 transition">
-                    <td class="py-3 px-5">
-                      <div class="font-bold text-white">{{ l.anfitrion }}</div>
-                      <div class="text-[11px] text-stone-400">{{ l.alojamiento }}</div>
+                <tbody class="divide-y divide-slate-200 dark:divide-stone-800/60 text-slate-700 dark:text-stone-300">
+                  <tr *ngFor="let l of liquidaciones" class="hover:bg-blue-50/50 dark:hover:bg-blue-950/20 transition">
+                    <td class="py-3.5 px-5">
+                      <div class="font-bold text-slate-900 dark:text-white">{{ l.anfitrion }}</div>
+                      <div class="text-[11px] text-slate-500 dark:text-stone-400">{{ l.alojamiento }}</div>
                     </td>
-                    <td class="py-3 px-5">
-                      <span class="font-semibold text-white">{{ l.banco }}</span>
-                      <div class="font-mono text-[11px] text-stone-400">{{ l.numeroCuenta }}</div>
+                    <td class="py-3.5 px-5">
+                      <span class="font-semibold text-slate-900 dark:text-white">{{ l.banco }}</span>
+                      <div class="font-mono text-[11px] text-slate-500 dark:text-stone-400">{{ l.numeroCuenta }}</div>
                     </td>
-                    <td class="py-3 px-5 font-mono text-right text-stone-300">
+                    <td class="py-3.5 px-5 font-mono text-right text-slate-700 dark:text-stone-300">
                       {{ l.montoBruto.toFixed(2) }} BOB
                     </td>
-                    <td class="py-3 px-5 font-mono text-right text-brand-400">
+                    <td class="py-3.5 px-5 font-mono text-right text-blue-600 dark:text-blue-400 font-semibold">
                       -{{ l.comisionPlataforma.toFixed(2) }} BOB
                     </td>
-                    <td class="py-3 px-5 font-mono text-right text-stone-400">
+                    <td class="py-3.5 px-5 font-mono text-right text-slate-500 dark:text-stone-400">
                       -{{ l.retencionImpuestos.toFixed(2) }} BOB
                     </td>
-                    <td class="py-3 px-5 font-mono font-bold text-right text-emerald-400 text-sm">
+                    <td class="py-3.5 px-5 font-mono font-bold text-right text-emerald-600 dark:text-emerald-400 text-sm">
                       {{ l.montoNeto.toFixed(2) }} BOB
                     </td>
-                    <td class="py-3 px-5 text-center">
-                      <span [class]="l.estado === 'PAGADO' ? 'px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold' : (l.estado === 'EN_PROCESO' ? 'px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 text-[10px] font-bold' : 'px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-bold')">
+                    <td class="py-3.5 px-5 text-center">
+                      <span [class]="l.estado === 'PAGADO' ? 'px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold border border-emerald-200 dark:border-emerald-800' : (l.estado === 'EN_PROCESO' ? 'px-2.5 py-1 rounded-full bg-cyan-100 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300 text-[10px] font-bold border border-cyan-200 dark:border-cyan-800' : 'px-2.5 py-1 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 text-[10px] font-bold border border-blue-200 dark:border-blue-800')">
                         {{ l.estado }}
                       </span>
                     </td>
@@ -784,26 +813,26 @@ export interface ReporteGenerativo {
           <!-- ======================================================== -->
           <!-- VISTA 5: REPORTES GENERATIVOS CON INTELIGENCIA ARTIFICIAL-->
           <!-- ======================================================== -->
-          <div *ngIf="activeTab === 'reportes-ia'" class="space-y-6">
+          <div *ngIf="activeTab === 'reportes-ia'" class="space-y-6 animate-fade-in">
             
             <!-- Generador de Informes Estratégicos -->
-            <div class="p-6 rounded-3xl liquid-card border-chiquitania-500/30 space-y-5">
+            <div class="p-6 rounded-3xl liquid-card border-blue-500/30 space-y-5">
               <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                   <div class="flex items-center gap-2 mb-1">
-                    <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping"></span>
-                    <span class="text-[10px] font-bold uppercase tracking-widest text-cyan-400">
+                    <span class="w-2.5 h-2.5 rounded-full bg-cyan-500 animate-ping"></span>
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-cyan-600 dark:text-cyan-400">
                       Motor de Analítica Predictiva & Generativa
                     </span>
                   </div>
-                  <h3 class="font-serif text-2xl font-bold text-white">Generador de Informes de Negocio con Inteligencia Artificial</h3>
-                  <p class="text-xs text-stone-400 mt-1">Sintetiza tendencias de ocupación regional, simulación fiscal y proyecciones estratégicas</p>
+                  <h3 class="font-serif text-2xl font-bold text-slate-900 dark:text-white">Generador de Informes de Negocio con Inteligencia Artificial</h3>
+                  <p class="text-xs text-slate-500 dark:text-stone-400 mt-1">Sintetiza tendencias de ocupación regional, simulación fiscal y proyecciones estratégicas</p>
                 </div>
 
                 <button
                   (click)="generarReporteIA()"
                   [disabled]="generandoReporte"
-                  class="px-5 py-3 rounded-2xl bg-gradient-to-r from-brand-600 via-blue-600 to-indigo-600 hover:opacity-95 text-white font-bold text-xs shadow-xl shadow-brand-600/30 flex items-center justify-center gap-2 disabled:opacity-50 transition shrink-0"
+                  class="px-5 py-3 rounded-2xl bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-600 hover:opacity-95 text-white font-bold text-xs shadow-xl shadow-blue-500/25 flex items-center justify-center gap-2 disabled:opacity-50 transition shrink-0"
                 >
                   <svg *ngIf="!generandoReporte" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
@@ -820,55 +849,55 @@ export interface ReporteGenerativo {
               <div class="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
                 <button
                   (click)="tipoReporteSeleccionado = 1"
-                  [class]="tipoReporteSeleccionado === 1 ? 'p-3.5 rounded-2xl bg-brand-950/70 border-2 border-brand-500 text-left space-y-1 transition' : 'p-3.5 rounded-2xl bg-stone-900/60 border border-stone-800 text-left space-y-1 hover:border-stone-700 transition'"
+                  [class]="tipoReporteSeleccionado === 1 ? 'p-4 rounded-2xl bg-blue-50 dark:bg-blue-950/60 border-2 border-blue-600 text-left space-y-1 shadow-md shadow-blue-500/10 transition' : 'p-4 rounded-2xl bg-slate-50 dark:bg-stone-900/60 border border-slate-200 dark:border-stone-800 text-left space-y-1 hover:border-slate-300 dark:hover:border-stone-700 transition'"
                 >
-                  <span class="text-[10px] font-bold text-brand-400 uppercase tracking-wider block">Auditoría & Proyección</span>
-                  <h4 class="text-xs font-bold text-white">Cierre Fiscal & Rendimiento</h4>
-                  <p class="text-[11px] text-stone-400">Balance contable, retenciones impositivas y margen neto de comisiones.</p>
+                  <span class="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider block">Auditoría & Proyección</span>
+                  <h4 class="text-xs font-bold text-slate-900 dark:text-white">Cierre Fiscal & Rendimiento</h4>
+                  <p class="text-[11px] text-slate-500 dark:text-stone-400 leading-relaxed">Balance contable, retenciones impositivas y margen neto de comisiones.</p>
                 </button>
 
                 <button
                   (click)="tipoReporteSeleccionado = 2"
-                  [class]="tipoReporteSeleccionado === 2 ? 'p-3.5 rounded-2xl bg-chiquitania-950/70 border-2 border-chiquitania-500 text-left space-y-1 transition' : 'p-3.5 rounded-2xl bg-stone-900/60 border border-stone-800 text-left space-y-1 hover:border-stone-700 transition'"
+                  [class]="tipoReporteSeleccionado === 2 ? 'p-4 rounded-2xl bg-blue-50 dark:bg-blue-950/60 border-2 border-blue-600 text-left space-y-1 shadow-md shadow-blue-500/10 transition' : 'p-4 rounded-2xl bg-slate-50 dark:bg-stone-900/60 border border-slate-200 dark:border-stone-800 text-left space-y-1 hover:border-slate-300 dark:hover:border-stone-700 transition'"
                 >
-                  <span class="text-[10px] font-bold text-chiquitania-400 uppercase tracking-wider block">Tendencia Regional</span>
-                  <h4 class="text-xs font-bold text-white">Demanda Festividades 2026</h4>
-                  <p class="text-[11px] text-stone-400">Predicción de ocupación en Chiquitanía, Carnaval de Oruro y Lago Titicaca.</p>
+                  <span class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider block">Tendencia Regional</span>
+                  <h4 class="text-xs font-bold text-slate-900 dark:text-white">Demanda Festividades 2026</h4>
+                  <p class="text-[11px] text-slate-500 dark:text-stone-400 leading-relaxed">Predicción de ocupación en Chiquitanía, Carnaval de Oruro y Lago Titicaca.</p>
                 </button>
 
                 <button
                   (click)="tipoReporteSeleccionado = 3"
-                  [class]="tipoReporteSeleccionado === 3 ? 'p-3.5 rounded-2xl bg-cyan-950/70 border-2 border-cyan-500 text-left space-y-1 transition' : 'p-3.5 rounded-2xl bg-stone-900/60 border border-stone-800 text-left space-y-1 hover:border-stone-700 transition'"
+                  [class]="tipoReporteSeleccionado === 3 ? 'p-4 rounded-2xl bg-cyan-50 dark:bg-cyan-950/60 border-2 border-cyan-600 text-left space-y-1 shadow-md shadow-cyan-500/10 transition' : 'p-4 rounded-2xl bg-slate-50 dark:bg-stone-900/60 border border-slate-200 dark:border-stone-800 text-left space-y-1 hover:border-slate-300 dark:hover:border-stone-700 transition'"
                 >
-                  <span class="text-[10px] font-bold text-cyan-400 uppercase tracking-wider block">Calidad & Detección</span>
-                  <h4 class="text-xs font-bold text-white">Detección de Anomalías</h4>
-                  <p class="text-[11px] text-stone-400">Monitoreo de cancelaciones inusuales y auditoría de precios por noche.</p>
+                  <span class="text-[10px] font-bold text-cyan-600 dark:text-cyan-400 uppercase tracking-wider block">Calidad & Detección</span>
+                  <h4 class="text-xs font-bold text-slate-900 dark:text-white">Detección de Anomalías</h4>
+                  <p class="text-[11px] text-slate-500 dark:text-stone-400 leading-relaxed">Monitoreo de cancelaciones inusuales y auditoría de precios por noche.</p>
                 </button>
               </div>
             </div>
 
             <!-- Previsualización del Informe Generado -->
-            <div *ngIf="reporteActual" class="p-8 rounded-3xl liquid-card border-stone-800 space-y-8 animate-fade-in">
+            <div *ngIf="reporteActual" class="p-8 rounded-3xl liquid-card border-slate-200 dark:border-stone-800 space-y-8 animate-fade-in shadow-xl">
               
               <!-- Encabezado del Documento -->
-              <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-6 border-b border-stone-800">
+              <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-6 border-b border-slate-200 dark:border-stone-800">
                 <div>
-                  <div class="flex items-center gap-2 mb-1">
-                    <span class="px-2 py-0.5 rounded bg-brand-500/20 text-brand-300 text-[10px] font-bold uppercase tracking-wider">
+                  <div class="flex items-center gap-2 mb-1.5">
+                    <span class="px-2.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 text-[10px] font-bold uppercase tracking-wider border border-blue-200 dark:border-blue-800">
                       {{ reporteActual.categoria }}
                     </span>
-                    <span class="text-xs text-stone-500 font-mono">• Emitido: {{ reporteActual.fechaEmision }}</span>
+                    <span class="text-xs text-slate-400 dark:text-stone-500 font-mono">• Emitido: {{ reporteActual.fechaEmision }}</span>
                   </div>
-                  <h2 class="font-serif text-2xl font-bold text-white">{{ reporteActual.titulo }}</h2>
-                  <p class="text-xs text-stone-400 mt-1">Período evaluado: {{ reporteActual.periodo }}</p>
+                  <h2 class="font-serif text-2xl font-bold text-slate-900 dark:text-white">{{ reporteActual.titulo }}</h2>
+                  <p class="text-xs text-slate-500 dark:text-stone-400 mt-1">Período evaluado: {{ reporteActual.periodo }}</p>
                 </div>
 
                 <div class="flex items-center gap-2">
                   <button
                     (click)="exportarPdfSimulado()"
-                    class="px-3.5 py-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-200 text-xs font-semibold flex items-center gap-2 transition"
+                    class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-stone-800 dark:hover:bg-stone-700 text-slate-700 hover:text-slate-900 dark:text-stone-200 text-xs font-semibold flex items-center gap-2 transition border border-slate-200 dark:border-stone-700"
                   >
-                    <svg class="w-4 h-4 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-4 h-4 text-slate-500 dark:text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                     <span>Descargar PDF</span>
@@ -876,7 +905,7 @@ export interface ReporteGenerativo {
 
                   <button
                     (click)="exportarExcelSimulado()"
-                    class="px-3.5 py-2 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/30 text-emerald-300 text-xs font-semibold flex items-center gap-2 transition"
+                    class="px-4 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 border border-emerald-200 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs font-semibold flex items-center gap-2 transition"
                   >
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -888,41 +917,41 @@ export interface ReporteGenerativo {
 
               <!-- Métricas Clave del Informe -->
               <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div *ngFor="let k of reporteActual.kpis" class="p-4 rounded-2xl bg-stone-900/80 border border-stone-800 space-y-1">
-                  <span class="text-[11px] text-stone-400 font-semibold">{{ k.etiqueta }}</span>
-                  <div class="text-xl font-black text-white font-sans">{{ k.valor }}</div>
-                  <div [class]="k.esPositivo ? 'text-[11px] text-emerald-400 font-semibold' : 'text-[11px] text-amber-400 font-semibold'">
+                <div *ngFor="let k of reporteActual.kpis" class="p-4 rounded-2xl bg-slate-50 dark:bg-stone-900/80 border border-slate-200 dark:border-stone-800 space-y-1">
+                  <span class="text-[11px] text-slate-500 dark:text-stone-400 font-semibold">{{ k.etiqueta }}</span>
+                  <div class="text-2xl font-black text-slate-900 dark:text-white font-sans">{{ k.valor }}</div>
+                  <div [class]="k.esPositivo ? 'text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold' : 'text-[11px] text-blue-600 dark:text-blue-400 font-semibold'">
                     {{ k.variacion }}
                   </div>
                 </div>
               </div>
 
               <!-- Resumen Ejecutivo -->
-              <div class="p-5 rounded-2xl bg-stone-900/50 border border-stone-800/80 space-y-2">
-                <h4 class="text-xs font-bold uppercase tracking-wider text-chiquitania-400">Resumen Ejecutivo</h4>
-                <p class="text-xs leading-relaxed text-stone-300">
+              <div class="p-5 rounded-2xl bg-slate-50 dark:bg-stone-900/50 border border-slate-200 dark:border-stone-800/80 space-y-2">
+                <h4 class="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">Resumen Ejecutivo</h4>
+                <p class="text-xs leading-relaxed text-slate-700 dark:text-stone-300">
                   {{ reporteActual.resumenEjecutivo }}
                 </p>
               </div>
 
               <!-- Puntos Clave & Hallazgos -->
               <div class="space-y-3">
-                <h4 class="text-xs font-bold uppercase tracking-wider text-stone-400">Hallazgos Principales</h4>
-                <ul class="space-y-2 text-xs text-stone-300">
+                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-stone-400">Hallazgos Principales</h4>
+                <ul class="space-y-2.5 text-xs text-slate-700 dark:text-stone-300">
                   <li *ngFor="let punto of reporteActual.puntosClave" class="flex items-start gap-2.5">
-                    <span class="w-1.5 h-1.5 rounded-full bg-brand-500 mt-1.5 shrink-0"></span>
-                    <span>{{ punto }}</span>
+                    <span class="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 shrink-0"></span>
+                    <span class="leading-relaxed">{{ punto }}</span>
                   </li>
                 </ul>
               </div>
 
               <!-- Recomendaciones Estratégicas para la Dirección -->
-              <div class="p-5 rounded-2xl bg-gradient-to-br from-brand-950/40 to-carbon-900 border border-brand-500/30 space-y-3">
-                <h4 class="text-xs font-bold uppercase tracking-wider text-brand-400">Recomendaciones Estratégicas</h4>
-                <ul class="space-y-2 text-xs text-stone-200">
+              <div class="p-5 rounded-2xl bg-blue-50/60 dark:bg-gradient-to-br dark:from-blue-950/40 dark:to-carbon-900 border border-blue-200 dark:border-blue-500/30 space-y-3">
+                <h4 class="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">Recomendaciones Estratégicas</h4>
+                <ul class="space-y-2 text-xs text-slate-800 dark:text-stone-200">
                   <li *ngFor="let rec of reporteActual.recomendacionesEstrategicas" class="flex items-start gap-2.5">
-                    <span class="text-emerald-400 font-bold shrink-0">✓</span>
-                    <span>{{ rec }}</span>
+                    <span class="text-emerald-600 dark:text-emerald-400 font-bold shrink-0">✓</span>
+                    <span class="leading-relaxed">{{ rec }}</span>
                   </li>
                 </ul>
               </div>
@@ -937,56 +966,56 @@ export interface ReporteGenerativo {
       <!-- ========================================== -->
       <!-- MODAL DE INSPECCIÓN PANORÁMICA DE ALOJAMIENTO -->
       <!-- ========================================== -->
-      <div *ngIf="alojamientoInspeccionado" class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md overflow-y-auto">
-        <div class="absolute inset-0" (click)="alojamientoInspeccionado = null"></div>
+      <div *ngIf="alojamientoInspeccionado" class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-md overflow-y-auto animate-fade-in">
+        <div class="absolute inset-0" (click)="cerrarInspeccion()"></div>
 
-        <div class="relative w-full max-w-5xl my-4 p-6 sm:p-8 rounded-3xl bg-carbon-900 border border-stone-800 text-white z-10 space-y-6 shadow-2xl max-h-[92vh] overflow-y-auto">
+        <div class="relative w-full max-w-5xl my-4 p-6 sm:p-8 rounded-3xl bg-white dark:bg-carbon-900 border border-slate-200 dark:border-stone-800 text-slate-900 dark:text-white z-10 space-y-6 shadow-2xl max-h-[92vh] overflow-y-auto animate-modal-in">
           
           <!-- Encabezado con Badges & Título -->
-          <div class="flex items-start justify-between gap-4 border-b border-stone-800/80 pb-4">
+          <div class="flex items-start justify-between gap-4 border-b border-slate-200 dark:border-stone-800/80 pb-4">
             <div class="space-y-1.5">
               <div class="flex items-center gap-2 flex-wrap">
-                <span class="text-[10px] font-bold text-brand-400 uppercase tracking-widest block">
+                <span class="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest block">
                   Auditoría Técnica & Calidad Turística
                 </span>
-                <span class="text-stone-600">•</span>
-                <span class="text-[10px] font-semibold text-stone-300">
+                <span class="text-slate-400 dark:text-stone-600">•</span>
+                <span class="text-[10px] font-semibold text-slate-600 dark:text-stone-300">
                   {{ alojamientoInspeccionado.departamento }} • {{ alojamientoInspeccionado.ciudad }}
                 </span>
-                <span *ngIf="alojamientoInspeccionado.modalidad === 'HOTEL_HOSTAL'" class="px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 text-[10px] font-bold border border-indigo-500/30">
+                <span *ngIf="alojamientoInspeccionado.modalidad === 'HOTEL_HOSTAL'" class="px-2.5 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-[10px] font-bold border border-indigo-200 dark:border-indigo-800">
                   🏨 Hotel / Hostal (Múltiples Hab.)
                 </span>
-                <span *ngIf="alojamientoInspeccionado.modalidad !== 'HOTEL_HOSTAL'" class="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold border border-emerald-500/30">
+                <span *ngIf="alojamientoInspeccionado.modalidad !== 'HOTEL_HOSTAL'" class="px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold border border-emerald-200 dark:border-emerald-800">
                   🏡 Oferta Única (Casa / Depto)
                 </span>
-                <span [class]="alojamientoInspeccionado.estado === 'PUBLICADO' ? 'px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold border border-emerald-500/30' : (alojamientoInspeccionado.estado === 'EN_REVISION' ? 'px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 text-[10px] font-bold border border-blue-500/30' : 'px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 text-[10px] font-bold border border-rose-500/30')">
+                <span [class]="alojamientoInspeccionado.estado === 'PUBLICADO' ? 'px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold border border-emerald-200 dark:border-emerald-800' : (alojamientoInspeccionado.estado === 'EN_REVISION' ? 'px-2.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 text-[10px] font-bold border border-blue-200 dark:border-blue-800' : 'px-2.5 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 text-[10px] font-bold border border-rose-200 dark:border-rose-800')">
                   {{ alojamientoInspeccionado.estado === 'PUBLICADO' ? '● Publicado' : (alojamientoInspeccionado.estado === 'EN_REVISION' ? '⏳ Por Revisar' : '✕ Observado') }}
                 </span>
               </div>
 
-              <h2 class="font-serif text-2xl font-bold text-white">{{ alojamientoInspeccionado.titulo }}</h2>
-              <p class="text-xs text-stone-400">
-                Anfitrión Responsable: <strong class="text-stone-200">{{ alojamientoInspeccionado.anfitrion }}</strong> • Dirección: <strong class="text-stone-300">{{ alojamientoInspeccionado.direccion || 'Zona registrada' }}</strong> • ID: <span class="font-mono text-stone-500">{{ alojamientoInspeccionado.id }}</span>
+              <h2 class="font-serif text-2xl font-bold text-slate-900 dark:text-white">{{ alojamientoInspeccionado.titulo }}</h2>
+              <p class="text-xs text-slate-500 dark:text-stone-400">
+                Anfitrión Responsable: <strong class="text-slate-800 dark:text-stone-200">{{ alojamientoInspeccionado.anfitrion }}</strong> • Dirección: <strong class="text-slate-700 dark:text-stone-300">{{ alojamientoInspeccionado.direccion || 'Zona registrada' }}</strong> • ID: <span class="font-mono text-slate-400 dark:text-stone-500">{{ alojamientoInspeccionado.id }}</span>
               </p>
             </div>
 
-            <button (click)="alojamientoInspeccionado = null" class="p-2 rounded-full bg-stone-800 text-stone-400 hover:text-white hover:bg-stone-700 transition">✕</button>
+            <button (click)="cerrarInspeccion()" class="p-2 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-stone-800 dark:hover:bg-stone-700 text-slate-500 hover:text-slate-900 dark:text-stone-400 dark:hover:text-white transition">✕</button>
           </div>
 
           <!-- Galería Fotográfica Amplia -->
           <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
-            <div class="md:col-span-3 h-72 sm:h-80 rounded-2xl overflow-hidden relative border border-stone-800">
+            <div class="md:col-span-3 h-72 sm:h-80 rounded-2xl overflow-hidden relative border border-slate-200 dark:border-stone-800">
               <img [src]="alojamientoInspeccionado.imagen" [alt]="alojamientoInspeccionado.titulo" class="w-full h-full object-cover" />
-              <div class="absolute bottom-3 left-3 px-3 py-1.5 rounded-xl bg-black/80 backdrop-blur text-white font-mono font-bold text-xs border border-white/10">
+              <div class="absolute bottom-3 left-3 px-3 py-1.5 rounded-xl bg-black/80 backdrop-blur-md text-white font-mono font-bold text-xs border border-white/10">
                 Tarifa Base: {{ alojamientoInspeccionado.precioNoche }} BOB / noche
               </div>
             </div>
             
             <div class="hidden md:flex flex-col gap-3 h-72 sm:h-80">
-              <div *ngFor="let f of (alojamientoInspeccionado.fotos?.slice(1, 4) || []); let i = index" class="flex-1 rounded-xl overflow-hidden relative border border-stone-800">
+              <div *ngFor="let f of (alojamientoInspeccionado.fotos?.slice(1, 4) || []); let i = index" class="flex-1 rounded-xl overflow-hidden relative border border-slate-200 dark:border-stone-800">
                 <img [src]="f" class="w-full h-full object-cover" />
               </div>
-              <div *ngIf="!alojamientoInspeccionado.fotos || alojamientoInspeccionado.fotos.length <= 1" class="flex-1 rounded-xl bg-stone-900 border border-stone-800 flex flex-col items-center justify-center p-3 text-center text-stone-500 text-[11px]">
+              <div *ngIf="!alojamientoInspeccionado.fotos || alojamientoInspeccionado.fotos.length <= 1" class="flex-1 rounded-xl bg-slate-50 dark:bg-stone-900 border border-slate-200 dark:border-stone-800 flex flex-col items-center justify-center p-3 text-center text-slate-400 dark:text-stone-500 text-[11px]">
                 <span>📸 Fotografía principal verificada</span>
               </div>
             </div>
@@ -994,32 +1023,32 @@ export interface ReporteGenerativo {
 
           <!-- Tarjetas de Especificaciones Principales -->
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-            <div class="p-3.5 rounded-2xl bg-stone-950/80 border border-stone-800 space-y-1">
-              <span class="text-[10px] uppercase font-bold text-stone-400 block tracking-wider">Capacidad Máxima</span>
-              <div class="font-bold text-white text-base">👥 {{ alojamientoInspeccionado.capacidad }} Huéspedes</div>
-              <span class="text-[10px] text-stone-500">Distribución certificada</span>
+            <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-stone-950/80 border border-slate-200 dark:border-stone-800 space-y-1">
+              <span class="text-[10px] uppercase font-bold text-slate-500 dark:text-stone-400 block tracking-wider">Capacidad Máxima</span>
+              <div class="font-bold text-slate-900 dark:text-white text-base">👥 {{ alojamientoInspeccionado.capacidad }} Huéspedes</div>
+              <span class="text-[10px] text-slate-400 dark:text-stone-500">Distribución certificada</span>
             </div>
-            <div class="p-3.5 rounded-2xl bg-stone-950/80 border border-stone-800 space-y-1">
-              <span class="text-[10px] uppercase font-bold text-stone-400 block tracking-wider">Dormitorios / Unidades</span>
-              <div class="font-bold text-white text-base">🛏️ {{ alojamientoInspeccionado.habitaciones }} Habitaciones</div>
-              <span class="text-[10px] text-stone-500">{{ alojamientoInspeccionado.unidades?.length || 1 }} unidades registradas</span>
+            <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-stone-950/80 border border-slate-200 dark:border-stone-800 space-y-1">
+              <span class="text-[10px] uppercase font-bold text-slate-500 dark:text-stone-400 block tracking-wider">Dormitorios / Unidades</span>
+              <div class="font-bold text-slate-900 dark:text-white text-base">🛏️ {{ alojamientoInspeccionado.habitaciones }} Habitaciones</div>
+              <span class="text-[10px] text-slate-400 dark:text-stone-500">{{ alojamientoInspeccionado.unidades?.length || 1 }} unidades registradas</span>
             </div>
-            <div class="p-3.5 rounded-2xl bg-stone-950/80 border border-stone-800 space-y-1">
-              <span class="text-[10px] uppercase font-bold text-stone-400 block tracking-wider">Horario de Ingreso</span>
-              <div class="font-bold text-white text-base">⏰ {{ alojamientoInspeccionado.horarioEntrada || '14:00' }}</div>
-              <span class="text-[10px] text-stone-500">Check-in anfitrión</span>
+            <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-stone-950/80 border border-slate-200 dark:border-stone-800 space-y-1">
+              <span class="text-[10px] uppercase font-bold text-slate-500 dark:text-stone-400 block tracking-wider">Horario de Ingreso</span>
+              <div class="font-bold text-slate-900 dark:text-white text-base">⏰ {{ alojamientoInspeccionado.horarioEntrada || '14:00' }}</div>
+              <span class="text-[10px] text-slate-400 dark:text-stone-500">Check-in anfitrión</span>
             </div>
-            <div class="p-3.5 rounded-2xl bg-stone-950/80 border border-stone-800 space-y-1">
-              <span class="text-[10px] uppercase font-bold text-stone-400 block tracking-wider">Horario de Salida</span>
-              <div class="font-bold text-white text-base">⏰ {{ alojamientoInspeccionado.horarioSalida || '11:00' }}</div>
-              <span class="text-[10px] text-stone-500">Check-out límite</span>
+            <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-stone-950/80 border border-slate-200 dark:border-stone-800 space-y-1">
+              <span class="text-[10px] uppercase font-bold text-slate-500 dark:text-stone-400 block tracking-wider">Horario de Salida</span>
+              <div class="font-bold text-slate-900 dark:text-white text-base">⏰ {{ alojamientoInspeccionado.horarioSalida || '11:00' }}</div>
+              <span class="text-[10px] text-slate-400 dark:text-stone-500">Check-out límite</span>
             </div>
           </div>
 
           <!-- Descripción del Alojamiento -->
           <div class="space-y-2">
-            <h4 class="text-xs font-bold uppercase tracking-wider text-stone-400">Descripción Comercial & Reglas</h4>
-            <div class="p-4 rounded-2xl bg-stone-950/80 border border-stone-800 text-xs text-stone-300 leading-relaxed">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-stone-400">Descripción Comercial & Reglas</h4>
+            <div class="p-4 rounded-2xl bg-slate-50 dark:bg-stone-950/80 border border-slate-200 dark:border-stone-800 text-xs text-slate-700 dark:text-stone-300 leading-relaxed">
               {{ alojamientoInspeccionado.descripcion }}
             </div>
           </div>
@@ -1027,20 +1056,20 @@ export interface ReporteGenerativo {
           <!-- Detalle de Habitaciones / Unidades Reservables (Especial Hoteles y Casas) -->
           <div *ngIf="alojamientoInspeccionado.unidades && alojamientoInspeccionado.unidades.length > 0" class="space-y-3">
             <div class="flex items-center justify-between">
-              <h4 class="text-xs font-bold uppercase tracking-wider text-brand-400">
+              <h4 class="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">
                 Inventario de Habitaciones & Unidades Reservables ({{ alojamientoInspeccionado.unidades.length }})
               </h4>
-              <span class="text-[10px] text-stone-400">
+              <span class="text-[10px] text-slate-500 dark:text-stone-400">
                 Desglose para reservas simultáneas
               </span>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div *ngFor="let u of alojamientoInspeccionado.unidades" class="p-4 rounded-2xl bg-stone-950 border border-stone-800 space-y-3">
+              <div *ngFor="let u of alojamientoInspeccionado.unidades" class="p-4 rounded-2xl bg-slate-50 dark:bg-stone-950 border border-slate-200 dark:border-stone-800 space-y-3">
                 <div class="flex items-start justify-between gap-2">
                   <div>
-                    <h5 class="text-sm font-bold text-white">{{ u.nombre }}</h5>
-                    <div class="flex items-center gap-2 mt-1 text-[11px] text-stone-400">
+                    <h5 class="text-sm font-bold text-slate-900 dark:text-white">{{ u.nombre }}</h5>
+                    <div class="flex items-center gap-2 mt-1 text-[11px] text-slate-500 dark:text-stone-400">
                       <span>👥 {{ u.capacidadHuespedes }} pers.</span>
                       <span>•</span>
                       <span>🛏️ {{ u.cantidadCamas }} camas</span>
@@ -1049,14 +1078,14 @@ export interface ReporteGenerativo {
                     </div>
                   </div>
                   <div class="text-right">
-                    <span class="font-mono font-bold text-brand-400 text-sm block">{{ u.precioNoche }} BOB</span>
-                    <span class="text-[10px] text-stone-500">por noche</span>
+                    <span class="font-mono font-bold text-blue-600 dark:text-blue-400 text-sm block">{{ u.precioNoche }} BOB</span>
+                    <span class="text-[10px] text-slate-400 dark:text-stone-500">por noche</span>
                   </div>
                 </div>
 
-                <div class="flex items-center justify-between pt-2 border-t border-stone-800 text-[11px]">
-                  <span class="text-stone-400">Stock para reserva:</span>
-                  <span class="px-2.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 font-mono font-bold text-[10px] border border-cyan-500/30">
+                <div class="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-stone-800 text-[11px]">
+                  <span class="text-slate-500 dark:text-stone-400">Stock para reserva:</span>
+                  <span class="px-2.5 py-0.5 rounded-full bg-cyan-100 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300 font-mono font-bold text-[10px] border border-cyan-200 dark:border-cyan-800">
                     {{ u.inventarioTotal }} unidades disponibles
                   </span>
                 </div>
@@ -1066,32 +1095,32 @@ export interface ReporteGenerativo {
 
           <!-- Servicios & Amenidades Declaradas -->
           <div *ngIf="alojamientoInspeccionado.servicios && alojamientoInspeccionado.servicios.length > 0" class="space-y-2">
-            <h4 class="text-xs font-bold uppercase tracking-wider text-stone-400">Servicios e Infraestructura</h4>
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-stone-400">Servicios e Infraestructura</h4>
             <div class="flex flex-wrap gap-2">
-              <span *ngFor="let s of alojamientoInspeccionado.servicios" class="px-3 py-1.5 rounded-xl bg-stone-900 border border-stone-800 text-xs text-stone-300 flex items-center gap-1.5">
-                <span>✓</span>
+              <span *ngFor="let s of alojamientoInspeccionado.servicios" class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-stone-900 border border-slate-200 dark:border-stone-800 text-xs text-slate-700 dark:text-stone-300 flex items-center gap-1.5">
+                <span class="text-blue-600 dark:text-blue-400">✓</span>
                 <span>{{ s }}</span>
               </span>
             </div>
           </div>
 
           <!-- Políticas y Reglas -->
-          <div class="p-4 rounded-2xl bg-stone-950 border border-stone-800 space-y-2 text-xs">
-            <div *ngIf="alojamientoInspeccionado.politicas" class="text-stone-300 text-xs leading-relaxed">
-              <strong class="text-stone-200 block mb-1">Políticas de Convivencia y Cancelación:</strong>
+          <div class="p-4 rounded-2xl bg-slate-50 dark:bg-stone-950 border border-slate-200 dark:border-stone-800 space-y-2 text-xs">
+            <div *ngIf="alojamientoInspeccionado.politicas" class="text-slate-700 dark:text-stone-300 text-xs leading-relaxed">
+              <strong class="text-slate-900 dark:text-stone-200 block mb-1">Políticas de Convivencia y Cancelación:</strong>
               {{ alojamientoInspeccionado.politicas }}
             </div>
-            <div *ngIf="alojamientoInspeccionado.motivoRechazo" class="pt-2 border-t border-rose-900/40 text-rose-300 text-xs">
-              <strong class="block mb-0.5 text-rose-200">Observación Anterior Registrada:</strong>
+            <div *ngIf="alojamientoInspeccionado.motivoRechazo" class="pt-2 border-t border-rose-200 dark:border-rose-900/40 text-rose-700 dark:text-rose-300 text-xs">
+              <strong class="block mb-0.5 text-rose-800 dark:text-rose-200">Observación Anterior Registrada:</strong>
               {{ alojamientoInspeccionado.motivoRechazo }}
             </div>
           </div>
 
           <!-- Footer de Moderación Administrativa -->
-          <div class="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-stone-800">
+          <div class="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-slate-200 dark:border-stone-800">
             <button
-              (click)="alojamientoInspeccionado = null"
-              class="px-5 py-2.5 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 text-xs font-semibold transition"
+              (click)="cerrarInspeccion()"
+              class="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-stone-800 dark:hover:bg-stone-700 text-slate-700 dark:text-stone-300 text-xs font-semibold transition border border-slate-200 dark:border-stone-700"
             >
               Cerrar Inspección
             </button>
@@ -1099,24 +1128,24 @@ export interface ReporteGenerativo {
             <div class="flex items-center gap-2">
               <button
                 *ngIf="alojamientoInspeccionado.estado === 'EN_REVISION'"
-                (click)="abrirModalRechazo(alojamientoInspeccionado); alojamientoInspeccionado = null"
-                class="px-4 py-2.5 rounded-xl bg-stone-800 hover:bg-stone-700 text-rose-300 text-xs font-semibold border border-rose-500/30 transition flex items-center gap-1.5"
+                (click)="abrirModalRechazo(alojamientoInspeccionado); cerrarInspeccion()"
+                class="px-4 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-stone-800 dark:hover:bg-stone-700 text-rose-700 dark:text-rose-300 text-xs font-semibold border border-rose-200 dark:border-rose-500/30 transition flex items-center gap-1.5"
               >
                 <span>Observar Solicitud</span>
               </button>
 
               <button
                 *ngIf="alojamientoInspeccionado.estado === 'PUBLICADO'"
-                (click)="suspenderAlojamiento(alojamientoInspeccionado.id); alojamientoInspeccionado = null"
-                class="px-4 py-2.5 rounded-xl bg-stone-800 hover:bg-stone-700 text-amber-300 text-xs font-semibold border border-amber-500/30 transition"
+                (click)="suspenderAlojamiento(alojamientoInspeccionado.id); cerrarInspeccion()"
+                class="px-4 py-2.5 rounded-xl bg-blue-50 hover:bg-blue-100 dark:bg-stone-800 dark:hover:bg-stone-700 text-blue-700 dark:text-blue-300 text-xs font-semibold border border-blue-200 dark:border-blue-500/30 transition"
               >
                 Suspender Preventivamente
               </button>
 
               <button
                 *ngIf="alojamientoInspeccionado.estado === 'EN_REVISION' || alojamientoInspeccionado.estado === 'RECHAZADO'"
-                (click)="aprobarAlojamiento(alojamientoInspeccionado.id); alojamientoInspeccionado = null"
-                class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-md shadow-emerald-600/20 transition flex items-center gap-1.5"
+                (click)="aprobarAlojamiento(alojamientoInspeccionado.id); cerrarInspeccion()"
+                class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs shadow-md shadow-blue-500/25 transition flex items-center gap-1.5"
               >
                 <span>✓ Aprobar y Publicar en Catálogo</span>
               </button>
@@ -1129,39 +1158,39 @@ export interface ReporteGenerativo {
       <!-- ========================================== -->
       <!-- MODAL DE OBSERVACIÓN / RECHAZO             -->
       <!-- ========================================== -->
-      <div *ngIf="modalRechazoAbierto" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+      <div *ngIf="modalRechazoAbierto" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in">
         <div class="absolute inset-0" (click)="modalRechazoAbierto = false"></div>
 
-        <div class="relative w-full max-w-lg p-6 rounded-3xl bg-carbon-900 border border-stone-700 text-white z-10 space-y-4 shadow-2xl">
+        <div class="relative w-full max-w-lg p-6 rounded-3xl bg-white dark:bg-carbon-900 border border-slate-200 dark:border-stone-700 text-slate-900 dark:text-white z-10 space-y-4 shadow-2xl animate-modal-in">
           <div class="flex items-start justify-between">
             <div>
-              <span class="text-[10px] font-bold text-rose-400 uppercase tracking-widest block mb-0.5">
+              <span class="text-[10px] font-bold text-rose-600 dark:text-rose-400 uppercase tracking-widest block mb-0.5">
                 Moderación de Calidad
               </span>
-              <h3 class="font-serif text-lg font-bold text-white">Observar Solicitud de Alojamiento</h3>
-              <p class="text-xs text-stone-400">{{ alojamientoParaRechazo?.titulo }}</p>
+              <h3 class="font-serif text-lg font-bold text-slate-900 dark:text-white">Observar Solicitud de Alojamiento</h3>
+              <p class="text-xs text-slate-500 dark:text-stone-400">{{ alojamientoParaRechazo?.titulo }}</p>
             </div>
-            <button (click)="modalRechazoAbierto = false" class="p-1.5 rounded-full bg-stone-800 text-stone-400 hover:text-white transition">✕</button>
+            <button (click)="modalRechazoAbierto = false" class="p-1.5 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-stone-800 dark:hover:bg-stone-700 text-slate-500 dark:text-stone-400 hover:text-slate-900 dark:hover:text-white transition">✕</button>
           </div>
 
-          <p class="text-xs text-stone-300">
+          <p class="text-xs text-slate-600 dark:text-stone-300 leading-relaxed">
             Especifique el motivo técnico o administrativo de la observación. El anfitrión recibirá esta notificación para corregir su solicitud y volver a postularla.
           </p>
 
           <div>
-            <label class="block text-[11px] font-semibold text-stone-400 mb-1">Motivo de la Observación:</label>
+            <label class="block text-[11px] font-semibold text-slate-600 dark:text-stone-400 mb-1">Motivo de la Observación:</label>
             <textarea
               [(ngModel)]="motivoRechazoTexto"
               rows="4"
-              class="w-full p-3 rounded-xl bg-stone-950 border border-stone-800 text-white text-xs placeholder-stone-500 focus:outline-none focus:border-rose-400 transition"
+              class="w-full p-3.5 rounded-2xl bg-slate-50 dark:bg-stone-950 border border-slate-300 dark:border-stone-800 text-slate-900 dark:text-white text-xs placeholder-slate-400 dark:placeholder-stone-500 focus:outline-none focus:border-rose-500 transition"
               placeholder="Indique las observaciones sobre fotografías, normas de habitabilidad o licencias..."
             ></textarea>
           </div>
 
-          <div class="flex items-center justify-end gap-2 pt-2 border-t border-stone-800">
+          <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-200 dark:border-stone-800">
             <button
               (click)="modalRechazoAbierto = false"
-              class="px-4 py-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 text-xs font-semibold transition"
+              class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-stone-800 dark:hover:bg-stone-700 text-slate-700 hover:text-slate-900 dark:text-stone-300 text-xs font-semibold transition border border-slate-200 dark:border-stone-700"
             >
               Cancelar
             </button>
@@ -1180,6 +1209,8 @@ export interface ReporteGenerativo {
 })
 export class AppComponent implements OnInit {
   activeTab: 'dashboard' | 'contabilidad' | 'alojamientos' | 'liquidaciones' | 'reportes-ia' = 'dashboard';
+  idPendienteInspeccion: string | null = null;
+  isDarkMode: boolean = true;
   
   // Contabilidad State
   movimientos: MovimientoContable[] = [];
@@ -1244,15 +1275,114 @@ export class AppComponent implements OnInit {
   reporteActual: ReporteGenerativo | null = null;
 
   ngOnInit() {
+    // 1. Inicializar Tema persistente desde LocalStorage
+    try {
+      const savedTheme = localStorage.getItem('alojate_theme_mode');
+      this.isDarkMode = savedTheme !== 'light';
+    } catch {
+      this.isDarkMode = true;
+    }
+    this.aplicarTema();
+
+    // 2. Cache local de alojamientos
     try {
       const cached = localStorage.getItem('alojate_admin_alojamientos');
       if (cached) {
         this.alojamientos = JSON.parse(cached);
       }
     } catch {}
+
+    // 3. Sincronización de Rutas Hash (Persistencia al recargar con F5)
+    if (typeof window !== 'undefined') {
+      window.addEventListener('hashchange', () => this.sincronizarRuta());
+      this.sincronizarRuta();
+    }
+
     this.cargarMovimientos();
     this.cargarAlojamientos();
     this.generarReporteIA();
+  }
+
+  toggleTheme() {
+    this.isDarkMode = !this.isDarkMode;
+    try {
+      localStorage.setItem('alojate_theme_mode', this.isDarkMode ? 'dark' : 'light');
+    } catch {}
+    this.aplicarTema();
+  }
+
+  aplicarTema() {
+    if (typeof document !== 'undefined') {
+      document.body.classList.toggle('theme-light', !this.isDarkMode);
+      document.documentElement.classList.toggle('dark', this.isDarkMode);
+    }
+  }
+
+  cambiarTab(tab: 'dashboard' | 'contabilidad' | 'alojamientos' | 'liquidaciones' | 'reportes-ia') {
+    this.activeTab = tab;
+    if (tab === 'alojamientos' && !this.alojamientoInspeccionado) {
+      window.location.hash = '#/alojamientos';
+    } else if (tab === 'alojamientos' && this.alojamientoInspeccionado) {
+      window.location.hash = `#/alojamientos/${this.alojamientoInspeccionado.id}`;
+    } else {
+      window.location.hash = `#/${tab}`;
+    }
+    try {
+      localStorage.setItem('alojate_admin_tab', tab);
+    } catch {}
+  }
+
+  inspeccionarAlojamiento(a: SolicitudAlojamiento) {
+    this.alojamientoInspeccionado = a;
+    this.activeTab = 'alojamientos';
+    window.location.hash = `#/alojamientos/${a.id}`;
+  }
+
+  cerrarInspeccion() {
+    this.alojamientoInspeccionado = null;
+    window.location.hash = '#/alojamientos';
+  }
+
+  sincronizarRuta() {
+    if (typeof window === 'undefined') return;
+    const hash = window.location.hash.replace(/^#\/?!?\/?/, '');
+    const parts = hash.split('/').filter(Boolean);
+    const rutaBase = parts[0];
+
+    if (rutaBase === 'dashboard' || rutaBase === 'contabilidad' || rutaBase === 'liquidaciones' || rutaBase === 'reportes-ia') {
+      this.activeTab = rutaBase as any;
+      this.alojamientoInspeccionado = null;
+      try {
+        localStorage.setItem('alojate_admin_tab', rutaBase);
+      } catch {}
+    } else if (rutaBase === 'alojamientos') {
+      this.activeTab = 'alojamientos';
+      try {
+        localStorage.setItem('alojate_admin_tab', 'alojamientos');
+      } catch {}
+      const alojId = parts[1];
+      if (alojId) {
+        const item = this.alojamientos.find(a => a.id === alojId);
+        if (item) {
+          this.alojamientoInspeccionado = item;
+        } else {
+          this.idPendienteInspeccion = alojId;
+        }
+      } else {
+        this.alojamientoInspeccionado = null;
+      }
+    } else {
+      try {
+        const savedTab = localStorage.getItem('alojate_admin_tab') as any;
+        if (savedTab && ['dashboard', 'contabilidad', 'alojamientos', 'liquidaciones', 'reportes-ia'].includes(savedTab)) {
+          this.activeTab = savedTab;
+        } else {
+          this.activeTab = 'dashboard';
+        }
+      } catch {
+        this.activeTab = 'dashboard';
+      }
+    }
   }
 
   obtenerTituloVista(): string {
@@ -1402,8 +1532,23 @@ export class AppComponent implements OnInit {
       } else {
         this.cargarAlojamientosFallback();
       }
+
+      if (this.idPendienteInspeccion) {
+        const item = this.alojamientos.find(a => a.id === this.idPendienteInspeccion);
+        if (item) {
+          this.alojamientoInspeccionado = item;
+        }
+        this.idPendienteInspeccion = null;
+      }
     } catch {
       this.cargarAlojamientosFallback();
+      if (this.idPendienteInspeccion) {
+        const item = this.alojamientos.find(a => a.id === this.idPendienteInspeccion);
+        if (item) {
+          this.alojamientoInspeccionado = item;
+        }
+        this.idPendienteInspeccion = null;
+      }
     } finally {
       this.cargandoAlojamientos = false;
     }
@@ -1611,10 +1756,6 @@ export class AppComponent implements OnInit {
       const item = this.alojamientos.find(a => a.id === id);
       if (item) item.estado = 'SUSPENDIDO';
     }
-  }
-
-  inspeccionarAlojamiento(a: SolicitudAlojamiento) {
-    this.alojamientoInspeccionado = a;
   }
 
   autorizarLotePagos() {
