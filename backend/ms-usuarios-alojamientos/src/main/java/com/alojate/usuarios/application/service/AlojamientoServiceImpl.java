@@ -72,7 +72,20 @@ public class AlojamientoServiceImpl implements AlojamientoUseCase {
     public Alojamiento cambiarEstado(UUID idAlojamiento, EstadoPublicacion nuevoEstado) {
         Alojamiento alojamiento = obtenerPorId(idAlojamiento);
         alojamiento.setEstadoPublicacion(nuevoEstado);
+        if (nuevoEstado == EstadoPublicacion.PUBLICADO) {
+            propagarCascadaUnidades(idAlojamiento, true);
+        } else if (nuevoEstado == EstadoPublicacion.SUSPENDIDO || nuevoEstado == EstadoPublicacion.PAUSADO || nuevoEstado == EstadoPublicacion.RECHAZADO) {
+            propagarCascadaUnidades(idAlojamiento, false);
+        }
         return alojamientoRepository.guardar(alojamiento);
+    }
+
+    private void propagarCascadaUnidades(UUID idAlojamiento, boolean habilitar) {
+        List<UnidadReservable> unidades = unidadReservableRepository.listarPorAlojamiento(idAlojamiento);
+        for (UnidadReservable u : unidades) {
+            u.setEstado(habilitar ? com.alojate.usuarios.domain.model.EstadoUnidad.DISPONIBLE : com.alojate.usuarios.domain.model.EstadoUnidad.MANTENIMIENTO);
+            unidadReservableRepository.guardar(u);
+        }
     }
 
     @Override
@@ -137,6 +150,7 @@ public class AlojamientoServiceImpl implements AlojamientoUseCase {
         Alojamiento alojamiento = obtenerPorId(idAlojamiento);
         alojamiento.setEstadoPublicacion(EstadoPublicacion.PUBLICADO);
         alojamiento.setMotivoRechazo(null);
+        propagarCascadaUnidades(idAlojamiento, true);
         return alojamientoRepository.guardar(alojamiento);
     }
 
@@ -146,6 +160,7 @@ public class AlojamientoServiceImpl implements AlojamientoUseCase {
         Alojamiento alojamiento = obtenerPorId(idAlojamiento);
         alojamiento.setEstadoPublicacion(EstadoPublicacion.RECHAZADO);
         alojamiento.setMotivoRechazo(motivo != null ? motivo.trim() : "No cumple con las normas de habitabilidad y calidad.");
+        propagarCascadaUnidades(idAlojamiento, false);
         return alojamientoRepository.guardar(alojamiento);
     }
 
@@ -155,6 +170,7 @@ public class AlojamientoServiceImpl implements AlojamientoUseCase {
         Alojamiento alojamiento = obtenerPorId(idAlojamiento);
         alojamiento.setEstadoPublicacion(EstadoPublicacion.SUSPENDIDO);
         alojamiento.setMotivoRechazo(motivo != null ? motivo.trim() : "Publicación suspendida por auditoría.");
+        propagarCascadaUnidades(idAlojamiento, false);
         return alojamientoRepository.guardar(alojamiento);
     }
 

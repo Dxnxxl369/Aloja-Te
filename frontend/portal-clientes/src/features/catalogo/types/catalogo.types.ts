@@ -55,3 +55,36 @@ export interface Alojamiento {
   unidades: UnidadReservable[];
   servicios: ServicioAlojamiento[];
 }
+
+export interface ValoracionCliente {
+  idValoracion: string;
+  idAlojamiento: string;
+  idUnidad?: string;
+  idUsuario: string;
+  nombreUsuario?: string;
+  puntuacionGeneral: number;
+  calificacionLimpieza?: number;
+  calificacionUbicacion?: number;
+  calificacionCalidadPrecio?: number;
+  calificacionServicio?: number;
+  calificacionComodidad?: number;
+  esAnonimo: boolean;
+  comentario: string;
+  sentimientoNlp?: string;
+  confianzaNlp?: number;
+  topicoPredicho?: string;
+  fechaCreacion?: string;
+}
+
+export interface ResumenValoraciones {
+  calificacionPromedio: number;
+  totalResenas: number;
+  promedioLimpieza: number;
+  promedioUbicacion: number;
+  promedioCalidadPrecio: number;
+  promedioServicio: number;
+  promedioComodidad: number;
+  conteoPositivos: number;
+  conteoNeutros: number;
+  conteoNegativos: number;
+}

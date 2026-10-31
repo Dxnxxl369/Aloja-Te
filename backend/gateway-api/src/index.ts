@@ -37,11 +37,13 @@ const MS_FINANZAS = process.env.MS_FINANZAS_URL || 'http://localhost:3003';
 const MS_IA = process.env.MS_IA_URL || 'http://localhost:3004';
 
 // Enrutamiento a Microservicios preservando la ruta completa /api/v1/...
-// MS-01: Usuarios, Autenticación y Alojamientos
+// MS-01: Usuarios, Autenticación, Alojamientos, Unidades y Valoraciones
 app.use(createProxyMiddleware(proxyOptions(MS_USUARIOS, 
   '/api/v1/auth',
   '/api/v1/usuarios',
   '/api/v1/alojamientos',
+  '/api/v1/unidades',
+  '/api/v1/valoraciones',
   '/api/v1/catalogos',
   '/api/v1/configuracion',
   '/api/v1/seguridad'

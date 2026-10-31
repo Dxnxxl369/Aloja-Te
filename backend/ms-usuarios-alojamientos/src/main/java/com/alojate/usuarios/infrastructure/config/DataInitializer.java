@@ -32,6 +32,7 @@ public class DataInitializer implements CommandLineRunner {
     private final SpringDataAlojamientoRepository alojamientoRepo;
     private final SpringDataUnidadReservableRepository unidadRepo;
     private final SpringDataFotografiaRepository fotoRepo;
+    private final SpringDataValoracionRepository valoracionRepo;
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
 
@@ -314,7 +315,7 @@ public class DataInitializer implements CommandLineRunner {
             AlojamientoJpaEntity hotelGuardado = alojamientoRepo.save(hotelDemo);
 
             // Habitación 1: Suite Presidencial con Balcón (Inventario: 3)
-            unidadRepo.save(UnidadReservableJpaEntity.builder()
+            UnidadReservableJpaEntity uSuite = unidadRepo.save(UnidadReservableJpaEntity.builder()
                     .idAlojamiento(hotelGuardado.getIdAlojamiento())
                     .tipoEspacio(espacioHabitacion)
                     .nombre("Suite Presidencial con Balcón & Vista a Jardines")
@@ -328,7 +329,7 @@ public class DataInitializer implements CommandLineRunner {
                     .build());
 
             // Habitación 2: Habitación Ejecutiva Doble (Inventario: 12)
-            unidadRepo.save(UnidadReservableJpaEntity.builder()
+            UnidadReservableJpaEntity uDoble = unidadRepo.save(UnidadReservableJpaEntity.builder()
                     .idAlojamiento(hotelGuardado.getIdAlojamiento())
                     .tipoEspacio(espacioHabitacion)
                     .nombre("Habitación Ejecutiva Doble Twin")
@@ -398,6 +399,105 @@ public class DataInitializer implements CommandLineRunner {
             log.info("[DataInitializer] Alojamiento demo creado: Cabaña Chiquitana El Palmar (CASA_DEPARTAMENTO)");
             log.info("[DataInitializer] Hotel demo creado: Hotel Boutique Los Tajibos Colonial (HOTEL_HOSTAL)");
             log.info("[DataInitializer] Alojamiento en moderación creado: Casa de Campo La Rinconada (EN_REVISION)");
+
+            // 13. Sembrar Valoraciones y Reseñas con 5 Atributos y NLP
+            UsuarioJpaEntity clienteDefault = usuarioRepo.findByEmail("cliente@alojate.bo").orElse(null);
+            if (valoracionRepo.count() == 0 && clienteDefault != null) {
+                // Reseña 1 Casa: Pública, 5 estrellas
+                valoracionRepo.save(ValoracionJpaEntity.builder()
+                        .idAlojamiento(alojGuardado.getIdAlojamiento())
+                        .idUsuario(clienteDefault.getIdUsuario())
+                        .puntuacionGeneral(5)
+                        .calificacionLimpieza(5)
+                        .calificacionUbicacion(5)
+                        .calificacionCalidadPrecio(5)
+                        .calificacionServicio(5)
+                        .calificacionComodidad(5)
+                        .esAnonimo(false)
+                        .comentario("La cabaña superó nuestras expectativas. Todo impecable, el entorno natural es bellísimo y la atención del anfitrión fue excelente.")
+                        .sentimientoNlp("POSITIVO")
+                        .confianzaNlp(new BigDecimal("0.9850"))
+                        .topicoPredicho("Comodidad")
+                        .fechaCreacion(LocalDateTime.now().minusDays(10))
+                        .build());
+
+                // Reseña 2 Casa: Anónima, 4 estrellas
+                valoracionRepo.save(ValoracionJpaEntity.builder()
+                        .idAlojamiento(alojGuardado.getIdAlojamiento())
+                        .idUsuario(clienteDefault.getIdUsuario())
+                        .puntuacionGeneral(4)
+                        .calificacionLimpieza(4)
+                        .calificacionUbicacion(5)
+                        .calificacionCalidadPrecio(4)
+                        .calificacionServicio(5)
+                        .calificacionComodidad(4)
+                        .esAnonimo(true)
+                        .comentario("Muy buena ubicación cerca del pueblo y lugar tranquilo. El wifi es un poco inestable por la zona pero desconectar vino bien.")
+                        .sentimientoNlp("POSITIVO")
+                        .confianzaNlp(new BigDecimal("0.8920"))
+                        .topicoPredicho("Ubicación")
+                        .fechaCreacion(LocalDateTime.now().minusDays(3))
+                        .build());
+
+                // Reseña 3 Hotel General (idUnidad == null)
+                valoracionRepo.save(ValoracionJpaEntity.builder()
+                        .idAlojamiento(hotelGuardado.getIdAlojamiento())
+                        .idUnidad(null) // Reseña del Hotel en general
+                        .idUsuario(clienteDefault.getIdUsuario())
+                        .puntuacionGeneral(5)
+                        .calificacionLimpieza(5)
+                        .calificacionUbicacion(5)
+                        .calificacionCalidadPrecio(4)
+                        .calificacionServicio(5)
+                        .calificacionComodidad(5)
+                        .esAnonimo(false)
+                        .comentario("El desayuno buffet del hotel es de primer nivel y la piscina tropical increíble. El personal de recepción muy amable y atento.")
+                        .sentimientoNlp("POSITIVO")
+                        .confianzaNlp(new BigDecimal("0.9740"))
+                        .topicoPredicho("Atención/Desayuno")
+                        .fechaCreacion(LocalDateTime.now().minusDays(7))
+                        .build());
+
+                // Reseña 4 Hotel Habitación Suite (idUnidad == uSuite.getIdUnidad())
+                valoracionRepo.save(ValoracionJpaEntity.builder()
+                        .idAlojamiento(hotelGuardado.getIdAlojamiento())
+                        .idUnidad(uSuite.getIdUnidad()) // Reseña específica de la Suite
+                        .idUsuario(clienteDefault.getIdUsuario())
+                        .puntuacionGeneral(5)
+                        .calificacionLimpieza(5)
+                        .calificacionUbicacion(5)
+                        .calificacionCalidadPrecio(5)
+                        .calificacionServicio(5)
+                        .calificacionComodidad(5)
+                        .esAnonimo(false)
+                        .comentario("La cama king size de esta suite es una nube. El balcón privado con vista a los jardines coloniales fue lo mejor de nuestra estadía.")
+                        .sentimientoNlp("POSITIVO")
+                        .confianzaNlp(new BigDecimal("0.9910"))
+                        .topicoPredicho("Confort/Cama")
+                        .fechaCreacion(LocalDateTime.now().minusDays(4))
+                        .build());
+
+                // Reseña 5 Hotel Habitación Doble (idUnidad == uDoble.getIdUnidad()) - Anónima
+                valoracionRepo.save(ValoracionJpaEntity.builder()
+                        .idAlojamiento(hotelGuardado.getIdAlojamiento())
+                        .idUnidad(uDoble.getIdUnidad()) // Reseña específica de la Habitación Doble
+                        .idUsuario(clienteDefault.getIdUsuario())
+                        .puntuacionGeneral(4)
+                        .calificacionLimpieza(5)
+                        .calificacionUbicacion(4)
+                        .calificacionCalidadPrecio(4)
+                        .calificacionServicio(4)
+                        .calificacionComodidad(4)
+                        .esAnonimo(true)
+                        .comentario("Habitación espaciosa y limpia con excelente aire acondicionado y ducha con buena presión. Muy recomendable para viajes de trabajo.")
+                        .sentimientoNlp("POSITIVO")
+                        .confianzaNlp(new BigDecimal("0.9340"))
+                        .topicoPredicho("Limpieza/Ducha")
+                        .fechaCreacion(LocalDateTime.now().minusDays(1))
+                        .build());
+
+                log.info("[DataInitializer] Reseñas y valoraciones sembradas (Casa, Hotel general y Habitaciones).");
+            }
         }
 
         log.info("[DataInitializer] Inicialización completada con éxito.");

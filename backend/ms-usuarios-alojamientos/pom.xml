@@ -80,6 +80,7 @@
 	</dependencies>
 
 	<build>
+		<directory>${project.basedir}/build-target</directory>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>

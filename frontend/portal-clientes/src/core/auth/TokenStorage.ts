@@ -32,5 +32,7 @@ export const TokenStorage = {
   clearSession(): void {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
+    localStorage.removeItem('alojate_mis_reservas');
+    sessionStorage.clear();
   }
 };

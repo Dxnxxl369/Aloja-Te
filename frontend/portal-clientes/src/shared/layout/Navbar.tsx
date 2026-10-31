@@ -7,6 +7,7 @@ interface NavbarProps {
   onChangeView: (view: 'catalogo' | 'mis-viajes' | 'anfitrion') => void;
   darkMode: boolean;
   onToggleDarkMode: () => void;
+  onLogout?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -14,6 +15,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onChangeView,
   darkMode,
   onToggleDarkMode,
+  onLogout,
 }) => {
   const { user, openAuthModal, logout, activeRole, setRole } = useAuth();
 
@@ -139,7 +141,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               </div>
 
               <button
-                onClick={logout}
+                onClick={onLogout ? onLogout : logout}
                 className="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-red-500/10 text-slate-500 hover:text-red-500 transition"
                 title="Cerrar Sesión"
               >

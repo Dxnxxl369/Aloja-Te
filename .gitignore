@@ -19,12 +19,20 @@ __pycache__/
 
 # Salidas de compilación
 target/
+build-target/
 dist/
 dist-ssr/
 build/
 .angular/
-out/
+/out/
 *.class
+
+# Bases de datos locales
+*.mv.db
+*.trace.db
+*.sqlite
+*.sqlite3
+data/
 
 # Logs y temporales
 *.log

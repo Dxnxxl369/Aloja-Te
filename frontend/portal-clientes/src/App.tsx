@@ -23,8 +23,9 @@ import { ENDPOINTS } from './core/api/apiEndpoints';
 import { Plus, Building2, Home, Hotel, Eye, ShieldCheck, AlertCircle, ArrowLeft, Loader2 } from 'lucide-react';
 
 export const AppContent: React.FC = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { currentView, params, navigate } = useAppRouter();
+  const [cerrandoSesion, setCerrandoSesion] = useState(false);
 
   // Theme State con persistencia en LocalStorage
   const [darkMode, setDarkMode] = useState<boolean>(() => {
@@ -52,12 +53,26 @@ export const AppContent: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [misReservas, setMisReservas] = useState<ReservaResponse[]>(() => {
     try {
+      const token = localStorage.getItem('alojate_jwt_token');
+      const savedUser = localStorage.getItem('alojate_user_profile');
+      if (!token || !savedUser) return [];
       const saved = localStorage.getItem('alojate_mis_reservas');
       return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
     }
   });
+
+  const handleLogout = () => {
+    setCerrandoSesion(true);
+    setTimeout(() => {
+      logout();
+      setMisReservas([]);
+      localStorage.removeItem('alojate_mis_reservas');
+      setCerrandoSesion(false);
+      navigate.catalogo();
+    }, 700);
+  };
 
   // Modal & Detalle Flow States
   const [detalleAlojamiento, setDetalleAlojamiento] = useState<Alojamiento | null>(null);
@@ -144,9 +159,14 @@ export const AppContent: React.FC = () => {
 
   // Sincronizar Reservas del Cliente (MS-02 y LocalStorage)
   useEffect(() => {
+    if (!user) {
+      setMisReservas([]);
+      return;
+    }
+
     const cargarReservas = async () => {
       try {
-        const clienteId = user?.id || '12e9afda-0a98-4a40-80fb-88794b383a8e';
+        const clienteId = user.id;
         let reservasServidor: ReservaResponse[] = [];
         
         try {
@@ -228,6 +248,7 @@ export const AppContent: React.FC = () => {
         }}
         darkMode={darkMode}
         onToggleDarkMode={() => setDarkMode(!darkMode)}
+        onLogout={handleLogout}
       />
 
       {/* 2. Contenido Dinámico según la Ruta */}
@@ -320,6 +341,20 @@ export const AppContent: React.FC = () => {
               <DetalleAlojamientoView
                 alojamiento={detalleAlojamiento}
                 onVolver={() => navigate.back()}
+                onFiltrarDepartamento={(depto) => {
+                  setDepartamento(depto);
+                  navigate.catalogo(depto);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                onFiltrarCiudad={(ciudad) => {
+                  if (detalleAlojamiento.departamento) {
+                    setDepartamento(detalleAlojamiento.departamento);
+                    navigate.catalogo(detalleAlojamiento.departamento);
+                  } else {
+                    navigate.catalogo();
+                  }
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
                 onReservar={(a, u, ci, co, h) => {
                   setUnidadSeleccionada(u);
                   setDatosReservaPrevia({ checkIn: ci, checkOut: co, huespedes: h });
@@ -479,6 +514,25 @@ export const AppContent: React.FC = () => {
           setAlojamientos((prev) => [nuevo, ...prev]);
         }}
       />
+
+      {/* Animación Visual de Cierre de Sesión Seguro */}
+      {cerrandoSesion && (
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/75 backdrop-blur-md animate-fade-in select-none">
+          <div className="p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl text-center space-y-4 max-w-sm mx-4 animate-modal-in">
+            <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400 flex items-center justify-center mx-auto shadow-sm">
+              <Loader2 className="w-7 h-7 animate-spin" />
+            </div>
+            <div>
+              <h3 className="font-serif text-lg font-bold text-slate-900 dark:text-white">
+                Cerrando Sesión de Forma Segura
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                Limpiando credenciales activas y datos de reserva...
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

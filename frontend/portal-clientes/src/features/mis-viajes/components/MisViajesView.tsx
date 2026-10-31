@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ReservaResponse } from '../../reservas/types/reserva.types';
-import { KeyRound, Calendar, MapPin, CheckCircle, Copy, Check, Clock } from 'lucide-react';
+import { KeyRound, Calendar, MapPin, CheckCircle, Copy, Check, Clock, User } from 'lucide-react';
+import { useAuth } from '../../../core/auth/AuthContext';
 
 interface MisViajesViewProps {
   reservas: ReservaResponse[];
@@ -8,6 +9,7 @@ interface MisViajesViewProps {
 }
 
 export const MisViajesView: React.FC<MisViajesViewProps> = ({ reservas, onNuevaReserva }) => {
+  const { user, openAuthModal } = useAuth();
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const handleCopy = (pin: string, id: string) => {
@@ -15,6 +17,28 @@ export const MisViajesView: React.FC<MisViajesViewProps> = ({ reservas, onNuevaR
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
   };
+
+  if (!user) {
+    return (
+      <div className="max-w-4xl mx-auto py-16 px-4 text-center">
+        <div className="w-16 h-16 rounded-3xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 flex items-center justify-center text-blue-600 dark:text-blue-400 mx-auto mb-4">
+          <User className="w-8 h-8" />
+        </div>
+        <h3 className="font-serif text-2xl font-bold text-slate-900 dark:text-white mb-2">
+          Inicia sesión para ver tus reservas
+        </h3>
+        <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto mb-6">
+          Accede con tu cuenta para consultar tus claves PIN de check-in, comprobantes y estado de tus viajes.
+        </p>
+        <button
+          onClick={() => openAuthModal('login')}
+          className="px-6 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-600/20 transition cursor-pointer"
+        >
+          Iniciar Sesión
+        </button>
+      </div>
+    );
+  }
 
   if (reservas.length === 0) {
     return (
@@ -87,28 +111,38 @@ export const MisViajesView: React.FC<MisViajesViewProps> = ({ reservas, onNuevaR
               </div>
             </div>
 
-            {/* PIN Highlight Box */}
-            <div className="w-full sm:w-auto p-4 rounded-2xl bg-slate-900 border border-cyan-500/40 text-center sm:text-right shrink-0">
+            {/* PIN Highlight Box & Escrow Custody Info */}
+            <div className="w-full sm:w-auto p-4 rounded-2xl bg-slate-900 border border-blue-500/40 text-center sm:text-right shrink-0 space-y-1">
               <div className="flex items-center justify-between sm:justify-end gap-2 mb-1">
-                <div className="flex items-center gap-1.5 text-cyan-300 text-[11px] font-bold">
-                  <KeyRound className="w-3.5 h-3.5" />
-                  <span>PIN de Check-in</span>
+                <div className="flex items-center gap-1.5 text-blue-400 text-[11px] font-bold">
+                  <KeyRound className="w-3.5 h-3.5 text-blue-400" />
+                  <span>PIN de Check-in Presencial</span>
                 </div>
                 <button
                   onClick={() => handleCopy(reserva.codigoCheckin, reserva.idReserva)}
-                  className="p-1 rounded bg-white/10 hover:bg-white/20 text-slate-300 transition"
+                  className="p-1 rounded bg-white/10 hover:bg-white/20 text-slate-300 transition cursor-pointer"
                   title="Copiar código PIN"
                 >
                   {copiedId === reserva.idReserva ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
                 </button>
               </div>
 
-              <span className="font-mono text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-emerald-300 tracking-widest block">
+              <span className="font-mono text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-300 tracking-widest block">
                 {reserva.codigoCheckin}
               </span>
-              <span className="text-[10px] text-slate-400 block mt-0.5">
-                Válido para entrega de llaves
-              </span>
+              
+              <div className="pt-1 border-t border-white/10 text-[10px]">
+                {reserva.estado === 'CHECKIN_REALIZADO' ? (
+                  <span className="text-emerald-400 font-bold block flex items-center justify-center sm:justify-end gap-1">
+                    <CheckCircle className="w-3 h-3" />
+                    <span>Check-in Certificado</span>
+                  </span>
+                ) : (
+                  <span className="text-slate-400 block">
+                    Entrega este PIN al anfitrión para recibir tus llaves
+                  </span>
+                )}
+              </div>
             </div>
 
           </div>

@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Microfrontend React para Clientes y Anfitriones de Aloja-Te",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --port 3000 --strictPort",
     "build": "tsc && vite build",
     "preview": "vite preview"
   },

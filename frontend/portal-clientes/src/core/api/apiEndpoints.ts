@@ -11,6 +11,10 @@ export const ENDPOINTS = {
     DETALLE: (id: string) => `${API_BASE_URL}/api/v1/alojamientos/${id}`,
     UNIDADES: (id: string) => `${API_BASE_URL}/api/v1/alojamientos/${id}/unidades`,
     CATALOGOS: `${API_BASE_URL}/api/v1/catalogos`,
+    VALORACIONES: (idAlojamiento: string) => `${API_BASE_URL}/api/v1/alojamientos/${idAlojamiento}/valoraciones`,
+    VALORACIONES_HOTEL: (idAlojamiento: string) => `${API_BASE_URL}/api/v1/alojamientos/${idAlojamiento}/valoraciones/hotel`,
+    VALORACIONES_UNIDAD: (idUnidad: string) => `${API_BASE_URL}/api/v1/unidades/${idUnidad}/valoraciones`,
+    RESUMEN_VALORACIONES: (idAlojamiento: string) => `${API_BASE_URL}/api/v1/alojamientos/${idAlojamiento}/valoraciones/resumen`,
   },
 
   // MS-02: Reservas y Estadías (DynamoDB NoSQL)

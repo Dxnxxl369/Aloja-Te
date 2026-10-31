@@ -22,6 +22,24 @@ Cada integrante del equipo debe crear sus bases de datos en su gestor correspond
 
 ---
 
+## ⚠️ MODIFICACIÓN EN BASE DE DATOS: MS-01 (Tabla `valoraciones`)
+
+**Aviso para el equipo:** En el microservicio **MS-01 (Usuarios y Alojamientos)** se modificó la tabla `valoraciones` para soportar las nuevas reglas de negocio de hotelería, reseñas y experiencia del usuario:
+
+### ¿Qué columnas se añadieron/modificaron?
+1. **`id_unidad` (UUID, opcional/nullable, FK a `unidades_reservables`):**
+   - **Motivo:** En hoteles (`HOTEL_HOSTAL`), permite registrar reseñas dirigidas a una **habitación específica** además de las reseñas generales de todo el establecimiento. En casas o departamentos, se mantiene evaluando directamente al alojamiento (`id_alojamiento`).
+2. **`es_anonima` (BOOLEAN, default `false`):**
+   - **Motivo:** Da la opción al cliente de publicar su comentario de forma 100% anónima para resguardar su identidad y privacidad frente al anfitrión.
+3. **5 Criterios de Puntuación Detallada:**
+   - `calificacion_general` (1 a 5, obligatoria).
+   - `calificacion_limpieza`, `calificacion_ubicacion`, `calificacion_calidad_precio`, `calificacion_servicio`, `calificacion_comodidad` (1 a 5, opcionales).
+   - **Motivo:** Facilidad de uso para el cliente; quien tiene prisa califica en 1 solo clic la puntuación general sin verse obligado a llenar todo, y quien desea ser minucioso puede desglosar los 5 atributos.
+4. **`topicos` y `sentimiento` (TEXT / VARCHAR):**
+   - **Motivo:** Guarda las etiquetas automáticas de tópicos destacados (ej. *Limpieza Impecable*, *Ubicación Privilegiada*) y sentimiento (*POSITIVO*, *NEUTRO*, *NEGATIVO*).
+
+---
+
 ## 1. Arquitecturas y Microservicios (Backend)
 
 Todos los servicios corren de forma desacoplada e independiente:
@@ -90,7 +108,15 @@ El frontend esta separado en aplicaciones independientes con paleta Azul y Blanc
 
 ## 3. Como Correr los Servicios
 
-### Backend
+### Opción Rápida (1 Clic en Windows)
+- **`iniciar-todo.bat`**: Ejecutable en la raíz del proyecto que detecta los entornos (PHP, Python, Maven, PNPM) y levanta automáticamente los 4 microservicios, el API Gateway y los 2 microfrontends en ventanas etiquetadas e independientes.
+- **`detener-todo.bat`**: Cierra limpiamente todos los procesos y libera los puertos (3000, 3001, 3002, 3003, 3004, 4200, 8080).
+
+---
+
+### Opción Manual (Terminal por Terminal)
+
+#### Backend
 
 Abrir una terminal para cada uno:
 

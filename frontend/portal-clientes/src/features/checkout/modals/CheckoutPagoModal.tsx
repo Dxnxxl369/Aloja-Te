@@ -97,8 +97,33 @@ export const CheckoutPagoModal: React.FC<CheckoutPagoModalProps> = ({
 
   if (!reserva) return null;
 
+  if (timeLeft <= 0) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in">
+        <div className="w-full max-w-md p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center space-y-4 shadow-2xl animate-modal-in">
+          <div className="w-14 h-14 rounded-2xl bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto">
+            <Clock className="w-7 h-7" />
+          </div>
+          <h3 className="font-serif text-2xl font-bold text-slate-900 dark:text-white">
+            Tiempo de Pago Expirado
+          </h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+            Han transcurrido los 15 minutos asignados para completar el pago con QR. Para evitar sobreventas, el bloqueo temporal de inventario ha sido liberado en el sistema.
+          </p>
+          <button
+            onClick={onClose}
+            className="w-full py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-lg shadow-blue-600/25 transition cursor-pointer"
+          >
+            Seleccionar Fechas y Reintentar
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   const minutos = Math.floor(timeLeft / 60);
   const segundos = timeLeft % 60;
+  const esAlertaCritica = timeLeft < 120; // Menos de 2 minutos
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/60 backdrop-blur-md transition-all duration-300 animate-fade-in overflow-y-auto">
@@ -153,12 +178,20 @@ export const CheckoutPagoModal: React.FC<CheckoutPagoModalProps> = ({
           )}
 
           {/* Timer Countdown Bar */}
-          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200/70 dark:border-blue-900/50 text-xs text-slate-700 dark:text-slate-300">
-            <div className="flex items-center gap-2 text-blue-700 dark:text-blue-400 font-medium">
-              <Clock className="w-4 h-4 text-blue-600 dark:text-blue-400 animate-pulse" />
-              <span>Tiempo restante para completar el pago:</span>
+          <div className={`flex items-center justify-between p-3.5 rounded-2xl border text-xs transition-colors ${
+            esAlertaCritica
+              ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-800 text-amber-800 dark:text-amber-200 animate-pulse'
+              : 'bg-blue-50/70 dark:bg-blue-950/30 border-blue-200/70 dark:border-blue-900/50 text-slate-700 dark:text-slate-300'
+          }`}>
+            <div className="flex items-center gap-2 font-medium">
+              <Clock className={`w-4 h-4 ${esAlertaCritica ? 'text-amber-600' : 'text-blue-600 dark:text-blue-400'} animate-pulse`} />
+              <span>{esAlertaCritica ? '¡Atención! Tiempo por agotarse:' : 'Tiempo restante para completar el pago:'}</span>
             </div>
-            <span className="font-mono font-bold text-sm text-blue-700 dark:text-blue-300 px-2.5 py-0.5 rounded-lg bg-white dark:bg-slate-800 shadow-sm border border-blue-100 dark:border-blue-900/60">
+            <span className={`font-mono font-bold text-sm px-2.5 py-0.5 rounded-lg shadow-sm border ${
+              esAlertaCritica
+                ? 'bg-amber-600 text-white border-amber-700'
+                : 'bg-white dark:bg-slate-800 text-blue-700 dark:text-blue-300 border-blue-100 dark:border-blue-900/60'
+            }`}>
               {minutos.toString().padStart(2, '0')}:{segundos.toString().padStart(2, '0')}
             </span>
           </div>

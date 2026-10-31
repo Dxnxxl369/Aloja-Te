@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -37,7 +37,7 @@ export interface SolicitudAlojamiento {
   precioNoche: number;
   capacidad: number;
   habitaciones: number;
-  estado: 'PUBLICADO' | 'EN_REVISION' | 'RECHAZADO' | 'SUSPENDIDO';
+  estado: 'PUBLICADO' | 'EN_REVISION' | 'RECHAZADO' | 'SUSPENDIDO' | 'PAUSADO';
   fechaRegistro: string;
   imagen: string;
   fotos?: string[];
@@ -647,7 +647,7 @@ export interface ReporteGenerativo {
                         </span>
                       </div>
 
-                      <h4 class="font-serif text-lg font-bold text-slate-900 dark:text-white">{{ a.titulo }}</h4>
+                      <h4 (click)="inspeccionarAlojamiento(a, 'general')" class="font-serif text-lg font-bold text-slate-900 dark:text-white cursor-pointer hover:text-blue-600 transition">{{ a.titulo }}</h4>
                       <p class="text-xs text-slate-500 dark:text-stone-400">Anfitrión: <strong class="text-slate-700 dark:text-stone-300">{{ a.anfitrion }}</strong> • {{ a.ciudad }}</p>
                     </div>
 
@@ -657,11 +657,14 @@ export interface ReporteGenerativo {
                     </span>
                   </div>
 
-                  <!-- Imagen de Portada -->
-                  <div class="h-48 rounded-2xl overflow-hidden relative border border-slate-200 dark:border-stone-800 group">
+                  <!-- Imagen de Portada con Lightbox Directo -->
+                  <div class="h-48 rounded-2xl overflow-hidden relative border border-slate-200 dark:border-stone-800 group cursor-pointer" (click)="abrirFotoLightbox(a.imagen, 0, a.fotos)">
                     <img [src]="a.imagen" [alt]="a.titulo" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     <div class="absolute bottom-2.5 right-2.5 px-3 py-1 rounded-xl bg-black/80 backdrop-blur-md text-white text-xs font-bold font-mono border border-white/10 shadow-lg">
                       {{ a.precioNoche }} BOB / noche
+                    </div>
+                    <div class="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-xl bg-black/60 backdrop-blur-md text-white text-[11px] font-semibold opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                      <span>🔍 Ampliar Foto</span>
                     </div>
                   </div>
 
@@ -678,9 +681,12 @@ export interface ReporteGenerativo {
                   <!-- Ficha de Modalidad, Capacidad y Horarios -->
                   <div class="flex flex-col gap-1.5 text-xs text-slate-500 dark:text-stone-400 pt-2 border-t border-slate-200 dark:border-stone-800">
                     <div class="flex items-center justify-between">
-                      <span *ngIf="a.modalidad === 'HOTEL_HOSTAL'" class="text-indigo-600 dark:text-indigo-300 font-medium">
+                      <button *ngIf="a.modalidad === 'HOTEL_HOSTAL'"
+                              type="button"
+                              (click)="inspeccionarAlojamiento(a, 'habitaciones')"
+                              class="text-indigo-600 dark:text-indigo-300 font-semibold hover:underline flex items-center gap-1 cursor-pointer text-left">
                         🏨 {{ a.unidades?.length || 1 }} Tipos de habitación configurados
-                      </span>
+                      </button>
                       <span *ngIf="a.modalidad !== 'HOTEL_HOSTAL'">
                         👥 {{ a.capacidad }} Huéspedes • 🛏️ {{ a.habitaciones }} Dormitorios
                       </span>
@@ -696,11 +702,11 @@ export interface ReporteGenerativo {
                 </div>
 
                 <!-- Botonera de Decisiones -->
-                <div class="pt-3 border-t border-slate-200/80 dark:border-stone-800/80 flex items-center gap-2">
+                <div class="pt-3 border-t border-slate-200/80 dark:border-stone-800/80 flex items-center gap-2 flex-wrap">
                   <button
                     *ngIf="a.estado === 'EN_REVISION' || a.estado === 'RECHAZADO'"
                     (click)="aprobarAlojamiento(a.id)"
-                    class="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs shadow-md shadow-blue-500/20 transition flex items-center justify-center gap-1.5"
+                    class="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs shadow-md shadow-blue-500/20 transition flex items-center justify-center gap-1.5 min-w-[120px]"
                   >
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
@@ -711,7 +717,7 @@ export interface ReporteGenerativo {
                   <button
                     *ngIf="a.estado === 'EN_REVISION'"
                     (click)="abrirModalRechazo(a)"
-                    class="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-rose-50 dark:bg-stone-800 dark:hover:bg-stone-700 text-rose-600 dark:text-rose-300 hover:text-rose-700 font-semibold text-xs border border-rose-200 dark:border-rose-500/30 transition flex items-center justify-center gap-1.5"
+                    class="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-rose-50 dark:bg-stone-800 dark:hover:bg-stone-700 text-rose-600 dark:text-rose-300 hover:text-rose-700 font-semibold text-xs border border-rose-200 dark:border-rose-500/30 transition flex items-center justify-center gap-1.5 min-w-[100px]"
                   >
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -722,13 +728,22 @@ export interface ReporteGenerativo {
                   <button
                     *ngIf="a.estado === 'PUBLICADO'"
                     (click)="suspenderAlojamiento(a.id)"
-                    class="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-stone-800 dark:hover:bg-stone-700 text-blue-600 dark:text-blue-300 font-semibold text-xs border border-blue-200 dark:border-blue-500/30 transition"
+                    class="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-stone-800 dark:hover:bg-stone-700 text-blue-600 dark:text-blue-300 font-semibold text-xs border border-blue-200 dark:border-blue-500/30 transition min-w-[90px]"
                   >
                     Suspender
                   </button>
 
                   <button
-                    (click)="inspeccionarAlojamiento(a)"
+                    *ngIf="a.modalidad === 'HOTEL_HOSTAL'"
+                    (click)="inspeccionarAlojamiento(a, 'habitaciones')"
+                    class="px-3.5 py-2.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 text-xs font-bold border border-indigo-200 dark:border-indigo-800 transition flex items-center gap-1.5"
+                    title="Ver habitaciones configuradas del hotel"
+                  >
+                    🏨 Habitaciones ({{ a.unidades?.length || 0 }})
+                  </button>
+
+                  <button
+                    (click)="inspeccionarAlojamiento(a, 'general')"
                     class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-stone-800 dark:hover:bg-stone-700 text-slate-700 hover:text-slate-900 dark:text-stone-300 dark:hover:text-white text-xs font-semibold border border-slate-200 dark:border-stone-700 hover:border-blue-500/40 transition"
                   >
                     Detalles
@@ -999,21 +1014,108 @@ export interface ReporteGenerativo {
               </p>
             </div>
 
-            <button (click)="cerrarInspeccion()" class="p-2 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-stone-800 dark:hover:bg-stone-700 text-slate-500 hover:text-slate-900 dark:text-stone-400 dark:hover:text-white transition">✕</button>
+            <button
+              (click)="cerrarInspeccion()"
+              class="p-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-stone-800 dark:hover:bg-stone-700 text-slate-800 hover:text-slate-900 dark:text-stone-100 font-bold text-sm transition cursor-pointer border border-slate-300 dark:border-stone-700 flex items-center justify-center shadow-sm"
+              title="Cerrar Inspección (Esc)"
+            >
+              ✕
+            </button>
           </div>
 
-          <!-- Galería Fotográfica Amplia -->
+          <!-- PESTAÑAS DE INSPECCIÓN PARA HOTELES -->
+          <div *ngIf="alojamientoInspeccionado.modalidad === 'HOTEL_HOSTAL'" class="flex items-center gap-2 border-b border-slate-200 dark:border-stone-800 pb-3">
+            <button
+              type="button"
+              (click)="subTabInspeccion = 'general'"
+              [class]="subTabInspeccion === 'general' ? 'px-4 py-2 rounded-xl bg-blue-600 text-white font-bold text-xs shadow-md shadow-blue-500/20' : 'px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-stone-800 dark:hover:bg-stone-700 text-slate-700 dark:text-stone-300 font-semibold text-xs transition border border-slate-200 dark:border-stone-700'"
+            >
+              📋 Ficha General del Hotel
+            </button>
+            <button
+              type="button"
+              (click)="subTabInspeccion = 'habitaciones'"
+              [class]="subTabInspeccion === 'habitaciones' ? 'px-4 py-2 rounded-xl bg-blue-600 text-white font-bold text-xs shadow-md shadow-blue-500/20' : 'px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-stone-800 dark:hover:bg-stone-700 text-slate-700 dark:text-stone-300 font-semibold text-xs transition border border-slate-200 dark:border-stone-700'"
+            >
+              🏨 Habitaciones & Unidades ({{ alojamientoInspeccionado.unidades?.length || 0 }})
+            </button>
+          </div>
+
+          <!-- CONTENIDO TAB HABITACIONES (DESTACADO PARA HOTELES) -->
+          <div *ngIf="alojamientoInspeccionado.modalidad === 'HOTEL_HOSTAL' && subTabInspeccion === 'habitaciones'" class="space-y-4 animate-fade-in">
+            <div class="p-4 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/60 flex items-center justify-between flex-wrap gap-2">
+              <div>
+                <h4 class="text-sm font-bold text-indigo-950 dark:text-indigo-200">
+                  Gestión y Moderación de Habitaciones del Establecimiento
+                </h4>
+                <p class="text-xs text-indigo-700 dark:text-indigo-300 mt-0.5">
+                  Puedes desactivar individualmente una habitación por mantenimiento sin suspender todo el hotel.
+                </p>
+              </div>
+              <span class="px-3 py-1 rounded-full bg-white dark:bg-stone-900 text-indigo-700 dark:text-indigo-300 text-xs font-bold shadow-sm border border-indigo-200 dark:border-indigo-800 font-mono">
+                Total Tipologías: {{ alojamientoInspeccionado.unidades?.length || 0 }}
+              </span>
+            </div>
+
+            <div *ngIf="!alojamientoInspeccionado.unidades || alojamientoInspeccionado.unidades.length === 0" class="p-8 text-center rounded-2xl bg-slate-50 dark:bg-stone-950 border border-slate-200 dark:border-stone-800 text-slate-500 dark:text-stone-400 text-xs">
+              No hay habitaciones configuradas para este establecimiento.
+            </div>
+
+            <div *ngIf="alojamientoInspeccionado.unidades && alojamientoInspeccionado.unidades.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+              <div *ngFor="let u of alojamientoInspeccionado.unidades" class="p-4 rounded-2xl bg-slate-50 dark:bg-stone-950 border border-slate-200 dark:border-stone-800 space-y-3 shadow-sm hover:border-blue-500/30 transition">
+                <div class="flex items-start justify-between gap-2">
+                  <div>
+                    <h5 class="text-sm font-bold text-slate-900 dark:text-white">{{ u.nombre }}</h5>
+                    <div class="flex items-center gap-2 mt-1 text-[11px] text-slate-500 dark:text-stone-400">
+                      <span>👥 {{ u.capacidadHuespedes }} pers.</span>
+                      <span>•</span>
+                      <span>🛏️ {{ u.cantidadCamas }} camas</span>
+                      <span>•</span>
+                      <span>🚿 {{ u.cantidadBanos }} baños</span>
+                    </div>
+                  </div>
+                  <div class="text-right">
+                    <span class="font-mono font-bold text-blue-600 dark:text-blue-400 text-sm block">{{ u.precioNoche }} BOB</span>
+                    <span class="text-[10px] text-slate-400 dark:text-stone-500">por noche</span>
+                  </div>
+                </div>
+
+                <div class="flex items-center justify-between pt-2.5 border-t border-slate-200 dark:border-stone-800 text-[11px] flex-wrap gap-2">
+                  <div class="flex items-center gap-2">
+                    <span class="text-slate-500 dark:text-stone-400">Inventario: <strong>{{ u.inventarioTotal }} unidades</strong></span>
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold"
+                          [ngClass]="u.estado === 'MANTENIMIENTO' ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-800' : 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'">
+                      {{ u.estado === 'MANTENIMIENTO' ? 'En Mantenimiento (Oculta)' : 'Disponible' }}
+                    </span>
+                  </div>
+                  <button (click)="alternarEstadoHabitacion(u)"
+                          class="px-3 py-1.5 rounded-xl text-[10px] font-bold border transition-colors shadow-sm cursor-pointer"
+                          [ngClass]="u.estado === 'MANTENIMIENTO' ? 'bg-blue-600 text-white hover:bg-blue-700 border-blue-600' : 'bg-white dark:bg-stone-800 text-slate-700 dark:text-stone-200 hover:bg-amber-50 dark:hover:bg-amber-950/40 hover:text-amber-700 border-slate-300 dark:border-stone-700'">
+                    {{ u.estado === 'MANTENIMIENTO' ? '✓ Reactivar Habitación' : '✕ Desactivar Habitación' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- CONTENIDO TAB GENERAL (O VISTA ÚNICA PARA CASAS/DEPTOS) -->
+          <div *ngIf="alojamientoInspeccionado.modalidad !== 'HOTEL_HOSTAL' || subTabInspeccion === 'general'" class="space-y-6 animate-fade-in">
+
+          <!-- Galería Fotográfica Amplia con Lightbox -->
           <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
-            <div class="md:col-span-3 h-72 sm:h-80 rounded-2xl overflow-hidden relative border border-slate-200 dark:border-stone-800">
-              <img [src]="alojamientoInspeccionado.imagen" [alt]="alojamientoInspeccionado.titulo" class="w-full h-full object-cover" />
+            <div class="md:col-span-3 h-72 sm:h-80 rounded-2xl overflow-hidden relative border border-slate-200 dark:border-stone-800 cursor-pointer group" (click)="abrirFotoLightbox(alojamientoInspeccionado.imagen, 0, alojamientoInspeccionado.fotos)">
+              <img [src]="alojamientoInspeccionado.imagen" [alt]="alojamientoInspeccionado.titulo" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
               <div class="absolute bottom-3 left-3 px-3 py-1.5 rounded-xl bg-black/80 backdrop-blur-md text-white font-mono font-bold text-xs border border-white/10">
                 Tarifa Base: {{ alojamientoInspeccionado.precioNoche }} BOB / noche
+              </div>
+              <div class="absolute top-3 right-3 px-2.5 py-1 rounded-xl bg-black/60 backdrop-blur-md text-white text-[11px] font-semibold opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                <span>🔍 Ver en Alta Resolución</span>
               </div>
             </div>
             
             <div class="hidden md:flex flex-col gap-3 h-72 sm:h-80">
-              <div *ngFor="let f of (alojamientoInspeccionado.fotos?.slice(1, 4) || []); let i = index" class="flex-1 rounded-xl overflow-hidden relative border border-slate-200 dark:border-stone-800">
-                <img [src]="f" class="w-full h-full object-cover" />
+              <div *ngFor="let f of (alojamientoInspeccionado.fotos?.slice(1, 4) || []); let i = index" class="flex-1 rounded-xl overflow-hidden relative border border-slate-200 dark:border-stone-800 cursor-pointer group" (click)="abrirFotoLightbox(f, i + 1, alojamientoInspeccionado.fotos)">
+                <img [src]="f" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
               </div>
               <div *ngIf="!alojamientoInspeccionado.fotos || alojamientoInspeccionado.fotos.length <= 1" class="flex-1 rounded-xl bg-slate-50 dark:bg-stone-900 border border-slate-200 dark:border-stone-800 flex flex-col items-center justify-center p-3 text-center text-slate-400 dark:text-stone-500 text-[11px]">
                 <span>📸 Fotografía principal verificada</span>
@@ -1083,11 +1185,19 @@ export interface ReporteGenerativo {
                   </div>
                 </div>
 
-                <div class="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-stone-800 text-[11px]">
-                  <span class="text-slate-500 dark:text-stone-400">Stock para reserva:</span>
-                  <span class="px-2.5 py-0.5 rounded-full bg-cyan-100 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300 font-mono font-bold text-[10px] border border-cyan-200 dark:border-cyan-800">
-                    {{ u.inventarioTotal }} unidades disponibles
-                  </span>
+                <div class="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-stone-800 text-[11px] flex-wrap gap-2">
+                  <div class="flex items-center gap-2">
+                    <span class="text-slate-500 dark:text-stone-400">Stock: {{ u.inventarioTotal }} un.</span>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold"
+                          [ngClass]="u.estado === 'MANTENIMIENTO' ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-800' : 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'">
+                      {{ u.estado === 'MANTENIMIENTO' ? 'En Mantenimiento (Oculta)' : 'Disponible' }}
+                    </span>
+                  </div>
+                  <button (click)="alternarEstadoHabitacion(u)"
+                          class="px-2.5 py-1 rounded-xl text-[10px] font-bold border transition-colors shadow-sm"
+                          [ngClass]="u.estado === 'MANTENIMIENTO' ? 'bg-blue-600 text-white hover:bg-blue-700 border-blue-600' : 'bg-slate-100 dark:bg-stone-800 text-slate-700 dark:text-stone-300 hover:bg-amber-50 dark:hover:bg-amber-950/40 hover:text-amber-800 border-slate-300 dark:border-stone-700'">
+                    {{ u.estado === 'MANTENIMIENTO' ? '✓ Reactivar Habitación' : '✕ Ocultar Habitación' }}
+                  </button>
                 </div>
               </div>
             </div>
@@ -1115,6 +1225,7 @@ export interface ReporteGenerativo {
               {{ alojamientoInspeccionado.motivoRechazo }}
             </div>
           </div>
+          </div>
 
           <!-- Footer de Moderación Administrativa -->
           <div class="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-slate-200 dark:border-stone-800">
@@ -1136,6 +1247,14 @@ export interface ReporteGenerativo {
 
               <button
                 *ngIf="alojamientoInspeccionado.estado === 'PUBLICADO'"
+                (click)="ocultarAlojamiento(alojamientoInspeccionado.id); cerrarInspeccion()"
+                class="px-4 py-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 dark:bg-stone-800 dark:hover:bg-stone-700 text-amber-800 dark:text-amber-300 text-xs font-semibold border border-amber-200 dark:border-amber-500/30 transition flex items-center gap-1.5"
+              >
+                <span>⏸ Ocultar del Catálogo</span>
+              </button>
+
+              <button
+                *ngIf="alojamientoInspeccionado.estado === 'PUBLICADO'"
                 (click)="suspenderAlojamiento(alojamientoInspeccionado.id); cerrarInspeccion()"
                 class="px-4 py-2.5 rounded-xl bg-blue-50 hover:bg-blue-100 dark:bg-stone-800 dark:hover:bg-stone-700 text-blue-700 dark:text-blue-300 text-xs font-semibold border border-blue-200 dark:border-blue-500/30 transition"
               >
@@ -1143,7 +1262,7 @@ export interface ReporteGenerativo {
               </button>
 
               <button
-                *ngIf="alojamientoInspeccionado.estado === 'EN_REVISION' || alojamientoInspeccionado.estado === 'RECHAZADO'"
+                *ngIf="alojamientoInspeccionado.estado === 'EN_REVISION' || alojamientoInspeccionado.estado === 'RECHAZADO' || alojamientoInspeccionado.estado === 'PAUSADO' || alojamientoInspeccionado.estado === 'SUSPENDIDO'"
                 (click)="aprobarAlojamiento(alojamientoInspeccionado.id); cerrarInspeccion()"
                 class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs shadow-md shadow-blue-500/25 transition flex items-center gap-1.5"
               >
@@ -1204,6 +1323,86 @@ export interface ReporteGenerativo {
         </div>
       </div>
 
+      <!-- LIGHTBOX DE FOTOGRAFÍAS A PANTALLA COMPLETA CON CONTROL DE TECLADO Y MODO CLARO/OSCURO -->
+      <div *ngIf="fotoLightboxUrl" class="fixed inset-0 z-50 flex flex-col justify-between p-4 sm:p-6 bg-slate-950/95 backdrop-blur-2xl animate-fade-in text-white select-none" (click)="cerrarFotoLightbox()">
+        
+        <!-- Header Superior del Lightbox -->
+        <div class="flex items-center justify-between z-20 w-full max-w-6xl mx-auto px-5 py-3 rounded-2xl bg-white/10 dark:bg-stone-900/80 backdrop-blur-md border border-white/15 shadow-2xl" (click)="$event.stopPropagation()">
+          <div class="flex items-center gap-3">
+            <div class="p-2 rounded-xl bg-blue-600/30 text-blue-400 border border-blue-500/30">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <div>
+              <span class="text-sm sm:text-base font-bold text-white block leading-tight">
+                {{ alojamientoInspeccionado?.titulo || 'Fotografía de Inspección Técnica' }}
+              </span>
+              <div class="flex items-center gap-2 text-xs text-slate-300 mt-0.5">
+                <span class="font-mono">Foto {{ fotoLightboxIndex + 1 }} de {{ fotosLightboxLista.length }}</span>
+                <span>•</span>
+                <span class="px-1.5 py-0.5 rounded bg-white/15 text-[10px] font-mono text-white">[← / → Flechas]</span>
+                <span class="px-1.5 py-0.5 rounded bg-white/15 text-[10px] font-mono text-white">[Esc Salir]</span>
+              </div>
+            </div>
+          </div>
+
+          <button
+            (click)="cerrarFotoLightbox()"
+            class="px-4 py-2 rounded-2xl bg-white/15 hover:bg-white/25 text-white font-bold text-xs transition border border-white/25 flex items-center gap-2 shadow-lg cursor-pointer hover:scale-105 active:scale-95"
+            title="Cerrar vista (Esc)"
+          >
+            <span class="text-sm font-black">✕</span>
+            <span>Cerrar (Esc)</span>
+          </button>
+        </div>
+
+        <!-- Área Central con Imagen y Flechas Flotantes -->
+        <div class="relative flex-1 flex items-center justify-center max-w-6xl w-full mx-auto my-3" (click)="$event.stopPropagation()">
+          <!-- Flecha Anterior -->
+          <button
+            *ngIf="fotosLightboxLista.length > 1"
+            (click)="fotoAnterior(); $event.stopPropagation()"
+            class="absolute left-2 sm:left-4 z-20 p-3.5 sm:p-4 rounded-full bg-black/60 hover:bg-blue-600 text-white transition backdrop-blur-md border border-white/20 shadow-2xl hover:scale-110 active:scale-95 cursor-pointer"
+            title="Foto anterior (←)"
+          >
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+
+          <!-- Imagen Principal -->
+          <img
+            [src]="fotoLightboxUrl"
+            class="max-w-full max-h-[72vh] object-contain rounded-2xl shadow-2xl border border-white/20 select-none animate-fade-in"
+          />
+
+          <!-- Flecha Siguiente -->
+          <button
+            *ngIf="fotosLightboxLista.length > 1"
+            (click)="fotoSiguiente(); $event.stopPropagation()"
+            class="absolute right-2 sm:right-4 z-20 p-3.5 sm:p-4 rounded-full bg-black/60 hover:bg-blue-600 text-white transition backdrop-blur-md border border-white/20 shadow-2xl hover:scale-110 active:scale-95 cursor-pointer"
+            title="Foto siguiente (→)"
+          >
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Tira de Miniaturas Inferior -->
+        <div *ngIf="fotosLightboxLista.length > 1" class="flex items-center justify-center gap-2 z-20 max-w-5xl mx-auto overflow-x-auto py-2.5 px-4 rounded-2xl bg-black/50 border border-white/15 backdrop-blur-md" (click)="$event.stopPropagation()">
+          <button
+            *ngFor="let f of fotosLightboxLista; let i = index"
+            (click)="abrirFotoLightbox(f, i, fotosLightboxLista); $event.stopPropagation()"
+            [class]="i === fotoLightboxIndex ? 'w-14 h-14 rounded-xl overflow-hidden ring-2 ring-blue-500 shrink-0 shadow-lg scale-105 transition-all' : 'w-14 h-14 rounded-xl overflow-hidden opacity-50 hover:opacity-100 shrink-0 transition-all border border-white/20'"
+          >
+            <img [src]="f" class="w-full h-full object-cover" />
+          </button>
+        </div>
+
+      </div>
+
     </div>
   `
 })
@@ -1219,10 +1418,14 @@ export class AppComponent implements OnInit {
 
   // Alojamientos State
   alojamientoInspeccionado: SolicitudAlojamiento | null = null;
+  subTabInspeccion: 'general' | 'habitaciones' = 'general';
   filtroAlojamientos: 'TODOS' | 'PENDIENTES' | 'PUBLICADOS' | 'OBSERVADOS' = 'TODOS';
   modalRechazoAbierto: boolean = false;
   alojamientoParaRechazo: SolicitudAlojamiento | null = null;
   motivoRechazoTexto: string = '';
+  fotoLightboxUrl: string | null = null;
+  fotoLightboxIndex: number = 0;
+  fotosLightboxLista: string[] = [];
   cargandoAlojamientos: boolean = false;
   alojamientos: SolicitudAlojamiento[] = [];
 
@@ -1314,7 +1517,13 @@ export class AppComponent implements OnInit {
   aplicarTema() {
     if (typeof document !== 'undefined') {
       document.body.classList.toggle('theme-light', !this.isDarkMode);
-      document.documentElement.classList.toggle('dark', this.isDarkMode);
+      if (this.isDarkMode) {
+        document.documentElement.classList.remove('light');
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+        document.documentElement.classList.add('light');
+      }
     }
   }
 
@@ -1332,8 +1541,9 @@ export class AppComponent implements OnInit {
     } catch {}
   }
 
-  inspeccionarAlojamiento(a: SolicitudAlojamiento) {
+  inspeccionarAlojamiento(a: SolicitudAlojamiento, subTab: 'general' | 'habitaciones' = 'general') {
     this.alojamientoInspeccionado = a;
+    this.subTabInspeccion = subTab;
     this.activeTab = 'alojamientos';
     window.location.hash = `#/alojamientos/${a.id}`;
   }
@@ -1486,7 +1696,7 @@ export class AppComponent implements OnInit {
         return {
           id: raw.idAlojamiento || String(Math.random()),
           titulo: raw.titulo || 'Alojamiento Tradicional',
-          anfitrion: 'Carlos Mendoza (Anfitrión Verificado)',
+          anfitrion: raw.nombreAnfitrion || 'Carlos Mendoza · Anfitrión Registrado',
           departamento: raw.departamento || 'Santa Cruz',
           ciudad: raw.ciudad || 'Bolivia',
           direccion: raw.direccion || '',
@@ -1755,6 +1965,93 @@ export class AppComponent implements OnInit {
     } catch {
       const item = this.alojamientos.find(a => a.id === id);
       if (item) item.estado = 'SUSPENDIDO';
+    }
+  }
+
+  @HostListener('window:keydown', ['$event'])
+  manejarTecladoLightbox(event: KeyboardEvent) {
+    if (!this.fotoLightboxUrl) return;
+    if (event.key === 'ArrowRight') {
+      event.preventDefault();
+      this.fotoSiguiente();
+    } else if (event.key === 'ArrowLeft') {
+      event.preventDefault();
+      this.fotoAnterior();
+    } else if (event.key === 'Escape') {
+      event.preventDefault();
+      this.cerrarFotoLightbox();
+    }
+  }
+
+  abrirFotoLightbox(url: string, index: number = 0, fotos?: string[]) {
+    this.fotosLightboxLista = (fotos && fotos.length > 0)
+      ? fotos
+      : (this.alojamientoInspeccionado?.fotos || [url]);
+    
+    let targetIndex = index;
+    if (targetIndex < 0 || targetIndex >= this.fotosLightboxLista.length) {
+      const idxFound = this.fotosLightboxLista.indexOf(url);
+      targetIndex = idxFound >= 0 ? idxFound : 0;
+    }
+    this.fotoLightboxIndex = targetIndex;
+    this.fotoLightboxUrl = this.fotosLightboxLista[this.fotoLightboxIndex] || url;
+  }
+
+  fotoSiguiente() {
+    if (this.fotosLightboxLista.length <= 1) return;
+    this.fotoLightboxIndex = (this.fotoLightboxIndex + 1) % this.fotosLightboxLista.length;
+    this.fotoLightboxUrl = this.fotosLightboxLista[this.fotoLightboxIndex];
+  }
+
+  fotoAnterior() {
+    if (this.fotosLightboxLista.length <= 1) return;
+    this.fotoLightboxIndex = (this.fotoLightboxIndex - 1 + this.fotosLightboxLista.length) % this.fotosLightboxLista.length;
+    this.fotoLightboxUrl = this.fotosLightboxLista[this.fotoLightboxIndex];
+  }
+
+  cerrarFotoLightbox() {
+    this.fotoLightboxUrl = null;
+    this.fotosLightboxLista = [];
+    this.fotoLightboxIndex = 0;
+  }
+
+  async alternarEstadoHabitacion(u: UnidadAdmin) {
+    const nuevoEstado = u.estado === 'MANTENIMIENTO' ? 'DISPONIBLE' : 'MANTENIMIENTO';
+    try {
+      const res = await fetch(`http://localhost:8080/api/v1/unidades/${u.idUnidad}/estado?estado=${nuevoEstado}`, {
+        method: 'PATCH'
+      });
+      u.estado = nuevoEstado;
+      alert(`Habitación "${u.nombre}" actualizada a ${nuevoEstado === 'DISPONIBLE' ? 'Disponible' : 'En Mantenimiento (Oculta)'}.`);
+    } catch {
+      u.estado = nuevoEstado;
+      alert(`Estado de la habitación "${u.nombre}" actualizado a ${nuevoEstado === 'DISPONIBLE' ? 'Disponible' : 'En Mantenimiento'}.`);
+    }
+  }
+
+  async ocultarAlojamiento(id: string) {
+    if (!confirm('¿Desea ocultar/pausar temporalmente este alojamiento del catálogo? Sus habitaciones asociadas se desactivarán en cascada.')) return;
+    try {
+      const res = await fetch(`http://localhost:8080/api/v1/alojamientos/${id}/estado?estado=PAUSADO`, {
+        method: 'PATCH'
+      });
+      const item = this.alojamientos.find(a => a.id === id);
+      if (item) {
+        item.estado = 'PAUSADO';
+        if (item.unidades) {
+          item.unidades.forEach(u => u.estado = 'MANTENIMIENTO');
+        }
+      }
+      alert('Alojamiento ocultado del catálogo y sus habitaciones han sido desactivadas en cascada.');
+      await this.cargarAlojamientos();
+    } catch {
+      const item = this.alojamientos.find(a => a.id === id);
+      if (item) {
+        item.estado = 'PAUSADO';
+        if (item.unidades) {
+          item.unidades.forEach(u => u.estado = 'MANTENIMIENTO');
+        }
+      }
     }
   }
 

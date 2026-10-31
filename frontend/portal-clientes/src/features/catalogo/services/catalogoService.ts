@@ -315,5 +315,46 @@ export const catalogoService = {
     } catch (e) {
       console.warn('No se pudo guardar en localStorage:', e);
     }
+  },
+
+  async listarValoraciones(idAlojamiento: string): Promise<any[]> {
+    try {
+      const res = await httpClient.get<any[]>(ENDPOINTS.ALOJAMIENTOS.VALORACIONES(idAlojamiento));
+      return res.data || [];
+    } catch (e) {
+      return [];
+    }
+  },
+
+  async listarValoracionesGeneralesHotel(idAlojamiento: string): Promise<any[]> {
+    try {
+      const res = await httpClient.get<any[]>(ENDPOINTS.ALOJAMIENTOS.VALORACIONES_HOTEL(idAlojamiento));
+      return res.data || [];
+    } catch (e) {
+      return [];
+    }
+  },
+
+  async listarValoracionesUnidad(idUnidad: string): Promise<any[]> {
+    try {
+      const res = await httpClient.get<any[]>(ENDPOINTS.ALOJAMIENTOS.VALORACIONES_UNIDAD(idUnidad));
+      return res.data || [];
+    } catch (e) {
+      return [];
+    }
+  },
+
+  async crearValoracion(idAlojamiento: string, req: any): Promise<any> {
+    const res = await httpClient.post<any>(ENDPOINTS.ALOJAMIENTOS.VALORACIONES(idAlojamiento), req);
+    return res.data;
+  },
+
+  async obtenerResumenValoraciones(idAlojamiento: string): Promise<any> {
+    try {
+      const res = await httpClient.get<any>(ENDPOINTS.ALOJAMIENTOS.RESUMEN_VALORACIONES(idAlojamiento));
+      return res.data;
+    } catch (e) {
+      return null;
+    }
   }
 };

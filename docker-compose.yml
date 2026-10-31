@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  # PostgreSQL para MS-01 (Usuarios y Alojamientos con PostGIS) y MS-03 (Finanzas)
+  postgres-alojate:
+    image: postgis/postgis:15-3.4
+    container_name: alojate-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_MULTIPLE_DATABASES: "alojate_usuarios,alojate_finanzas"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # DynamoDB Local para MS-02 (Reservas y Estadías)
+  dynamodb-local:
+    image: amazon/dynamodb-local:latest
+    container_name: alojate-dynamodb
+    restart: always
+    ports:
+      - "8000:8000"
+    command: "-jar DynamoDBLocal.jar -sharedDb -dbPath ./data"
+    volumes:
+      - dynamodb_data:/home/dynamodblocal/data
+
+  # MongoDB para MS-04 (Inteligencia Artificial y Memoria Copiloto)
+  mongodb-alojate:
+    image: mongo:7.0
+    container_name: alojate-mongodb
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-admin123}
+      MONGO_INITDB_DATABASE: alojate_ia
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  # Broker de Mensajería: RabbitMQ (Eventos Asíncronos y Patrón SAGA)
+  rabbitmq-alojate:
+    image: rabbitmq:3-management
+    container_name: alojate-rabbitmq
+    restart: always
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
+    ports:
+      - "5672:5672"     # AMQP
+      - "15672:15672"   # Management Dashboard UI
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+volumes:
+  postgres_data:
+  dynamodb_data:
+  mongo_data:
+  rabbitmq_data:
