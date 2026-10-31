@@ -4,6 +4,7 @@ namespace App\Infrastructure\Persistence;
 
 use PDO;
 use PDOException;
+use Dotenv\Dotenv;
 
 class PdoDatabase
 {
@@ -12,12 +13,20 @@ class PdoDatabase
     public static function getInstance(): PDO
     {
         if (self::$instance === null) {
-            $driver = getenv('DB_CONNECTION') ?: 'sqlite';
-            $host = getenv('DB_HOST') ?: '127.0.0.1';
-            $port = getenv('DB_PORT') ?: '5432';
-            $database = getenv('DB_DATABASE') ?: 'alojate_comercial';
-            $username = getenv('DB_USERNAME') ?: 'postgres';
-            $password = getenv('DB_PASSWORD') ?: 'postgres';
+            $envPath = dirname(__DIR__, 2);
+            if (file_exists($envPath . '/.env')) {
+                try {
+                    $dotenv = Dotenv::createImmutable($envPath);
+                    $dotenv->load();
+                } catch (\Throwable $e) {}
+            }
+
+            $driver = $_ENV['DB_CONNECTION'] ?? getenv('DB_CONNECTION') ?: 'pgsql';
+            $host = $_ENV['DB_HOST'] ?? getenv('DB_HOST') ?: '127.0.0.1';
+            $port = $_ENV['DB_PORT'] ?? getenv('DB_PORT') ?: '5432';
+            $database = $_ENV['DB_DATABASE'] ?? getenv('DB_DATABASE') ?: 'ms3-pagos_comercios';
+            $username = $_ENV['DB_USERNAME'] ?? getenv('DB_USERNAME') ?: 'postgres';
+            $password = $_ENV['DB_PASSWORD'] ?? getenv('DB_PASSWORD') ?: 'admin369';
 
             if ($driver === 'pgsql') {
                 try {
@@ -27,7 +36,7 @@ class PdoDatabase
                         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
                     ]);
                 } catch (PDOException $e) {
-                    // Fallback to SQLite if PostgreSQL database does not exist yet
+                    // Fallback to SQLite if PostgreSQL fails
                     $sqlitePath = dirname(__DIR__, 2) . '/database/database.sqlite';
                     self::$instance = new PDO("sqlite:{$sqlitePath}", null, null, [
                         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
@@ -53,6 +62,9 @@ class PdoDatabase
 
     private static function inicializarEsquema(PDO $pdo): void
     {
+        $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+        $esPgsql = ($driver === 'pgsql');
+
         // 1. ref_anfitrion
         $pdo->exec("CREATE TABLE IF NOT EXISTS ref_anfitriones (
             anfitrion_id VARCHAR(36) PRIMARY KEY,
@@ -62,12 +74,13 @@ class PdoDatabase
         )");
 
         // 2. metodo_cobro_anfitrion
+        $boolDefault = $esPgsql ? "TRUE" : "1";
         $pdo->exec("CREATE TABLE IF NOT EXISTS metodo_cobro_anfitriones (
             metodo_id VARCHAR(36) PRIMARY KEY,
             anfitrion_id VARCHAR(36) NOT NULL,
             tipo VARCHAR(50) NOT NULL,
             numero_cifrado VARCHAR(255) NOT NULL,
-            es_principal BOOLEAN DEFAULT 1,
+            es_principal BOOLEAN DEFAULT {$boolDefault},
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )");
 
@@ -215,8 +228,9 @@ class PdoDatabase
         )");
 
         // 16. movimiento_contable
+        $autoInc = $esPgsql ? "SERIAL PRIMARY KEY" : "INTEGER PRIMARY KEY AUTOINCREMENT";
         $pdo->exec("CREATE TABLE IF NOT EXISTS movimientos_contables (
-            movimiento_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            movimiento_id {$autoInc},
             asiento_id VARCHAR(36) NOT NULL,
             cuenta VARCHAR(150) NOT NULL,
             tipo VARCHAR(20) NOT NULL,
@@ -244,10 +258,10 @@ class PdoDatabase
         )");
 
         // Semillas iniciales si no existen
-        self::autoseed($pdo);
+        self::autoseed($pdo, $esPgsql);
     }
 
-    private static function autoseed(PDO $pdo): void
+    private static function autoseed(PDO $pdo, bool $esPgsql): void
     {
         $stmt = $pdo->query("SELECT COUNT(*) FROM reglas_monetizacion");
         if ((int) $stmt->fetchColumn() === 0) {
@@ -264,8 +278,14 @@ class PdoDatabase
                 VALUES ('33333333-3333-3333-3333-333333333333', 'BIENVENIDO2026', 'LANZAMIENTO', 'PORCENTAJE', 10.0, CURRENT_TIMESTAMP, '2026-12-31 23:59:59', 'ACTIVA')");
 
             // Anfitrión de demostración
-            $pdo->exec("INSERT OR IGNORE INTO ref_anfitriones (anfitrion_id, nombre_completo, nit, estado_verificacion)
-                VALUES ('5211de5d-bd9e-4cb7-8912-3fbf6a0184b0', 'Carlos Mendoza', '4839201019', 'VERIFICADO')");
+            if ($esPgsql) {
+                $pdo->exec("INSERT INTO ref_anfitriones (anfitrion_id, nombre_completo, nit, estado_verificacion)
+                    VALUES ('5211de5d-bd9e-4cb7-8912-3fbf6a0184b0', 'Carlos Mendoza', '4839201019', 'VERIFICADO')
+                    ON CONFLICT (anfitrion_id) DO NOTHING");
+            } else {
+                $pdo->exec("INSERT OR IGNORE INTO ref_anfitriones (anfitrion_id, nombre_completo, nit, estado_verificacion)
+                    VALUES ('5211de5d-bd9e-4cb7-8912-3fbf6a0184b0', 'Carlos Mendoza', '4839201019', 'VERIFICADO')");
+            }
         }
     }
 }
