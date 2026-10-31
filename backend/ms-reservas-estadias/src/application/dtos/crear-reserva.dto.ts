@@ -13,6 +13,10 @@ export class CrearReservaDto {
   @IsNotEmpty()
   idAnfitrion: string;
 
+  @IsString()
+  @IsOptional()
+  nombreAnfitrion?: string;
+
   @IsUUID()
   @IsNotEmpty()
   idAlojamiento: string;

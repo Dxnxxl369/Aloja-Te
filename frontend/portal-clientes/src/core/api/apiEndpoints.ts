@@ -28,6 +28,8 @@ export const ENDPOINTS = {
     CHECK_OUT: (id: string) => `${API_BASE_URL}/api/v1/reservas/${id}/check-out`,
     CLIENTE_HISTORIAL: (clienteId: string) => `${API_BASE_URL}/api/v1/reservas/cliente/${clienteId}`,
     ANFITRION_HISTORIAL: (anfitrionId: string) => `${API_BASE_URL}/api/v1/reservas/anfitrion/${anfitrionId}`,
+    DISPONIBILIDAD: (unidadId: string, checkIn: string, checkOut: string) =>
+      `${API_BASE_URL}/api/v1/reservas/disponibilidad/${unidadId}?checkIn=${checkIn}&checkOut=${checkOut}`,
   },
 
   // MS-03: Comercial y Financiero (Laravel DDD)

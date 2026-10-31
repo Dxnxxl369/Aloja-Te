@@ -30,6 +30,7 @@ export class ReservaEntity {
   idCliente: string;
   nombreCliente: string;
   idAnfitrion: string;
+  nombreAnfitrion?: string;
   idAlojamiento: string;
   tituloAlojamiento: string;
   idUnidad: string;

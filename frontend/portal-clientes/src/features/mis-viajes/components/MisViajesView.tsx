@@ -245,6 +245,19 @@ export const MisViajesView: React.FC<MisViajesViewProps> = ({
                         {reserva.nombreUnidad}
                       </p>
                     )}
+
+                    {/* Información del Anfitrión Responsable */}
+                    <div className="flex items-center gap-2 pt-1 text-xs text-slate-600 dark:text-slate-300">
+                      <div className="w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-900/60 text-blue-600 dark:text-blue-300 flex items-center justify-center font-bold text-[10px] shrink-0">
+                        <User className="w-3 h-3" />
+                      </div>
+                      <span className="font-medium">
+                        Anfitrión:{' '}
+                        <span className="font-bold text-slate-900 dark:text-white">
+                          {reserva.nombreAnfitrion || 'Carlos Mendoza'}
+                        </span>
+                      </span>
+                    </div>
                   </div>
 
                   <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500 dark:text-slate-400">
@@ -335,8 +348,12 @@ export const MisViajesView: React.FC<MisViajesViewProps> = ({
                       </span>
                     )}
                     {esConfirmada && (
-                      <span className="text-slate-400 block">
-                        Presenta esta clave al anfitrión al llegar
+                      <span className="text-slate-300 block">
+                        Presenta esta clave a tu anfitrión{' '}
+                        <strong className="text-white font-semibold">
+                          {reserva.nombreAnfitrion || 'Carlos Mendoza'}
+                        </strong>{' '}
+                        al llegar para recibir tus llaves
                       </span>
                     )}
                     {esCompletada && (

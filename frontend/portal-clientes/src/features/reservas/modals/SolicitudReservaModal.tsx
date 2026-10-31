@@ -80,13 +80,26 @@ export const SolicitudReservaModal: React.FC<SolicitudReservaModalProps> = ({
       return;
     }
 
+    if (user.id === alojamiento.idAnfitrion) {
+      setError('Eres el anfitrión de este alojamiento. No es posible reservar tus propias propiedades.');
+      return;
+    }
+
     setLoading(true);
 
     try {
+      const disp = await reservasService.verificarDisponibilidad(unidad.idUnidad, checkIn, checkOut);
+      if (!disp.disponible) {
+        setError(`Esta habitación ya se encuentra reservada del ${checkIn} al ${checkOut}. Por favor selecciona otro rango de fechas.`);
+        setLoading(false);
+        return;
+      }
+
       const payload = {
         idCliente: user.id,
         nombreCliente: `${user.nombre} ${user.apellido}`.trim() || user.nombre || 'Huésped Registrado',
         idAnfitrion: alojamiento.idAnfitrion,
+        nombreAnfitrion: alojamiento.nombreAnfitrion || 'Carlos Mendoza',
         idAlojamiento: alojamiento.idAlojamiento,
         tituloAlojamiento: alojamiento.titulo,
         idUnidad: unidad.idUnidad,

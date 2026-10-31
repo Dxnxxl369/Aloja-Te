@@ -58,6 +58,7 @@ export class ReservasService {
       idCliente: dto.idCliente,
       nombreCliente: dto.nombreCliente,
       idAnfitrion: dto.idAnfitrion,
+      nombreAnfitrion: dto.nombreAnfitrion || 'Carlos Mendoza',
       idAlojamiento: dto.idAlojamiento,
       tituloAlojamiento: dto.tituloAlojamiento,
       idUnidad: dto.idUnidad,

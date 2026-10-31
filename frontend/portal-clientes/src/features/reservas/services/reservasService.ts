@@ -55,5 +55,21 @@ export const reservasService = {
   async finalizarCheckOut(idReserva: string): Promise<ReservaResponse> {
     const response = await httpClient.post<ReservaResponse>(ENDPOINTS.RESERVAS.CHECK_OUT(idReserva), {});
     return response.data;
+  },
+
+  async verificarDisponibilidad(
+    unidadId: string,
+    checkIn: string,
+    checkOut: string
+  ): Promise<{ disponible: boolean; fechasBloqueadas: string[] }> {
+    try {
+      const response = await httpClient.get<{ disponible: boolean; fechasBloqueadas: string[] }>(
+        ENDPOINTS.RESERVAS.DISPONIBILIDAD(unidadId, checkIn, checkOut)
+      );
+      return response.data;
+    } catch {
+      // Fallback local en caso de verificación sin conexión
+      return { disponible: true, fechasBloqueadas: [] };
+    }
   }
 };

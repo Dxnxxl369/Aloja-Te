@@ -4,10 +4,11 @@ import {
   ShieldCheck, Clock, Calendar, ArrowRight, Share2, Heart, 
   Hotel, Home, Building2, CheckCircle2, ChevronRight, Eye,
   Image as ImageIcon, MessageSquarePlus, ChevronDown, ChevronUp,
-  X, Send, User, Award, CheckCircle
+  X, Send, User, Award, CheckCircle, AlertCircle
 } from 'lucide-react';
 import { Alojamiento, UnidadReservable, ValoracionCliente, ResumenValoraciones } from '../types/catalogo.types';
 import { catalogoService } from '../services/catalogoService';
+import { reservasService } from '../../reservas/services/reservasService';
 import { useAuth } from '../../../core/auth/AuthContext';
 import { ImageLightboxModal } from '../modals/ImageLightboxModal';
 
@@ -37,6 +38,22 @@ export const DetalleAlojamientoView: React.FC<DetalleAlojamientoViewProps> = ({
   const [checkIn, setCheckIn] = useState('2026-11-10');
   const [checkOut, setCheckOut] = useState('2026-11-13');
   const [huespedes, setHuespedes] = useState(2);
+
+  // Verificación reactiva de Disponibilidad y fechas bloqueadas
+  const [verificandoDisponibilidad, setVerificandoDisponibilidad] = useState(false);
+  const [estaDisponible, setEstaDisponible] = useState(true);
+  const [fechasBloqueadas, setFechasBloqueadas] = useState<string[]>([]);
+
+  // Detección de auto-reserva (Anfitrión propietario del alojamiento)
+  const esMiPropiedad = Boolean(
+    user && (
+      user.id === alojamiento.idAnfitrion ||
+      (user.rol === 'ANFITRION' && (
+        alojamiento.idAnfitrion === user.id ||
+        (alojamiento.nombreAnfitrion && `${user.nombre} ${user.apellido}`.toLowerCase().includes(alojamiento.nombreAnfitrion.toLowerCase()))
+      ))
+    )
+  );
 
   // Lightbox State
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -78,6 +95,33 @@ export const DetalleAlojamientoView: React.FC<DetalleAlojamientoViewProps> = ({
     moneda: 'BOB',
     activo: true,
   };
+
+  // Verificación reactiva de disponibilidad en fechas seleccionadas
+  useEffect(() => {
+    if (!unidadActiva?.idUnidad || !checkIn || !checkOut) return;
+    let isCurrent = true;
+    setVerificandoDisponibilidad(true);
+
+    reservasService
+      .verificarDisponibilidad(unidadActiva.idUnidad, checkIn, checkOut)
+      .then((res) => {
+        if (isCurrent) {
+          setEstaDisponible(res.disponible);
+          setFechasBloqueadas(res.fechasBloqueadas || []);
+          setVerificandoDisponibilidad(false);
+        }
+      })
+      .catch(() => {
+        if (isCurrent) {
+          setEstaDisponible(true);
+          setVerificandoDisponibilidad(false);
+        }
+      });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [unidadActiva?.idUnidad, checkIn, checkOut]);
 
   // Fotos para Galería y Lightbox
   const todasFotos = (alojamiento.fotografias || []).map(f => f.url).filter(Boolean);
@@ -716,8 +760,8 @@ export const DetalleAlojamientoView: React.FC<DetalleAlojamientoViewProps> = ({
                                 #{resena.topicoPredicho}
                               </span>
                             )}
-                            <div className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 font-bold text-xs border border-amber-200 dark:border-amber-800">
-                              <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                            <div className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 font-bold text-xs border border-blue-200 dark:border-blue-800">
+                              <Star className="w-3.5 h-3.5 fill-blue-500 text-blue-500" />
                               <span>{resena.puntuacionGeneral}.0</span>
                             </div>
                           </div>
@@ -820,15 +864,57 @@ export const DetalleAlojamientoView: React.FC<DetalleAlojamientoViewProps> = ({
                 </div>
               </div>
 
-              {/* Botón Principal de Acción: Reservar con QR Simple */}
-              <button
-                type="button"
-                onClick={() => onReservar(alojamiento, unidadActiva, checkIn, checkOut, huespedes)}
-                className="w-full py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-sm shadow-xl shadow-blue-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <span>Reservar Hospedaje</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
+              {/* Control de Acciones: Auto-reserva vs Disponibilidad vs Reservar */}
+              {esMiPropiedad ? (
+                <div className="p-4 rounded-2xl bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 text-center space-y-2.5">
+                  <div className="flex items-center justify-center gap-2 text-blue-600 dark:text-blue-400 font-bold text-xs uppercase tracking-wider">
+                    <Building2 className="w-4 h-4" />
+                    <span>Propiedad de tu Catálogo</span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                    Eres el anfitrión registrado de este alojamiento. Para gestionar habitaciones, consultar calendarios o validar la llegada de tus huéspedes, accede a tu panel.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      window.location.hash = '#/anfitrion';
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-600/20 transition cursor-pointer flex items-center justify-center gap-1.5"
+                  >
+                    <span>Ir a Mi Panel de Anfitrión</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ) : !estaDisponible ? (
+                <div className="space-y-2.5">
+                  <div className="p-3.5 rounded-2xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 text-red-700 dark:text-red-300 text-xs space-y-1">
+                    <div className="flex items-center gap-1.5 font-bold">
+                      <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
+                      <span>Fechas No Disponibles</span>
+                    </div>
+                    <p className="text-[11px] text-red-600 dark:text-red-400">
+                      Esta habitación ya cuenta con una reserva activa en las fechas seleccionadas ({checkIn} al {checkOut}). Por favor elige otro rango de fechas en el calendario.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    disabled
+                    className="w-full py-4 rounded-2xl bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-500 font-bold text-sm cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    <span>No Disponible en Estas Fechas</span>
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => onReservar(alojamiento, unidadActiva, checkIn, checkOut, huespedes)}
+                  className="w-full py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-sm shadow-xl shadow-blue-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <span>Reservar Hospedaje</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              )}
 
               {/* Desglose Transparente de Precios */}
               <div className="space-y-2 pt-3 border-t border-slate-100 dark:border-slate-800 text-xs">

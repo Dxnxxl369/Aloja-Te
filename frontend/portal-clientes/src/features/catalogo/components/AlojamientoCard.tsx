@@ -1,6 +1,7 @@
 import React from 'react';
 import { Alojamiento } from '../types/catalogo.types';
-import { Star, MapPin, Users, ArrowRight } from 'lucide-react';
+import { Star, MapPin, Users, ArrowRight, Building2 } from 'lucide-react';
+import { useAuth } from '../../../core/auth/AuthContext';
 
 interface AlojamientoCardProps {
   alojamiento: Alojamiento;
@@ -13,6 +14,17 @@ export const AlojamientoCard: React.FC<AlojamientoCardProps> = ({
   onSelect,
   onReservarDirecto,
 }) => {
+  const { user } = useAuth();
+  const esMiPropiedad = Boolean(
+    user && (
+      user.id === alojamiento.idAnfitrion ||
+      (user.rol === 'ANFITRION' && (
+        alojamiento.idAnfitrion === user.id ||
+        (alojamiento.nombreAnfitrion && `${user.nombre} ${user.apellido}`.toLowerCase().includes(alojamiento.nombreAnfitrion.toLowerCase()))
+      ))
+    )
+  );
+
   const fotoPrincipal = alojamiento.fotografias?.find(f => f.esPrincipal)?.url ||
     alojamiento.fotografias?.[0]?.url ||
     'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=800&q=80';
@@ -51,6 +63,14 @@ export const AlojamientoCard: React.FC<AlojamientoCardProps> = ({
           <MapPin className="w-3 h-3 text-blue-400" />
           <span>{alojamiento.ciudad}, {alojamiento.departamento}</span>
         </div>
+
+        {/* Badge Anfitrión Propietario */}
+        {esMiPropiedad && (
+          <div className="absolute top-3.5 left-3.5 px-2.5 py-1 rounded-xl bg-blue-600 text-white text-[10px] font-bold flex items-center gap-1 shadow-md">
+            <Building2 className="w-3 h-3" />
+            <span>Tu Alojamiento</span>
+          </div>
+        )}
       </div>
 
       {/* Content */}
@@ -98,17 +118,31 @@ export const AlojamientoCard: React.FC<AlojamientoCardProps> = ({
           <div className="flex items-center gap-2">
             <button
               onClick={() => onSelect(alojamiento)}
-              className="px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold transition"
+              className="px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold transition cursor-pointer"
             >
-              Ver Pantalla
+              Ver Ficha
             </button>
-            <button
-              onClick={() => onReservarDirecto(alojamiento)}
-              className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-600/25 transition flex items-center gap-1.5"
-            >
-              <span>Reservar</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
+            {esMiPropiedad ? (
+              <button
+                onClick={() => {
+                  window.location.hash = '#/anfitrion';
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className="px-3.5 py-2 rounded-xl bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                title="Administrar en tu Panel de Anfitrión"
+              >
+                <span>Gestionar</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            ) : (
+              <button
+                onClick={() => onReservarDirecto(alojamiento)}
+                className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-600/25 transition flex items-center gap-1.5 cursor-pointer"
+              >
+                <span>Reservar</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
         </div>
       </div>

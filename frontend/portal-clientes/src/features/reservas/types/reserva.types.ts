@@ -2,6 +2,7 @@ export interface CrearReservaPayload {
   idCliente: string;
   nombreCliente: string;
   idAnfitrion: string;
+  nombreAnfitrion?: string;
   idAlojamiento: string;
   tituloAlojamiento: string;
   idUnidad: string;
@@ -18,6 +19,7 @@ export interface ReservaResponse {
   idCliente: string;
   nombreCliente: string;
   idAnfitrion: string;
+  nombreAnfitrion?: string;
   idAlojamiento: string;
   tituloAlojamiento: string;
   idUnidad: string;

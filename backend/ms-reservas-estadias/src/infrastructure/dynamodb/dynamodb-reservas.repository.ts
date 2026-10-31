@@ -170,8 +170,36 @@ export class DynamoDBReservasRepository implements IReservasRepository {
   }
 
   async obtenerBloqueosPorRango(idUnidad: string, fechaInicio: string, fechaFin: string): Promise<BloqueoInventarioEntity[]> {
-    return Array.from(this.memoryBloqueos.values()).filter(
-      (b) => b.idUnidad === idUnidad && b.fecha >= fechaInicio && b.fecha <= fechaFin,
+    const bloqueosDirectos = Array.from(this.memoryBloqueos.values()).filter(
+      (b) => b.idUnidad === idUnidad && b.fecha >= fechaInicio && b.fecha < fechaFin,
     );
+    if (bloqueosDirectos.length > 0) {
+      return bloqueosDirectos;
+    }
+
+    // Verificar también en reservas activas de la unidad
+    const reservasOcupadas = Array.from(this.memoryReservas.values()).filter(
+      (r) =>
+        r.idUnidad === idUnidad &&
+        r.estado !== 'CANCELADA' &&
+        r.estado !== 'EXPIRADA' &&
+        r.checkIn < fechaFin &&
+        r.checkOut > fechaInicio,
+    );
+
+    if (reservasOcupadas.length > 0) {
+      return reservasOcupadas.map(
+        (r) =>
+          new BloqueoInventarioEntity({
+            idUnidad,
+            fecha: r.checkIn,
+            idReserva: r.idReserva,
+            cantidadOcupada: r.cantidadUnidades || 1,
+            motivo: 'RESERVA_EN_CURSO',
+          }),
+      );
+    }
+
+    return [];
   }
 }
