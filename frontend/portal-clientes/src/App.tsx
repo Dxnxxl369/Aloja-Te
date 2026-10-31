@@ -369,6 +369,30 @@ export const AppContent: React.FC = () => {
           <MisViajesView
             reservas={misReservas}
             onNuevaReserva={() => navigate.catalogo()}
+            onActualizarReservas={(nuevas) => {
+              setMisReservas(nuevas);
+              localStorage.setItem('alojate_mis_reservas', JSON.stringify(nuevas));
+            }}
+            onDejarResena={(alojamientoId) => {
+              const target = alojamientos.find((a) => a.idAlojamiento === alojamientoId);
+              if (target) {
+                setDetalleAlojamiento(target);
+              } else {
+                catalogoService
+                  .obtenerPorId(alojamientoId)
+                  .then((data) => {
+                    if (data) setDetalleAlojamiento(data);
+                  })
+                  .catch(() => {});
+              }
+              navigate.detalle(alojamientoId);
+              setTimeout(() => {
+                const el = document.getElementById('seccion-resenas');
+                if (el) {
+                  el.scrollIntoView({ behavior: 'smooth' });
+                }
+              }, 400);
+            }}
           />
         )}
 

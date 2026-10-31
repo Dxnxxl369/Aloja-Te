@@ -37,6 +37,13 @@ export const reservasService = {
     return response.data;
   },
 
+  async cancelarReserva(idReserva: string, motivo?: string): Promise<ReservaResponse> {
+    const response = await httpClient.post<ReservaResponse>(ENDPOINTS.RESERVAS.CANCELAR(idReserva), {
+      motivo: motivo || 'Cancelada por el huésped según política de cancelación flexible',
+    });
+    return response.data;
+  },
+
   async realizarCheckIn(idReserva: string, codigoCheckin: string, notasHuesped?: string): Promise<ReservaResponse> {
     const response = await httpClient.post<ReservaResponse>(ENDPOINTS.RESERVAS.CHECK_IN(idReserva), {
       codigoCheckin,

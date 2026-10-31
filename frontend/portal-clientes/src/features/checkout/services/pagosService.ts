@@ -20,5 +20,13 @@ export const pagosService = {
   async validarPromocion(codigo: string): Promise<any> {
     const response = await httpClient.get(ENDPOINTS.FINANZAS.PROMOCION(codigo));
     return response.data;
+  },
+
+  async procesarReembolso(reservaId: string, monto?: number, motivo?: string): Promise<any> {
+    const response = await httpClient.post(ENDPOINTS.FINANZAS.REEMBOLSAR(reservaId), {
+      monto,
+      motivo: motivo || 'Cancelación de reserva y devolución al cliente',
+    });
+    return response.data;
   }
 };

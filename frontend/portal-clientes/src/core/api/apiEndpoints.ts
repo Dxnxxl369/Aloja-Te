@@ -23,6 +23,7 @@ export const ENDPOINTS = {
     LISTAR_TODAS: `${API_BASE_URL}/api/v1/reservas`,
     OBTENER: (id: string) => `${API_BASE_URL}/api/v1/reservas/${id}`,
     CONFIRMAR_PAGO: (id: string) => `${API_BASE_URL}/api/v1/reservas/${id}/confirmar-pago`,
+    CANCELAR: (id: string) => `${API_BASE_URL}/api/v1/reservas/${id}/cancelar`,
     CHECK_IN: (id: string) => `${API_BASE_URL}/api/v1/reservas/${id}/check-in`,
     CHECK_OUT: (id: string) => `${API_BASE_URL}/api/v1/reservas/${id}/check-out`,
     CLIENTE_HISTORIAL: (clienteId: string) => `${API_BASE_URL}/api/v1/reservas/cliente/${clienteId}`,
