@@ -1,6 +1,6 @@
 import { httpClient } from '../../../core/api/httpClient';
 import { ENDPOINTS } from '../../../core/api/apiEndpoints';
-import { Alojamiento } from '../types/catalogo.types';
+import { Alojamiento, ValoracionCliente, ResumenValoraciones } from '../types/catalogo.types';
 
 // Fuente Canónica Unificada de Alojamientos Demo (Compartida con Portal Admin y Base de Datos)
 const ALOJAMIENTOS_DEMO: Alojamiento[] = [
@@ -470,6 +470,288 @@ function sincronizarConDecisionesAdmin(lista: Alojamiento[]): Alojamiento[] {
   return lista;
 }
 
+// =========================================================================
+// VALORACIONES CANÓNICAS Y ANÁLISIS DE TÓPICOS NLP
+// =========================================================================
+export const VALORACIONES_DEMO: ValoracionCliente[] = [
+  // --- Hotel Boutique Los Tajibos Colonial (General) ---
+  {
+    idValoracion: 'val-taj-gen-1',
+    idAlojamiento: '49768530-76ae-459e-9bbe-faf2f3d488ba',
+    idUsuario: '075eabd5-7aca-4ec2-a00d-67064b8eccdf',
+    nombreUsuario: 'Mateo Zalles',
+    puntuacionGeneral: 5,
+    calificacionLimpieza: 5,
+    calificacionUbicacion: 5,
+    calificacionCalidadPrecio: 4.8,
+    calificacionServicio: 5,
+    calificacionComodidad: 5,
+    esAnonimo: false,
+    comentario: 'Excelente atención en la recepción y los jardines con la piscina son hermosos. El desayuno buffet típico cruceño espectacular, volveremos siempre.',
+    sentimientoNlp: 'POSITIVO',
+    confianzaNlp: 0.96,
+    topicoPredicho: 'AREAS_COMUNES_Y_DESAYUNO',
+    fechaCreacion: '2026-10-24T10:15:00Z'
+  },
+  {
+    idValoracion: 'val-taj-gen-2',
+    idAlojamiento: '49768530-76ae-459e-9bbe-faf2f3d488ba',
+    idUsuario: '3b892a01-51f2-4bc9-8800-47bf1b14a220',
+    nombreUsuario: 'Camila Vaca',
+    puntuacionGeneral: 4,
+    calificacionLimpieza: 5,
+    calificacionUbicacion: 5,
+    calificacionCalidadPrecio: 4,
+    calificacionServicio: 4.5,
+    calificacionComodidad: 4,
+    esAnonimo: false,
+    comentario: 'Ubicación inmejorable en pleno Equipetrol, muy seguro y tranquilo. El personal de conserjería fue muy atento durante toda la estancia.',
+    sentimientoNlp: 'POSITIVO',
+    confianzaNlp: 0.91,
+    topicoPredicho: 'UBICACION_Y_SEGURIDAD',
+    fechaCreacion: '2026-10-21T18:30:00Z'
+  },
+
+  // --- Suite Presidencial con Balcón & Vista a Jardines (u-tajibos-1) ---
+  {
+    idValoracion: 'val-taj-u1-1',
+    idAlojamiento: '49768530-76ae-459e-9bbe-faf2f3d488ba',
+    idUnidad: 'u-tajibos-1',
+    idUsuario: '6c1a8902-33dd-45ab-9912-78814aa88231',
+    nombreUsuario: 'Roberto Fernández',
+    puntuacionGeneral: 5,
+    calificacionLimpieza: 5,
+    calificacionUbicacion: 5,
+    calificacionCalidadPrecio: 5,
+    calificacionServicio: 5,
+    calificacionComodidad: 5,
+    esAnonimo: false,
+    comentario: 'La suite es maravillosa, la tina de hidromasaje en mármol y la vista al jardín botánico valen cada centavo. Cama King super cómoda y silencio absoluto.',
+    sentimientoNlp: 'POSITIVO',
+    confianzaNlp: 0.98,
+    topicoPredicho: 'CONFORT_Y_LUJO',
+    fechaCreacion: '2026-10-26T14:20:00Z'
+  },
+  {
+    idValoracion: 'val-taj-u1-2',
+    idAlojamiento: '49768530-76ae-459e-9bbe-faf2f3d488ba',
+    idUnidad: 'u-tajibos-1',
+    idUsuario: '8f220199-77aa-42a1-bb00-112233445566',
+    nombreUsuario: 'Sofía Banegas',
+    puntuacionGeneral: 5,
+    calificacionLimpieza: 5,
+    calificacionUbicacion: 5,
+    calificacionCalidadPrecio: 4.8,
+    calificacionServicio: 5,
+    calificacionComodidad: 5,
+    esAnonimo: false,
+    comentario: 'Inolvidable estadía de aniversario. El balcón privado hacia las palmeras y el room service fueron impecables. 100% recomendado.',
+    sentimientoNlp: 'POSITIVO',
+    confianzaNlp: 0.95,
+    topicoPredicho: 'EXPERIENCIA_Y_VISTAS',
+    fechaCreacion: '2026-10-27T11:00:00Z'
+  },
+
+  // --- Habitación Ejecutiva Doble Twin (u-tajibos-2) (CON RESEÑAS NEGATIVAS DETECTADAS POR IA NLP) ---
+  {
+    idValoracion: 'val-taj-u2-1',
+    idAlojamiento: '49768530-76ae-459e-9bbe-faf2f3d488ba',
+    idUnidad: 'u-tajibos-2',
+    idUsuario: '99aa0011-22bb-43cc-88dd-776655443322',
+    nombreUsuario: 'Javier Arnez',
+    puntuacionGeneral: 2,
+    calificacionLimpieza: 3,
+    calificacionUbicacion: 4,
+    calificacionCalidadPrecio: 2,
+    calificacionServicio: 2,
+    calificacionComodidad: 1,
+    esAnonimo: false,
+    comentario: 'El aire acondicionado hacía un ruido metálico ensordecedor toda la noche y apenas enfriaba. Tuvimos que abrir la ventana y entraron mosquitos, pésima noche de descanso.',
+    sentimientoNlp: 'NEGATIVO',
+    confianzaNlp: 0.94,
+    topicoPredicho: 'CLIMATIZACION_Y_RUIDO',
+    fechaCreacion: '2026-10-29T08:45:00Z'
+  },
+  {
+    idValoracion: 'val-taj-u2-2',
+    idAlojamiento: '49768530-76ae-459e-9bbe-faf2f3d488ba',
+    idUnidad: 'u-tajibos-2',
+    idUsuario: '55bb6677-88cc-49dd-a0ee-112233445577',
+    nombreUsuario: 'Carla Mercado',
+    puntuacionGeneral: 2,
+    calificacionLimpieza: 4,
+    calificacionUbicacion: 5,
+    calificacionCalidadPrecio: 2,
+    calificacionServicio: 2,
+    calificacionComodidad: 2,
+    esAnonimo: true,
+    comentario: 'El agua de la ducha salía completamente fría en la mañana. Llamé a recepción y dijeron que el termotanque del bloque ejecutivo estaba en mantenimiento. Inaceptable para la tarifa que cobran.',
+    sentimientoNlp: 'NEGATIVO',
+    confianzaNlp: 0.92,
+    topicoPredicho: 'AGUA_CALIENTE_Y_BANO',
+    fechaCreacion: '2026-10-30T09:12:00Z'
+  },
+  {
+    idValoracion: 'val-taj-u2-3',
+    idAlojamiento: '49768530-76ae-459e-9bbe-faf2f3d488ba',
+    idUnidad: 'u-tajibos-2',
+    idUsuario: '11aa22bb-33cc-44dd-55ee-6677889900aa',
+    nombreUsuario: 'Andrés Guidi',
+    puntuacionGeneral: 3,
+    calificacionLimpieza: 4,
+    calificacionUbicacion: 4.5,
+    calificacionCalidadPrecio: 3,
+    calificacionServicio: 3.5,
+    calificacionComodidad: 3,
+    esAnonimo: false,
+    comentario: 'El escritorio ejecutivo y el internet son buenos para trabajar, pero deberían revisar el aislamiento acústico y el clima de estas habitaciones.',
+    sentimientoNlp: 'NEUTRO',
+    confianzaNlp: 0.82,
+    topicoPredicho: 'EQUIPAMIENTO_Y_TRABAJO',
+    fechaCreacion: '2026-10-30T17:00:00Z'
+  },
+
+  // --- Lodge Mirador del Illimani (ea199203-91aa-42a1-bf00-881273918a22 - OBSERVADO POR NLP) ---
+  {
+    idValoracion: 'val-illi-1',
+    idAlojamiento: 'ea199203-91aa-42a1-bf00-881273918a22',
+    idUsuario: '44cc55dd-66ee-47ff-88aa-99bb00112233',
+    nombreUsuario: 'Diego Morales',
+    puntuacionGeneral: 2,
+    calificacionLimpieza: 4,
+    calificacionUbicacion: 4.5,
+    calificacionCalidadPrecio: 2,
+    calificacionServicio: 3,
+    calificacionComodidad: 1.5,
+    esAnonimo: false,
+    comentario: 'La vista al majestuoso nevado Illimani es insuperable, pero por la noche la estufa a leña no dio abasto y pasamos un frío extremo en el dormitorio. No había frazadas térmicas suficientes.',
+    sentimientoNlp: 'NEGATIVO',
+    confianzaNlp: 0.96,
+    topicoPredicho: 'TEMPERATURA_Y_CALEFACCION',
+    fechaCreacion: '2026-10-17T22:30:00Z'
+  },
+  {
+    idValoracion: 'val-illi-2',
+    idAlojamiento: 'ea199203-91aa-42a1-bf00-881273918a22',
+    idUsuario: '77dd88ee-99ff-40aa-bb11-223344556677',
+    nombreUsuario: 'Valeria Soliz',
+    puntuacionGeneral: 3,
+    calificacionLimpieza: 4,
+    calificacionUbicacion: 5,
+    calificacionCalidadPrecio: 3,
+    calificacionServicio: 4,
+    calificacionComodidad: 2.5,
+    esAnonimo: false,
+    comentario: 'Lugar mágico para desconectar de la ciudad, pero vengan muy preparados para las bajas temperaturas porque las noches son realmente heladas en Mecapaca.',
+    sentimientoNlp: 'NEUTRO',
+    confianzaNlp: 0.88,
+    topicoPredicho: 'CLIMA_Y_TEMPERATURA',
+    fechaCreacion: '2026-10-18T07:15:00Z'
+  },
+
+  // --- Chalet Boutique Los Viñedos (ca4d2e81-7b90-41f2-9854-1b3a88c22110) ---
+  {
+    idValoracion: 'val-tari-1',
+    idAlojamiento: 'ca4d2e81-7b90-41f2-9854-1b3a88c22110',
+    idUsuario: '88ee99ff-00aa-41bb-cc22-334455667788',
+    nombreUsuario: 'Sebastián Farfán',
+    puntuacionGeneral: 5,
+    calificacionLimpieza: 5,
+    calificacionUbicacion: 5,
+    calificacionCalidadPrecio: 5,
+    calificacionServicio: 5,
+    calificacionComodidad: 5,
+    esAnonimo: false,
+    comentario: 'Una de las mejores experiencias en Tarija. El viñedo privado, la cata de vinos guiada y el desayuno chapaco fueron de diez. Doña Elena es una anfitriona de primer nivel.',
+    sentimientoNlp: 'POSITIVO',
+    confianzaNlp: 0.97,
+    topicoPredicho: 'HOSPITALIDAD_Y_VINOS',
+    fechaCreacion: '2026-10-23T16:00:00Z'
+  },
+
+  // --- Cabaña Chiquitana El Palmar (93fce18e-32fa-400c-8f49-8d4f2fe2f5bb) ---
+  {
+    idValoracion: 'val-chiqui-1',
+    idAlojamiento: '93fce18e-32fa-400c-8f49-8d4f2fe2f5bb',
+    idUsuario: '22ff33aa-44bb-42cc-dd33-445566778899',
+    nombreUsuario: 'Mariana Roca',
+    puntuacionGeneral: 5,
+    calificacionLimpieza: 5,
+    calificacionUbicacion: 4.8,
+    calificacionCalidadPrecio: 5,
+    calificacionServicio: 5,
+    calificacionComodidad: 5,
+    esAnonimo: false,
+    comentario: 'Hermosa cabaña en San José de Chiquitos, la galería con hamacas y la piscina privada son perfectas para desconectarse en familia bajo el cielo estrellado.',
+    sentimientoNlp: 'POSITIVO',
+    confianzaNlp: 0.95,
+    topicoPredicho: 'DESCANSO_Y_FAMILIA',
+    fechaCreacion: '2026-10-26T20:00:00Z'
+  }
+];
+
+function obtenerValoracionesLocales(): ValoracionCliente[] {
+  try {
+    const raw = localStorage.getItem('alojate_valoraciones_local');
+    if (raw) {
+      const parsed: ValoracionCliente[] = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        const ids = new Set(parsed.map(p => p.idValoracion));
+        const combinadas = [...parsed];
+        VALORACIONES_DEMO.forEach(v => {
+          if (!ids.has(v.idValoracion)) combinadas.push(v);
+        });
+        return combinadas;
+      }
+    }
+  } catch {}
+  return [...VALORACIONES_DEMO];
+}
+
+function calcularResumenLocal(lista: ValoracionCliente[]): ResumenValoraciones {
+  if (!lista || lista.length === 0) {
+    return {
+      calificacionPromedio: 5.0,
+      totalResenas: 0,
+      promedioLimpieza: 5.0,
+      promedioUbicacion: 5.0,
+      promedioCalidadPrecio: 5.0,
+      promedioServicio: 5.0,
+      promedioComodidad: 5.0,
+      conteoPositivos: 0,
+      conteoNeutros: 0,
+      conteoNegativos: 0
+    };
+  }
+  const total = lista.length;
+  let sumGen = 0, sumLimp = 0, sumUbi = 0, sumCal = 0, sumServ = 0, sumCom = 0;
+  let pos = 0, neu = 0, neg = 0;
+  for (const v of lista) {
+    sumGen += v.puntuacionGeneral;
+    sumLimp += (v.calificacionLimpieza ?? v.puntuacionGeneral);
+    sumUbi += (v.calificacionUbicacion ?? v.puntuacionGeneral);
+    sumCal += (v.calificacionCalidadPrecio ?? v.puntuacionGeneral);
+    sumServ += (v.calificacionServicio ?? v.puntuacionGeneral);
+    sumCom += (v.calificacionComodidad ?? v.puntuacionGeneral);
+    const sent = (v.sentimientoNlp || '').toUpperCase();
+    if (sent === 'POSITIVO' || v.puntuacionGeneral >= 4) pos++;
+    else if (sent === 'NEUTRO' || v.puntuacionGeneral === 3) neu++;
+    else neg++;
+  }
+  return {
+    calificacionPromedio: Number((sumGen / total).toFixed(2)),
+    totalResenas: total,
+    promedioLimpieza: Number((sumLimp / total).toFixed(1)),
+    promedioUbicacion: Number((sumUbi / total).toFixed(1)),
+    promedioCalidadPrecio: Number((sumCal / total).toFixed(1)),
+    promedioServicio: Number((sumServ / total).toFixed(1)),
+    promedioComodidad: Number((sumCom / total).toFixed(1)),
+    conteoPositivos: pos,
+    conteoNeutros: neu,
+    conteoNegativos: neg
+  };
+}
+
 export const catalogoService = {
   async listarAlojamientos(departamento?: string): Promise<Alojamiento[]> {
     let baseList: Alojamiento[] = [];
@@ -626,44 +908,74 @@ export const catalogoService = {
     }
   },
 
-  async listarValoraciones(idAlojamiento: string): Promise<any[]> {
+  async listarValoraciones(idAlojamiento: string): Promise<ValoracionCliente[]> {
     try {
-      const res = await httpClient.get<any[]>(ENDPOINTS.ALOJAMIENTOS.VALORACIONES(idAlojamiento));
-      return res.data || [];
-    } catch (e) {
-      return [];
-    }
+      const res = await httpClient.get<ValoracionCliente[]>(ENDPOINTS.ALOJAMIENTOS.VALORACIONES(idAlojamiento));
+      if (res.data && res.data.length > 0) return res.data;
+    } catch (e) {}
+    const locales = obtenerValoracionesLocales();
+    return locales.filter(v => v.idAlojamiento === idAlojamiento);
   },
 
-  async listarValoracionesGeneralesHotel(idAlojamiento: string): Promise<any[]> {
+  async listarValoracionesGeneralesHotel(idAlojamiento: string): Promise<ValoracionCliente[]> {
     try {
-      const res = await httpClient.get<any[]>(ENDPOINTS.ALOJAMIENTOS.VALORACIONES_HOTEL(idAlojamiento));
-      return res.data || [];
-    } catch (e) {
-      return [];
-    }
+      const res = await httpClient.get<ValoracionCliente[]>(ENDPOINTS.ALOJAMIENTOS.VALORACIONES_HOTEL(idAlojamiento));
+      if (res.data && res.data.length > 0) return res.data;
+    } catch (e) {}
+    const locales = obtenerValoracionesLocales();
+    return locales.filter(v => v.idAlojamiento === idAlojamiento && !v.idUnidad);
   },
 
-  async listarValoracionesUnidad(idUnidad: string): Promise<any[]> {
+  async listarValoracionesUnidad(idUnidad: string): Promise<ValoracionCliente[]> {
     try {
-      const res = await httpClient.get<any[]>(ENDPOINTS.ALOJAMIENTOS.VALORACIONES_UNIDAD(idUnidad));
-      return res.data || [];
-    } catch (e) {
-      return [];
-    }
+      const res = await httpClient.get<ValoracionCliente[]>(ENDPOINTS.ALOJAMIENTOS.VALORACIONES_UNIDAD(idUnidad));
+      if (res.data && res.data.length > 0) return res.data;
+    } catch (e) {}
+    const locales = obtenerValoracionesLocales();
+    return locales.filter(v => v.idUnidad === idUnidad);
   },
 
-  async crearValoracion(idAlojamiento: string, req: any): Promise<any> {
-    const res = await httpClient.post<any>(ENDPOINTS.ALOJAMIENTOS.VALORACIONES(idAlojamiento), req);
-    return res.data;
-  },
+  async crearValoracion(idAlojamiento: string, req: any): Promise<ValoracionCliente> {
+    const nueva: ValoracionCliente = {
+      idValoracion: `val-${Date.now()}`,
+      idAlojamiento,
+      idUnidad: req.idUnidad,
+      idUsuario: req.idUsuario,
+      nombreUsuario: req.esAnonimo ? 'Huésped Anónimo' : (req.nombreUsuario || 'Viajero Aloja-Te'),
+      puntuacionGeneral: req.puntuacionGeneral || 5,
+      calificacionLimpieza: req.calificacionLimpieza,
+      calificacionUbicacion: req.calificacionUbicacion,
+      calificacionCalidadPrecio: req.calificacionCalidadPrecio,
+      calificacionServicio: req.calificacionServicio,
+      calificacionComodidad: req.calificacionComodidad,
+      esAnonimo: Boolean(req.esAnonimo),
+      comentario: req.comentario || '',
+      sentimientoNlp: req.sentimientoNlp || (req.puntuacionGeneral >= 4 ? 'POSITIVO' : (req.puntuacionGeneral === 3 ? 'NEUTRO' : 'NEGATIVO')),
+      confianzaNlp: req.confianzaNlp || 0.95,
+      topicoPredicho: req.topicoPredicho || 'EXPERIENCIA_GENERAL',
+      fechaCreacion: new Date().toISOString()
+    };
 
-  async obtenerResumenValoraciones(idAlojamiento: string): Promise<any> {
     try {
-      const res = await httpClient.get<any>(ENDPOINTS.ALOJAMIENTOS.RESUMEN_VALORACIONES(idAlojamiento));
+      const actuales = obtenerValoracionesLocales();
+      const actualizadas = [nueva, ...actuales];
+      localStorage.setItem('alojate_valoraciones_local', JSON.stringify(actualizadas));
+    } catch {}
+
+    try {
+      const res = await httpClient.post<any>(ENDPOINTS.ALOJAMIENTOS.VALORACIONES(idAlojamiento), req);
       return res.data;
-    } catch (e) {
-      return null;
+    } catch {
+      return nueva;
     }
+  },
+
+  async obtenerResumenValoraciones(idAlojamiento: string): Promise<ResumenValoraciones> {
+    try {
+      const res = await httpClient.get<ResumenValoraciones>(ENDPOINTS.ALOJAMIENTOS.RESUMEN_VALORACIONES(idAlojamiento));
+      if (res.data) return res.data;
+    } catch (e) {}
+    const locales = obtenerValoracionesLocales().filter(v => v.idAlojamiento === idAlojamiento);
+    return calcularResumenLocal(locales);
   }
 };
