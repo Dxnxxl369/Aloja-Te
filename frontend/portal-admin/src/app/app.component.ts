@@ -1026,9 +1026,9 @@ export const VALORACIONES_ADMIN_DEMO: ValoracionAdmin[] = [
                     type="button"
                     (click)="inspeccionarAlojamiento(a, 'resenas')"
                     class="px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-blue-50 dark:bg-stone-800 dark:hover:bg-blue-950/40 text-slate-700 hover:text-blue-600 dark:text-stone-300 text-xs font-semibold border border-slate-200 dark:border-stone-700 transition flex items-center gap-1.5"
-                    title="Auditar reseñas y tópicos analizados por IA NLP"
+                    title="Ver opiniones y comentarios de huéspedes"
                   >
-                    💬 Reseñas & NLP
+                    💬 Reseñas
                   </button>
 
                   <button
@@ -1312,14 +1312,14 @@ export const VALORACIONES_ADMIN_DEMO: ValoracionAdmin[] = [
             </button>
           </div>
 
-          <!-- PESTAÑAS DE INSPECCIÓN AUDITORÍA -->
+          <!-- PESTAÑAS DE INSPECCIÓN -->
           <div class="flex items-center gap-2 border-b border-slate-200 dark:border-stone-800 pb-3 flex-wrap">
             <button
               type="button"
               (click)="subTabInspeccion = 'general'; habitacionEnDetalleAdmin = null"
               [class]="subTabInspeccion === 'general' && !habitacionEnDetalleAdmin ? 'px-4 py-2 rounded-xl bg-blue-600 text-white font-bold text-xs shadow-md shadow-blue-500/20' : 'px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-stone-800 dark:hover:bg-stone-700 text-slate-700 dark:text-stone-300 font-semibold text-xs transition border border-slate-200 dark:border-stone-700'"
             >
-              📋 Ficha General {{ alojamientoInspeccionado.modalidad === 'HOTEL_HOSTAL' ? 'del Hotel' : 'de la Propiedad' }}
+              📋 Información General
             </button>
             <button
               *ngIf="alojamientoInspeccionado.modalidad === 'HOTEL_HOSTAL'"
@@ -1327,36 +1327,35 @@ export const VALORACIONES_ADMIN_DEMO: ValoracionAdmin[] = [
               (click)="subTabInspeccion = 'habitaciones'"
               [class]="subTabInspeccion === 'habitaciones' ? 'px-4 py-2 rounded-xl bg-blue-600 text-white font-bold text-xs shadow-md shadow-blue-500/20' : 'px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-stone-800 dark:hover:bg-stone-700 text-slate-700 dark:text-stone-300 font-semibold text-xs transition border border-slate-200 dark:border-stone-700'"
             >
-              🏨 Habitaciones & Unidades ({{ alojamientoInspeccionado.unidades?.length || 0 }})
+              🏨 Habitaciones ({{ alojamientoInspeccionado.unidades?.length || 0 }})
             </button>
             <button
               type="button"
               (click)="subTabInspeccion = 'resenas'; habitacionEnDetalleAdmin = null"
               [class]="subTabInspeccion === 'resenas' ? 'px-4 py-2 rounded-xl bg-blue-600 text-white font-bold text-xs shadow-md shadow-blue-500/20' : 'px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-stone-800 dark:hover:bg-stone-700 text-slate-700 dark:text-stone-300 font-semibold text-xs transition border border-slate-200 dark:border-stone-700'"
             >
-              💬 Reseñas & Tópicos IA NLP ({{ resenasAlojamientoActual.length }})
+              💬 Reseñas ({{ resenasAlojamientoActual.length }})
               <span *ngIf="conteoNegativasGeneral() > 0" class="ml-1.5 px-2 py-0.5 rounded-full bg-rose-500 text-white text-[10px] font-bold">
-                {{ conteoNegativasGeneral() }} críticas
+                {{ conteoNegativasGeneral() }} {{ conteoNegativasGeneral() === 1 ? 'reclamo' : 'reclamos' }}
               </span>
             </button>
           </div>
 
-          <!-- CONTENIDO TAB HABITACIONES (MODO VISTA CLIENTE & AUDITORÍA NLP PARA HOTELES) -->
+          <!-- CONTENIDO TAB HABITACIONES (HOTELES) -->
           <div *ngIf="alojamientoInspeccionado.modalidad === 'HOTEL_HOSTAL' && subTabInspeccion === 'habitaciones'" class="space-y-4 animate-fade-in">
             
-            <!-- LISTADO DE HABITACIONES (CUANDO NO HAY NINGUNA EN DETALLE) -->
+            <!-- LISTADO DE HABITACIONES -->
             <div *ngIf="!habitacionEnDetalleAdmin" class="space-y-4">
-              <div class="p-4 rounded-2xl bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/60 flex items-center justify-between flex-wrap gap-2">
+              <div class="p-4 rounded-2xl bg-slate-50 dark:bg-stone-900 border border-slate-200 dark:border-stone-800 flex items-center justify-between flex-wrap gap-2">
                 <div>
-                  <h4 class="text-sm font-bold text-indigo-950 dark:text-indigo-200 flex items-center gap-2">
-                    <span>🏨 Moderación y Auditoría Individual de Habitaciones</span>
-                    <span class="px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300 text-[10px] font-bold">Vista Cliente & NLP Disponible</span>
+                  <h4 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <span>🏨 Habitaciones del Establecimiento</span>
                   </h4>
-                  <p class="text-xs text-indigo-700 dark:text-indigo-300 mt-0.5">
-                    Haz clic en <strong>"👁️ Ver Habitación (Vista Cliente & Reseñas)"</strong> para auditar cada habitación individualmente con sus fotos en alta definición y las opiniones procesadas por Inteligencia Artificial NLP.
+                  <p class="text-xs text-slate-500 dark:text-stone-400 mt-0.5">
+                    Revisa las fotos, características y opiniones de cada habitación, o pon en mantenimiento las que requieran atención.
                   </p>
                 </div>
-                <span class="px-3 py-1 rounded-full bg-white dark:bg-stone-900 text-indigo-700 dark:text-indigo-300 text-xs font-bold shadow-sm border border-indigo-200 dark:border-indigo-800 font-mono">
+                <span class="px-3 py-1 rounded-full bg-white dark:bg-stone-800 text-slate-700 dark:text-stone-300 text-xs font-bold shadow-sm border border-slate-200 dark:border-stone-700 font-mono">
                   Tipologías: {{ alojamientoInspeccionado.unidades?.length || 0 }}
                 </span>
               </div>
@@ -1368,7 +1367,7 @@ export const VALORACIONES_ADMIN_DEMO: ValoracionAdmin[] = [
               <div *ngIf="alojamientoInspeccionado.unidades && alojamientoInspeccionado.unidades.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div *ngFor="let u of alojamientoInspeccionado.unidades" class="p-4 rounded-2xl bg-slate-50 dark:bg-stone-950 border border-slate-200 dark:border-stone-800 space-y-3.5 shadow-sm hover:border-blue-500/40 transition flex flex-col justify-between">
                   <div class="space-y-3">
-                    <!-- Portada de la Habitación con acceso a Vista Cliente -->
+                    <!-- Portada de la Habitación -->
                     <div *ngIf="u.fotos && u.fotos.length > 0" 
                          class="h-44 rounded-xl overflow-hidden relative border border-slate-200 dark:border-stone-800 cursor-pointer group shadow-inner"
                          (click)="abrirVistaClienteHabitacion(u)">
@@ -1377,11 +1376,11 @@ export const VALORACIONES_ADMIN_DEMO: ValoracionAdmin[] = [
                         <span>📷 {{ u.fotos.length }} fotos</span>
                       </div>
                       <div class="absolute top-2 right-2 px-2.5 py-1 rounded-lg bg-blue-600 text-white text-[10px] font-bold shadow-md flex items-center gap-1">
-                        <span>👁️ Abrir Vista Cliente</span>
+                        <span>👁️ Ver Habitación</span>
                       </div>
-                      <!-- Alerta de Quejas NLP sobre la foto si existen quejas -->
-                      <div *ngIf="conteoNegativasHabitacionPorUnidad(u.idUnidad) > 0" class="absolute top-2 left-2 px-2.5 py-1 rounded-lg bg-rose-600 text-white text-[10px] font-bold shadow-md flex items-center gap-1 animate-pulse">
-                        <span>⚠️ {{ conteoNegativasHabitacionPorUnidad(u.idUnidad) }} Quejas NLP</span>
+                      <!-- Alerta si hay quejas -->
+                      <div *ngIf="conteoNegativasHabitacionPorUnidad(u.idUnidad) > 0" class="absolute top-2 left-2 px-2.5 py-1 rounded-lg bg-rose-600 text-white text-[10px] font-bold shadow-md flex items-center gap-1">
+                        <span>⚠️ {{ conteoNegativasHabitacionPorUnidad(u.idUnidad) }} {{ conteoNegativasHabitacionPorUnidad(u.idUnidad) === 1 ? 'reclamo' : 'reclamos' }}</span>
                       </div>
                     </div>
 
@@ -1405,17 +1404,17 @@ export const VALORACIONES_ADMIN_DEMO: ValoracionAdmin[] = [
                       </div>
                     </div>
 
-                    <!-- Rating y Estado de Reseñas NLP -->
+                    <!-- Estado de Reseñas -->
                     <div class="flex items-center justify-between text-xs py-1.5 px-2.5 rounded-xl bg-white dark:bg-stone-900 border border-slate-200 dark:border-stone-800">
                       <div class="flex items-center gap-1.5">
                         <span class="text-amber-500 font-bold">⭐ {{ promedioHabitacionPorUnidad(u.idUnidad) }}</span>
                         <span class="text-slate-400 dark:text-stone-500 text-[11px]">/ 5</span>
                       </div>
                       <div *ngIf="conteoNegativasHabitacionPorUnidad(u.idUnidad) > 0" class="flex items-center gap-1 text-[11px] font-bold text-rose-600 dark:text-rose-400">
-                        <span>🔴 {{ conteoNegativasHabitacionPorUnidad(u.idUnidad) }} reseñas críticas</span>
+                        <span>🔴 {{ conteoNegativasHabitacionPorUnidad(u.idUnidad) }} {{ conteoNegativasHabitacionPorUnidad(u.idUnidad) === 1 ? 'reclamo' : 'reclamos' }}</span>
                       </div>
                       <div *ngIf="conteoNegativasHabitacionPorUnidad(u.idUnidad) === 0" class="flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
-                        <span>🟢 Calidad Conforme</span>
+                        <span>🟢 Sin observaciones</span>
                       </div>
                     </div>
 
@@ -1439,13 +1438,12 @@ export const VALORACIONES_ADMIN_DEMO: ValoracionAdmin[] = [
                       <button type="button"
                               (click)="abrirVistaClienteHabitacion(u)"
                               class="flex-1 py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-500/20 transition flex items-center justify-center gap-1.5 cursor-pointer">
-                        <span>👁️ Ver Habitación (Vista Cliente & Reseñas)</span>
+                        <span>👁️ Ver Detalle y Reseñas</span>
                       </button>
                       <button (click)="alternarEstadoHabitacion(u)"
                               class="px-3 py-2 rounded-xl text-xs font-bold border transition shadow-sm cursor-pointer whitespace-nowrap"
-                              [ngClass]="u.estado === 'MANTENIMIENTO' ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600' : 'bg-white dark:bg-stone-800 text-slate-700 dark:text-stone-200 hover:bg-rose-50 dark:hover:bg-rose-950/40 hover:text-rose-600 border-slate-300 dark:border-stone-700'"
-                              title="{{ u.estado === 'MANTENIMIENTO' ? 'Reactivar y mostrar en catálogo' : 'Ocultar temporalmente por mantenimiento sin afectar el resto del hotel' }}">
-                        {{ u.estado === 'MANTENIMIENTO' ? '✓ Reactivar' : '⛔ Desactivar' }}
+                              [ngClass]="u.estado === 'MANTENIMIENTO' ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600' : 'bg-white dark:bg-stone-800 text-slate-700 dark:text-stone-200 hover:bg-rose-50 dark:hover:bg-rose-950/40 hover:text-rose-600 border-slate-300 dark:border-stone-700'">
+                        {{ u.estado === 'MANTENIMIENTO' ? '✓ Habilitar' : '⛔ Desactivar' }}
                       </button>
                     </div>
                   </div>
@@ -1453,39 +1451,33 @@ export const VALORACIONES_ADMIN_DEMO: ValoracionAdmin[] = [
               </div>
             </div>
 
-            <!-- MODO VISTA CLIENTE DE HABITACIÓN INDIVIDUAL -->
+            <!-- DETALLE DE HABITACIÓN SELECCIONADA -->
             <div *ngIf="habitacionEnDetalleAdmin" class="space-y-6 animate-fade-in">
-              <!-- Barra de Retorno y Estado Superior -->
-              <div class="flex items-center justify-between p-3.5 rounded-2xl bg-slate-100 dark:bg-stone-800/80 border border-slate-200 dark:border-stone-700 flex-wrap gap-2">
-                <button type="button"
-                        (click)="cerrarVistaClienteHabitacion()"
-                        class="px-3.5 py-1.5 rounded-xl bg-white dark:bg-stone-900 hover:bg-blue-50 dark:hover:bg-stone-800 text-blue-600 dark:text-blue-400 font-bold text-xs border border-slate-200 dark:border-stone-700 transition flex items-center gap-1.5 cursor-pointer shadow-sm">
-                  <span>← Volver a Lista de Habitaciones</span>
-                </button>
+              <!-- Barra Superior de Navegación y Estado -->
+              <div class="flex items-center justify-between p-4 rounded-2xl bg-slate-50 dark:bg-stone-900 border border-slate-200 dark:border-stone-800 flex-wrap gap-3">
+                <div>
+                  <button type="button"
+                          (click)="cerrarVistaClienteHabitacion()"
+                          class="mb-2 px-3 py-1.5 rounded-xl bg-white dark:bg-stone-800 hover:bg-slate-100 dark:hover:bg-stone-700 text-blue-600 dark:text-blue-400 font-bold text-xs border border-slate-200 dark:border-stone-700 transition inline-flex items-center gap-1.5 cursor-pointer shadow-sm">
+                    <span>← Volver a lista de habitaciones</span>
+                  </button>
+                  <h3 class="text-xl font-bold font-serif text-slate-900 dark:text-white">{{ habitacionEnDetalleAdmin.nombre }}</h3>
+                  <p class="text-xs text-slate-500 dark:text-stone-400 mt-0.5">Habitación perteneciente a: <strong>{{ alojamientoInspeccionado.titulo }}</strong></p>
+                </div>
                 <div class="flex items-center gap-2">
-                  <span class="text-xs text-slate-500 dark:text-stone-400">Estado en Catálogo:</span>
                   <span class="px-3 py-1 rounded-full text-xs font-bold border"
                         [ngClass]="habitacionEnDetalleAdmin.estado === 'MANTENIMIENTO' ? 'bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border-amber-300' : 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border-emerald-300'">
-                    {{ habitacionEnDetalleAdmin.estado === 'MANTENIMIENTO' ? 'En Mantenimiento (Oculta)' : 'Publicada y Disponible' }}
+                    {{ habitacionEnDetalleAdmin.estado === 'MANTENIMIENTO' ? 'En Mantenimiento (Oculta)' : 'Disponible para Reservas' }}
                   </span>
                   <button (click)="alternarEstadoHabitacion(habitacionEnDetalleAdmin)"
-                          class="px-3 py-1 rounded-xl text-xs font-bold border transition cursor-pointer"
-                          [ngClass]="habitacionEnDetalleAdmin.estado === 'MANTENIMIENTO' ? 'bg-emerald-600 text-white hover:bg-emerald-700 border-emerald-600' : 'bg-rose-50 hover:bg-rose-100 dark:bg-stone-900 text-rose-600 border-rose-300 dark:border-rose-800'">
-                    {{ habitacionEnDetalleAdmin.estado === 'MANTENIMIENTO' ? '✓ Reactivar Habitación' : '⛔ Desactivar por Mantenimiento' }}
+                          class="px-3.5 py-1.5 rounded-xl text-xs font-bold border transition cursor-pointer"
+                          [ngClass]="habitacionEnDetalleAdmin.estado === 'MANTENIMIENTO' ? 'bg-emerald-600 text-white hover:bg-emerald-700 border-emerald-600' : 'bg-white dark:bg-stone-800 text-slate-700 dark:text-stone-200 hover:bg-rose-50 dark:hover:bg-rose-950/40 hover:text-rose-600 border-slate-300 dark:border-stone-700'">
+                    {{ habitacionEnDetalleAdmin.estado === 'MANTENIMIENTO' ? '✓ Habilitar Habitación' : '⛔ Desactivar por Mantenimiento' }}
                   </button>
                 </div>
               </div>
 
-              <!-- Identificador Visual Modo Cliente -->
-              <div class="px-4 py-2.5 rounded-xl bg-blue-600 text-white flex items-center justify-between text-xs font-bold shadow-md shadow-blue-500/20">
-                <div class="flex items-center gap-2">
-                  <span>👁️ MODO VISTA CLIENTE DE HABITACIÓN INDIVIDUAL</span>
-                  <span class="text-blue-200 text-[11px] font-normal">| Así la visualizan los viajeros en el portal público</span>
-                </div>
-                <span class="font-mono text-white">{{ habitacionEnDetalleAdmin.nombre }}</span>
-              </div>
-
-              <!-- Galería Fotográfica de la Habitación (Modo Cliente) -->
+              <!-- Galería Fotográfica de la Habitación -->
               <div class="space-y-3">
                 <div *ngIf="habitacionEnDetalleAdmin.fotos && habitacionEnDetalleAdmin.fotos.length > 0" class="grid grid-cols-1 md:grid-cols-4 gap-3">
                   <!-- Foto Principal Grande -->
@@ -1496,7 +1488,7 @@ export const VALORACIONES_ADMIN_DEMO: ValoracionAdmin[] = [
                       Tarifa: {{ habitacionEnDetalleAdmin.precioNoche }} BOB / noche
                     </div>
                     <div class="absolute top-3 right-3 px-2.5 py-1 rounded-xl bg-black/60 backdrop-blur-md text-white text-[11px] font-semibold flex items-center gap-1.5 border border-white/10">
-                      <span>🔍 Clic para pantalla completa</span>
+                      <span>🔍 Clic para ampliar</span>
                     </div>
                   </div>
                   <!-- Columna de Miniaturas -->
@@ -1514,11 +1506,6 @@ export const VALORACIONES_ADMIN_DEMO: ValoracionAdmin[] = [
               <!-- Ficha Técnica y Amenidades de la Habitación -->
               <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div class="md:col-span-2 space-y-4">
-                  <div>
-                    <h3 class="text-xl font-bold font-serif text-slate-900 dark:text-white">{{ habitacionEnDetalleAdmin.nombre }}</h3>
-                    <p class="text-xs text-slate-500 dark:text-stone-400 mt-0.5">Tipología perteneciente a: <strong>{{ alojamientoInspeccionado.titulo }}</strong></p>
-                  </div>
-
                   <!-- Ficha de Capacidad -->
                   <div class="flex items-center gap-4 py-3 px-4 rounded-2xl bg-slate-50 dark:bg-stone-950 border border-slate-200 dark:border-stone-800 text-xs text-slate-700 dark:text-stone-300 flex-wrap">
                     <div class="flex items-center gap-1.5">
@@ -1541,7 +1528,7 @@ export const VALORACIONES_ADMIN_DEMO: ValoracionAdmin[] = [
 
                   <!-- Descripción -->
                   <div class="space-y-1">
-                    <h5 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Descripción para Huéspedes</h5>
+                    <h5 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Descripción de la Habitación</h5>
                     <p class="text-xs text-slate-600 dark:text-stone-300 leading-relaxed bg-slate-50/50 dark:bg-stone-950/50 p-3.5 rounded-2xl border border-slate-200 dark:border-stone-800">
                       {{ habitacionEnDetalleAdmin.descripcion || 'Sin descripción detallada registrada para esta tipología.' }}
                     </p>
@@ -1549,30 +1536,30 @@ export const VALORACIONES_ADMIN_DEMO: ValoracionAdmin[] = [
 
                   <!-- Amenidades de la Habitación -->
                   <div class="space-y-2">
-                    <h5 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Amenidades Incluidas en la Habitación</h5>
+                    <h5 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Servicios Incluidos</h5>
                     <div class="flex flex-wrap gap-2">
-                      <span class="px-3 py-1 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 text-xs font-semibold border border-blue-200 dark:border-blue-800/60">
-                        ❄️ Aire Acondicionado / Climatización
+                      <span class="px-3 py-1 rounded-xl bg-slate-100 dark:bg-stone-800 text-slate-700 dark:text-stone-300 text-xs font-medium border border-slate-200 dark:border-stone-700">
+                        ❄️ Aire Acondicionado
                       </span>
-                      <span class="px-3 py-1 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 text-xs font-semibold border border-blue-200 dark:border-blue-800/60">
-                        📶 WiFi Alta Velocidad
+                      <span class="px-3 py-1 rounded-xl bg-slate-100 dark:bg-stone-800 text-slate-700 dark:text-stone-300 text-xs font-medium border border-slate-200 dark:border-stone-700">
+                        📶 Wi-Fi
                       </span>
-                      <span class="px-3 py-1 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 text-xs font-semibold border border-blue-200 dark:border-blue-800/60">
-                        🚿 Agua Caliente 24h
+                      <span class="px-3 py-1 rounded-xl bg-slate-100 dark:bg-stone-800 text-slate-700 dark:text-stone-300 text-xs font-medium border border-slate-200 dark:border-stone-700">
+                        🚿 Agua Caliente
                       </span>
-                      <span class="px-3 py-1 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 text-xs font-semibold border border-blue-200 dark:border-blue-800/60">
-                        📺 Smart TV Cable
+                      <span class="px-3 py-1 rounded-xl bg-slate-100 dark:bg-stone-800 text-slate-700 dark:text-stone-300 text-xs font-medium border border-slate-200 dark:border-stone-700">
+                        📺 TV Cable
                       </span>
-                      <span class="px-3 py-1 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 text-xs font-semibold border border-blue-200 dark:border-blue-800/60">
-                        🧴 Amenities de Baño & Toallas
+                      <span class="px-3 py-1 rounded-xl bg-slate-100 dark:bg-stone-800 text-slate-700 dark:text-stone-300 text-xs font-medium border border-slate-200 dark:border-stone-700">
+                        🧴 Artículos de Tocador
                       </span>
                     </div>
                   </div>
                 </div>
 
-                <!-- Tarjeta Resumen de Auditoría y Acciones Directas -->
+                <!-- Tarjeta Resumen y Controles -->
                 <div class="p-5 rounded-2xl bg-slate-50 dark:bg-stone-950 border border-slate-200 dark:border-stone-800 space-y-4">
-                  <h5 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Control de Auditoría</h5>
+                  <h5 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Estado de la Habitación</h5>
                   <div class="p-3 rounded-xl bg-white dark:bg-stone-900 border border-slate-200 dark:border-stone-800 space-y-2">
                     <div class="flex items-center justify-between text-xs">
                       <span class="text-slate-500">Puntuación Media:</span>
@@ -1583,38 +1570,34 @@ export const VALORACIONES_ADMIN_DEMO: ValoracionAdmin[] = [
                       <span class="font-bold text-slate-800 dark:text-stone-200">{{ resenasHabitacionActual.length }}</span>
                     </div>
                     <div class="flex items-center justify-between text-xs">
-                      <span class="text-slate-500">Quejas Críticas:</span>
+                      <span class="text-slate-500">Reclamos:</span>
                       <span class="font-bold text-rose-600">{{ conteoNegativasHabitacion() }}</span>
                     </div>
                   </div>
 
-                  <!-- Acciones de Moderación Inmediata -->
                   <div class="space-y-2 pt-2">
                     <button (click)="alternarEstadoHabitacion(habitacionEnDetalleAdmin)"
                             class="w-full py-2.5 px-3 rounded-xl text-xs font-bold transition shadow-sm cursor-pointer flex items-center justify-center gap-1.5"
-                            [ngClass]="habitacionEnDetalleAdmin.estado === 'MANTENIMIENTO' ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : 'bg-amber-600 hover:bg-amber-700 text-white'">
-                      <span>{{ habitacionEnDetalleAdmin.estado === 'MANTENIMIENTO' ? '✓ Restablecer a Disponible' : '⛔ Ocultar por Mantenimiento' }}</span>
+                            [ngClass]="habitacionEnDetalleAdmin.estado === 'MANTENIMIENTO' ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : 'bg-slate-800 hover:bg-slate-900 text-white'">
+                      <span>{{ habitacionEnDetalleAdmin.estado === 'MANTENIMIENTO' ? '✓ Habilitar Habitación' : '⛔ Poner en Mantenimiento' }}</span>
                     </button>
                     <button (click)="observarPorComentariosHabitacion(habitacionEnDetalleAdmin)"
-                            class="w-full py-2.5 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/30 text-rose-700 dark:text-rose-300 font-bold text-xs border border-rose-300 dark:border-rose-800 transition flex items-center justify-center gap-1.5 cursor-pointer">
-                      <span>⚠️ Observar Hotel por esta Habitación</span>
+                            class="w-full py-2.5 px-3 rounded-xl bg-white dark:bg-stone-900 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-rose-700 dark:text-rose-300 font-bold text-xs border border-rose-300 dark:border-rose-800 transition flex items-center justify-center gap-1.5 cursor-pointer">
+                      <span>⚠️ Solicitar Corrección al Anfitrión</span>
                     </button>
                   </div>
                 </div>
               </div>
 
-              <!-- SECCIÓN DE AUDITORÍA DE RESEÑAS Y TÓPICOS NLP DE LA HABITACIÓN -->
+              <!-- SECCIÓN DE RESEÑAS DE LA HABITACIÓN -->
               <div class="space-y-4 pt-4 border-t border-slate-200 dark:border-stone-800">
                 <div class="flex items-center justify-between flex-wrap gap-2">
                   <div>
                     <h4 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                      <span>💬 Reseñas de Huéspedes en {{ habitacionEnDetalleAdmin.nombre }}</span>
-                      <span class="px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300 text-[11px] font-bold">
-                        Auditoría NLP
-                      </span>
+                      <span>💬 Opiniones de Huéspedes en {{ habitacionEnDetalleAdmin.nombre }}</span>
                     </h4>
                     <p class="text-xs text-slate-500 dark:text-stone-400 mt-0.5">
-                      Opiniones directas de huéspedes que reservaron esta habitación específica, clasificadas por sentimiento y tópico.
+                      Comentarios registrados por viajeros que se hospedaron en esta habitación.
                     </p>
                   </div>
 
@@ -1628,67 +1611,59 @@ export const VALORACIONES_ADMIN_DEMO: ValoracionAdmin[] = [
                     <button type="button"
                             (click)="filtroResenasHabitacion = 'NEGATIVAS'"
                             [class]="filtroResenasHabitacion === 'NEGATIVAS' ? 'px-3 py-1 rounded-lg bg-rose-600 font-bold text-xs text-white shadow-sm' : 'px-3 py-1 rounded-lg text-xs font-semibold text-slate-600 dark:text-stone-400 hover:text-rose-600'">
-                      🔴 Críticas ({{ conteoNegativasHabitacion() }})
+                      🔴 Reclamos ({{ conteoNegativasHabitacion() }})
                     </button>
                     <button type="button"
                             (click)="filtroResenasHabitacion = 'POSITIVAS'"
                             [class]="filtroResenasHabitacion === 'POSITIVAS' ? 'px-3 py-1 rounded-lg bg-emerald-600 font-bold text-xs text-white shadow-sm' : 'px-3 py-1 rounded-lg text-xs font-semibold text-slate-600 dark:text-stone-400 hover:text-emerald-600'">
-                      🟢 Positivas ({{ conteoPositivasHabitacion() }})
+                      🟢 Favorables ({{ conteoPositivasHabitacion() }})
                     </button>
                   </div>
                 </div>
 
-                <!-- BANNER DE ALERTA INTELIGENTE NLP SI HAY QUEJAS RECURRENTES -->
-                <div *ngIf="conteoNegativasHabitacion() > 0" class="p-4 rounded-2xl bg-rose-50/90 dark:bg-rose-950/40 border border-rose-300 dark:border-rose-800/80 space-y-3">
-                  <div class="flex items-start justify-between gap-3">
-                    <div class="flex items-start gap-3">
-                      <div class="p-2 rounded-xl bg-rose-600 text-white shrink-0 shadow-md">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                        </svg>
-                      </div>
-                      <div>
-                        <h5 class="text-sm font-bold text-rose-950 dark:text-rose-200">
-                          🚨 Alerta de Inteligencia Artificial NLP — Quejas Recurrentes Detectadas
-                        </h5>
-                        <p class="text-xs text-rose-800 dark:text-rose-300 mt-0.5 leading-relaxed">
-                          El motor de análisis de opiniones ha detectado insatisfacción severa en esta habitación. Se recomienda intervenir para evitar daños a la reputación turística.
-                        </p>
-                      </div>
+                <!-- ALERTA SI HAY QUEJAS RECURRENTES -->
+                <div *ngIf="conteoNegativasHabitacion() > 0" class="p-4 rounded-2xl bg-rose-50/90 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 space-y-3">
+                  <div class="flex items-start gap-3">
+                    <div class="p-2 rounded-xl bg-rose-600 text-white shrink-0 shadow-sm">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                    </div>
+                    <div class="space-y-1">
+                      <h5 class="text-sm font-bold text-rose-950 dark:text-rose-200">
+                        Atención: Reclamos recurrentes reportados por huéspedes
+                      </h5>
+                      <p class="text-xs text-rose-800 dark:text-rose-300 leading-relaxed">
+                        Varios huéspedes han reportado inconvenientes en esta habitación con:
+                        <strong *ngFor="let t of topicosDetectadosHabitacion(); let last = last">
+                          {{ formatearTopico(t) }}{{ last ? '.' : ', ' }}
+                        </strong>
+                      </p>
                     </div>
                   </div>
 
-                  <!-- Tópicos detectados en esta habitación -->
-                  <div class="flex items-center gap-2 flex-wrap pt-1">
-                    <span class="text-xs font-bold text-rose-900 dark:text-rose-300">Tópicos Críticos Identificados por NLP:</span>
-                    <span *ngFor="let topico of topicosDetectadosHabitacion()" class="px-2.5 py-1 rounded-lg bg-rose-200/80 dark:bg-rose-900/60 text-rose-900 dark:text-rose-200 text-xs font-bold font-mono border border-rose-300 dark:border-rose-700">
-                      #{{ topico }}
-                    </span>
-                  </div>
-
-                  <!-- Botones de Acción Inmediata en el Banner -->
-                  <div class="flex items-center gap-2 pt-2 border-t border-rose-200 dark:border-rose-800/60 flex-wrap">
+                  <div class="flex items-center gap-2 pt-2 border-t border-rose-200 dark:border-rose-900/50 flex-wrap">
                     <button (click)="alternarEstadoHabitacion(habitacionEnDetalleAdmin)"
                             class="px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-sm cursor-pointer transition">
-                      ⛔ {{ habitacionEnDetalleAdmin.estado === 'MANTENIMIENTO' ? 'Habitación ya en Mantenimiento' : 'Desactivar Habitación (Mantenimiento)' }}
+                      ⛔ {{ habitacionEnDetalleAdmin.estado === 'MANTENIMIENTO' ? 'Habitación ya en Mantenimiento' : 'Poner Habitación en Mantenimiento' }}
                     </button>
                     <button (click)="observarPorComentariosHabitacion(habitacionEnDetalleAdmin)"
-                            class="px-3.5 py-1.5 rounded-xl bg-white dark:bg-stone-900 text-rose-700 dark:text-rose-300 hover:bg-rose-100 font-bold text-xs border border-rose-300 dark:border-rose-700 cursor-pointer transition">
-                      ⚠️ Marcar Hotel como OBSERVADO con motivo NLP
+                            class="px-3.5 py-1.5 rounded-xl bg-white dark:bg-stone-900 text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-stone-800 font-bold text-xs border border-rose-300 dark:border-rose-700 cursor-pointer transition">
+                      ⚠️ Solicitar Corrección al Anfitrión
                     </button>
                   </div>
                 </div>
 
                 <!-- Lista de Reseñas de la Habitación -->
                 <div *ngIf="resenasHabitacionFiltradas().length === 0" class="p-8 text-center rounded-2xl bg-slate-50 dark:bg-stone-950 border border-slate-200 dark:border-stone-800 text-slate-500 text-xs">
-                  No hay reseñas registradas para este filtro en esta habitación.
+                  No hay opiniones registradas para este filtro en esta habitación.
                 </div>
 
                 <div *ngIf="resenasHabitacionFiltradas().length > 0" class="space-y-3">
                   <div *ngFor="let r of resenasHabitacionFiltradas()" class="p-4 rounded-2xl bg-white dark:bg-stone-900 border border-slate-200 dark:border-stone-800 space-y-2.5 shadow-sm">
                     <div class="flex items-start justify-between gap-2">
                       <div class="flex items-center gap-2.5">
-                        <div class="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 font-bold text-xs flex items-center justify-center">
+                        <div class="w-8 h-8 rounded-full bg-slate-100 dark:bg-stone-800 text-slate-700 dark:text-stone-300 font-bold text-xs flex items-center justify-center">
                           {{ r.nombreUsuario ? r.nombreUsuario.charAt(0) : 'H' }}
                         </div>
                         <div>
@@ -1702,15 +1677,14 @@ export const VALORACIONES_ADMIN_DEMO: ValoracionAdmin[] = [
                         <div class="flex items-center gap-0.5 text-amber-500 font-bold text-xs">
                           <span>⭐ {{ r.puntuacionGeneral }}</span>
                         </div>
-                        <!-- Badge Sentimiento NLP -->
+                        <!-- Badge Sentimiento -->
                         <span class="px-2 py-0.5 rounded-full text-[10px] font-bold"
-                              [ngClass]="r.sentimientoNlp === 'NEGATIVO' ? 'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 border border-rose-300' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300'">
-                          {{ r.sentimientoNlp === 'NEGATIVO' ? '🔴 NEGATIVO' : '🟢 POSITIVO' }}
-                          <span *ngIf="r.confianzaNlp" class="text-[9px] opacity-80">({{ (r.confianzaNlp * 100).toFixed(0) }}%)</span>
+                              [ngClass]="r.sentimientoNlp === 'NEGATIVO' ? 'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 border border-rose-200' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200'">
+                          {{ r.sentimientoNlp === 'NEGATIVO' ? '🔴 Reclamo' : '🟢 Favorable' }}
                         </span>
-                        <!-- Badge Tópico NLP -->
-                        <span *ngIf="r.topicoPredicho" class="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-stone-800 text-slate-700 dark:text-stone-300 text-[10px] font-mono font-semibold border border-slate-200 dark:border-stone-700">
-                          #{{ r.topicoPredicho }}
+                        <!-- Motivo / Aspecto Formateado -->
+                        <span *ngIf="r.topicoPredicho" class="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-stone-800 text-slate-700 dark:text-stone-300 text-[10px] font-medium border border-slate-200 dark:border-stone-700">
+                          {{ formatearTopico(r.topicoPredicho) }}
                         </span>
                       </div>
                     </div>
@@ -1852,21 +1826,20 @@ export const VALORACIONES_ADMIN_DEMO: ValoracionAdmin[] = [
           </div>
           </div>
 
-          <!-- CONTENIDO TAB AUDITORÍA DE RESEÑAS Y TÓPICOS NLP A NIVEL ESTABLECIMIENTO -->
+          <!-- CONTENIDO TAB RESEÑAS DE HUÉSPEDES -->
           <div *ngIf="subTabInspeccion === 'resenas'" class="space-y-6 animate-fade-in">
-            <!-- Cabecera de Auditoría General de Opiniones & NLP -->
-            <div class="p-4 rounded-2xl bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 flex items-center justify-between flex-wrap gap-3">
+            <!-- Cabecera de Reseñas de Huéspedes -->
+            <div class="p-4 rounded-2xl bg-slate-100 dark:bg-stone-900 border border-slate-200 dark:border-stone-800 flex items-center justify-between flex-wrap gap-3">
               <div>
-                <h4 class="text-sm font-bold text-blue-950 dark:text-blue-200 flex items-center gap-2">
-                  <span>💬 Auditoría Completa de Reseñas y Tópicos por IA NLP</span>
-                  <span class="px-2 py-0.5 rounded-full bg-blue-600 text-white text-[10px] font-bold">Inteligencia Artificial</span>
+                <h4 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <span>💬 Opiniones y Evaluaciones de Huéspedes</span>
                 </h4>
-                <p class="text-xs text-blue-700 dark:text-blue-300 mt-0.5">
-                  Monitoreo automatizado de opiniones de huéspedes para asegurar estándares de calidad, habitabilidad y servicio turístico.
+                <p class="text-xs text-slate-500 dark:text-stone-400 mt-0.5">
+                  Comentarios registrados por viajeros que completaron su estadía en este establecimiento.
                 </p>
               </div>
               <div class="flex items-center gap-2">
-                <span class="px-3 py-1 rounded-full bg-white dark:bg-stone-900 text-blue-700 dark:text-blue-300 text-xs font-bold border border-blue-200 dark:border-blue-800 font-mono">
+                <span class="px-3 py-1 rounded-full bg-white dark:bg-stone-800 text-slate-700 dark:text-stone-300 text-xs font-bold border border-slate-200 dark:border-stone-700 font-mono">
                   Total Reseñas: {{ resenasAlojamientoActual.length }}
                 </span>
               </div>
@@ -1874,36 +1847,34 @@ export const VALORACIONES_ADMIN_DEMO: ValoracionAdmin[] = [
 
             <!-- ALERTA SI EL ALOJAMIENTO ESTÁ EN ESTADO OBSERVADO -->
             <div *ngIf="alojamientoInspeccionado.estado === 'OBSERVADO'" class="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 space-y-3">
-              <div class="flex items-start justify-between gap-3">
-                <div class="flex items-start gap-3">
-                  <div class="p-2 rounded-xl bg-amber-600 text-white shrink-0 shadow-md">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h5 class="text-sm font-bold text-amber-950 dark:text-amber-200">
-                      ⚠️ Alojamiento en Estado OBSERVADO (Sigue en servicio para auditoría)
-                    </h5>
-                    <p class="text-xs text-amber-800 dark:text-amber-300 mt-1 leading-relaxed">
-                      <strong>Motivo registrado:</strong> {{ alojamientoInspeccionado.motivoObservacionRechazo || alojamientoInspeccionado.motivoRechazo || 'Reportes de insatisfacción identificados por NLP en las reseñas de huéspedes.' }}
-                    </p>
-                  </div>
+              <div class="flex items-start gap-3">
+                <div class="p-2 rounded-xl bg-amber-600 text-white shrink-0 shadow-sm">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+                <div>
+                  <h5 class="text-sm font-bold text-amber-950 dark:text-amber-200">
+                    Establecimiento en Estado Observado
+                  </h5>
+                  <p class="text-xs text-amber-800 dark:text-amber-300 mt-1 leading-relaxed">
+                    <strong>Motivo registrado:</strong> {{ alojamientoInspeccionado.motivoObservacionRechazo || alojamientoInspeccionado.motivoRechazo || 'Reclamos reportados en las opiniones de huéspedes.' }}
+                  </p>
                 </div>
               </div>
               <div class="flex items-center gap-2 pt-2 border-t border-amber-200 dark:border-amber-800/60">
                 <button (click)="aprobarAlojamiento(alojamientoInspeccionado.id); cerrarInspeccion()"
                         class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md shadow-emerald-500/20 transition cursor-pointer">
-                  ✓ Levantar Observación y Habilitar al 100%
+                  ✓ Levantar Observación y Habilitar
                 </button>
                 <button (click)="suspenderAlojamiento(alojamientoInspeccionado.id); cerrarInspeccion()"
                         class="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition cursor-pointer">
-                  ⛔ Confirmar Suspensión Definitiva
+                  ⛔ Suspender Establecimiento
                 </button>
               </div>
             </div>
 
-            <!-- TARJETAS DE MÉTRICAS GLOBALES -->
+            <!-- TARJETAS DE MÉTRICAS -->
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-stone-950 border border-slate-200 dark:border-stone-800 text-center">
                 <span class="text-[10px] font-bold text-slate-400 dark:text-stone-500 uppercase tracking-wider block">Calificación Media</span>
@@ -1914,29 +1885,28 @@ export const VALORACIONES_ADMIN_DEMO: ValoracionAdmin[] = [
                 <span class="font-bold text-slate-900 dark:text-white text-lg font-mono">{{ resenasAlojamientoActual.length }}</span>
               </div>
               <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-stone-950 border border-slate-200 dark:border-stone-800 text-center">
-                <span class="text-[10px] font-bold text-slate-400 dark:text-stone-500 uppercase tracking-wider block">Sentimiento Positivo</span>
+                <span class="text-[10px] font-bold text-slate-400 dark:text-stone-500 uppercase tracking-wider block">Opiniones Favorables</span>
                 <span class="font-bold text-emerald-600 dark:text-emerald-400 text-lg font-mono">🟢 {{ conteoPositivasGeneral() }}</span>
               </div>
               <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-stone-950 border border-slate-200 dark:border-stone-800 text-center">
-                <span class="text-[10px] font-bold text-slate-400 dark:text-stone-500 uppercase tracking-wider block">Sentimiento Crítico</span>
+                <span class="text-[10px] font-bold text-slate-400 dark:text-stone-500 uppercase tracking-wider block">Reclamos</span>
                 <span class="font-bold text-rose-600 dark:text-rose-400 text-lg font-mono">🔴 {{ conteoNegativasGeneral() }}</span>
               </div>
             </div>
 
-            <!-- BARRA DE TÓPICOS NLP DETECTADOS EN EL ALOJAMIENTO -->
+            <!-- ASPECTOS MENCIONADOS -->
             <div class="p-4 rounded-2xl bg-white dark:bg-stone-900 border border-slate-200 dark:border-stone-800 space-y-2">
               <div class="flex items-center justify-between">
-                <h5 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-                  <span>🏷️ Tópicos y Aspectos Auditados por NLP</span>
+                <h5 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+                  Aspectos mencionados en los comentarios
                 </h5>
-                <span class="text-[10px] text-slate-400">Clasificación Automática de Texto</span>
               </div>
               <div class="flex items-center gap-2 flex-wrap pt-1">
-                <span *ngFor="let topico of topicosDetectadosGeneral()" class="px-2.5 py-1 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 text-xs font-mono font-bold border border-blue-200 dark:border-blue-800">
-                  #{{ topico }}
+                <span *ngFor="let topico of topicosDetectadosGeneral()" class="px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-stone-800 text-slate-700 dark:text-stone-300 text-xs font-medium border border-slate-200 dark:border-stone-700">
+                  {{ formatearTopico(topico) }}
                 </span>
                 <span *ngIf="topicosDetectadosGeneral().length === 0" class="text-xs text-slate-400">
-                  Sin tópicos críticos registrados.
+                  No hay observaciones registradas.
                 </span>
               </div>
             </div>
@@ -1945,7 +1915,7 @@ export const VALORACIONES_ADMIN_DEMO: ValoracionAdmin[] = [
             <div class="space-y-3">
               <div class="flex items-center justify-between flex-wrap gap-2">
                 <h5 class="text-sm font-bold text-slate-900 dark:text-white">
-                  Detalle de Evaluaciones de Huéspedes
+                  Comentarios de Huéspedes
                 </h5>
                 <div class="flex items-center gap-1.5 bg-slate-100 dark:bg-stone-800 p-1 rounded-xl">
                   <button type="button"
@@ -1956,31 +1926,31 @@ export const VALORACIONES_ADMIN_DEMO: ValoracionAdmin[] = [
                   <button type="button"
                           (click)="filtroResenasGeneral = 'NEGATIVAS'"
                           [class]="filtroResenasGeneral === 'NEGATIVAS' ? 'px-3 py-1 rounded-lg bg-rose-600 font-bold text-xs text-white shadow-sm' : 'px-3 py-1 rounded-lg text-xs font-semibold text-slate-600 dark:text-stone-400 hover:text-rose-600'">
-                    🔴 Críticas ({{ conteoNegativasGeneral() }})
+                    🔴 Reclamos ({{ conteoNegativasGeneral() }})
                   </button>
                   <button type="button"
                           (click)="filtroResenasGeneral = 'POSITIVAS'"
                           [class]="filtroResenasGeneral === 'POSITIVAS' ? 'px-3 py-1 rounded-lg bg-emerald-600 font-bold text-xs text-white shadow-sm' : 'px-3 py-1 rounded-lg text-xs font-semibold text-slate-600 dark:text-stone-400 hover:text-emerald-600'">
-                    🟢 Positivas ({{ conteoPositivasGeneral() }})
+                    🟢 Favorables ({{ conteoPositivasGeneral() }})
                   </button>
                 </div>
               </div>
 
               <div *ngIf="resenasGeneralFiltradas().length === 0" class="p-8 text-center rounded-2xl bg-slate-50 dark:bg-stone-950 border border-slate-200 dark:border-stone-800 text-slate-500 text-xs">
-                No hay reseñas registradas para este filtro en este alojamiento.
+                No hay opiniones registradas para este filtro en este alojamiento.
               </div>
 
               <div *ngIf="resenasGeneralFiltradas().length > 0" class="space-y-3">
                 <div *ngFor="let r of resenasGeneralFiltradas()" class="p-4 rounded-2xl bg-white dark:bg-stone-900 border border-slate-200 dark:border-stone-800 space-y-2.5 shadow-sm">
                   <div class="flex items-start justify-between gap-2 flex-wrap">
                     <div class="flex items-center gap-2.5">
-                      <div class="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 font-bold text-xs flex items-center justify-center">
+                      <div class="w-8 h-8 rounded-full bg-slate-100 dark:bg-stone-800 text-slate-700 dark:text-stone-300 font-bold text-xs flex items-center justify-center">
                         {{ r.nombreUsuario ? r.nombreUsuario.charAt(0) : 'H' }}
                       </div>
                       <div>
                         <div class="flex items-center gap-2">
                           <span class="text-xs font-bold text-slate-900 dark:text-white">{{ r.nombreUsuario }}</span>
-                          <span *ngIf="r.nombreUnidad" class="px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 text-[10px] font-bold border border-indigo-200 dark:border-indigo-800">
+                          <span *ngIf="r.nombreUnidad" class="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-stone-800 text-slate-700 dark:text-stone-300 text-[10px] font-medium border border-slate-200 dark:border-stone-700">
                             🏨 {{ r.nombreUnidad }}
                           </span>
                         </div>
@@ -1993,12 +1963,11 @@ export const VALORACIONES_ADMIN_DEMO: ValoracionAdmin[] = [
                         <span>⭐ {{ r.puntuacionGeneral }}</span>
                       </div>
                       <span class="px-2 py-0.5 rounded-full text-[10px] font-bold"
-                            [ngClass]="r.sentimientoNlp === 'NEGATIVO' ? 'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 border border-rose-300' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300'">
-                        {{ r.sentimientoNlp === 'NEGATIVO' ? '🔴 NEGATIVO' : '🟢 POSITIVO' }}
-                        <span *ngIf="r.confianzaNlp" class="text-[9px] opacity-80">({{ (r.confianzaNlp * 100).toFixed(0) }}%)</span>
+                            [ngClass]="r.sentimientoNlp === 'NEGATIVO' ? 'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 border border-rose-200' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200'">
+                        {{ r.sentimientoNlp === 'NEGATIVO' ? '🔴 Reclamo' : '🟢 Favorable' }}
                       </span>
-                      <span *ngIf="r.topicoPredicho" class="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-stone-800 text-slate-700 dark:text-stone-300 text-[10px] font-mono font-semibold border border-slate-200 dark:border-stone-700">
-                        #{{ r.topicoPredicho }}
+                      <span *ngIf="r.topicoPredicho" class="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-stone-800 text-slate-700 dark:text-stone-300 text-[10px] font-medium border border-slate-200 dark:border-stone-700">
+                        {{ formatearTopico(r.topicoPredicho) }}
                       </span>
                     </div>
                   </div>
@@ -2503,9 +2472,28 @@ export class AppComponent implements OnInit {
     return Array.from(set);
   }
 
+  formatearTopico(topico: string | undefined): string {
+    if (!topico) return '';
+    const t = topico.replace(/^#/, '').toUpperCase().trim();
+    const mapa: Record<string, string> = {
+      'CLIMATIZACION_Y_RUIDO': 'Aire acondicionado y ruido',
+      'AGUA_CALIENTE_Y_BANO': 'Agua caliente y baño',
+      'TEMPERATURA_Y_CALEFACCION': 'Calefacción y temperatura',
+      'AREAS_COMUNES_Y_DESAYUNO': 'Áreas comunes y desayuno',
+      'UBICACION_Y_SEGURIDAD': 'Ubicación y seguridad',
+      'CONFORT_Y_VISTAS': 'Comodidad y vistas',
+      'CONFORT_CAMAS': 'Camas y descanso',
+      'LIMPIEZA_Y_DETALLES': 'Limpieza'
+    };
+    if (mapa[t]) return mapa[t];
+    return t.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+  }
+
   observarPorComentariosHabitacion(u: UnidadAdmin) {
     if (!this.alojamientoInspeccionado) return;
-    const motivo = `Observación preventiva por IA NLP: Comentarios negativos recurrentes en ${u.nombre} sobre climatización / mantenimiento.`;
+    const aspectos = this.topicosDetectadosHabitacion().map(t => this.formatearTopico(t)).join(', ');
+    const detalle = aspectos ? ` (motivo: ${aspectos})` : '';
+    const motivo = `Reclamos de huéspedes en ${u.nombre}${detalle}. Se solicita al anfitrión realizar las mejoras correspondientes.`;
     this.confirmarObservacionDirecta(this.alojamientoInspeccionado.id, motivo);
   }
 
