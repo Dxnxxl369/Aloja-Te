@@ -20,7 +20,8 @@ public interface SpringDataAlojamientoRepository extends JpaRepository<Alojamien
 
     @Query("SELECT DISTINCT a FROM AlojamientoJpaEntity a " +
            "LEFT JOIN a.unidades u " +
-           "WHERE a.estadoPublicacion = com.alojate.usuarios.domain.model.EstadoPublicacion.PUBLICADO " +
+           "WHERE (a.estadoPublicacion = com.alojate.usuarios.domain.model.EstadoPublicacion.PUBLICADO " +
+           "   OR (a.estadoPublicacion = com.alojate.usuarios.domain.model.EstadoPublicacion.OBSERVADO AND (LOWER(a.origenUltimoCambio) LIKE '%nlp%' OR LOWER(a.origenUltimoCambio) LIKE '%resena%'))) " +
            "AND (:ciudad IS NULL OR LOWER(a.ciudad) LIKE LOWER(CONCAT('%', :ciudad, '%'))) " +
            "AND (:departamento IS NULL OR LOWER(a.departamento) LIKE LOWER(CONCAT('%', :departamento, '%'))) " +
            "AND (:idTipoPropiedad IS NULL OR a.tipoPropiedad.idTipoPropiedad = :idTipoPropiedad) " +

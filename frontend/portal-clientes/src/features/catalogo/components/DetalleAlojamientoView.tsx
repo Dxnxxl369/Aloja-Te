@@ -243,9 +243,46 @@ export const DetalleAlojamientoView: React.FC<DetalleAlojamientoViewProps> = ({
     }
   };
 
+  const estadoActual = alojamiento.estadoPublicacion || alojamiento.estado || 'PUBLICADO';
+  const esPublico = estadoActual === 'PUBLICADO' || (estadoActual === 'OBSERVADO' && ((alojamiento.origenUltimoCambio || '').toUpperCase().includes('NLP') || (alojamiento.origenUltimoCambio || '').toUpperCase().includes('RESENA')));
+
+  if (!esPublico && !esMiPropiedad && user?.rol !== 'ADMINISTRADOR') {
+    return (
+      <div className="max-w-xl mx-auto px-4 py-24 text-center space-y-6 animate-fade-in">
+        <div className="w-16 h-16 rounded-3xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-600 dark:text-amber-400 mx-auto shadow-lg shadow-amber-500/10">
+          <AlertCircle className="w-8 h-8" />
+        </div>
+        <div>
+          <h3 className="font-serif text-2xl font-bold text-slate-900 dark:text-white">
+            Alojamiento no disponible para reservas
+          </h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 max-w-sm mx-auto">
+            {estadoActual === 'SUSPENDIDO'
+              ? 'Esta propiedad se encuentra temporalmente en pausa preventiva por auditoría de calidad.'
+              : 'Esta propiedad se encuentra actualmente en proceso de revisión y moderación.'}
+          </p>
+        </div>
+        <button
+          onClick={onVolver}
+          className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition shadow-md shadow-blue-500/25"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>Volver al Catálogo</span>
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#f8fafc] dark:bg-[#0b0f17] text-slate-900 dark:text-slate-100 transition-colors duration-300 pb-20">
       
+      {/* Banner de Aviso de Estado para el Propietario */}
+      {!esPublico && esMiPropiedad && (
+        <div className="bg-amber-500/15 border-b border-amber-500/30 px-4 py-2.5 text-center text-xs text-amber-800 dark:text-amber-300 font-medium">
+          ⚠️ <strong>Aviso para el Anfitrión:</strong> Tu propiedad está en estado <strong>{estadoActual}</strong>. {alojamiento.motivoObservacionRechazo ? `Motivo registrado: "${alojamiento.motivoObservacionRechazo}"` : 'Aún no está disponible para reservas públicas.'}
+        </div>
+      )}
+
       {/* 1. Barra Superior de Retorno & Breadcrumbs Reales */}
       <div className="border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur sticky top-20 z-30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">

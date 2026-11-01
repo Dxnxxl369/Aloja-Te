@@ -50,6 +50,7 @@ export const AppContent: React.FC = () => {
   
   // Data States
   const [alojamientos, setAlojamientos] = useState<Alojamiento[]>([]);
+  const [misAlojamientosAnfitrion, setMisAlojamientosAnfitrion] = useState<Alojamiento[]>([]);
   const [departamento, setDepartamento] = useState(params.depto || 'Todos');
   const [loading, setLoading] = useState(true);
   const [misReservas, setMisReservas] = useState<ReservaResponse[]>(() => {
@@ -147,16 +148,31 @@ export const AppContent: React.FC = () => {
     }
   }, [darkMode]);
 
-  // Cargar Catálogo de Alojamientos
+  // Cargar Catálogo de Alojamientos Publicados para Clientes
   useEffect(() => {
     const cargar = async () => {
       setLoading(true);
-      const data = await catalogoService.listarAlojamientos(departamento);
+      const data = await catalogoService.listarAlojamientosPublicados(departamento);
       setAlojamientos(data);
       setLoading(false);
     };
     cargar();
   }, [departamento]);
+
+  // Cargar Alojamientos propios del Anfitrión
+  useEffect(() => {
+    if (user?.rol === 'ANFITRION') {
+      catalogoService.listarAlojamientosPorAnfitrion({
+        id: user.id,
+        email: user.email,
+        nombre: user.nombre
+      }).then(data => {
+        setMisAlojamientosAnfitrion(data);
+      });
+    } else {
+      setMisAlojamientosAnfitrion([]);
+    }
+  }, [user, currentView]);
 
   // Sincronizar Reservas del Cliente (MS-02 y LocalStorage)
   useEffect(() => {
@@ -427,10 +443,10 @@ export const AppContent: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="font-serif text-lg font-bold text-slate-900 dark:text-white">
-                    Tus Propiedades Registradas ({alojamientos.length})
+                    Tus Propiedades Registradas ({misAlojamientosAnfitrion.length})
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Propiedades en catálogo o en espera de aprobación
+                    Propiedades en catálogo o en espera de aprobación de auditoría
                   </p>
                 </div>
                 <button
@@ -444,7 +460,7 @@ export const AppContent: React.FC = () => {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {alojamientos.map((a) => (
+                {misAlojamientosAnfitrion.map((a) => (
                   <div
                     key={a.idAlojamiento}
                     className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/40 hover:border-blue-400 transition flex items-center justify-between gap-3"
@@ -569,7 +585,7 @@ export const AppContent: React.FC = () => {
         onClose={() => setWizardAbierto(false)}
         onAlojamientoCreado={(nuevo) => {
           catalogoService.guardarAlojamientoLocal(nuevo);
-          setAlojamientos((prev) => [nuevo, ...prev]);
+          setMisAlojamientosAnfitrion((prev) => [nuevo, ...prev]);
         }}
       />
 

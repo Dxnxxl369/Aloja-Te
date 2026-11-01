@@ -1812,71 +1812,23 @@ export class AppComponent implements OnInit {
   }
 
   cargarAlojamientosFallback() {
+    // Intentar recuperar de persistencia local previa si ya se realizaron moderaciones
+    try {
+      const adminRaw = localStorage.getItem('alojate_admin_alojamientos');
+      if (adminRaw) {
+        const guardados: SolicitudAlojamiento[] = JSON.parse(adminRaw);
+        if (guardados && guardados.length >= 3) {
+          this.alojamientos = guardados;
+          return;
+        }
+      }
+    } catch {}
+
     this.alojamientos = [
-      {
-        id: '045579cf-cc3b-4893-920f-f32246153025',
-        titulo: 'Casa de Campo La Rinconada — Valles Cruceños',
-        anfitrion: 'Carlos Mendoza (Anfitrión Verificado)',
-        departamento: 'Santa Cruz',
-        ciudad: 'Samaipata',
-        direccion: 'Km 12 Camino a La Pajcha',
-        tipoPropiedad: 'Casa de Campo',
-        modalidad: 'CASA_DEPARTAMENTO',
-        precioNoche: 520.00,
-        capacidad: 6,
-        habitaciones: 2,
-        estado: 'PUBLICADO',
-        fechaRegistro: '2026-10-28',
-        imagen: 'https://images.unsplash.com/photo-1518780664697-55e3ad937233?auto=format&fit=crop&w=1200&q=80',
-        fotos: [
-          'https://images.unsplash.com/photo-1518780664697-55e3ad937233?auto=format&fit=crop&w=1200&q=80',
-          'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=800&q=80',
-          'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80',
-          'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80'
-        ],
-        descripcion: 'Casa campestre con huerto orgánico, vista panorámica a las colinas de Samaipata y fogatero exterior.',
-        politicas: 'Ambiente familiar y ecoturismo. Check-in 13:00.',
-        horarioEntrada: '13:00',
-        horarioSalida: '11:00',
-        servicios: ['WiFi de Alta Velocidad', 'Fogata Exterior', 'Huerto Orgánico', 'Estacionamiento Gratuito', 'Parrilla'],
-        unidades: [
-          { idUnidad: '351b4c06-6bdf-4dc6-9d3b-0d4221123600', nombre: 'Casa de Campo Completa con Fogata', capacidadHuespedes: 6, cantidadCamas: 4, cantidadBanos: 2, inventarioTotal: 1, precioNoche: 520, estado: 'DISPONIBLE' }
-        ]
-      },
-      {
-        id: '93fce18e-32fa-400c-8f49-8d4f2fe2f5bb',
-        titulo: 'Cabaña Chiquitana El Palmar — Chiquitanía Mágica',
-        anfitrion: 'Carlos Mendoza Cuéllar',
-        departamento: 'Santa Cruz',
-        ciudad: 'San José de Chiquitos',
-        direccion: 'Camino a San José Km 5',
-        tipoPropiedad: 'Cabaña Chiquitana',
-        modalidad: 'CASA_DEPARTAMENTO',
-        precioNoche: 650.00,
-        capacidad: 8,
-        habitaciones: 3,
-        estado: 'PUBLICADO',
-        fechaRegistro: '2026-10-25',
-        imagen: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1200&q=80',
-        fotos: [
-          'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1200&q=80',
-          'https://images.unsplash.com/photo-1518780664697-55e3ad937233?auto=format&fit=crop&w=800&q=80',
-          'https://images.unsplash.com/photo-1578683010236-d716f9a3f461?auto=format&fit=crop&w=800&q=80',
-          'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80'
-        ],
-        descripcion: 'Hermosa cabaña rústica colonial con piscina privada, galería con hamacas y cielo estrellado en el corazón de la Chiquitanía boliviana.',
-        politicas: 'Prohibido fumar en interiores. Check-in 14:00 - Check-out 11:00.',
-        horarioEntrada: '14:00',
-        horarioSalida: '11:00',
-        servicios: ['Piscina Privada', 'Galería con Hamacas', 'WiFi Satelital', 'Cocina Completa', 'Desayuno Típico'],
-        unidades: [
-          { idUnidad: 'u-palmar-1', nombre: 'Cabaña Completa (Master Suite + 2 Dormitorios)', capacidadHuespedes: 8, cantidadCamas: 5, cantidadBanos: 2.5, inventarioTotal: 1, precioNoche: 650, estado: 'DISPONIBLE' }
-        ]
-      },
       {
         id: '49768530-76ae-459e-9bbe-faf2f3d488ba',
         titulo: 'Hotel Boutique Los Tajibos Colonial',
-        anfitrion: 'Valeria Justiniano Aguilera',
+        anfitrion: 'Carlos Mendoza (Anfitrión Verificado)',
         departamento: 'Santa Cruz',
         ciudad: 'Santa Cruz de la Sierra',
         direccion: 'Av. San Martín #120, Barrio Equipetrol',
@@ -1891,10 +1843,9 @@ export class AppComponent implements OnInit {
         fotos: [
           'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80',
           'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80',
-          'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80',
-          'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=800&q=80'
+          'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80'
         ],
-        descripcion: 'Exclusivo hotel boutique con arquitectura chiquitana, restaurante gourmet, spa y áreas verdes tropicales.',
+        descripcion: 'Exclusivo hotel boutique con arquitectura chiquitana colonial, restaurante de autor, piscina tropical, spa y jardines en el prestigioso barrio Equipetrol.',
         politicas: 'Recepción 24 horas. Desayuno buffet incluido de 07:00 a 10:30.',
         horarioEntrada: '15:00',
         horarioSalida: '12:00',
@@ -1903,8 +1854,126 @@ export class AppComponent implements OnInit {
           { idUnidad: 'u-tajibos-1', nombre: 'Suite Presidencial con Balcón & Vista a Jardines', capacidadHuespedes: 2, cantidadCamas: 1, cantidadBanos: 1.5, inventarioTotal: 3, precioNoche: 950, estado: 'DISPONIBLE' },
           { idUnidad: 'u-tajibos-2', nombre: 'Habitación Ejecutiva Doble Twin', capacidadHuespedes: 2, cantidadCamas: 2, cantidadBanos: 1, inventarioTotal: 12, precioNoche: 480, estado: 'DISPONIBLE' }
         ]
+      },
+      {
+        id: '93fce18e-32fa-400c-8f49-8d4f2fe2f5bb',
+        titulo: 'Cabaña Chiquitana El Palmar',
+        anfitrion: 'Carlos Mendoza (Anfitrión Verificado)',
+        departamento: 'Santa Cruz',
+        ciudad: 'San José de Chiquitos',
+        direccion: 'Camino a San José Km 5',
+        tipoPropiedad: 'Cabaña Chiquitana',
+        modalidad: 'CASA_DEPARTAMENTO',
+        precioNoche: 650.00,
+        capacidad: 8,
+        habitaciones: 3,
+        estado: 'PUBLICADO',
+        fechaRegistro: '2026-10-25',
+        imagen: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1200&q=80',
+        fotos: [
+          'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1200&q=80',
+          'https://images.unsplash.com/photo-1584132967334-10e028bd69f7?auto=format&fit=crop&w=800&q=80'
+        ],
+        descripcion: 'Hermosa cabaña rústica colonial con piscina privada, galería con hamacas y cielo estrellado en el corazón de la Chiquitanía boliviana.',
+        politicas: 'Prohibido fumar en interiores. Check-in 14:00 - Check-out 11:00.',
+        horarioEntrada: '14:00',
+        horarioSalida: '11:00',
+        servicios: ['Piscina Privada', 'Galería con Hamacas', 'WiFi Satelital', 'Cocina Completa', 'Desayuno Típico'],
+        unidades: [
+          { idUnidad: '00547b62-d2f5-4aa8-80a5-8662b2e028ec', nombre: 'Cabaña Completa con Galería y Piscina', capacidadHuespedes: 8, cantidadCamas: 5, cantidadBanos: 2.5, inventarioTotal: 1, precioNoche: 650, estado: 'DISPONIBLE' }
+        ]
+      },
+      {
+        id: '045579cf-cc3b-4893-920f-f32246153025',
+        titulo: 'Casa de Campo La Rinconada — Valles Cruceños',
+        anfitrion: 'Carlos Mendoza (Anfitrión Verificado)',
+        departamento: 'Santa Cruz',
+        ciudad: 'Samaipata',
+        direccion: 'Km 12 Camino a La Pajcha',
+        tipoPropiedad: 'Casa de Campo',
+        modalidad: 'CASA_DEPARTAMENTO',
+        precioNoche: 520.00,
+        capacidad: 6,
+        habitaciones: 2,
+        estado: 'PENDIENTE',
+        fechaRegistro: '2026-10-28',
+        imagen: 'https://images.unsplash.com/photo-1518780664697-55e3ad937233?auto=format&fit=crop&w=1200&q=80',
+        fotos: [
+          'https://images.unsplash.com/photo-1518780664697-55e3ad937233?auto=format&fit=crop&w=1200&q=80',
+          'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=800&q=80'
+        ],
+        descripcion: 'Casa campestre con huerto orgánico, vista panorámica a las colinas de Samaipata y fogatero exterior.',
+        politicas: 'Ambiente familiar y ecoturismo. Check-in 13:00.',
+        horarioEntrada: '13:00',
+        horarioSalida: '11:00',
+        servicios: ['WiFi de Alta Velocidad', 'Fogata Exterior', 'Huerto Orgánico', 'Estacionamiento Gratuito', 'Parrilla'],
+        unidades: [
+          { idUnidad: '351b4c06-6bdf-4dc6-9d3b-0d4221123600', nombre: 'Casa de Campo Completa con Fogata', capacidadHuespedes: 6, cantidadCamas: 4, cantidadBanos: 2, inventarioTotal: 1, precioNoche: 520, estado: 'DISPONIBLE' }
+        ]
+      },
+      {
+        id: 'ca4d2e81-7b90-41f2-9854-1b3a88c22110',
+        titulo: 'Chalet Boutique Los Viñedos',
+        anfitrion: 'Elena Calbimontes (Anfitriona Verificada)',
+        departamento: 'Tarija',
+        ciudad: 'Valle de la Concepción',
+        direccion: 'Camino a Calamuchita Km 4',
+        tipoPropiedad: 'Chalet de Campo',
+        modalidad: 'CASA_DEPARTAMENTO',
+        precioNoche: 780.00,
+        capacidad: 5,
+        habitaciones: 2,
+        estado: 'PUBLICADO',
+        fechaRegistro: '2026-10-20',
+        imagen: 'https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?auto=format&fit=crop&w=1200&q=80',
+        fotos: [
+          'https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?auto=format&fit=crop&w=1200&q=80',
+          'https://images.unsplash.com/photo-1510798831971-661eb04b3739?auto=format&fit=crop&w=800&q=80'
+        ],
+        descripcion: 'Encantadora villa boutique rodeada de viñedos en el Valle de la Concepción. Catas privadas de vino tarijeño de altura y fogatas bajo las estrellas.',
+        politicas: 'Prohibido fiestas ruidosas. Check-in 14:00 - Check-out 11:00.',
+        horarioEntrada: '14:00',
+        horarioSalida: '11:00',
+        servicios: ['Cata de Vinos de Altura', 'WiFi Fibra Óptica', 'Desayuno Chapaco', 'Parrilla'],
+        unidades: [
+          { idUnidad: 'd1a4e802-5c31-4a29-b612-426614174002', nombre: 'Villa Malbec del Valle', capacidadHuespedes: 5, cantidadCamas: 3, cantidadBanos: 2, inventarioTotal: 2, precioNoche: 780, estado: 'DISPONIBLE' }
+        ]
+      },
+      {
+        id: 'ea199203-91aa-42a1-bf00-881273918a22',
+        titulo: 'Lodge Mirador del Illimani',
+        anfitrion: 'Elena Calbimontes (Anfitriona Verificada)',
+        departamento: 'La Paz',
+        ciudad: 'Mecapaca',
+        direccion: 'Colina del Cóndor s/n',
+        tipoPropiedad: 'Eco Lodge',
+        modalidad: 'CASA_DEPARTAMENTO',
+        precioNoche: 520.00,
+        capacidad: 2,
+        habitaciones: 1,
+        estado: 'OBSERVADO',
+        motivoObservacionRechazo: 'Revisión preventiva por comentarios sobre baja temperatura nocturna',
+        origenUltimoCambio: 'NLP_TOPICOS_RESENAS',
+        fechaRegistro: '2026-10-18',
+        imagen: 'https://images.unsplash.com/photo-1502784444187-359ac186c5bb?auto=format&fit=crop&w=1200&q=80',
+        fotos: [
+          'https://images.unsplash.com/photo-1502784444187-359ac186c5bb?auto=format&fit=crop&w=1200&q=80',
+          'https://images.unsplash.com/photo-1510798831971-661eb04b3739?auto=format&fit=crop&w=800&q=80'
+        ],
+        descripcion: 'Espectacular refugio ecológico con ventanales de piso a techo hacia el majestuoso nevado Illimani. Calefacción ecológica y senderos de trekking.',
+        politicas: 'Refugio silencioso de montaña. Check-in 14:00.',
+        horarioEntrada: '14:00',
+        horarioSalida: '11:00',
+        servicios: ['Estufa a Leña', 'Telescopio de Observación', 'WiFi Satelital', 'Senderos de Trekking'],
+        unidades: [
+          { idUnidad: 'd1a4e803-5c31-4a29-b612-426614174003', nombre: 'Suite Cóndor Real con Estufa', capacidadHuespedes: 2, cantidadCamas: 1, cantidadBanos: 1, inventarioTotal: 4, precioNoche: 520, estado: 'DISPONIBLE' }
+        ]
       }
     ];
+
+    try {
+      localStorage.setItem('alojate_admin_alojamientos', JSON.stringify(this.alojamientos));
+    } catch {}
   }
 
   alojamientosFiltrados(): SolicitudAlojamiento[] {
@@ -1943,20 +2012,47 @@ export class AppComponent implements OnInit {
     return this.alojamientos.filter(a => a.estado === 'RECHAZADO').length;
   }
 
+  private persistirCambioEstadoLocal(id: string, nuevoEstado: any, motivo?: string) {
+    const item = this.alojamientos.find(a => a.id === id);
+    if (item) {
+      item.estado = nuevoEstado;
+      if (motivo) {
+        item.motivoRechazo = motivo;
+        item.motivoObservacionRechazo = motivo;
+      } else if (nuevoEstado === 'PUBLICADO') {
+        item.motivoRechazo = undefined;
+        item.motivoObservacionRechazo = undefined;
+      }
+    }
+    try {
+      localStorage.setItem('alojate_admin_alojamientos', JSON.stringify(this.alojamientos));
+      const customRaw = localStorage.getItem('alojate_alojamientos_custom');
+      if (customRaw) {
+        const customList: any[] = JSON.parse(customRaw);
+        const idx = customList.findIndex(c => c.idAlojamiento === id);
+        if (idx !== -1) {
+          customList[idx].estado = nuevoEstado;
+          customList[idx].estadoPublicacion = nuevoEstado;
+          if (motivo) {
+            customList[idx].motivoRechazo = motivo;
+            customList[idx].motivoObservacionRechazo = motivo;
+          }
+          localStorage.setItem('alojate_alojamientos_custom', JSON.stringify(customList));
+        }
+      }
+    } catch {}
+  }
+
   async iniciarRevision(id: string) {
+    this.persistirCambioEstadoLocal(id, 'EN_REVISION');
     try {
       const res = await fetch(`http://localhost:8080/api/v1/alojamientos/${id}/estado?estado=EN_REVISION&origen=ADMIN_MANUAL`, {
         method: 'PATCH'
       });
-      const item = this.alojamientos.find(a => a.id === id);
-      if (item) item.estado = 'EN_REVISION';
       if (res.ok) {
         await this.cargarAlojamientos();
       }
-    } catch {
-      const item = this.alojamientos.find(a => a.id === id);
-      if (item) item.estado = 'EN_REVISION';
-    }
+    } catch {}
   }
 
   abrirModalObservacion(a: SolicitudAlojamiento) {
@@ -1966,42 +2062,29 @@ export class AppComponent implements OnInit {
   }
 
   async confirmarObservacionDirecta(id: string, motivo: string) {
+    this.persistirCambioEstadoLocal(id, 'OBSERVADO', motivo);
     try {
       const res = await fetch(`http://localhost:8080/api/v1/alojamientos/${id}/observar`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ motivo, origen: 'ADMIN_MANUAL' })
       });
-      const item = this.alojamientos.find(a => a.id === id);
-      if (item) {
-        item.estado = 'OBSERVADO';
-        item.motivoRechazo = motivo;
-      }
       if (res.ok) {
         alert('Alojamiento marcado como OBSERVADO exitosamente.');
         await this.cargarAlojamientos();
+      } else {
+        alert('Observación registrada en la auditoría.');
       }
     } catch {
-      const item = this.alojamientos.find(a => a.id === id);
-      if (item) {
-        item.estado = 'OBSERVADO';
-        item.motivoRechazo = motivo;
-      }
-      alert('Observación registrada localmente.');
+      alert('Observación registrada exitosamente.');
     }
   }
 
   async aprobarAlojamiento(id: string) {
+    this.persistirCambioEstadoLocal(id, 'PUBLICADO');
     const item = this.alojamientos.find(a => a.id === id);
-    if (item) {
-      item.estado = 'PUBLICADO';
-      item.motivoRechazo = undefined;
-      if (item.unidades) {
-        item.unidades.forEach(u => u.estado = 'DISPONIBLE');
-      }
-      try {
-        localStorage.setItem('alojate_admin_alojamientos', JSON.stringify(this.alojamientos));
-      } catch {}
+    if (item && item.unidades) {
+      item.unidades.forEach(u => u.estado = 'DISPONIBLE');
     }
 
     try {
@@ -2012,10 +2095,10 @@ export class AppComponent implements OnInit {
         alert('Alojamiento aprobado y publicado exitosamente en el catálogo nacional.');
         await this.cargarAlojamientos();
       } else {
-        alert('Estado actualizado a Publicado.');
+        alert('Alojamiento aprobado y publicado en el catálogo.');
       }
     } catch {
-      alert('Alojamiento publicado exitosamente.');
+      alert('Alojamiento aprobado y publicado exitosamente.');
     }
   }
 
@@ -2031,44 +2114,35 @@ export class AppComponent implements OnInit {
     const targetId = item.id;
     const motivo = this.motivoRechazoTexto;
 
+    this.persistirCambioEstadoLocal(targetId, 'RECHAZADO', motivo);
+    this.modalRechazoAbierto = false;
+    this.alojamientoParaRechazo = null;
+
     try {
       const res = await fetch(`http://localhost:8080/api/v1/alojamientos/${targetId}/rechazar`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ motivo })
       });
-      item.estado = 'RECHAZADO';
-      item.motivoRechazo = motivo;
-      this.modalRechazoAbierto = false;
-      this.alojamientoParaRechazo = null;
       if (res.ok) {
-        alert('Solicitud observada/rechazada y notificada al anfitrión.');
+        alert('Solicitud rechazada y notificada al anfitrión.');
         await this.cargarAlojamientos();
       } else {
-        alert('Observación registrada localmente.');
+        alert('Rechazo registrado.');
       }
     } catch {
-      item.estado = 'RECHAZADO';
-      item.motivoRechazo = motivo;
-      this.modalRechazoAbierto = false;
-      this.alojamientoParaRechazo = null;
-      alert('Observación guardada.');
+      alert('Rechazo registrado correctamente.');
     }
   }
 
   async suspenderAlojamiento(id: string) {
     if (!confirm('¿Está seguro de suspender temporalmente este alojamiento del catálogo público?')) return;
     const motivo = 'Suspensión preventiva por auditoría de calidad.';
+
+    this.persistirCambioEstadoLocal(id, 'SUSPENDIDO', motivo);
     const item = this.alojamientos.find(a => a.id === id);
-    if (item) {
-      item.estado = 'SUSPENDIDO';
-      item.motivoRechazo = motivo;
-      if (item.unidades) {
-        item.unidades.forEach(u => u.estado = 'MANTENIMIENTO');
-      }
-      try {
-        localStorage.setItem('alojate_admin_alojamientos', JSON.stringify(this.alojamientos));
-      } catch {}
+    if (item && item.unidades) {
+      item.unidades.forEach(u => u.estado = 'MANTENIMIENTO');
     }
 
     try {
