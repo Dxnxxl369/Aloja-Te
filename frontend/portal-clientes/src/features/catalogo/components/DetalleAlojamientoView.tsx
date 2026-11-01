@@ -85,7 +85,7 @@ export const DetalleAlojamientoView: React.FC<DetalleAlojamientoViewProps> = ({
 
   const esHotel = alojamiento.modalidad === 'HOTEL_HOSTAL';
   const unidadActiva = alojamiento.unidades?.find(u => u.idUnidad === selectedUnidadId) || alojamiento.unidades?.[0] || {
-    idUnidad: 'u-def',
+    idUnidad: '00547b62-d2f5-4aa8-80a5-8662b2e028ec',
     nombre: 'Alojamiento Completo',
     capacidadPersonas: 4,
     cantidadCamas: 2,

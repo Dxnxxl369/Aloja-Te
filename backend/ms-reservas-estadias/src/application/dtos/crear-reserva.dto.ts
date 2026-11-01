@@ -1,7 +1,7 @@
-import { IsNotEmpty, IsUUID, IsString, IsNumber, Min, Matches, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsString, IsNumber, Min, Matches, IsOptional } from 'class-validator';
 
 export class CrearReservaDto {
-  @IsUUID()
+  @IsString()
   @IsNotEmpty()
   idCliente: string;
 
@@ -9,7 +9,7 @@ export class CrearReservaDto {
   @IsNotEmpty()
   nombreCliente: string;
 
-  @IsUUID()
+  @IsString()
   @IsNotEmpty()
   idAnfitrion: string;
 
@@ -17,7 +17,7 @@ export class CrearReservaDto {
   @IsOptional()
   nombreAnfitrion?: string;
 
-  @IsUUID()
+  @IsString()
   @IsNotEmpty()
   idAlojamiento: string;
 
@@ -25,7 +25,7 @@ export class CrearReservaDto {
   @IsNotEmpty()
   tituloAlojamiento: string;
 
-  @IsUUID()
+  @IsString()
   @IsNotEmpty()
   idUnidad: string;
 

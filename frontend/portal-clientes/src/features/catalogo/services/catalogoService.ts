@@ -91,7 +91,7 @@ const ALOJAMIENTOS_DEMO: Alojamiento[] = [
     ],
     unidades: [
       {
-        idUnidad: 'u-tarija-1',
+        idUnidad: 'd1a4e802-5c31-4a29-b612-426614174002',
         nombre: 'Villa Malbec del Valle',
         descripcion: 'Chalet completo con chimenea rústica y cava de vinos.',
         capacidadPersonas: 5,
@@ -136,7 +136,7 @@ const ALOJAMIENTOS_DEMO: Alojamiento[] = [
     ],
     unidades: [
       {
-        idUnidad: 'u-lapaz-1',
+        idUnidad: 'd1a4e803-5c31-4a29-b612-426614174003',
         nombre: 'Suite Cóndor Real',
         descripcion: 'Cama Queen térmica, estufa a leña y telescopio astronómico.',
         capacidadPersonas: 2,
@@ -201,7 +201,7 @@ function normalizarAlojamiento(raw: any): Alojamiento {
         ],
     unidades: (raw.unidades && raw.unidades.length > 0)
       ? raw.unidades.map((u: any) => ({
-          idUnidad: u.idUnidad || 'u-default',
+          idUnidad: u.idUnidad || 'd1a4e800-5c31-4a29-b612-426614174000',
           nombre: u.nombre || 'Unidad Principal',
           descripcion: u.descripcion || '',
           capacidadPersonas: u.capacidadHuespedes ?? u.capacidadPersonas ?? 4,
@@ -215,7 +215,7 @@ function normalizarAlojamiento(raw: any): Alojamiento {
         }))
       : [
           {
-            idUnidad: 'u-default',
+            idUnidad: 'd1a4e800-5c31-4a29-b612-426614174000',
             nombre: 'Suite Estándar',
             descripcion: 'Alojamiento completo equipado',
             capacidadPersonas: 4,
