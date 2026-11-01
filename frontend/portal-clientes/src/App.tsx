@@ -462,13 +462,45 @@ export const AppContent: React.FC = () => {
                           <span>•</span>
                           <span className="font-semibold">{a.modalidad === 'HOTEL_HOSTAL' ? '🏨 Hotel' : '🏡 Casa'}</span>
                         </div>
-                        <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-[9px] font-bold ${
-                          a.estadoPublicacion === 'PUBLICADO'
-                            ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400'
-                            : 'bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300'
-                        }`}>
-                          {a.estadoPublicacion || 'PUBLICADO'}
-                        </span>
+                        {(() => {
+                          const est = a.estadoPublicacion || a.estado || 'PUBLICADO';
+                          const motivo = a.motivoObservacionRechazo || a.motivoRechazo;
+                          let estilo = 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300';
+                          let label: string = est;
+
+                          if (est === 'PUBLICADO') {
+                            estilo = 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400';
+                            label = '✅ Publicado en Catálogo';
+                          } else if (est === 'PENDIENTE') {
+                            estilo = 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300';
+                            label = '🕒 Pendiente de Revisión';
+                          } else if (est === 'EN_REVISION') {
+                            estilo = 'bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300';
+                            label = '🔍 En Revisión Automática';
+                          } else if (est === 'OBSERVADO') {
+                            estilo = 'bg-amber-100 text-amber-900 dark:bg-amber-950/80 dark:text-amber-200 border border-amber-300 dark:border-amber-700';
+                            label = '⚠️ Observado por Auditoría';
+                          } else if (est === 'SUSPENDIDO') {
+                            estilo = 'bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-300';
+                            label = '⛔ Suspendido Temporalmente';
+                          } else if (est === 'RECHAZADO') {
+                            estilo = 'bg-red-100 text-red-700 dark:bg-red-950/60 dark:text-red-400';
+                            label = '❌ Rechazado';
+                          }
+
+                          return (
+                            <div className="mt-1 space-y-0.5">
+                              <span className={`inline-block px-2 py-0.5 rounded-full text-[9px] font-bold ${estilo}`}>
+                                {label}
+                              </span>
+                              {motivo && (est === 'OBSERVADO' || est === 'RECHAZADO' || est === 'SUSPENDIDO') && (
+                                <p className="text-[10px] text-amber-600 dark:text-amber-400 font-medium italic line-clamp-1">
+                                  Motivo: {motivo}
+                                </p>
+                              )}
+                            </div>
+                          );
+                        })()}
                       </div>
                     </div>
 

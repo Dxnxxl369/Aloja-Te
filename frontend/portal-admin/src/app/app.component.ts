@@ -37,7 +37,9 @@ export interface SolicitudAlojamiento {
   precioNoche: number;
   capacidad: number;
   habitaciones: number;
-  estado: 'PUBLICADO' | 'EN_REVISION' | 'RECHAZADO' | 'SUSPENDIDO' | 'PAUSADO';
+  estado: 'PENDIENTE' | 'EN_REVISION' | 'PUBLICADO' | 'OBSERVADO' | 'SUSPENDIDO' | 'RECHAZADO';
+  motivoObservacionRechazo?: string;
+  origenUltimoCambio?: string;
   fechaRegistro: string;
   imagen: string;
   fotos?: string[];
@@ -593,31 +595,49 @@ export interface ReporteGenerativo {
               </div>
             </div>
 
-            <!-- Filtros de Estado -->
+            <!-- Filtros de Estado Oficiales (6 Estados) -->
             <div class="flex flex-wrap items-center gap-2 text-xs">
               <button
                 (click)="filtroAlojamientos = 'TODOS'"
-                [class]="filtroAlojamientos === 'TODOS' ? 'px-4 py-2 rounded-xl bg-blue-600 text-white font-semibold shadow-md shadow-blue-500/20' : 'px-4 py-2 rounded-xl bg-slate-100 dark:bg-stone-900 text-slate-600 dark:text-stone-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-stone-800 border border-slate-200 dark:border-stone-800 font-medium transition'"
+                [class]="filtroAlojamientos === 'TODOS' ? 'px-3.5 py-2 rounded-xl bg-blue-600 text-white font-semibold shadow-md shadow-blue-500/20' : 'px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-stone-900 text-slate-600 dark:text-stone-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-stone-800 border border-slate-200 dark:border-stone-800 font-medium transition'"
               >
                 Todos ({{ alojamientos.length }})
               </button>
               <button
-                (click)="filtroAlojamientos = 'PENDIENTES'"
-                [class]="filtroAlojamientos === 'PENDIENTES' ? 'px-4 py-2 rounded-xl bg-blue-600 text-white font-semibold shadow-md shadow-blue-500/20' : 'px-4 py-2 rounded-xl bg-slate-100 dark:bg-stone-900 text-slate-600 dark:text-stone-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-stone-800 border border-slate-200 dark:border-stone-800 font-medium transition'"
+                (click)="filtroAlojamientos = 'PENDIENTE'"
+                [class]="filtroAlojamientos === 'PENDIENTE' ? 'px-3.5 py-2 rounded-xl bg-amber-600 text-white font-semibold shadow-md shadow-amber-500/20' : 'px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-stone-900 text-slate-600 dark:text-stone-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-stone-800 border border-slate-200 dark:border-stone-800 font-medium transition'"
               >
-                Pendientes de Moderación ({{ conteoPendientes() }})
+                🕒 Pendientes ({{ conteoPendientes() }})
               </button>
               <button
-                (click)="filtroAlojamientos = 'PUBLICADOS'"
-                [class]="filtroAlojamientos === 'PUBLICADOS' ? 'px-4 py-2 rounded-xl bg-emerald-600 text-white font-semibold shadow-md shadow-emerald-500/20' : 'px-4 py-2 rounded-xl bg-slate-100 dark:bg-stone-900 text-slate-600 dark:text-stone-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-stone-800 border border-slate-200 dark:border-stone-800 font-medium transition'"
+                (click)="filtroAlojamientos = 'EN_REVISION'"
+                [class]="filtroAlojamientos === 'EN_REVISION' ? 'px-3.5 py-2 rounded-xl bg-blue-600 text-white font-semibold shadow-md shadow-blue-500/20' : 'px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-stone-900 text-slate-600 dark:text-stone-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-stone-800 border border-slate-200 dark:border-stone-800 font-medium transition'"
               >
-                Publicados en Catálogo ({{ conteoPublicados() }})
+                🔍 En Revisión ({{ conteoEnRevision() }})
               </button>
               <button
-                (click)="filtroAlojamientos = 'OBSERVADOS'"
-                [class]="filtroAlojamientos === 'OBSERVADOS' ? 'px-4 py-2 rounded-xl bg-rose-700 text-white font-semibold shadow-md shadow-rose-700/20' : 'px-4 py-2 rounded-xl bg-slate-100 dark:bg-stone-900 text-slate-600 dark:text-stone-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-stone-800 border border-slate-200 dark:border-stone-800 font-medium transition'"
+                (click)="filtroAlojamientos = 'PUBLICADO'"
+                [class]="filtroAlojamientos === 'PUBLICADO' ? 'px-3.5 py-2 rounded-xl bg-emerald-600 text-white font-semibold shadow-md shadow-emerald-500/20' : 'px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-stone-900 text-slate-600 dark:text-stone-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-stone-800 border border-slate-200 dark:border-stone-800 font-medium transition'"
               >
-                Observados ({{ conteoObservados() }})
+                ✅ Publicados ({{ conteoPublicados() }})
+              </button>
+              <button
+                (click)="filtroAlojamientos = 'OBSERVADO'"
+                [class]="filtroAlojamientos === 'OBSERVADO' ? 'px-3.5 py-2 rounded-xl bg-orange-600 text-white font-semibold shadow-md shadow-orange-600/20' : 'px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-stone-900 text-slate-600 dark:text-stone-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-stone-800 border border-slate-200 dark:border-stone-800 font-medium transition'"
+              >
+                ⚠️ Observados ({{ conteoObservados() }})
+              </button>
+              <button
+                (click)="filtroAlojamientos = 'SUSPENDIDO'"
+                [class]="filtroAlojamientos === 'SUSPENDIDO' ? 'px-3.5 py-2 rounded-xl bg-slate-700 text-white font-semibold shadow-md shadow-slate-700/20' : 'px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-stone-900 text-slate-600 dark:text-stone-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-stone-800 border border-slate-200 dark:border-stone-800 font-medium transition'"
+              >
+                ⛔ Suspendidos ({{ conteoSuspendidos() }})
+              </button>
+              <button
+                (click)="filtroAlojamientos = 'RECHAZADO'"
+                [class]="filtroAlojamientos === 'RECHAZADO' ? 'px-3.5 py-2 rounded-xl bg-rose-700 text-white font-semibold shadow-md shadow-rose-700/20' : 'px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-stone-900 text-slate-600 dark:text-stone-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-stone-800 border border-slate-200 dark:border-stone-800 font-medium transition'"
+              >
+                ❌ Rechazados ({{ conteoRechazados() }})
               </button>
             </div>
 
@@ -651,9 +671,16 @@ export interface ReporteGenerativo {
                       <p class="text-xs text-slate-500 dark:text-stone-400">Anfitrión: <strong class="text-slate-700 dark:text-stone-300">{{ a.anfitrion }}</strong> • {{ a.ciudad }}</p>
                     </div>
 
-                    <!-- Badge Estado -->
-                    <span [class]="a.estado === 'PUBLICADO' ? 'px-2.5 py-1 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold border border-emerald-200 dark:border-emerald-800 shrink-0' : (a.estado === 'EN_REVISION' ? 'px-2.5 py-1 rounded-xl bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 text-[11px] font-bold border border-blue-200 dark:border-blue-800 shrink-0' : 'px-2.5 py-1 rounded-xl bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 text-[11px] font-bold border border-rose-200 dark:border-rose-800 shrink-0')">
-                      {{ a.estado === 'PUBLICADO' ? '● Publicado' : (a.estado === 'EN_REVISION' ? '⏳ Por Revisar' : (a.estado === 'SUSPENDIDO' ? 'Suspendido' : '✕ Observado')) }}
+                    <!-- Badge Estado Oficial -->
+                    <span [ngClass]="{
+                      'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800': a.estado === 'PUBLICADO',
+                      'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800': a.estado === 'PENDIENTE',
+                      'bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800': a.estado === 'EN_REVISION',
+                      'bg-orange-100 dark:bg-orange-950 text-orange-800 dark:text-orange-300 border-orange-200 dark:border-orange-800': a.estado === 'OBSERVADO',
+                      'bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-300 border-slate-300 dark:border-slate-700': a.estado === 'SUSPENDIDO',
+                      'bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800': a.estado === 'RECHAZADO'
+                    }" class="px-2.5 py-1 rounded-xl text-[11px] font-bold border shrink-0">
+                      {{ a.estado === 'PUBLICADO' ? '● Publicado' : (a.estado === 'PENDIENTE' ? '🕒 Pendiente' : (a.estado === 'EN_REVISION' ? '🔍 En Revisión' : (a.estado === 'OBSERVADO' ? '⚠️ Observado' : (a.estado === 'SUSPENDIDO' ? '⛔ Suspendido' : '❌ Rechazado')))) }}
                     </span>
                   </div>
 
@@ -701,36 +728,46 @@ export interface ReporteGenerativo {
                   </div>
                 </div>
 
-                <!-- Botonera de Decisiones -->
+                <!-- Botonera de Decisiones Oficial (6 Estados) -->
                 <div class="pt-3 border-t border-slate-200/80 dark:border-stone-800/80 flex items-center gap-2 flex-wrap">
                   <button
-                    *ngIf="a.estado === 'EN_REVISION' || a.estado === 'RECHAZADO'"
+                    *ngIf="a.estado === 'PENDIENTE'"
+                    (click)="iniciarRevision(a.id)"
+                    class="flex-1 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md shadow-blue-500/20 transition flex items-center justify-center gap-1 min-w-[120px]"
+                  >
+                    <span>🔍 Iniciar Revisión</span>
+                  </button>
+
+                  <button
+                    *ngIf="a.estado !== 'PUBLICADO'"
                     (click)="aprobarAlojamiento(a.id)"
-                    class="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs shadow-md shadow-blue-500/20 transition flex items-center justify-center gap-1.5 min-w-[120px]"
+                    class="flex-1 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md shadow-emerald-500/20 transition flex items-center justify-center gap-1 min-w-[110px]"
                   >
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span>Aprobar y Publicar</span>
+                    <span>✓ Publicar</span>
                   </button>
 
                   <button
-                    *ngIf="a.estado === 'EN_REVISION'"
+                    *ngIf="a.estado === 'PENDIENTE' || a.estado === 'EN_REVISION'"
+                    (click)="abrirModalObservacion(a)"
+                    class="flex-1 py-2 rounded-xl bg-orange-50 hover:bg-orange-100 dark:bg-stone-800 dark:hover:bg-stone-700 text-orange-700 dark:text-orange-300 font-bold text-xs border border-orange-200 dark:border-orange-800 transition flex items-center justify-center gap-1 min-w-[95px]"
+                  >
+                    <span>⚠️ Observar</span>
+                  </button>
+
+                  <button
+                    *ngIf="a.estado === 'PENDIENTE' || a.estado === 'EN_REVISION'"
                     (click)="abrirModalRechazo(a)"
-                    class="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-rose-50 dark:bg-stone-800 dark:hover:bg-stone-700 text-rose-600 dark:text-rose-300 hover:text-rose-700 font-semibold text-xs border border-rose-200 dark:border-rose-500/30 transition flex items-center justify-center gap-1.5 min-w-[100px]"
+                    class="flex-1 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-stone-800 dark:hover:bg-stone-700 text-rose-700 dark:text-rose-300 font-bold text-xs border border-rose-200 dark:border-rose-800 transition flex items-center justify-center gap-1 min-w-[95px]"
                   >
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-                    <span>Observar</span>
+                    <span>❌ Rechazar</span>
                   </button>
 
                   <button
-                    *ngIf="a.estado === 'PUBLICADO'"
+                    *ngIf="a.estado === 'PUBLICADO' || a.estado === 'OBSERVADO'"
                     (click)="suspenderAlojamiento(a.id)"
-                    class="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-stone-800 dark:hover:bg-stone-700 text-blue-600 dark:text-blue-300 font-semibold text-xs border border-blue-200 dark:border-blue-500/30 transition min-w-[90px]"
+                    class="flex-1 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-stone-800 dark:hover:bg-stone-700 text-slate-700 dark:text-slate-300 font-bold text-xs border border-slate-300 dark:border-slate-700 transition flex items-center justify-center gap-1 min-w-[95px]"
                   >
-                    Suspender
+                    <span>⛔ Suspender</span>
                   </button>
 
                   <button
@@ -1236,35 +1273,43 @@ export interface ReporteGenerativo {
               Cerrar Inspección
             </button>
 
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 flex-wrap">
               <button
-                *ngIf="alojamientoInspeccionado.estado === 'EN_REVISION'"
+                *ngIf="alojamientoInspeccionado.estado === 'PENDIENTE'"
+                (click)="iniciarRevision(alojamientoInspeccionado.id); cerrarInspeccion()"
+                class="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-md shadow-blue-500/20 transition flex items-center gap-1.5"
+              >
+                <span>🔍 Iniciar Revisión</span>
+              </button>
+
+              <button
+                *ngIf="alojamientoInspeccionado.estado === 'PENDIENTE' || alojamientoInspeccionado.estado === 'EN_REVISION'"
+                (click)="abrirModalObservacion(alojamientoInspeccionado); cerrarInspeccion()"
+                class="px-4 py-2.5 rounded-xl bg-orange-50 hover:bg-orange-100 dark:bg-stone-800 dark:hover:bg-stone-700 text-orange-700 dark:text-orange-300 text-xs font-bold border border-orange-200 dark:border-orange-800 transition flex items-center gap-1.5"
+              >
+                <span>⚠️ Observar</span>
+              </button>
+
+              <button
+                *ngIf="alojamientoInspeccionado.estado === 'PENDIENTE' || alojamientoInspeccionado.estado === 'EN_REVISION'"
                 (click)="abrirModalRechazo(alojamientoInspeccionado); cerrarInspeccion()"
-                class="px-4 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-stone-800 dark:hover:bg-stone-700 text-rose-700 dark:text-rose-300 text-xs font-semibold border border-rose-200 dark:border-rose-500/30 transition flex items-center gap-1.5"
+                class="px-4 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-stone-800 dark:hover:bg-stone-700 text-rose-700 dark:text-rose-300 text-xs font-bold border border-rose-200 dark:border-rose-800 transition flex items-center gap-1.5"
               >
-                <span>Observar Solicitud</span>
+                <span>❌ Rechazar</span>
               </button>
 
               <button
-                *ngIf="alojamientoInspeccionado.estado === 'PUBLICADO'"
-                (click)="ocultarAlojamiento(alojamientoInspeccionado.id); cerrarInspeccion()"
-                class="px-4 py-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 dark:bg-stone-800 dark:hover:bg-stone-700 text-amber-800 dark:text-amber-300 text-xs font-semibold border border-amber-200 dark:border-amber-500/30 transition flex items-center gap-1.5"
-              >
-                <span>⏸ Ocultar del Catálogo</span>
-              </button>
-
-              <button
-                *ngIf="alojamientoInspeccionado.estado === 'PUBLICADO'"
+                *ngIf="alojamientoInspeccionado.estado === 'PUBLICADO' || alojamientoInspeccionado.estado === 'OBSERVADO'"
                 (click)="suspenderAlojamiento(alojamientoInspeccionado.id); cerrarInspeccion()"
-                class="px-4 py-2.5 rounded-xl bg-blue-50 hover:bg-blue-100 dark:bg-stone-800 dark:hover:bg-stone-700 text-blue-700 dark:text-blue-300 text-xs font-semibold border border-blue-200 dark:border-blue-500/30 transition"
+                class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-stone-800 dark:hover:bg-stone-700 text-slate-700 dark:text-slate-300 text-xs font-semibold border border-slate-300 dark:border-slate-700 transition"
               >
-                Suspender Preventivamente
+                <span>⛔ Suspender</span>
               </button>
 
               <button
-                *ngIf="alojamientoInspeccionado.estado === 'EN_REVISION' || alojamientoInspeccionado.estado === 'RECHAZADO' || alojamientoInspeccionado.estado === 'PAUSADO' || alojamientoInspeccionado.estado === 'SUSPENDIDO'"
+                *ngIf="alojamientoInspeccionado.estado !== 'PUBLICADO'"
                 (click)="aprobarAlojamiento(alojamientoInspeccionado.id); cerrarInspeccion()"
-                class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs shadow-md shadow-blue-500/25 transition flex items-center gap-1.5"
+                class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md shadow-emerald-500/25 transition flex items-center gap-1.5"
               >
                 <span>✓ Aprobar y Publicar en Catálogo</span>
               </button>
@@ -1419,7 +1464,7 @@ export class AppComponent implements OnInit {
   // Alojamientos State
   alojamientoInspeccionado: SolicitudAlojamiento | null = null;
   subTabInspeccion: 'general' | 'habitaciones' = 'general';
-  filtroAlojamientos: 'TODOS' | 'PENDIENTES' | 'PUBLICADOS' | 'OBSERVADOS' = 'TODOS';
+  filtroAlojamientos: 'TODOS' | 'PENDIENTE' | 'PENDIENTES' | 'EN_REVISION' | 'PUBLICADO' | 'PUBLICADOS' | 'OBSERVADO' | 'OBSERVADOS' | 'SUSPENDIDO' | 'SUSPENDIDOS' | 'RECHAZADO' | 'RECHAZADOS' = 'TODOS';
   modalRechazoAbierto: boolean = false;
   alojamientoParaRechazo: SolicitudAlojamiento | null = null;
   motivoRechazoTexto: string = '';
@@ -1705,7 +1750,7 @@ export class AppComponent implements OnInit {
           precioNoche: Number(u?.precioNoche ?? 500),
           capacidad: Number(u?.capacidadHuespedes ?? 4),
           habitaciones: Number(u?.cantidadDormitorios ?? 2),
-          estado: (raw.estadoPublicacion as any) || 'EN_REVISION',
+          estado: (raw.estadoPublicacion as any) || 'PENDIENTE',
           fechaRegistro: raw.fechaCreacion || new Date().toISOString(),
           imagen: foto,
           fotos: fotosList,
@@ -1713,7 +1758,9 @@ export class AppComponent implements OnInit {
           politicas: raw.politicas || 'Ambiente respetuoso y cumplimiento de horarios de ingreso.',
           horarioEntrada: raw.horarioEntrada || '14:00',
           horarioSalida: raw.horarioSalida || '11:00',
-          motivoRechazo: raw.motivoRechazo || '',
+          motivoRechazo: raw.motivoObservacionRechazo || raw.motivoRechazo || '',
+          motivoObservacionRechazo: raw.motivoObservacionRechazo || raw.motivoRechazo || '',
+          origenUltimoCambio: raw.origenUltimoCambio || '',
           unidades: (raw.unidades || []).map((un: any) => ({
             idUnidad: un.idUnidad,
             nombre: un.nombre,
@@ -1862,14 +1909,21 @@ export class AppComponent implements OnInit {
 
   alojamientosFiltrados(): SolicitudAlojamiento[] {
     return this.alojamientos.filter(a => {
-      if (this.filtroAlojamientos === 'PENDIENTES') return a.estado === 'EN_REVISION';
-      if (this.filtroAlojamientos === 'PUBLICADOS') return a.estado === 'PUBLICADO';
-      if (this.filtroAlojamientos === 'OBSERVADOS') return a.estado === 'RECHAZADO' || a.estado === 'SUSPENDIDO';
+      if (this.filtroAlojamientos === 'PENDIENTE' || this.filtroAlojamientos === 'PENDIENTES') return a.estado === 'PENDIENTE';
+      if (this.filtroAlojamientos === 'EN_REVISION') return a.estado === 'EN_REVISION';
+      if (this.filtroAlojamientos === 'PUBLICADO' || this.filtroAlojamientos === 'PUBLICADOS') return a.estado === 'PUBLICADO';
+      if (this.filtroAlojamientos === 'OBSERVADO' || this.filtroAlojamientos === 'OBSERVADOS') return a.estado === 'OBSERVADO';
+      if (this.filtroAlojamientos === 'SUSPENDIDO' || this.filtroAlojamientos === 'SUSPENDIDOS') return a.estado === 'SUSPENDIDO';
+      if (this.filtroAlojamientos === 'RECHAZADO' || this.filtroAlojamientos === 'RECHAZADOS') return a.estado === 'RECHAZADO';
       return true;
     });
   }
 
   conteoPendientes(): number {
+    return this.alojamientos.filter(a => a.estado === 'PENDIENTE').length;
+  }
+
+  conteoEnRevision(): number {
     return this.alojamientos.filter(a => a.estado === 'EN_REVISION').length;
   }
 
@@ -1878,7 +1932,63 @@ export class AppComponent implements OnInit {
   }
 
   conteoObservados(): number {
-    return this.alojamientos.filter(a => a.estado === 'RECHAZADO' || a.estado === 'SUSPENDIDO').length;
+    return this.alojamientos.filter(a => a.estado === 'OBSERVADO').length;
+  }
+
+  conteoSuspendidos(): number {
+    return this.alojamientos.filter(a => a.estado === 'SUSPENDIDO').length;
+  }
+
+  conteoRechazados(): number {
+    return this.alojamientos.filter(a => a.estado === 'RECHAZADO').length;
+  }
+
+  async iniciarRevision(id: string) {
+    try {
+      const res = await fetch(`http://localhost:8080/api/v1/alojamientos/${id}/estado?estado=EN_REVISION&origen=ADMIN_MANUAL`, {
+        method: 'PATCH'
+      });
+      const item = this.alojamientos.find(a => a.id === id);
+      if (item) item.estado = 'EN_REVISION';
+      if (res.ok) {
+        await this.cargarAlojamientos();
+      }
+    } catch {
+      const item = this.alojamientos.find(a => a.id === id);
+      if (item) item.estado = 'EN_REVISION';
+    }
+  }
+
+  abrirModalObservacion(a: SolicitudAlojamiento) {
+    const motivo = prompt('Ingrese el motivo de observación para este alojamiento:', 'Las fotografías requieren revisión adicional de resolución o contenido.');
+    if (!motivo) return;
+    this.confirmarObservacionDirecta(a.id, motivo);
+  }
+
+  async confirmarObservacionDirecta(id: string, motivo: string) {
+    try {
+      const res = await fetch(`http://localhost:8080/api/v1/alojamientos/${id}/observar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ motivo, origen: 'ADMIN_MANUAL' })
+      });
+      const item = this.alojamientos.find(a => a.id === id);
+      if (item) {
+        item.estado = 'OBSERVADO';
+        item.motivoRechazo = motivo;
+      }
+      if (res.ok) {
+        alert('Alojamiento marcado como OBSERVADO exitosamente.');
+        await this.cargarAlojamientos();
+      }
+    } catch {
+      const item = this.alojamientos.find(a => a.id === id);
+      if (item) {
+        item.estado = 'OBSERVADO';
+        item.motivoRechazo = motivo;
+      }
+      alert('Observación registrada localmente.');
+    }
   }
 
   async aprobarAlojamiento(id: string) {
@@ -2032,22 +2142,22 @@ export class AppComponent implements OnInit {
   async ocultarAlojamiento(id: string) {
     if (!confirm('¿Desea ocultar/pausar temporalmente este alojamiento del catálogo? Sus habitaciones asociadas se desactivarán en cascada.')) return;
     try {
-      const res = await fetch(`http://localhost:8080/api/v1/alojamientos/${id}/estado?estado=PAUSADO`, {
+      const res = await fetch(`http://localhost:8080/api/v1/alojamientos/${id}/estado?estado=SUSPENDIDO`, {
         method: 'PATCH'
       });
       const item = this.alojamientos.find(a => a.id === id);
       if (item) {
-        item.estado = 'PAUSADO';
+        item.estado = 'SUSPENDIDO';
         if (item.unidades) {
           item.unidades.forEach(u => u.estado = 'MANTENIMIENTO');
         }
       }
-      alert('Alojamiento ocultado del catálogo y sus habitaciones han sido desactivadas en cascada.');
+      alert('Alojamiento suspendido del catálogo y sus habitaciones han sido desactivadas en cascada.');
       await this.cargarAlojamientos();
     } catch {
       const item = this.alojamientos.find(a => a.id === id);
       if (item) {
-        item.estado = 'PAUSADO';
+        item.estado = 'SUSPENDIDO';
         if (item.unidades) {
           item.unidades.forEach(u => u.estado = 'MANTENIMIENTO');
         }

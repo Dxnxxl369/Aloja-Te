@@ -122,7 +122,9 @@ public class AlojamientoPersistenceAdapter implements AlojamientoRepositoryPort 
                 .horarioEntrada(domain.getHorarioEntrada())
                 .horarioSalida(domain.getHorarioSalida())
                 .motivoRechazo(domain.getMotivoRechazo())
-                .estadoPublicacion(domain.getEstadoPublicacion() != null ? domain.getEstadoPublicacion() : EstadoPublicacion.BORRADOR)
+                .motivoObservacionRechazo(domain.getMotivoObservacionRechazo() != null ? domain.getMotivoObservacionRechazo() : domain.getMotivoRechazo())
+                .origenUltimoCambio(domain.getOrigenUltimoCambio())
+                .estadoPublicacion(domain.getEstadoPublicacion() != null ? domain.getEstadoPublicacion() : EstadoPublicacion.PENDIENTE)
                 .fechaCreacion(domain.getFechaCreacion() != null ? domain.getFechaCreacion() : java.time.LocalDateTime.now())
                 .build();
     }
@@ -188,6 +190,8 @@ public class AlojamientoPersistenceAdapter implements AlojamientoRepositoryPort 
                 .horarioEntrada(entity.getHorarioEntrada())
                 .horarioSalida(entity.getHorarioSalida())
                 .motivoRechazo(entity.getMotivoRechazo())
+                .motivoObservacionRechazo(entity.getMotivoObservacionRechazo() != null ? entity.getMotivoObservacionRechazo() : entity.getMotivoRechazo())
+                .origenUltimoCambio(entity.getOrigenUltimoCambio())
                 .estadoPublicacion(entity.getEstadoPublicacion())
                 .fechaCreacion(entity.getFechaCreacion())
                 .servicios(servicios)

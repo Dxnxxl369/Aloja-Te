@@ -352,8 +352,8 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
           politicas,
           horarioEntrada,
           horarioSalida,
-          estado: 'EN_REVISION',
-          estadoPublicacion: 'EN_REVISION'
+          estado: 'PENDIENTE',
+          estadoPublicacion: 'PENDIENTE'
         };
       } catch (apiErr) {
         console.warn('API MS-01 respondió con advertencia, creando en persistencia local:', apiErr);
@@ -382,13 +382,13 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
           politicas,
           horarioEntrada,
           horarioSalida,
-          estado: 'EN_REVISION',
-          estadoPublicacion: 'EN_REVISION'
+          estado: 'PENDIENTE',
+          estadoPublicacion: 'PENDIENTE'
         };
       }
 
       onAlojamientoCreado(nuevoAlojamiento);
-      alert('¡Alojamiento registrado exitosamente y enviado a moderación!');
+      alert('¡Alojamiento registrado exitosamente! Su estado inicial es PENDIENTE mientras la automatización y administración auditan las fotografías y contenido.');
       onClose();
     } catch (err: any) {
       setError(err.message || 'Error al registrar el alojamiento.');

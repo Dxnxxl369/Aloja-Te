@@ -30,7 +30,7 @@ public class AlojamientoServiceImpl implements AlojamientoUseCase {
     @Transactional
     public Alojamiento crearAlojamiento(Alojamiento alojamiento, Set<Integer> serviciosIds) {
         if (alojamiento.getEstadoPublicacion() == null) {
-            alojamiento.setEstadoPublicacion(EstadoPublicacion.BORRADOR);
+            alojamiento.setEstadoPublicacion(EstadoPublicacion.PENDIENTE);
         }
         alojamiento.setFechaCreacion(LocalDateTime.now());
         Alojamiento guardado = alojamientoRepository.guardar(alojamiento);
@@ -70,14 +70,49 @@ public class AlojamientoServiceImpl implements AlojamientoUseCase {
     @Override
     @Transactional
     public Alojamiento cambiarEstado(UUID idAlojamiento, EstadoPublicacion nuevoEstado) {
+        return cambiarEstado(idAlojamiento, nuevoEstado, null, null);
+    }
+
+    @Override
+    @Transactional
+    public Alojamiento cambiarEstado(UUID idAlojamiento, EstadoPublicacion nuevoEstado, String motivo, String origen) {
         Alojamiento alojamiento = obtenerPorId(idAlojamiento);
+        EstadoPublicacion estadoAnterior = alojamiento.getEstadoPublicacion();
         alojamiento.setEstadoPublicacion(nuevoEstado);
+
+        if (motivo != null) {
+            alojamiento.setMotivoRechazo(motivo.trim());
+            alojamiento.setMotivoObservacionRechazo(motivo.trim());
+        }
+        if (origen != null) {
+            alojamiento.setOrigenUltimoCambio(origen.trim());
+        }
+
         if (nuevoEstado == EstadoPublicacion.PUBLICADO) {
             propagarCascadaUnidades(idAlojamiento, true);
-        } else if (nuevoEstado == EstadoPublicacion.SUSPENDIDO || nuevoEstado == EstadoPublicacion.PAUSADO || nuevoEstado == EstadoPublicacion.RECHAZADO) {
+        } else if (nuevoEstado == EstadoPublicacion.SUSPENDIDO || nuevoEstado == EstadoPublicacion.RECHAZADO || nuevoEstado == EstadoPublicacion.PENDIENTE || nuevoEstado == EstadoPublicacion.EN_REVISION) {
             propagarCascadaUnidades(idAlojamiento, false);
+        } else if (nuevoEstado == EstadoPublicacion.OBSERVADO) {
+            // Regla de Negocio:
+            // - Si proviene de NLP / reseñas sobre un alojamiento ya publicado, sigue en servicio temporalmente.
+            // - Si proviene de moderación inicial de fotos (pre-servicio), NO entra en servicio.
+            boolean mantenerEnServicio = (estadoAnterior == EstadoPublicacion.PUBLICADO) || (origen != null && origen.toUpperCase().contains("NLP"));
+            propagarCascadaUnidades(idAlojamiento, mantenerEnServicio);
         }
+
         return alojamientoRepository.guardar(alojamiento);
+    }
+
+    @Override
+    @Transactional
+    public Alojamiento observarAlojamiento(UUID idAlojamiento, String motivo, String origen) {
+        return cambiarEstado(idAlojamiento, EstadoPublicacion.OBSERVADO, motivo, origen != null ? origen : "AUTOMATIZACION");
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Alojamiento> listarPorEstado(EstadoPublicacion estado) {
+        return alojamientoRepository.listarPorEstado(estado);
     }
 
     private void propagarCascadaUnidades(UUID idAlojamiento, boolean habilitar) {

@@ -182,6 +182,9 @@ function normalizarAlojamiento(raw: any): Alojamiento {
     calificacionPromedio: Number(raw.calificacionPromedio ?? 4.92),
     totalResenas: Number(raw.totalResenas ?? 32),
     estado: raw.estadoPublicacion || raw.estado || 'PUBLICADO',
+    estadoPublicacion: raw.estadoPublicacion || raw.estado || 'PUBLICADO',
+    motivoObservacionRechazo: raw.motivoObservacionRechazo || raw.motivoRechazo,
+    origenUltimoCambio: raw.origenUltimoCambio,
     fotografias: (raw.fotografias && raw.fotografias.length > 0)
       ? raw.fotografias.map((f: any, idx: number) => ({
           idFotografia: f.idFotografia || `foto-${idx}`,
