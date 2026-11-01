@@ -1992,19 +1992,22 @@ export class AppComponent implements OnInit {
   }
 
   async aprobarAlojamiento(id: string) {
-    try {
-      const res = await fetch(`http://localhost:8080/api/v1/alojamientos/${id}/aceptar`, {
-        method: 'POST'
-      });
-      const item = this.alojamientos.find(a => a.id === id);
-      if (item) {
-        item.estado = 'PUBLICADO';
-        item.motivoRechazo = undefined;
+    const item = this.alojamientos.find(a => a.id === id);
+    if (item) {
+      item.estado = 'PUBLICADO';
+      item.motivoRechazo = undefined;
+      if (item.unidades) {
+        item.unidades.forEach(u => u.estado = 'DISPONIBLE');
       }
       try {
         localStorage.setItem('alojate_admin_alojamientos', JSON.stringify(this.alojamientos));
       } catch {}
+    }
 
+    try {
+      const res = await fetch(`http://localhost:8080/api/v1/alojamientos/${id}/aceptar`, {
+        method: 'POST'
+      });
       if (res.ok) {
         alert('Alojamiento aprobado y publicado exitosamente en el catálogo nacional.');
         await this.cargarAlojamientos();
@@ -2012,11 +2015,6 @@ export class AppComponent implements OnInit {
         alert('Estado actualizado a Publicado.');
       }
     } catch {
-      const item = this.alojamientos.find(a => a.id === id);
-      if (item) item.estado = 'PUBLICADO';
-      try {
-        localStorage.setItem('alojate_admin_alojamientos', JSON.stringify(this.alojamientos));
-      } catch {}
       alert('Alojamiento publicado exitosamente.');
     }
   }
@@ -2060,21 +2058,33 @@ export class AppComponent implements OnInit {
 
   async suspenderAlojamiento(id: string) {
     if (!confirm('¿Está seguro de suspender temporalmente este alojamiento del catálogo público?')) return;
+    const motivo = 'Suspensión preventiva por auditoría de calidad.';
+    const item = this.alojamientos.find(a => a.id === id);
+    if (item) {
+      item.estado = 'SUSPENDIDO';
+      item.motivoRechazo = motivo;
+      if (item.unidades) {
+        item.unidades.forEach(u => u.estado = 'MANTENIMIENTO');
+      }
+      try {
+        localStorage.setItem('alojate_admin_alojamientos', JSON.stringify(this.alojamientos));
+      } catch {}
+    }
+
     try {
       const res = await fetch(`http://localhost:8080/api/v1/alojamientos/${id}/suspender`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ motivo: 'Suspensión preventiva por auditoría de calidad.' })
+        body: JSON.stringify({ motivo, origen: 'ADMIN_MANUAL' })
       });
       if (res.ok) {
-        const item = this.alojamientos.find(a => a.id === id);
-        if (item) item.estado = 'SUSPENDIDO';
-        alert('Alojamiento suspendido preventivamente.');
+        alert('Alojamiento suspendido preventivamente en el sistema nacional.');
         await this.cargarAlojamientos();
+      } else {
+        alert('Alojamiento suspendido preventivamente.');
       }
     } catch {
-      const item = this.alojamientos.find(a => a.id === id);
-      if (item) item.estado = 'SUSPENDIDO';
+      alert('Alojamiento suspendido preventivamente (actualizado localmente).');
     }
   }
 

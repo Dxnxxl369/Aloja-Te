@@ -182,39 +182,25 @@ public class AlojamientoServiceImpl implements AlojamientoUseCase {
     @Override
     @Transactional
     public Alojamiento aceptarAlojamiento(UUID idAlojamiento) {
-        Alojamiento alojamiento = obtenerPorId(idAlojamiento);
-        alojamiento.setEstadoPublicacion(EstadoPublicacion.PUBLICADO);
-        alojamiento.setMotivoRechazo(null);
-        propagarCascadaUnidades(idAlojamiento, true);
-        return alojamientoRepository.guardar(alojamiento);
+        return cambiarEstado(idAlojamiento, EstadoPublicacion.PUBLICADO, null, "ADMIN_MANUAL");
     }
 
     @Override
     @Transactional
     public Alojamiento rechazarAlojamiento(UUID idAlojamiento, String motivo) {
-        Alojamiento alojamiento = obtenerPorId(idAlojamiento);
-        alojamiento.setEstadoPublicacion(EstadoPublicacion.RECHAZADO);
-        alojamiento.setMotivoRechazo(motivo != null ? motivo.trim() : "No cumple con las normas de habitabilidad y calidad.");
-        propagarCascadaUnidades(idAlojamiento, false);
-        return alojamientoRepository.guardar(alojamiento);
+        return cambiarEstado(idAlojamiento, EstadoPublicacion.RECHAZADO, motivo != null ? motivo.trim() : "No cumple con las normas de habitabilidad y calidad.", "ADMIN_MANUAL");
     }
 
     @Override
     @Transactional
     public Alojamiento suspenderAlojamiento(UUID idAlojamiento, String motivo) {
-        Alojamiento alojamiento = obtenerPorId(idAlojamiento);
-        alojamiento.setEstadoPublicacion(EstadoPublicacion.SUSPENDIDO);
-        alojamiento.setMotivoRechazo(motivo != null ? motivo.trim() : "Publicación suspendida por auditoría.");
-        propagarCascadaUnidades(idAlojamiento, false);
-        return alojamientoRepository.guardar(alojamiento);
+        return cambiarEstado(idAlojamiento, EstadoPublicacion.SUSPENDIDO, motivo != null ? motivo.trim() : "Publicación suspendida por auditoría.", "ADMIN_MANUAL");
     }
 
     @Override
     @Transactional
     public Alojamiento enviarARevision(UUID idAlojamiento) {
-        Alojamiento alojamiento = obtenerPorId(idAlojamiento);
-        alojamiento.setEstadoPublicacion(EstadoPublicacion.EN_REVISION);
-        return alojamientoRepository.guardar(alojamiento);
+        return cambiarEstado(idAlojamiento, EstadoPublicacion.EN_REVISION, null, "ADMIN_MANUAL");
     }
 
     // --- MODALIDAD CASA VS HOTEL ---

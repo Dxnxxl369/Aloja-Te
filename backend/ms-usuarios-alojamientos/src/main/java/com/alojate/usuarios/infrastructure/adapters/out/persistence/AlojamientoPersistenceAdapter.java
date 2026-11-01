@@ -42,6 +42,8 @@ public class AlojamientoPersistenceAdapter implements AlojamientoRepositoryPort 
                 existing.setHorarioEntrada(alojamiento.getHorarioEntrada());
                 existing.setHorarioSalida(alojamiento.getHorarioSalida());
                 existing.setMotivoRechazo(alojamiento.getMotivoRechazo());
+                existing.setMotivoObservacionRechazo(alojamiento.getMotivoObservacionRechazo() != null ? alojamiento.getMotivoObservacionRechazo() : alojamiento.getMotivoRechazo());
+                existing.setOrigenUltimoCambio(alojamiento.getOrigenUltimoCambio());
                 existing.setEstadoPublicacion(alojamiento.getEstadoPublicacion());
                 AlojamientoJpaEntity guardado = repository.save(existing);
                 return toDomain(guardado);
