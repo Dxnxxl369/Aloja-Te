@@ -1,6 +1,6 @@
 {
   "name": "portal-clientes",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Microfrontend React para Clientes y Anfitriones de Aloja-Te",
   "scripts": {
     "dev": "vite --port 3000 --strictPort",
