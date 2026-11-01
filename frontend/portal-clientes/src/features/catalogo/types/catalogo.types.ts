@@ -14,6 +14,9 @@ export interface UnidadReservable {
   inventarioTotal: number;
   activo: boolean;
   estado?: string;
+  fotografias?: Fotografia[];
+  fotos?: string[];
+  servicios?: string[];
 }
 
 export interface Fotografia {

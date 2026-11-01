@@ -1098,26 +1098,49 @@ export interface ReporteGenerativo {
               No hay habitaciones configuradas para este establecimiento.
             </div>
 
-            <div *ngIf="alojamientoInspeccionado.unidades && alojamientoInspeccionado.unidades.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-              <div *ngFor="let u of alojamientoInspeccionado.unidades" class="p-4 rounded-2xl bg-slate-50 dark:bg-stone-950 border border-slate-200 dark:border-stone-800 space-y-3 shadow-sm hover:border-blue-500/30 transition">
-                <div class="flex items-start justify-between gap-2">
-                  <div>
-                    <h5 class="text-sm font-bold text-slate-900 dark:text-white">{{ u.nombre }}</h5>
-                    <div class="flex items-center gap-2 mt-1 text-[11px] text-slate-500 dark:text-stone-400">
-                      <span>👥 {{ u.capacidadHuespedes }} pers.</span>
-                      <span>•</span>
-                      <span>🛏️ {{ u.cantidadCamas }} camas</span>
-                      <span>•</span>
-                      <span>🚿 {{ u.cantidadBanos }} baños</span>
+            <div *ngIf="alojamientoInspeccionado.unidades && alojamientoInspeccionado.unidades.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div *ngFor="let u of alojamientoInspeccionado.unidades" class="p-4 rounded-2xl bg-slate-50 dark:bg-stone-950 border border-slate-200 dark:border-stone-800 space-y-3.5 shadow-sm hover:border-blue-500/30 transition flex flex-col justify-between">
+                
+                <div class="space-y-3">
+                  <!-- Portada de la Habitación / Suite con Acceso a Lightbox Exclusivo -->
+                  <div *ngIf="u.fotos && u.fotos.length > 0" 
+                       class="h-40 rounded-xl overflow-hidden relative border border-slate-200 dark:border-stone-800 cursor-pointer group shadow-inner"
+                       (click)="abrirFotoLightbox(u.fotos[0], 0, u.fotos)">
+                    <img [src]="u.fotos[0]" [alt]="u.nombre" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <div class="absolute bottom-2 left-2 px-2.5 py-1 rounded-lg bg-black/75 backdrop-blur-md text-white text-[11px] font-semibold flex items-center gap-1.5 border border-white/10">
+                      <span>📷 {{ u.fotos.length }} fotos exclusivas</span>
+                    </div>
+                    <div class="absolute top-2 right-2 px-2 py-1 rounded-lg bg-blue-600/90 text-white text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-opacity">
+                      <span>Ver Galería</span>
                     </div>
                   </div>
-                  <div class="text-right">
-                    <span class="font-mono font-bold text-blue-600 dark:text-blue-400 text-sm block">{{ u.precioNoche }} BOB</span>
-                    <span class="text-[10px] text-slate-400 dark:text-stone-500">por noche</span>
+
+                  <!-- Título y Capacidad de la Habitación -->
+                  <div class="flex items-start justify-between gap-2">
+                    <div>
+                      <h5 class="text-sm font-bold text-slate-900 dark:text-white">{{ u.nombre }}</h5>
+                      <div class="flex items-center gap-2 mt-1 text-[11px] text-slate-500 dark:text-stone-400">
+                        <span>👥 {{ u.capacidadHuespedes }} pers.</span>
+                        <span>•</span>
+                        <span>🛏️ {{ u.cantidadCamas }} camas</span>
+                        <span>•</span>
+                        <span>🚿 {{ u.cantidadBanos }} baños</span>
+                      </div>
+                    </div>
+                    <div class="text-right shrink-0">
+                      <span class="font-mono font-bold text-blue-600 dark:text-blue-400 text-sm block">{{ u.precioNoche }} BOB</span>
+                      <span class="text-[10px] text-slate-400 dark:text-stone-500">por noche</span>
+                    </div>
                   </div>
+
+                  <!-- Descripción Dedicada de la Habitación -->
+                  <p *ngIf="u.descripcion" class="text-xs text-slate-600 dark:text-stone-300 leading-relaxed line-clamp-2">
+                    {{ u.descripcion }}
+                  </p>
                 </div>
 
-                <div class="flex items-center justify-between pt-2.5 border-t border-slate-200 dark:border-stone-800 text-[11px] flex-wrap gap-2">
+                <!-- Footer de Controles de Disponibilidad y Auditoría -->
+                <div class="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-stone-800 text-[11px] flex-wrap gap-2">
                   <div class="flex items-center gap-2">
                     <span class="text-slate-500 dark:text-stone-400">Inventario: <strong>{{ u.inventarioTotal }} unidades</strong></span>
                     <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold"
@@ -1125,11 +1148,20 @@ export interface ReporteGenerativo {
                       {{ u.estado === 'MANTENIMIENTO' ? 'En Mantenimiento (Oculta)' : 'Disponible' }}
                     </span>
                   </div>
-                  <button (click)="alternarEstadoHabitacion(u)"
-                          class="px-3 py-1.5 rounded-xl text-[10px] font-bold border transition-colors shadow-sm cursor-pointer"
-                          [ngClass]="u.estado === 'MANTENIMIENTO' ? 'bg-blue-600 text-white hover:bg-blue-700 border-blue-600' : 'bg-white dark:bg-stone-800 text-slate-700 dark:text-stone-200 hover:bg-amber-50 dark:hover:bg-amber-950/40 hover:text-amber-700 border-slate-300 dark:border-stone-700'">
-                    {{ u.estado === 'MANTENIMIENTO' ? '✓ Reactivar Habitación' : '✕ Desactivar Habitación' }}
-                  </button>
+                  
+                  <div class="flex items-center gap-2">
+                    <button *ngIf="u.fotos && u.fotos.length > 0"
+                            type="button"
+                            (click)="abrirFotoLightbox(u.fotos[0], 0, u.fotos)"
+                            class="px-2.5 py-1.5 rounded-xl text-[10px] font-bold bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 border border-blue-200 dark:border-blue-800 transition cursor-pointer">
+                      📷 Fotos ({{ u.fotos.length }})
+                    </button>
+                    <button (click)="alternarEstadoHabitacion(u)"
+                            class="px-3 py-1.5 rounded-xl text-[10px] font-bold border transition-colors shadow-sm cursor-pointer"
+                            [ngClass]="u.estado === 'MANTENIMIENTO' ? 'bg-blue-600 text-white hover:bg-blue-700 border-blue-600' : 'bg-white dark:bg-stone-800 text-slate-700 dark:text-stone-200 hover:bg-amber-50 dark:hover:bg-amber-950/40 hover:text-amber-700 border-slate-300 dark:border-stone-700'">
+                      {{ u.estado === 'MANTENIMIENTO' ? '✓ Reactivar Habitación' : '✕ Desactivar Habitación' }}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1778,8 +1810,17 @@ export class AppComponent implements OnInit {
       };
 
       if (rawData.length > 0) {
+        // Cargar primero los canónicos para asegurar que no falten propiedades
+        this.cargarAlojamientosFallback();
         const uniqueMap = new Map<string, SolicitudAlojamiento>();
+        for (const can of this.alojamientos) {
+          uniqueMap.set(can.id, can);
+        }
         for (const item of rawData.map(mapAlojamiento)) {
+          const existente = uniqueMap.get(item.id);
+          if (existente && (!item.unidades || item.unidades.length === 0 || !item.unidades.some(u => !!u.fotos && u.fotos.length > 0))) {
+            item.unidades = existente.unidades;
+          }
           uniqueMap.set(item.id, item);
         }
         this.alojamientos = Array.from(uniqueMap.values());
@@ -1812,19 +1853,7 @@ export class AppComponent implements OnInit {
   }
 
   cargarAlojamientosFallback() {
-    // Intentar recuperar de persistencia local previa si ya se realizaron moderaciones
-    try {
-      const adminRaw = localStorage.getItem('alojate_admin_alojamientos');
-      if (adminRaw) {
-        const guardados: SolicitudAlojamiento[] = JSON.parse(adminRaw);
-        if (guardados && guardados.length >= 3) {
-          this.alojamientos = guardados;
-          return;
-        }
-      }
-    } catch {}
-
-    this.alojamientos = [
+    const canonicalAlojamientos: SolicitudAlojamiento[] = [
       {
         id: '49768530-76ae-459e-9bbe-faf2f3d488ba',
         titulo: 'Hotel Boutique Los Tajibos Colonial',
@@ -1851,8 +1880,38 @@ export class AppComponent implements OnInit {
         horarioSalida: '12:00',
         servicios: ['Desayuno Buffet', 'Piscina Tropical', 'Spa & Masajes', 'Recepción 24h', 'Room Service'],
         unidades: [
-          { idUnidad: 'u-tajibos-1', nombre: 'Suite Presidencial con Balcón & Vista a Jardines', capacidadHuespedes: 2, cantidadCamas: 1, cantidadBanos: 1.5, inventarioTotal: 3, precioNoche: 950, estado: 'DISPONIBLE' },
-          { idUnidad: 'u-tajibos-2', nombre: 'Habitación Ejecutiva Doble Twin', capacidadHuespedes: 2, cantidadCamas: 2, cantidadBanos: 1, inventarioTotal: 12, precioNoche: 480, estado: 'DISPONIBLE' }
+          {
+            idUnidad: 'u-tajibos-1',
+            nombre: 'Suite Presidencial con Balcón & Vista a Jardines',
+            capacidadHuespedes: 2,
+            cantidadCamas: 1,
+            cantidadBanos: 1.5,
+            inventarioTotal: 3,
+            precioNoche: 950,
+            estado: 'DISPONIBLE',
+            descripcion: 'Suite de lujo de 65 m² con cama King, balcón privado panorámico hacia los jardines tropicales, tina de hidromasaje en mármol y sala de estar independiente.',
+            fotos: [
+              'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=1200&q=80',
+              'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80',
+              'https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=800&q=80'
+            ]
+          },
+          {
+            idUnidad: 'u-tajibos-2',
+            nombre: 'Habitación Ejecutiva Doble Twin',
+            capacidadHuespedes: 2,
+            cantidadCamas: 2,
+            cantidadBanos: 1,
+            inventarioTotal: 12,
+            precioNoche: 480,
+            estado: 'DISPONIBLE',
+            descripcion: 'Habitación elegante y funcional de 38 m² con dos camas Twin de alta gama, escritorio ejecutivo ergonómico, WiFi de alta velocidad y baño privado contemporáneo.',
+            fotos: [
+              'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&w=1200&q=80',
+              'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=800&q=80',
+              'https://images.unsplash.com/photo-1584132967334-10e028bd69f7?auto=format&fit=crop&w=800&q=80'
+            ]
+          }
         ]
       },
       {
@@ -1971,6 +2030,37 @@ export class AppComponent implements OnInit {
       }
     ];
 
+    try {
+      const adminRaw = localStorage.getItem('alojate_admin_alojamientos');
+      if (adminRaw) {
+        const guardados: SolicitudAlojamiento[] = JSON.parse(adminRaw);
+        if (Array.isArray(guardados) && guardados.length > 0) {
+          canonicalAlojamientos.forEach(canon => {
+            const previo = guardados.find(g => g.id === canon.id);
+            if (previo) {
+              canon.estado = previo.estado;
+              if (previo.motivoObservacionRechazo) canon.motivoObservacionRechazo = previo.motivoObservacionRechazo;
+              if (previo.motivoRechazo) canon.motivoRechazo = previo.motivoRechazo;
+              if (previo.origenUltimoCambio) canon.origenUltimoCambio = previo.origenUltimoCambio;
+              if (previo.unidades && canon.unidades) {
+                canon.unidades.forEach(cu => {
+                  const pu = previo.unidades?.find(u => u.idUnidad === cu.idUnidad);
+                  if (pu?.estado) cu.estado = pu.estado;
+                });
+              }
+            }
+          });
+          const canonIds = new Set(canonicalAlojamientos.map(c => c.id));
+          guardados.forEach(g => {
+            if (!canonIds.has(g.id)) {
+              canonicalAlojamientos.push(g);
+            }
+          });
+        }
+      }
+    } catch {}
+
+    this.alojamientos = canonicalAlojamientos;
     try {
       localStorage.setItem('alojate_admin_alojamientos', JSON.stringify(this.alojamientos));
     } catch {}

@@ -52,26 +52,84 @@ const ALOJAMIENTOS_DEMO: Alojamiento[] = [
       {
         idUnidad: 'u-tajibos-1',
         nombre: 'Suite Presidencial con Balcón & Vista a Jardines',
-        descripcion: 'Cama King, terraza privada, jacuzzi y desayuno buffet incluido.',
+        descripcion: 'Exclusiva master suite de 65 m² con cama King Size artesanal, terraza privada con vista a los jardines tropicales, tina de hidromasaje y servicio de desayuno buffet incluido.',
         capacidadPersonas: 2,
         cantidadCamas: 1,
         cantidadBanios: 2,
         precioNoche: 950,
         moneda: 'BOB',
         inventarioTotal: 3,
-        activo: true
+        activo: true,
+        servicios: ['Cama King Size', 'Jacuzzi Hidromasaje', 'Balcón Panorámico', 'Desayuno Buffet Gourmet', 'Smart TV 65"', 'Aire Acondicionado Central'],
+        fotos: [
+          'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=1200&q=80',
+          'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80',
+          'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=80'
+        ],
+        fotografias: [
+          {
+            idFotografia: 'f-suite-1',
+            url: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=1200&q=80',
+            esPrincipal: true,
+            orden: 1,
+            descripcion: 'Dormitorio principal con cama King y ventanales'
+          },
+          {
+            idFotografia: 'f-suite-2',
+            url: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80',
+            esPrincipal: false,
+            orden: 2,
+            descripcion: 'Balcón terraza privado con vista a jardines'
+          },
+          {
+            idFotografia: 'f-suite-3',
+            url: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=80',
+            esPrincipal: false,
+            orden: 3,
+            descripcion: 'Baño de mármol con tina de hidromasaje'
+          }
+        ]
       },
       {
         idUnidad: 'u-tajibos-2',
         nombre: 'Habitación Ejecutiva Doble Twin',
-        descripcion: 'Dos camas individuales, escritorio de trabajo, baño privado y aire acondicionado.',
+        descripcion: 'Habitación ejecutiva de 40 m² equipada con 2 camas individuales confortables, estación de trabajo ergonómica, internet satelital de alta velocidad y baño privado contemporáneo.',
         capacidadPersonas: 2,
         cantidadCamas: 2,
         cantidadBanios: 1,
         precioNoche: 480,
         moneda: 'BOB',
         inventarioTotal: 12,
-        activo: true
+        activo: true,
+        servicios: ['2 Camas Twin Individuales', 'Escritorio Ergonómico', 'WiFi Starlink 300 Mbps', 'Cafetera Nespresso', 'Caja Fuerte Digital'],
+        fotos: [
+          'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&w=1200&q=80',
+          'https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=800&q=80',
+          'https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?auto=format&fit=crop&w=800&q=80'
+        ],
+        fotografias: [
+          {
+            idFotografia: 'f-twin-1',
+            url: 'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&w=1200&q=80',
+            esPrincipal: true,
+            orden: 1,
+            descripcion: 'Habitación doble twin con camas confortables y luz natural'
+          },
+          {
+            idFotografia: 'f-twin-2',
+            url: 'https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=800&q=80',
+            esPrincipal: false,
+            orden: 2,
+            descripcion: 'Área de escritorio y ambiente de trabajo'
+          },
+          {
+            idFotografia: 'f-twin-3',
+            url: 'https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?auto=format&fit=crop&w=800&q=80',
+            esPrincipal: false,
+            orden: 3,
+            descripcion: 'Baño privado moderno con acabados en cerámica'
+          }
+        ]
       }
     ],
     servicios: [
@@ -347,7 +405,11 @@ function normalizarAlojamiento(raw: any): Alojamiento {
           precioNoche: Number(u.precioNoche ?? precioCalculado),
           moneda: 'BOB',
           inventarioTotal: u.inventarioTotal ?? 1,
-          activo: u.estado === 'DISPONIBLE' || u.activo !== false
+          activo: u.estado === 'DISPONIBLE' || u.activo !== false,
+          estado: u.estado || 'DISPONIBLE',
+          fotos: u.fotos || (u.fotografias || []).map((f: any) => f.url || f),
+          fotografias: u.fotografias || (u.fotos ? u.fotos.map((url: string, i: number) => ({ idFotografia: `f-${i}`, url, esPrincipal: i === 0, orden: i + 1 })) : undefined),
+          servicios: u.servicios || []
         }))
       : [
           {
