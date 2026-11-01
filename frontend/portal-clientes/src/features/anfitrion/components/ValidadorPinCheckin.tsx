@@ -161,23 +161,36 @@ export const ValidadorPinCheckin: React.FC<ValidadorPinCheckinProps> = ({
                     <span
                       className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
                         esCheckIn
-                          ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400'
+                          ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300'
                           : esCompletada
                           ? 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
                           : esCancelada
                           ? 'bg-red-100 text-red-600 dark:bg-red-950/60 dark:text-red-400'
-                          : 'bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300'
+                          : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400'
                       }`}
                     >
-                      {r.estado}
+                      {esCheckIn
+                        ? 'Hospedaje en curso'
+                        : esCompletada
+                        ? 'Estadía concluida'
+                        : esCancelada
+                        ? 'Cancelada'
+                        : 'Lista para ingresar'}
                     </span>
                   </div>
 
-                  <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                    <Calendar className="w-3 h-3 text-blue-600 dark:text-blue-400 shrink-0" />
-                    <span>
-                      {r.checkIn} al {r.checkOut}
-                    </span>
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center justify-between gap-1.5">
+                    <div className="flex items-center gap-1.5">
+                      <Calendar className="w-3 h-3 text-blue-600 dark:text-blue-400 shrink-0" />
+                      <span>
+                        {r.checkIn} al {r.checkOut}
+                      </span>
+                    </div>
+                    {r.horaEstimadaLlegada && (
+                      <span className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold">
+                        Llegada: {r.horaEstimadaLlegada}
+                      </span>
+                    )}
                   </div>
 
                   {r.codigoCheckin && (
@@ -229,11 +242,10 @@ export const ValidadorPinCheckin: React.FC<ValidadorPinCheckinProps> = ({
                 : '¡Ingreso Autorizado con Éxito!'}
             </span>
           </div>
-          <p className="text-slate-600 dark:text-slate-300">
-            Estado de la reserva actualizado a:{' '}
-            <span className="font-mono font-bold text-emerald-700 dark:text-emerald-300">
-              {resultado.estado || 'CHECK_IN'}
-            </span>
+          <p className="text-slate-700 dark:text-slate-300">
+            {resultado.estado === 'COMPLETADA'
+              ? 'La habitación ha quedado libre y las llaves han sido devueltas a recepción.'
+              : 'El huésped ha recibido sus llaves y la estadía se encuentra formalmente en curso.'}
           </p>
           <p className="text-[11px] text-slate-500 dark:text-slate-400">
             Huésped: {resultado.nombreCliente || 'Registrado'} • Unidad:{' '}

@@ -9,6 +9,7 @@ export interface CrearReservaPayload {
   nombreUnidad: string;
   checkIn: string; // YYYY-MM-DD
   checkOut: string; // YYYY-MM-DD
+  horaEstimadaLlegada?: string; // HH:mm
   cantidadHuespedes: number;
   cantidadUnidades: number;
   precioNoche: number;
@@ -26,6 +27,7 @@ export interface ReservaResponse {
   nombreUnidad: string;
   checkIn: string;
   checkOut: string;
+  horaEstimadaLlegada?: string;
   nochesEstadia: number;
   cantidadHuespedes: number;
   cantidadUnidades: number;

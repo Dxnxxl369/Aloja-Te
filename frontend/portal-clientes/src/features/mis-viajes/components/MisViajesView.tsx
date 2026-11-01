@@ -265,6 +265,12 @@ export const MisViajesView: React.FC<MisViajesViewProps> = ({
                       <Calendar className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                       {reserva.checkIn} al {reserva.checkOut} ({reserva.nochesEstadia} noches)
                     </span>
+                    {reserva.horaEstimadaLlegada && (
+                      <span className="flex items-center gap-1 text-blue-600 dark:text-blue-400 font-semibold">
+                        <Clock className="w-3 h-3" />
+                        <span>Llegada prevista: {reserva.horaEstimadaLlegada}</span>
+                      </span>
+                    )}
                     <span className="font-bold text-slate-900 dark:text-white">
                       Importe: {reserva.importeTotal} {reserva.moneda || 'BOB'}
                     </span>

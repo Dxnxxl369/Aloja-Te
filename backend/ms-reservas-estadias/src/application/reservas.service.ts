@@ -65,6 +65,7 @@ export class ReservasService {
       nombreUnidad: dto.nombreUnidad,
       checkIn: dto.checkIn,
       checkOut: dto.checkOut,
+      horaEstimadaLlegada: dto.horaEstimadaLlegada || '14:00',
       nochesEstadia,
       cantidadHuespedes: dto.cantidadHuespedes,
       cantidadUnidades,

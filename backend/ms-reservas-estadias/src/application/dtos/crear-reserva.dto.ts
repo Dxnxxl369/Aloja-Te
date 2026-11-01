@@ -41,6 +41,10 @@ export class CrearReservaDto {
   @Matches(/^\d{4}-\d{2}-\d{2}$/, { message: 'checkOut debe tener formato YYYY-MM-DD' })
   checkOut: string;
 
+  @IsString()
+  @IsOptional()
+  horaEstimadaLlegada?: string;
+
   @IsNumber()
   @Min(1)
   cantidadHuespedes: number;

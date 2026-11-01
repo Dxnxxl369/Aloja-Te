@@ -43,5 +43,14 @@ export const ENDPOINTS = {
     CONTABILIDAD: `${API_BASE_URL}/api/v1/finanzas/contabilidad`,
     REGLAS: `${API_BASE_URL}/api/v1/finanzas/reglas`,
     PROMOCION: (codigo: string) => `${API_BASE_URL}/api/v1/finanzas/promociones/${codigo}`,
+  },
+
+  // MS-01: Seguridad, Roles y Permisos (RBAC SaaS)
+  SEGURIDAD: {
+    ROLES: `${API_BASE_URL}/api/v1/seguridad/roles`,
+    ROL_DETALLE: (id: number | string) => `${API_BASE_URL}/api/v1/seguridad/roles/${id}`,
+    ROL_PERMISOS: (id: number | string) => `${API_BASE_URL}/api/v1/seguridad/roles/${id}/permisos`,
+    PERMISOS: `${API_BASE_URL}/api/v1/seguridad/permisos`,
+    MODULOS: `${API_BASE_URL}/api/v1/seguridad/modulos`,
   }
 };

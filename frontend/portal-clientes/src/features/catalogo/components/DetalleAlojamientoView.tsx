@@ -864,28 +864,20 @@ export const DetalleAlojamientoView: React.FC<DetalleAlojamientoViewProps> = ({
                 </div>
               </div>
 
-              {/* Control de Acciones: Auto-reserva vs Disponibilidad vs Reservar */}
+              {/* Control de Acciones: Administrar si es propio vs Disponibilidad vs Reservar */}
               {esMiPropiedad ? (
-                <div className="p-4 rounded-2xl bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 text-center space-y-2.5">
-                  <div className="flex items-center justify-center gap-2 text-blue-600 dark:text-blue-400 font-bold text-xs uppercase tracking-wider">
-                    <Building2 className="w-4 h-4" />
-                    <span>Propiedad de tu Catálogo</span>
-                  </div>
-                  <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
-                    Eres el anfitrión registrado de este alojamiento. Para gestionar habitaciones, consultar calendarios o validar la llegada de tus huéspedes, accede a tu panel.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      window.location.hash = '#/anfitrion';
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }}
-                    className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-600/20 transition cursor-pointer flex items-center justify-center gap-1.5"
-                  >
-                    <span>Ir a Mi Panel de Anfitrión</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    window.location.hash = '#/anfitrion';
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  className="w-full py-4 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-xl shadow-blue-600/25 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Building2 className="w-4 h-4" />
+                  <span>Administrar este Alojamiento</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
               ) : !estaDisponible ? (
                 <div className="space-y-2.5">
                   <div className="p-3.5 rounded-2xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 text-red-700 dark:text-red-300 text-xs space-y-1">

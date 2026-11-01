@@ -3,7 +3,7 @@ import { Alojamiento, UnidadReservable } from '../../catalogo/types/catalogo.typ
 import { useAuth } from '../../../core/auth/AuthContext';
 import { reservasService } from '../services/reservasService';
 import { ReservaResponse } from '../types/reserva.types';
-import { X, Calendar, Users, ShieldCheck, ArrowRight, Loader2, AlertCircle, Building2, Home, CheckCircle2 } from 'lucide-react';
+import { X, Calendar, Users, ShieldCheck, ArrowRight, Loader2, AlertCircle, Building2, Home, CheckCircle2, Clock } from 'lucide-react';
 
 interface SolicitudReservaModalProps {
   alojamiento: Alojamiento | null;
@@ -30,6 +30,7 @@ export const SolicitudReservaModal: React.FC<SolicitudReservaModalProps> = ({
   );
   const [checkIn, setCheckIn] = useState(fechasIniciales?.checkIn || '2026-11-10');
   const [checkOut, setCheckOut] = useState(fechasIniciales?.checkOut || '2026-11-13');
+  const [horaEstimadaLlegada, setHoraEstimadaLlegada] = useState('14:00');
   const [huespedes, setHuespedes] = useState(fechasIniciales?.huespedes || 2);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -106,6 +107,7 @@ export const SolicitudReservaModal: React.FC<SolicitudReservaModalProps> = ({
         nombreUnidad: unidad.nombre,
         checkIn,
         checkOut,
+        horaEstimadaLlegada,
         cantidadHuespedes: huespedes,
         cantidadUnidades: 1,
         precioNoche: unidad.precioNoche,
@@ -267,6 +269,28 @@ export const SolicitudReservaModal: React.FC<SolicitudReservaModalProps> = ({
                     className="w-full pl-10 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
                   />
                 </div>
+              </div>
+            </div>
+
+            {/* Hora Estimada de Llegada */}
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                  Hora Estimada de Llegada
+                </label>
+                <span className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold">
+                  Ingreso a partir de las {alojamiento.horarioEntrada || '14:00'}
+                </span>
+              </div>
+              <div className="relative">
+                <Clock className="w-4 h-4 text-blue-600 dark:text-blue-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  type="time"
+                  value={horaEstimadaLlegada}
+                  onChange={(e) => setHoraEstimadaLlegada(e.target.value)}
+                  required
+                  className="w-full pl-10 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                />
               </div>
             </div>
 

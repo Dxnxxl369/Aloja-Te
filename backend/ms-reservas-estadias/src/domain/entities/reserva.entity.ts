@@ -38,6 +38,7 @@ export class ReservaEntity {
 
   checkIn: string; // YYYY-MM-DD
   checkOut: string; // YYYY-MM-DD
+  horaEstimadaLlegada?: string; // HH:mm
   nochesEstadia: number;
   cantidadHuespedes: number;
   cantidadUnidades: number;

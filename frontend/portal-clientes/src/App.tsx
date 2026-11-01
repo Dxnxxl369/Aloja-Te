@@ -13,6 +13,7 @@ import { PagoExitosoModal } from './features/checkout/modals/PagoExitosoModal';
 import { AuthLiquidModal } from './features/auth/modals/AuthLiquidModal';
 import { MisViajesView } from './features/mis-viajes/components/MisViajesView';
 import { ValidadorPinCheckin } from './features/anfitrion/components/ValidadorPinCheckin';
+import { GestorRolesPermisos } from './features/anfitrion/components/GestorRolesPermisos';
 import { LiquidacionesResumen } from './features/anfitrion/components/LiquidacionesResumen';
 import { ListingWizardModal } from './features/anfitrion/modals/ListingWizardModal';
 import { catalogoService } from './features/catalogo/services/catalogoService';
@@ -490,6 +491,7 @@ export const AppContent: React.FC = () => {
 
             <div className="grid grid-cols-1 gap-6">
               <ValidadorPinCheckin reservaIdDefecto={misReservas[0]?.idReserva} />
+              <GestorRolesPermisos />
               <LiquidacionesResumen />
             </div>
           </div>
