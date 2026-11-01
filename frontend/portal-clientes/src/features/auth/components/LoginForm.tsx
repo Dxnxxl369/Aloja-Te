@@ -5,8 +5,8 @@ import { Mail, Lock, AlertCircle, ArrowRight, Loader2 } from 'lucide-react';
 
 export const LoginForm: React.FC = () => {
   const { loginSuccess } = useAuth();
-  const [email, setEmail] = useState('lucia.suarez@alojate.bo');
-  const [password, setPassword] = useState('Bolivia2026!');
+  const [email, setEmail] = useState('cliente@alojate.bo');
+  const [password, setPassword] = useState('Cliente1234!');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -105,13 +105,13 @@ export const LoginForm: React.FC = () => {
           <button
             type="button"
             onClick={() => {
-              setEmail('lucia.suarez@alojate.bo');
-              setPassword('Bolivia2026!');
+              setEmail('cliente@alojate.bo');
+              setPassword('Cliente1234!');
             }}
             className="p-2 rounded-xl border border-stone-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 hover:border-blue-500 text-left transition"
           >
             <span className="font-bold text-stone-900 dark:text-white block">Huésped / Viajero</span>
-            <span className="text-stone-500 dark:text-slate-400 font-mono text-[9px] truncate block">lucia.suarez@alojate.bo</span>
+            <span className="text-stone-500 dark:text-slate-400 font-mono text-[9px] truncate block">cliente@alojate.bo</span>
           </button>
 
           <button
