@@ -1,3 +1,4 @@
+import { AnfitrionVerificadoBadge } from './AnfitrionVerificadoBadge';
 import React, { useState, useEffect } from 'react';
 import { 
   ArrowLeft, Star, MapPin, Users, Bed, Bath, Sparkles, Check, 
@@ -9,6 +10,7 @@ import {
 import { Alojamiento, UnidadReservable, ValoracionCliente, ResumenValoraciones } from '../types/catalogo.types';
 import { catalogoService } from '../services/catalogoService';
 import { reservasService } from '../../reservas/services/reservasService';
+import { RangoOcupado } from '../../reservas/types/reserva.types';
 import { useAuth } from '../../../core/auth/AuthContext';
 import { ImageLightboxModal } from '../modals/ImageLightboxModal';
 
@@ -43,6 +45,7 @@ export const DetalleAlojamientoView: React.FC<DetalleAlojamientoViewProps> = ({
   const [verificandoDisponibilidad, setVerificandoDisponibilidad] = useState(false);
   const [estaDisponible, setEstaDisponible] = useState(true);
   const [fechasBloqueadas, setFechasBloqueadas] = useState<string[]>([]);
+  const [rangosOcupados, setRangosOcupados] = useState<RangoOcupado[]>([]);
 
   // Detección de auto-reserva (Anfitrión propietario del alojamiento)
   const esMiPropiedad = Boolean(
@@ -98,6 +101,14 @@ export const DetalleAlojamientoView: React.FC<DetalleAlojamientoViewProps> = ({
     moneda: 'BOB',
     activo: true,
   };
+
+  // Cargar ocupación previa de la unidad seleccionada
+  useEffect(() => {
+    if (!unidadActiva?.idUnidad) return;
+    reservasService.obtenerRangosOcupados(unidadActiva.idUnidad).then((rangos) => {
+      setRangosOcupados(rangos);
+    });
+  }, [unidadActiva?.idUnidad]);
 
   // Verificación reactiva de disponibilidad en fechas seleccionadas
   useEffect(() => {
@@ -499,9 +510,7 @@ export const DetalleAlojamientoView: React.FC<DetalleAlojamientoViewProps> = ({
                     <h3 className="font-bold text-base text-slate-900 dark:text-white">
                       {alojamiento.nombreAnfitrion || 'Carlos Mendoza'}
                     </h3>
-                    <span className="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 text-[10px] font-bold border border-blue-200 dark:border-blue-800">
-                      Anfitrión Verificado
-                    </span>
+                    <AnfitrionVerificadoBadge nombre={alojamiento.nombreAnfitrion || 'Carlos Mendoza'} tamano="md" />
                   </div>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                     Hospitalidad y calidad garantizada • Respuesta habitual en menos de 15 minutos
@@ -994,6 +1003,46 @@ export const DetalleAlojamientoView: React.FC<DetalleAlojamientoViewProps> = ({
                 </div>
               )}
 
+              {/* Bloque de Fechas y Horas ya Ocupadas */}
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-xs space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                    Fechas &amp; Horarios Ocupados
+                  </span>
+                  <span className="text-[10px] font-bold text-slate-400">
+                    {rangosOcupados.length} {rangosOcupados.length === 1 ? 'bloqueo' : 'bloqueos'}
+                  </span>
+                </div>
+
+                {rangosOcupados.length > 0 ? (
+                  <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+                    {rangosOcupados.map((ro) => (
+                      <div
+                        key={ro.idReserva}
+                        className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between text-[11px]"
+                      >
+                        <div>
+                          <div className="font-bold text-slate-800 dark:text-slate-200">
+                            {ro.checkIn} al {ro.checkOut}
+                          </div>
+                          <span className="text-[10px] text-slate-500 dark:text-slate-400">
+                            Ingreso: {ro.horaEntrada} • Salida: {ro.horaSalida}
+                          </span>
+                        </div>
+                        <span className="px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 text-[9px] font-bold border border-rose-200 dark:border-rose-900">
+                          Ocupado
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
+                    ✓ Totalmente libre: no existen fechas ocupadas para esta unidad.
+                  </p>
+                )}
+              </div>
+
               {/* Controles de Selección de Fecha */}
               <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-2">
@@ -1038,6 +1087,19 @@ export const DetalleAlojamientoView: React.FC<DetalleAlojamientoViewProps> = ({
                   </select>
                 </div>
               </div>
+
+              {/* Indicador de Disponibilidad Confirmada */}
+              {estaDisponible && !esMiPropiedad && (
+                <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 text-[11px] flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <div>
+                    <span className="font-bold block">Fechas Disponibles para Reserva Inmediata</span>
+                    <span className="text-[10px] text-emerald-700 dark:text-emerald-300">
+                      Check-in desde las {alojamiento.horarioEntrada || '14:00'} • Check-out hasta las {alojamiento.horarioSalida || '11:00'}
+                    </span>
+                  </div>
+                </div>
+              )}
 
               {/* Control de Acciones: Administrar si es propio vs Disponibilidad vs Reservar */}
               {esMiPropiedad ? (
@@ -1135,14 +1197,17 @@ export const DetalleAlojamientoView: React.FC<DetalleAlojamientoViewProps> = ({
                   {alojamiento.nombreAnfitrion ? alojamiento.nombreAnfitrion.charAt(0) : 'A'}
                 </div>
                 <div>
-                  <h3 className="font-serif text-xl font-bold text-slate-900 dark:text-white">
-                    {alojamiento.nombreAnfitrion || 'Carlos Mendoza'}
-                  </h3>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="font-serif text-xl font-bold text-slate-900 dark:text-white">
+                      {alojamiento.nombreAnfitrion || 'Carlos Mendoza'}
+                    </h3>
+                    <AnfitrionVerificadoBadge nombre={alojamiento.nombreAnfitrion || 'Carlos Mendoza'} tamano="md" />
+                  </div>
                   <span className="text-xs text-blue-600 dark:text-blue-400 font-semibold block mt-0.5">
-                    Anfitrión en la Red Aloja-Te
+                    Anfitrión Verificado Oficial en Aloja-Te Bolivia
                   </span>
                   <span className="text-[11px] text-slate-400">
-                    Miembro registrado en Bolivia desde 2024
+                    C.I. y Documentos de Operador Validados • Miembro desde 2024
                   </span>
                 </div>
               </div>
@@ -1154,6 +1219,36 @@ export const DetalleAlojamientoView: React.FC<DetalleAlojamientoViewProps> = ({
               >
                 <X className="w-4 h-4" />
               </button>
+            </div>
+
+            {/* Estado de Verificación y Documentación */}
+            <div className="p-4 rounded-2xl bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-800 text-xs space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-blue-900 dark:text-blue-200 text-xs">
+                  Insignia Oficial de Anfitrión Verificado
+                </span>
+                <AnfitrionVerificadoBadge tamano="sm" textoPersonalizado="Verificación Completa" />
+              </div>
+              <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                Para brindar máxima seguridad a los viajeros en Bolivia, este anfitrión ha completado satisfactoriamente los protocolos de auditoría documental requeridos antes de publicar:
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[11px] text-slate-700 dark:text-slate-300">
+                <div className="flex items-center gap-1.5 font-medium">
+                  <span className="text-blue-600 dark:text-blue-400 font-bold">✓</span> Cédula de Identidad / Pasaporte validado
+                </div>
+                <div className="flex items-center gap-1.5 font-medium">
+                  <span className="text-blue-600 dark:text-blue-400 font-bold">✓</span> Teléfono verificado con código SMS
+                </div>
+                <div className="flex items-center gap-1.5 font-medium">
+                  <span className="text-blue-600 dark:text-blue-400 font-bold">✓</span> Domicilio y registro turístico legal
+                </div>
+                <div className="flex items-center gap-1.5 font-medium">
+                  <span className="text-blue-600 dark:text-blue-400 font-bold">✓</span> Cuenta bancaria BNB para cobro seguro
+                </div>
+              </div>
+              <p className="text-[10px] text-slate-400 dark:text-slate-500 italic pt-1 border-t border-blue-200/50 dark:border-blue-900/50">
+                * Al registrarse solo se solicitan datos básicos. Para publicar y operar hospedajes es obligatorio contar con la insignia de verificación.
+              </p>
             </div>
 
             {/* Métricas de Calidad */}

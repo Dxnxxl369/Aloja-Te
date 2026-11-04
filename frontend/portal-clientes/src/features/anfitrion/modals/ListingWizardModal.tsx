@@ -330,7 +330,7 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
         nuevoAlojamiento = {
           idAlojamiento: data.idAlojamiento || `aloj-${Date.now()}`,
           idAnfitrion: anfitrionId,
-          nombreAnfitrion: user ? `${user.nombre} ${user.apellido || ''}`.trim() : 'Carlos Mendoza (Anfitrión Verificado)',
+          nombreAnfitrion: user ? `${user.nombre} ${user.apellido || ''}`.trim() : 'Carlos Mendoza',
           titulo,
           descripcion: payloadBackend.descripcion,
           tipoPropiedad: tipoPropiedadNombre,
@@ -361,7 +361,7 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
         nuevoAlojamiento = {
           idAlojamiento: `aloj-${Date.now()}`,
           idAnfitrion: anfitrionId,
-          nombreAnfitrion: user ? `${user.nombre} ${user.apellido || ''}`.trim() : 'Carlos Mendoza (Anfitrión Verificado)',
+          nombreAnfitrion: user ? `${user.nombre} ${user.apellido || ''}`.trim() : 'Carlos Mendoza',
           titulo,
           descripcion: payloadBackend.descripcion,
           tipoPropiedad: tipoPropiedadNombre,

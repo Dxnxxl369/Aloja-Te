@@ -7,7 +7,7 @@ const ALOJAMIENTOS_DEMO: Alojamiento[] = [
   {
     idAlojamiento: '49768530-76ae-459e-9bbe-faf2f3d488ba',
     idAnfitrion: 'a0000000-0000-4000-8000-000000000002',
-    nombreAnfitrion: 'Carlos Mendoza (Anfitrión Verificado)',
+    nombreAnfitrion: 'Carlos Mendoza',
     titulo: 'Hotel Boutique Los Tajibos Colonial',
     descripcion: 'Exclusivo hotel boutique con arquitectura chiquitana colonial, restaurante de autor, piscina tropical, spa y jardines en el prestigioso barrio Equipetrol.',
     departamento: 'Santa Cruz',
@@ -142,7 +142,7 @@ const ALOJAMIENTOS_DEMO: Alojamiento[] = [
   {
     idAlojamiento: '93fce18e-32fa-400c-8f49-8d4f2fe2f5bb',
     idAnfitrion: 'a0000000-0000-4000-8000-000000000002',
-    nombreAnfitrion: 'Carlos Mendoza (Anfitrión Verificado)',
+    nombreAnfitrion: 'Carlos Mendoza',
     titulo: 'Cabaña Chiquitana El Palmar',
     descripcion: 'Hermosa cabaña rústica colonial con acabados en madera de tajibo, galería chiquitana con hamacas, piscina privada y churrasquera.',
     departamento: 'Santa Cruz',
@@ -199,7 +199,7 @@ const ALOJAMIENTOS_DEMO: Alojamiento[] = [
   {
     idAlojamiento: '045579cf-cc3b-4893-920f-f32246153025',
     idAnfitrion: 'a0000000-0000-4000-8000-000000000002',
-    nombreAnfitrion: 'Carlos Mendoza (Anfitrión Verificado)',
+    nombreAnfitrion: 'Carlos Mendoza',
     titulo: 'Casa de Campo La Rinconada — Valles Cruceños',
     descripcion: 'Casa campestre en Samaipata con huerto orgánico, fogatero exterior y vista panorámica a los valles.',
     departamento: 'Santa Cruz',
@@ -215,8 +215,8 @@ const ALOJAMIENTOS_DEMO: Alojamiento[] = [
     moneda: 'BOB',
     calificacionPromedio: 4.89,
     totalResenas: 19,
-    estado: 'PENDIENTE',
-    estadoPublicacion: 'PENDIENTE',
+    estado: 'PUBLICADO',
+    estadoPublicacion: 'PUBLICADO',
     fotografias: [
       {
         idFotografia: 'f-rinconada-1',
@@ -237,7 +237,7 @@ const ALOJAMIENTOS_DEMO: Alojamiento[] = [
         precioNoche: 520,
         moneda: 'BOB',
         inventarioTotal: 1,
-        activo: false
+        activo: true
       }
     ],
     servicios: [
@@ -248,7 +248,7 @@ const ALOJAMIENTOS_DEMO: Alojamiento[] = [
   {
     idAlojamiento: 'ca4d2e81-7b90-41f2-9854-1b3a88c22110',
     idAnfitrion: 'a0000000-0000-4000-8000-000000000003',
-    nombreAnfitrion: 'Elena Calbimontes (Anfitriona Verificada)',
+    nombreAnfitrion: 'Elena Morales',
     titulo: 'Chalet Boutique Los Viñedos',
     descripcion: 'Encantadora villa boutique rodeada de viñedos en el Valle de la Concepción. Catas privadas de vino tarijeño de altura y fogatas bajo las estrellas.',
     departamento: 'Tarija',
@@ -297,7 +297,7 @@ const ALOJAMIENTOS_DEMO: Alojamiento[] = [
   {
     idAlojamiento: 'ea199203-91aa-42a1-bf00-881273918a22',
     idAnfitrion: 'a0000000-0000-4000-8000-000000000003',
-    nombreAnfitrion: 'Elena Calbimontes (Anfitriona Verificada)',
+    nombreAnfitrion: 'Elena Morales',
     titulo: 'Lodge Mirador del Illimani',
     descripcion: 'Espectacular refugio ecológico con ventanales de piso a techo hacia el majestuoso nevado Illimani. Calefacción ecológica y senderos de trekking.',
     departamento: 'La Paz',

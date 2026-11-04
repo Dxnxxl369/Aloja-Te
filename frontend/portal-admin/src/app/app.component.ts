@@ -911,7 +911,14 @@ export const VALORACIONES_ADMIN_DEMO: ValoracionAdmin[] = [
                       </div>
 
                       <h4 (click)="inspeccionarAlojamiento(a, 'general')" class="font-serif text-lg font-bold text-slate-900 dark:text-white cursor-pointer hover:text-blue-600 transition">{{ a.titulo }}</h4>
-                      <p class="text-xs text-slate-500 dark:text-stone-400">Anfitrión: <strong class="text-slate-700 dark:text-stone-300">{{ a.anfitrion }}</strong> • {{ a.ciudad }}</p>
+                      <p class="text-xs text-slate-500 dark:text-stone-400 flex items-center gap-1.5 flex-wrap">
+                        <span>Anfitrión: <strong class="text-slate-700 dark:text-stone-300">{{ a.anfitrion }}</strong></span>
+                        <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-700 dark:bg-blue-950/70 dark:text-blue-300 text-[9px] font-bold border border-blue-200 dark:border-blue-800 shadow-sm" title="Anfitrión Verificado con C.I. y Documentos">
+                          <svg class="w-2.5 h-2.5 text-blue-600 dark:text-blue-400 fill-current" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1.2 14.2l-4-4 1.41-1.41L10.8 13.38l6.79-6.79 1.41 1.41-8.2 8.2z"/></svg>
+                          <span>Verificado</span>
+                        </span>
+                        <span>• {{ a.ciudad }}</span>
+                      </p>
                     </div>
 
                     <!-- Badge Estado Oficial -->
@@ -1298,8 +1305,15 @@ export const VALORACIONES_ADMIN_DEMO: ValoracionAdmin[] = [
               </div>
 
               <h2 class="font-serif text-2xl font-bold text-slate-900 dark:text-white">{{ alojamientoInspeccionado.titulo }}</h2>
-              <p class="text-xs text-slate-500 dark:text-stone-400">
-                Anfitrión Responsable: <strong class="text-slate-800 dark:text-stone-200">{{ alojamientoInspeccionado.anfitrion }}</strong> • Dirección: <strong class="text-slate-700 dark:text-stone-300">{{ alojamientoInspeccionado.direccion || 'Zona registrada' }}</strong> • ID: <span class="font-mono text-slate-400 dark:text-stone-500">{{ alojamientoInspeccionado.id }}</span>
+              <p class="text-xs text-slate-500 dark:text-stone-400 flex items-center gap-1.5 flex-wrap">
+                <span>Anfitrión Responsable:</span>
+                <strong class="text-slate-800 dark:text-stone-200">{{ alojamientoInspeccionado.anfitrion }}</strong>
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 dark:bg-blue-950/70 dark:text-blue-300 text-[10px] font-bold border border-blue-200 dark:border-blue-800 shadow-sm" title="Anfitrión con Cédula de Identidad y documentación oficial verificada">
+                  <svg class="w-3 h-3 text-blue-600 dark:text-blue-400 fill-current" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1.2 14.2l-4-4 1.41-1.41L10.8 13.38l6.79-6.79 1.41 1.41-8.2 8.2z"/></svg>
+                  <span>Verificado</span>
+                </span>
+                <span>• Dirección:</span>
+                <strong class="text-slate-700 dark:text-stone-300">{{ alojamientoInspeccionado.direccion || 'Zona registrada' }}</strong>
               </p>
             </div>
 
@@ -2724,7 +2738,7 @@ export class AppComponent implements OnInit {
       {
         id: '49768530-76ae-459e-9bbe-faf2f3d488ba',
         titulo: 'Hotel Boutique Los Tajibos Colonial',
-        anfitrion: 'Carlos Mendoza (Anfitrión Verificado)',
+        anfitrion: 'Carlos Mendoza',
         departamento: 'Santa Cruz',
         ciudad: 'Santa Cruz de la Sierra',
         direccion: 'Av. San Martín #120, Barrio Equipetrol',
@@ -2784,7 +2798,7 @@ export class AppComponent implements OnInit {
       {
         id: '93fce18e-32fa-400c-8f49-8d4f2fe2f5bb',
         titulo: 'Cabaña Chiquitana El Palmar',
-        anfitrion: 'Carlos Mendoza (Anfitrión Verificado)',
+        anfitrion: 'Carlos Mendoza',
         departamento: 'Santa Cruz',
         ciudad: 'San José de Chiquitos',
         direccion: 'Camino a San José Km 5',
@@ -2812,7 +2826,7 @@ export class AppComponent implements OnInit {
       {
         id: '045579cf-cc3b-4893-920f-f32246153025',
         titulo: 'Casa de Campo La Rinconada — Valles Cruceños',
-        anfitrion: 'Carlos Mendoza (Anfitrión Verificado)',
+        anfitrion: 'Carlos Mendoza',
         departamento: 'Santa Cruz',
         ciudad: 'Samaipata',
         direccion: 'Km 12 Camino a La Pajcha',
@@ -2821,7 +2835,7 @@ export class AppComponent implements OnInit {
         precioNoche: 520.00,
         capacidad: 6,
         habitaciones: 2,
-        estado: 'PENDIENTE',
+        estado: 'PUBLICADO',
         fechaRegistro: '2026-10-28',
         imagen: 'https://images.unsplash.com/photo-1518780664697-55e3ad937233?auto=format&fit=crop&w=1200&q=80',
         fotos: [
@@ -2840,7 +2854,7 @@ export class AppComponent implements OnInit {
       {
         id: 'ca4d2e81-7b90-41f2-9854-1b3a88c22110',
         titulo: 'Chalet Boutique Los Viñedos',
-        anfitrion: 'Elena Calbimontes (Anfitriona Verificada)',
+        anfitrion: 'Elena Morales',
         departamento: 'Tarija',
         ciudad: 'Valle de la Concepción',
         direccion: 'Camino a Calamuchita Km 4',
@@ -2868,7 +2882,7 @@ export class AppComponent implements OnInit {
       {
         id: 'ea199203-91aa-42a1-bf00-881273918a22',
         titulo: 'Lodge Mirador del Illimani',
-        anfitrion: 'Elena Calbimontes (Anfitriona Verificada)',
+        anfitrion: 'Elena Morales',
         departamento: 'La Paz',
         ciudad: 'Mecapaca',
         direccion: 'Colina del Cóndor s/n',

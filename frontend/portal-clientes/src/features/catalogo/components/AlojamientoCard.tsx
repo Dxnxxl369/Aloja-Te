@@ -1,3 +1,4 @@
+import { AnfitrionVerificadoBadge } from './AnfitrionVerificadoBadge';
 import React from 'react';
 import { Alojamiento } from '../types/catalogo.types';
 import { Star, MapPin, Users, ArrowRight, Building2 } from 'lucide-react';
@@ -95,6 +96,13 @@ export const AlojamientoCard: React.FC<AlojamientoCardProps> = ({
           >
             {alojamiento.titulo}
           </h3>
+
+          <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+              Por <strong className="text-slate-700 dark:text-slate-200">{alojamiento.nombreAnfitrion || 'Carlos Mendoza'}</strong>
+            </span>
+            <AnfitrionVerificadoBadge nombre={alojamiento.nombreAnfitrion || 'Carlos Mendoza'} tamano="sm" />
+          </div>
 
           <p className="text-xs text-stone-600 dark:text-stone-300 line-clamp-2 mt-1.5 leading-relaxed font-normal">
             {alojamiento.descripcion}

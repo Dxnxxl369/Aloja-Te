@@ -438,6 +438,33 @@ export const AppContent: React.FC = () => {
               </button>
             </div>
 
+            {/* Estado Oficial de Verificación del Anfitrión */}
+            <div className="p-4 rounded-3xl bg-gradient-to-r from-blue-50/90 to-indigo-50/90 dark:from-blue-950/40 dark:to-indigo-950/40 border border-blue-200/80 dark:border-blue-900/60 flex items-center justify-between gap-4 flex-wrap">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-md shadow-blue-500/25 shrink-0">
+                  <svg className="w-5 h-5 text-white fill-current" viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1.2 14.2l-4-4 1.41-1.41L10.8 13.38l6.79-6.79 1.41 1.41-8.2 8.2z" />
+                  </svg>
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h4 className="font-bold text-xs text-slate-900 dark:text-white">
+                      Anfitrión Oficialmente Verificado
+                    </h4>
+                    <span className="px-2 py-0.5 rounded-full bg-blue-600 text-white text-[9px] font-bold shadow-sm">
+                      ✓ Acreditado
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-0.5">
+                    Tu Cédula de Identidad y acreditación de operador turístico están validadas al 100%. Cuentas con autorización total para publicar y recibir pagos con QR Simple BNB.
+                  </p>
+                </div>
+              </div>
+              <span className="text-[10px] font-semibold text-blue-700 dark:text-blue-300 bg-white dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-blue-200 dark:border-blue-800 shadow-sm shrink-0">
+                Auditoría Documental: Aprobada
+              </span>
+            </div>
+
             {/* Alojamientos del Anfitrión */}
             <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
               <div className="flex items-center justify-between">
