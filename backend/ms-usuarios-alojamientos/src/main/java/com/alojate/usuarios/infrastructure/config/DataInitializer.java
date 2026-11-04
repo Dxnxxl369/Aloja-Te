@@ -163,6 +163,26 @@ public class DataInitializer implements CommandLineRunner {
             log.info("[DataInitializer] Usuario Anfitrión creado: carlos.mendoza@alojate.bo / Bolivia2026!");
         }
 
+        if (!usuarioRepo.existsByEmail("elena.calbimontes@alojate.bo")) {
+            usuarioRepo.save(UsuarioJpaEntity.builder()
+                    .email("elena.calbimontes@alojate.bo")
+                    .passwordHash(passwordEncoder.encode("Anfitrion1234!"))
+                    .nombre("Elena")
+                    .apellido("Morales")
+                    .ci("3928174")
+                    .ciExpedido("TJA")
+                    .telefono("+591 72983741")
+                    .tipoCuenta("ANFITRION_VERIFICADO")
+                    .rol(rolAnfitrion)
+                    .estado(EstadoUsuario.ACTIVO)
+                    .bancoNombre("Banco Mercantil Santa Cruz (BMSC)")
+                    .numeroCuentaBancaria("4010987654321")
+                    .fechaRegistro(LocalDateTime.now())
+                    .fechaActualizacion(LocalDateTime.now())
+                    .build());
+            log.info("[DataInitializer] Usuario Anfitriona creado: elena.calbimontes@alojate.bo / Anfitrion1234!");
+        }
+
         if (!usuarioRepo.existsByEmail("anfitrion.pendiente@alojate.bo")) {
             usuarioRepo.save(UsuarioJpaEntity.builder()
                     .email("anfitrion.pendiente@alojate.bo")
@@ -216,6 +236,24 @@ public class DataInitializer implements CommandLineRunner {
                     .fechaActualizacion(LocalDateTime.now())
                     .build());
             log.info("[DataInitializer] Usuario Cliente creado: lucia.suarez@alojate.bo / Bolivia2026!");
+        }
+
+        if (!usuarioRepo.existsByEmail("juan.perez@alojate.bo")) {
+            usuarioRepo.save(UsuarioJpaEntity.builder()
+                    .email("juan.perez@alojate.bo")
+                    .passwordHash(passwordEncoder.encode("Cliente1234!"))
+                    .nombre("Juan")
+                    .apellido("Perez")
+                    .ci("6543210")
+                    .ciExpedido("LPZ")
+                    .telefono("+591 71234567")
+                    .tipoCuenta("VIAJERO_FRECUENTE")
+                    .rol(rolCliente)
+                    .estado(EstadoUsuario.ACTIVO)
+                    .fechaRegistro(LocalDateTime.now())
+                    .fechaActualizacion(LocalDateTime.now())
+                    .build());
+            log.info("[DataInitializer] Usuario Cliente creado: juan.perez@alojate.bo / Cliente1234!");
         }
 
         // 7. Catálogo de Tipos de Propiedad
@@ -527,16 +565,34 @@ public class DataInitializer implements CommandLineRunner {
 
     private TipoPropiedadJpaEntity obtenerOCrearTipoPropiedad(String nombre) {
         return tipoPropiedadRepo.findByNombreIgnoreCase(nombre)
-                .orElseGet(() -> tipoPropiedadRepo.save(TipoPropiedadJpaEntity.builder().nombre(nombre).build()));
+                .orElseGet(() -> {
+                    try {
+                        return tipoPropiedadRepo.save(TipoPropiedadJpaEntity.builder().nombre(nombre).build());
+                    } catch (Exception e) {
+                        return tipoPropiedadRepo.findByNombreIgnoreCase(nombre).orElse(null);
+                    }
+                });
     }
 
     private TipoEspacioJpaEntity obtenerOCrearTipoEspacio(String nombre) {
         return tipoEspacioRepo.findByNombreIgnoreCase(nombre)
-                .orElseGet(() -> tipoEspacioRepo.save(TipoEspacioJpaEntity.builder().nombre(nombre).build()));
+                .orElseGet(() -> {
+                    try {
+                        return tipoEspacioRepo.save(TipoEspacioJpaEntity.builder().nombre(nombre).build());
+                    } catch (Exception e) {
+                        return tipoEspacioRepo.findByNombreIgnoreCase(nombre).orElse(null);
+                    }
+                });
     }
 
     private ServicioJpaEntity obtenerOCrearServicio(String nombre, String categoria) {
         return servicioRepo.findByNombreIgnoreCase(nombre)
-                .orElseGet(() -> servicioRepo.save(ServicioJpaEntity.builder().nombre(nombre).categoria(categoria).build()));
+                .orElseGet(() -> {
+                    try {
+                        return servicioRepo.save(ServicioJpaEntity.builder().nombre(nombre).categoria(categoria).build());
+                    } catch (Exception e) {
+                        return servicioRepo.findByNombreIgnoreCase(nombre).orElse(null);
+                    }
+                });
     }
 }

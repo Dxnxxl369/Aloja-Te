@@ -22,8 +22,8 @@ public interface SpringDataAlojamientoRepository extends JpaRepository<Alojamien
            "LEFT JOIN a.unidades u " +
            "WHERE (a.estadoPublicacion = com.alojate.usuarios.domain.model.EstadoPublicacion.PUBLICADO " +
            "   OR (a.estadoPublicacion = com.alojate.usuarios.domain.model.EstadoPublicacion.OBSERVADO AND (LOWER(a.origenUltimoCambio) LIKE '%nlp%' OR LOWER(a.origenUltimoCambio) LIKE '%resena%'))) " +
-           "AND (:ciudad IS NULL OR LOWER(a.ciudad) LIKE LOWER(CONCAT('%', :ciudad, '%'))) " +
-           "AND (:departamento IS NULL OR LOWER(a.departamento) LIKE LOWER(CONCAT('%', :departamento, '%'))) " +
+           "AND (:ciudad IS NULL OR LOWER(a.ciudad) LIKE LOWER(CONCAT('%', CAST(:ciudad AS string), '%'))) " +
+           "AND (:departamento IS NULL OR LOWER(a.departamento) LIKE LOWER(CONCAT('%', CAST(:departamento AS string), '%'))) " +
            "AND (:idTipoPropiedad IS NULL OR a.tipoPropiedad.idTipoPropiedad = :idTipoPropiedad) " +
            "AND (:precioMax IS NULL OR u.precioNoche <= :precioMax) " +
            "AND (:minHuespedes IS NULL OR u.capacidadHuespedes >= :minHuespedes)")
