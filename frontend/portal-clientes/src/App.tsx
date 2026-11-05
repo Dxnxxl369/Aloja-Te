@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './core/auth/AuthContext';
 import { useAppRouter } from './core/router/useAppRouter';
 import { Navbar } from './shared/layout/Navbar';
@@ -16,12 +16,13 @@ import { ValidadorPinCheckin } from './features/anfitrion/components/ValidadorPi
 import { GestorRolesPermisos } from './features/anfitrion/components/GestorRolesPermisos';
 import { LiquidacionesResumen } from './features/anfitrion/components/LiquidacionesResumen';
 import { ListingWizardModal } from './features/anfitrion/modals/ListingWizardModal';
+import { EditorHotelHabitacionesModal } from './features/anfitrion/modals/EditorHotelHabitacionesModal';
 import { catalogoService } from './features/catalogo/services/catalogoService';
 import { Alojamiento, UnidadReservable } from './features/catalogo/types/catalogo.types';
 import { ReservaResponse } from './features/reservas/types/reserva.types';
 import { httpClient } from './core/api/httpClient';
 import { ENDPOINTS } from './core/api/apiEndpoints';
-import { Plus, Building2, Home, Hotel, Eye, ShieldCheck, AlertCircle, ArrowLeft, Loader2 } from 'lucide-react';
+import { Plus, Building2, Home, Hotel, Eye, ShieldCheck, AlertCircle, ArrowLeft, Loader2, Edit3 } from 'lucide-react';
 
 export const AppContent: React.FC = () => {
   const { user, logout } = useAuth();
@@ -92,6 +93,8 @@ export const AppContent: React.FC = () => {
   const [pagoCompletadoData, setPagoCompletadoData] = useState<any | null>(null);
   const [pinConfirmado, setPinConfirmado] = useState<string>('');
   const [wizardAbierto, setWizardAbierto] = useState(false);
+  const [editorHotelAbierto, setEditorHotelAbierto] = useState(false);
+  const [alojamientoEnEdicion, setAlojamientoEnEdicion] = useState<Alojamiento | null>(null);
 
   // Sincronizar parámetro de departamento si viene en la URL
   useEffect(() => {
@@ -547,18 +550,33 @@ export const AppContent: React.FC = () => {
                       </div>
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setDetalleAlojamiento(a);
-                        navigate.detalle(a.idAlojamiento);
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                      }}
-                      className="p-2 rounded-xl text-slate-400 hover:text-blue-600 hover:bg-white dark:hover:bg-slate-800 transition"
-                      title="Ver Pantalla Completa"
-                    >
-                      <Eye className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAlojamientoEnEdicion(a);
+                          setEditorHotelAbierto(true);
+                        }}
+                        className="px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
+                        title="Administrar Información, Fotos y Habitaciones"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" />
+                        <span>{a.modalidad === 'HOTEL_HOSTAL' ? 'Administrar Hotel' : 'Editar'}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setDetalleAlojamiento(a);
+                          navigate.detalle(a.idAlojamiento);
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
+                        className="p-2 rounded-xl text-slate-400 hover:text-blue-600 hover:bg-white dark:hover:bg-slate-800 transition"
+                        title="Ver como Viajero"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -613,6 +631,26 @@ export const AppContent: React.FC = () => {
         onAlojamientoCreado={(nuevo) => {
           catalogoService.guardarAlojamientoLocal(nuevo);
           setMisAlojamientosAnfitrion((prev) => [nuevo, ...prev]);
+        }}
+      />
+
+      <EditorHotelHabitacionesModal
+        isOpen={editorHotelAbierto}
+        onClose={() => {
+          setEditorHotelAbierto(false);
+          setAlojamientoEnEdicion(null);
+        }}
+        alojamiento={alojamientoEnEdicion}
+        onAlojamientoActualizado={(actualizado) => {
+          setMisAlojamientosAnfitrion((prev) =>
+            prev.map((item) => (item.idAlojamiento === actualizado.idAlojamiento ? actualizado : item))
+          );
+          setAlojamientos((prev) =>
+            prev.map((item) => (item.idAlojamiento === actualizado.idAlojamiento ? actualizado : item))
+          );
+          if (detalleAlojamiento?.idAlojamiento === actualizado.idAlojamiento) {
+            setDetalleAlojamiento(actualizado);
+          }
         }}
       />
 
