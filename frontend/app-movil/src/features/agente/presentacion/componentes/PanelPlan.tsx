@@ -45,11 +45,11 @@ export function pasoActual(plan: Paso[]): number {
 
 export function PanelPlan({ plan }: { plan: Paso[] }) {
   return (
-    <View style={estilos.caja} accessibilityLabel="Plan del agente">
+    <View style={estilos.caja} accessibilityLabel="Pasos del plan">
       <View style={estilos.cabecera}>
         <View style={estilos.cabeceraTitulo}>
           <Bot color={COLOR.primario} size={22} />
-          <Text style={estilos.titulo}>Plan del agente</Text>
+          <Text style={estilos.titulo}>Pasos del plan</Text>
         </View>
         <Insignia texto={`Paso ${pasoActual(plan)} de ${plan.length}`} />
       </View>

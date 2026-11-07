@@ -1,15 +1,14 @@
 // ======================================================================
 // ARCHIVO: agente/presentacion/pantallas/PantallaAgente.tsx      IMPORTANCIA: ★★★ MUCHA
-// QUÉ ES: La pantalla del agente: chat, plan visible, opciones para tocar y botones de confirmar o pagar.
+// QUÉ ES: La pantalla del agente: chat, avance compacto, tarjetas de alojamientos, respuestas rápidas y botones de confirmar o pagar.
 // PARA QUÉ SIRVE: Es donde el usuario genera la reserva hablando; al terminar entrega el `reservaId` para el pago.
 // SIN ÉL: No habría interfaz para el agente.
 // NO VA AQUÍ: Reglas del plan ni llamadas HTTP.
 // ======================================================================
-// Diseño: mockups "2. Agente: conversación y plan" y "3. Agente: elegir alojamiento".
-// Las insignias de las opciones ("Económico", "Espacioso") se calculan con los datos reales
-// de las opciones: no hay calificaciones en el modelo, así que no se muestra "Top valorado".
+// La conversación es el centro: el plan va en una barra compacta y las respuestas rápidas
+// evitan escribir. El indicador de modo dice la verdad: "IA local" solo si el modelo está cargado.
 
-import { Bot, ChevronDown, ChevronUp, ClipboardList, Send } from 'lucide-react-native';
+import { Bot, Send } from 'lucide-react-native';
 import { useEffect, useRef, useState } from 'react';
 import type { ComponentRef } from 'react';
 import {
@@ -25,11 +24,13 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Boton } from '../../../../shared/ui/Boton';
-import { Insignia } from '../../../../shared/ui/Insignia';
 import { COLOR, ESPACIO, FUENTE, RADIO } from '../../../../shared/ui/tema';
+import { CIUDADES } from '../../constantes';
 import type { CasosAgente } from '../../domain/interfaces';
 import type { Mensaje, Opcion } from '../../domain/modelos';
-import { PanelPlan, pasoActual } from '../componentes/PanelPlan';
+import { faltantes, recomendar } from '../../domain/plan';
+import { BarraProgreso } from '../componentes/BarraProgreso';
+import { TarjetaOpcion } from '../componentes/TarjetaOpcion';
 import { useAgente } from '../useAgente';
 
 interface Props {
@@ -41,9 +42,14 @@ interface Props {
    * Devuelve null mientras siga pendiente. Lo conecta app/ con el feature reservas.
    */
   resolverReservaEnCola?: (claveCola: string) => Promise<string | null>;
+  /** "local" si el modelo de IA del celular está cargado; "basico" si entiende con reglas. */
+  modoIa?: 'local' | 'basico';
 }
 
 const POLL_COLA_MS = 3_000;
+const DIA_MS = 24 * 60 * 60 * 1000;
+const CIUDADES_RAPIDAS = CIUDADES.slice(0, 4);
+const PERSONAS_RAPIDAS = [1, 2, 3, 4];
 
 /** Misma forma que `descripcionOpcion` (domain/plan.ts): sirve para no repetir la lista que ya se dibuja como tarjetas. */
 const LINEA_OPCION = /^\d+\. .+ · hasta \d+ personas · Bs \d+(\.\d+)? por noche$/;
@@ -55,6 +61,12 @@ function quitarListaDeOpciones(texto: string): string {
     .join('\n')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
+}
+
+function nochesEntre(entrada?: string, salida?: string): number | null {
+  if (!entrada || !salida) return null;
+  const n = (Date.parse(`${salida}T00:00:00Z`) - Date.parse(`${entrada}T00:00:00Z`)) / DIA_MS;
+  return Number.isFinite(n) && n >= 1 ? Math.round(n) : null;
 }
 
 function formatearHora(ms: number): string {
@@ -72,20 +84,23 @@ function useHoras(mensajes: Mensaje[]): Map<number, number> {
   return horas.current;
 }
 
-function insigniaDe(o: Opcion, todas: Opcion[]): string | null {
-  if (todas.length < 2) return null;
-  const masBarata = Math.min(...todas.map((x) => x.precioNoche));
-  const mayorCapacidad = Math.max(...todas.map((x) => x.capacidad));
-  const menorCapacidad = Math.min(...todas.map((x) => x.capacidad));
-  if (o.precioNoche === masBarata) return 'Económico';
-  if (o.capacidad === mayorCapacidad && mayorCapacidad > menorCapacidad) return 'Espacioso';
-  return null;
+function insigniasDe(indice: number, o: Opcion, todas: Opcion[], indiceRecomendada: number | null): string[] {
+  const etiquetas: string[] = [];
+  if (indice === indiceRecomendada) etiquetas.push('Recomendada');
+  if (todas.length >= 2) {
+    const masBarata = Math.min(...todas.map((x) => x.precioNoche));
+    const mayorCapacidad = Math.max(...todas.map((x) => x.capacidad));
+    const menorCapacidad = Math.min(...todas.map((x) => x.capacidad));
+    if (o.precioNoche === masBarata) etiquetas.push('Económico');
+    else if (o.capacidad === mayorCapacidad && mayorCapacidad > menorCapacidad) etiquetas.push('Espacioso');
+  }
+  return etiquetas;
 }
 
-export function PantallaAgente({ casos, alPagar, resolverReservaEnCola }: Props) {
+export function PantallaAgente({ casos, alPagar, resolverReservaEnCola, modoIa = 'basico' }: Props) {
   const { estado, ocupado, enviar, elegir, confirmar, rechazar, reiniciar } = useAgente(casos);
   const [texto, setTexto] = useState('');
-  const [verPlan, setVerPlan] = useState(true);
+  const [verPlan, setVerPlan] = useState(false);
   const [reservaDeCola, setReservaDeCola] = useState<string | null>(null);
   const insets = useSafeAreaInsets();
   const scroll = useRef<ComponentRef<typeof ScrollView>>(null);
@@ -114,39 +129,49 @@ export function PantallaAgente({ casos, alPagar, resolverReservaEnCola }: Props)
     };
   }, [estado.fase, estado.claveCola, resolverReservaEnCola]);
 
-  const mandar = () => {
-    const t = texto.trim();
+  const mandar = (contenido: string) => {
+    const t = contenido.trim();
     if (!t || ocupado) return;
     setTexto('');
     void enviar(t);
   };
 
   const ultimoDelAgente = [...estado.mensajes].reverse().find((m) => m.rol === 'agente')?.id;
+  const recomendada = estado.fase === 'ELIGIENDO' ? recomendar(estado.opciones, estado.criterios) : null;
+  const noches = nochesEntre(estado.criterios.checkIn, estado.criterios.checkOut);
+
+  // Respuestas rápidas: según lo que el agente esté esperando.
+  const falta = estado.fase === 'CONVERSANDO' ? faltantes(estado.criterios)[0] : undefined;
+  const rapidas: { etiqueta: string; accion: () => void }[] = [];
+  if (estado.fase === 'ELIGIENDO') {
+    estado.opciones.forEach((_, i) => rapidas.push({ etiqueta: `Opción ${i + 1}`, accion: () => void elegir(i) }));
+  } else if (estado.fase === 'CONFIRMANDO') {
+    rapidas.push({ etiqueta: 'Sí, reservar', accion: () => void confirmar() });
+    rapidas.push({ etiqueta: 'No', accion: () => void rechazar() });
+  } else if (falta === 'ciudad') {
+    CIUDADES_RAPIDAS.forEach((c) => rapidas.push({ etiqueta: c, accion: () => mandar(`en ${c}`) }));
+  } else if (falta === 'huespedes') {
+    PERSONAS_RAPIDAS.forEach((n) =>
+      rapidas.push({ etiqueta: `${n} persona${n === 1 ? '' : 's'}`, accion: () => mandar(`${n} personas`) }),
+    );
+  }
 
   return (
     <KeyboardAvoidingView style={estilos.pantalla} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <View style={estilos.estadoFila}>
+        <View style={[estilos.punto, { backgroundColor: modoIa === 'local' ? COLOR.exito : COLOR.aviso }]} />
+        <Text style={estilos.estadoTexto}>
+          {modoIa === 'local' ? 'Asistente · IA local en el dispositivo' : 'Asistente · modo básico (sin IA local)'}
+        </Text>
+      </View>
+
       <ScrollView
         ref={scroll}
         contentContainerStyle={estilos.contenido}
         keyboardShouldPersistTaps="handled"
         onContentSizeChange={() => scroll.current?.scrollToEnd({ animated: true })}
       >
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={verPlan ? 'Ocultar plan' : 'Ver plan del agente'}
-          onPress={() => setVerPlan((v) => !v)}
-          style={estilos.alternarPlan}
-        >
-          {!verPlan && <ClipboardList color={COLOR.primario} size={20} />}
-          <Text style={estilos.alternarTexto}>{verPlan ? 'Ocultar plan' : 'Ver plan del agente'}</Text>
-          {!verPlan && <Text style={estilos.alternarPaso}>Paso {pasoActual(estado.plan)} de {estado.plan.length}</Text>}
-          {verPlan ? <ChevronUp color={COLOR.primario} size={20} /> : <ChevronDown color={COLOR.primario} size={20} />}
-        </Pressable>
-        {verPlan && <PanelPlan plan={estado.plan} />}
-
-        <View style={estilos.dia}>
-          <Insignia texto="Hoy · Asistencia en tiempo real" />
-        </View>
+        <BarraProgreso plan={estado.plan} abierto={verPlan} alAlternar={() => setVerPlan((v) => !v)} />
 
         {estado.mensajes.map((m) => {
           const esUsuario = m.rol === 'usuario';
@@ -155,7 +180,7 @@ export function PantallaAgente({ casos, alPagar, resolverReservaEnCola }: Props)
           return (
             <View key={m.id} style={[estilos.filaMensaje, esUsuario && { justifyContent: 'flex-end' }]}>
               {!esUsuario && <Avatar />}
-              <View style={{ maxWidth: '82%', alignItems: esUsuario ? 'flex-end' : 'flex-start' }}>
+              <View style={{ maxWidth: '84%', alignItems: esUsuario ? 'flex-end' : 'flex-start' }}>
                 <View style={[estilos.burbuja, esUsuario ? estilos.usuario : estilos.agente]}>
                   <Text style={esUsuario ? estilos.textoUsuario : estilos.textoAgente}>{mostrar}</Text>
                 </View>
@@ -176,31 +201,17 @@ export function PantallaAgente({ casos, alPagar, resolverReservaEnCola }: Props)
         )}
 
         {estado.fase === 'ELIGIENDO' &&
-          estado.opciones.map((o, i) => {
-            const insignia = insigniaDe(o, estado.opciones);
-            return (
-              <View key={o.unidadId} style={estilos.opcion}>
-                <View style={estilos.opcionCabecera}>
-                  <Text style={estilos.opcionTitulo} numberOfLines={2}>
-                    {i + 1}. {o.titulo}
-                  </Text>
-                  {insignia && <Insignia texto={insignia} />}
-                </View>
-                <Text style={estilos.opcionDetalle}>
-                  {o.unidadNombre} ({o.ciudad}) · hasta {o.capacidad} personas
-                </Text>
-                <Text style={estilos.precio}>
-                  Bs {o.precioNoche.toFixed(2)} <Text style={estilos.porNoche}>por noche</Text>
-                </Text>
-                <Boton
-                  titulo={`Elegir ${i + 1}`}
-                  onPress={() => void elegir(i)}
-                  deshabilitado={ocupado}
-                  iconoDerecha={() => <Text style={estilos.flecha}>→</Text>}
-                />
-              </View>
-            );
-          })}
+          estado.opciones.map((o, i) => (
+            <TarjetaOpcion
+              key={o.unidadId}
+              opcion={o}
+              numero={i + 1}
+              noches={noches}
+              insignias={insigniasDe(i, o, estado.opciones, recomendada?.indice ?? null)}
+              deshabilitado={ocupado}
+              alElegir={() => void elegir(i)}
+            />
+          ))}
 
         {estado.fase === 'CONFIRMANDO' && (
           <View style={estilos.fila}>
@@ -224,18 +235,18 @@ export function PantallaAgente({ casos, alPagar, resolverReservaEnCola }: Props)
 
       {!terminada && (
         <View style={[estilos.pie, { paddingBottom: insets.bottom }]}>
-          {estado.fase === 'ELIGIENDO' && (
+          {rapidas.length > 0 && (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={estilos.chips} keyboardShouldPersistTaps="handled">
-              {estado.opciones.map((o, i) => (
+              {rapidas.map((r) => (
                 <Pressable
-                  key={o.unidadId}
+                  key={r.etiqueta}
                   accessibilityRole="button"
-                  accessibilityLabel={`Opción ${i + 1}`}
+                  accessibilityLabel={r.etiqueta}
                   disabled={ocupado}
-                  onPress={() => void elegir(i)}
-                  style={estilos.chip}
+                  onPress={r.accion}
+                  style={[estilos.chip, ocupado && { opacity: 0.5 }]}
                 >
-                  <Text style={estilos.chipTexto}>Opción {i + 1}</Text>
+                  <Text style={estilos.chipTexto}>{r.etiqueta}</Text>
                 </Pressable>
               ))}
             </ScrollView>
@@ -248,12 +259,12 @@ export function PantallaAgente({ casos, alPagar, resolverReservaEnCola }: Props)
               placeholder="Ej: 2 personas en Cochabamba del 12 al 15 de diciembre"
               placeholderTextColor={COLOR.textoSuave}
               editable={!ocupado}
-              onSubmitEditing={mandar}
+              onSubmitEditing={() => mandar(texto)}
               returnKeyType="send"
             />
             <Boton
               titulo="Enviar"
-              onPress={mandar}
+              onPress={() => mandar(texto)}
               cargando={ocupado}
               deshabilitado={!texto.trim()}
               iconoDerecha={(c) => <Send color={c} size={18} />}
@@ -277,20 +288,9 @@ const estilos = StyleSheet.create({
   pantalla: { flex: 1, backgroundColor: COLOR.fondo },
   contenido: { padding: ESPACIO.l, gap: ESPACIO.m },
 
-  alternarPlan: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: ESPACIO.s,
-    minHeight: 48,
-    backgroundColor: COLOR.tarjeta,
-    borderRadius: RADIO.tarjeta,
-    borderWidth: 1,
-    borderColor: COLOR.borde,
-  },
-  alternarTexto: { fontFamily: FUENTE.semi, fontSize: 15, color: COLOR.primario },
-  alternarPaso: { fontFamily: FUENTE.semi, fontSize: 11, color: COLOR.primario, letterSpacing: 0.4 },
-  dia: { alignItems: 'center' },
+  estadoFila: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.s, paddingHorizontal: ESPACIO.l, paddingTop: ESPACIO.s },
+  punto: { width: 8, height: 8, borderRadius: 4 },
+  estadoTexto: { fontFamily: FUENTE.medio, fontSize: 13, color: COLOR.textoSuave },
 
   filaMensaje: { flexDirection: 'row', alignItems: 'flex-end', gap: ESPACIO.s },
   avatar: { width: 32, height: 32, borderRadius: 16, backgroundColor: COLOR.primarioSuave, alignItems: 'center', justifyContent: 'center' },
@@ -298,24 +298,16 @@ const estilos = StyleSheet.create({
   usuario: { backgroundColor: COLOR.primario, borderBottomRightRadius: 4 },
   agente: { backgroundColor: COLOR.tarjeta, borderWidth: 1, borderColor: COLOR.borde, borderBottomLeftRadius: 4 },
   escribiendo: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.m },
-  textoUsuario: { fontFamily: FUENTE.normal, fontSize: 15, lineHeight: 22, color: '#fff' },
-  textoAgente: { fontFamily: FUENTE.normal, fontSize: 15, lineHeight: 22, color: COLOR.texto },
-  hora: { fontFamily: FUENTE.normal, fontSize: 11, color: COLOR.textoSuave, marginTop: 4 },
-
-  opcion: { backgroundColor: COLOR.tarjeta, borderRadius: RADIO.tarjeta, padding: ESPACIO.l, gap: ESPACIO.s, borderWidth: 1, borderColor: COLOR.borde },
-  opcionCabecera: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: ESPACIO.s },
-  opcionTitulo: { flex: 1, fontFamily: FUENTE.titulo, fontSize: 18, color: COLOR.texto },
-  opcionDetalle: { fontFamily: FUENTE.normal, fontSize: 14, color: COLOR.textoSuave },
-  precio: { fontFamily: FUENTE.fuerte, fontSize: 20, color: COLOR.texto, marginVertical: ESPACIO.xs },
-  porNoche: { fontFamily: FUENTE.normal, fontSize: 14, color: COLOR.textoSuave },
-  flecha: { color: '#fff', fontSize: 18 },
+  textoUsuario: { fontFamily: FUENTE.normal, fontSize: 16, lineHeight: 23, color: '#fff' },
+  textoAgente: { fontFamily: FUENTE.normal, fontSize: 16, lineHeight: 23, color: COLOR.texto },
+  hora: { fontFamily: FUENTE.normal, fontSize: 12, color: COLOR.textoSuave, marginTop: 4 },
 
   fila: { flexDirection: 'row', gap: ESPACIO.s },
 
   pie: { backgroundColor: COLOR.fondo, borderTopWidth: 1, borderTopColor: COLOR.borde },
   chips: { gap: ESPACIO.s, paddingHorizontal: ESPACIO.l, paddingTop: ESPACIO.m },
-  chip: { height: 36, paddingHorizontal: 14, borderRadius: RADIO.pildora, borderWidth: 1, borderColor: COLOR.borde, backgroundColor: COLOR.tarjeta, justifyContent: 'center' },
-  chipTexto: { fontFamily: FUENTE.medio, fontSize: 14, color: COLOR.textoSuave },
+  chip: { minHeight: 44, paddingHorizontal: 16, borderRadius: RADIO.pildora, borderWidth: 1, borderColor: COLOR.primario, backgroundColor: COLOR.primarioSuave, justifyContent: 'center' },
+  chipTexto: { fontFamily: FUENTE.semi, fontSize: 14, color: COLOR.primario },
   entrada: { flexDirection: 'row', gap: ESPACIO.s, padding: ESPACIO.l, alignItems: 'center' },
   input: {
     flex: 1,
@@ -326,7 +318,7 @@ const estilos = StyleSheet.create({
     paddingHorizontal: ESPACIO.l,
     backgroundColor: COLOR.tarjeta,
     fontFamily: FUENTE.normal,
-    fontSize: 14,
+    fontSize: 15,
     color: COLOR.texto,
   },
 });
