@@ -22,15 +22,19 @@ class RabbitMQSagaPublisher
         $publicados = 0;
 
         foreach ($eventos as $evento) {
-            $this->publicarEvento($evento);
-            $this->outboxRepository->marcarComoPublicado($evento->getEventoId());
-            $publicados++;
+            // Solo se marca como publicado si RabbitMQ lo recibió: si no, queda pendiente y se
+            // reintenta en la siguiente petición (antes se perdía el evento y la reserva no se confirmaba).
+            if ($this->publicarEvento($evento)) {
+                $this->outboxRepository->marcarComoPublicado($evento->getEventoId());
+                $publicados++;
+            }
         }
 
         return $publicados;
     }
 
-    public function publicarEvento(OutboxEvento $evento): void
+    /** @return bool true si RabbitMQ recibió el evento; false si falló (queda en el log de respaldo). */
+    public function publicarEvento(OutboxEvento $evento): bool
     {
         $host = getenv('RABBITMQ_HOST') ?: '127.0.0.1';
         $port = (int) (getenv('RABBITMQ_PORT') ?: 5672);
@@ -58,6 +62,7 @@ class RabbitMQSagaPublisher
             $routingKey = "finanzas.{$evento->getTipoEvento()}";
             $channel->basic_publish($msg, $this->exchange, $routingKey);
             $channel->close();
+            return true;
         } catch (\Throwable $e) {
             $storageDir = dirname(__DIR__, 3) . '/storage';
             if (!is_dir($storageDir)) {
@@ -68,6 +73,7 @@ class RabbitMQSagaPublisher
                 sprintf("[%s] [AMQP_FALLBACK] %s -> %s\n", date('c'), $evento->getTipoEvento(), json_encode($evento->getPayload())),
                 FILE_APPEND
             );
+            return false;
         }
     }
 }
