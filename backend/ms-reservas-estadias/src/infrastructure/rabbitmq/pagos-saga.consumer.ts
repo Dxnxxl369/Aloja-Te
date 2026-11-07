@@ -2,6 +2,7 @@ import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/commo
 import * as amqp from 'amqplib';
 import { ReservasService } from '../../application/reservas.service';
 import { PagoConfirmadoEvento } from '../../application/dtos/pago-confirmado.evento';
+import { PagosHttpClient } from '../http/pagos-http.client';
 
 /** Exchange donde MS-03 publica sus eventos (RabbitMQSagaPublisher.php). */
 const EXCHANGE_FINANZAS = 'alojate.reservas.saga';
@@ -15,6 +16,7 @@ const MAX_REINTENTOS = 10;
 /**
  * Saga por coreografía, lado MS-02: escucha los eventos de MS-03 y reacciona.
  *   finanzas.pago.confirmado  ->  la reserva pasa a CONFIRMADA (ReservasService.procesarPagoConfirmado)
+ *                                 o, si ya no se puede honrar, se pide el reembolso a MS-03 (compensación)
  *
  * - No bloquea el arranque: si RabbitMQ no está, reintenta cada 5 s.
  * - Un fallo inesperado reintenta el mensaje (hasta MAX_REINTENTOS); los resultados de negocio se confirman (ack).
@@ -28,7 +30,10 @@ export class PagosSagaConsumer implements OnModuleInit, OnModuleDestroy {
   private temporizador: NodeJS.Timeout | null = null;
   private readonly intentos = new Map<string, number>();
 
-  constructor(private readonly reservas: ReservasService) {}
+  constructor(
+    private readonly reservas: ReservasService,
+    private readonly pagos: PagosHttpClient,
+  ) {}
 
   onModuleInit(): void {
     void this.conectar();
@@ -96,7 +101,9 @@ export class PagosSagaConsumer implements OnModuleInit, OnModuleDestroy {
       const resultado = await this.reservas.procesarPagoConfirmado(evento);
       this.logger.log(`[SAGA] pago ${evento.pagoId} -> reserva ${evento.reservaId}: ${resultado}`);
       if (resultado === 'REEMBOLSAR') {
-        this.logger.error(`[SAGA] La reserva ${evento.reservaId} no se puede honrar: falta devolver el pago ${evento.pagoId}.`);
+        // Compensación: la reserva no se puede honrar, se devuelve el dinero. Si MS-03 no responde, se reintenta.
+        const reembolso = await this.pagos.reembolsar(evento.reservaId, 'La reserva ya no está disponible');
+        this.logger.warn(`[SAGA] Compensación del pago ${evento.pagoId} (reserva ${evento.reservaId}): ${reembolso}`);
       }
       this.intentos.delete(eventoId);
       this.channel?.ack(msg);
