@@ -28,6 +28,13 @@ export interface Opcion {
   unidadNombre: string;
   capacidad: number;
   precioNoche: number;
+  /** Datos de la tarjeta: opcionales porque MS-01 puede no enviarlos. */
+  fotoUrl?: string;
+  tipoPropiedad?: string;
+  servicios?: string[];
+  /** Promedio de reseñas (0-5); null o ausente si no tiene reseñas. */
+  calificacion?: number | null;
+  totalResenas?: number;
 }
 
 export interface Cliente {

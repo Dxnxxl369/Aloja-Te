@@ -8,24 +8,38 @@
 
 import { LIMITES } from '../constantes';
 import type { Criterios, Intencion, Opcion } from '../domain/modelos';
-import type { AlojamientoDto, UnidadDto } from './modelos';
+import type { AlojamientoDto, ResumenValoracionesDto, UnidadDto } from './modelos';
 
 const FECHA = /^\d{4}-\d{2}-\d{2}$/;
+
+/** Primera foto según `orden`; undefined si no hay. */
+function fotoPrincipal(a: AlojamientoDto): string | undefined {
+  const fotos = [...(a.fotografias ?? [])].sort((x, y) => (x.orden ?? 0) - (y.orden ?? 0));
+  return fotos[0]?.url || undefined;
+}
 
 /** Aplana alojamientos -> unidades que sirven para estos criterios. */
 export function opcionesDesdeAlojamientos(
   alojamientos: AlojamientoDto[],
   unidadesExtra: Record<string, UnidadDto[]>,
   c: Criterios,
+  resumenes: Record<string, ResumenValoracionesDto | null> = {},
 ): Opcion[] {
   const opciones: Opcion[] = [];
   for (const a of alojamientos) {
     const unidades = a.unidades?.length ? a.unidades : (unidadesExtra[a.idAlojamiento] ?? []);
+    const resumen = resumenes[a.idAlojamiento];
+    const tieneResenas = !!resumen && resumen.totalResenas > 0 && resumen.calificacionPromedio !== null;
     for (const u of unidades) {
       if (u.estado !== 'DISPONIBLE') continue;
       if (c.huespedes && u.capacidadHuespedes < c.huespedes) continue;
       if (c.presupuestoMaxNoche && u.precioNoche > c.presupuestoMaxNoche) continue;
       opciones.push({
+        fotoUrl: fotoPrincipal(a),
+        tipoPropiedad: a.tipoPropiedadNombre,
+        servicios: (a.servicios ?? []).map((s) => s.nombre),
+        calificacion: tieneResenas ? Number(resumen.calificacionPromedio) : null,
+        totalResenas: tieneResenas ? resumen.totalResenas : 0,
         alojamientoId: a.idAlojamiento,
         anfitrionId: a.idAnfitrion,
         titulo: a.titulo,

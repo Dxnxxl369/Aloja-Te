@@ -22,7 +22,16 @@ export interface AlojamientoDto {
   titulo: string;
   ciudad: string;
   estadoPublicacion?: string;
+  tipoPropiedadNombre?: string;
+  servicios?: { nombre: string }[];
+  fotografias?: { url: string; orden?: number }[];
   unidades?: UnidadDto[];
+}
+
+/** GET /alojamientos/{id}/valoraciones/resumen (solo lo que se usa). */
+export interface ResumenValoracionesDto {
+  calificacionPromedio: number | null;
+  totalResenas: number;
 }
 
 /** PROPUESTA para MS-04 (no existe aún). */
