@@ -110,7 +110,11 @@ public class AlojamientoServiceImpl implements AlojamientoUseCase {
     @Override
     @Transactional(readOnly = true)
     public List<Alojamiento> buscarPublicados(String ciudad, String departamento, Integer idTipoPropiedad, BigDecimal precioMax, Integer minHuespedes) {
-        return alojamientoRepository.buscarAvanzada(ciudad, departamento, idTipoPropiedad, precioMax, minHuespedes);
+        // PostgreSQL no sabe qué tipo tiene un texto nulo dentro de LOWER(CONCAT(...)) y falla con
+        // "function lower(bytea) does not exist". Un texto vacío filtra igual que "sin filtro" (LIKE '%%').
+        String ciudadFiltro = ciudad == null ? "" : ciudad.trim();
+        String departamentoFiltro = departamento == null ? "" : departamento.trim();
+        return alojamientoRepository.buscarAvanzada(ciudadFiltro, departamentoFiltro, idTipoPropiedad, precioMax, minHuespedes);
     }
 
     @Override
