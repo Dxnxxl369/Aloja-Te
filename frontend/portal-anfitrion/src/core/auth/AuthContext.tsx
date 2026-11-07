@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { PerfilAnfitrion } from '../types/anfitrion.types';
+import { setSSOToken } from '../api/httpClient';
 
 export const PERFILES_ANFITRION: Record<string, PerfilAnfitrion> = {
   carlos: {
@@ -36,81 +37,23 @@ export const PERFILES_ANFITRION: Record<string, PerfilAnfitrion> = {
   }
 };
 
-export interface SSOSessionData {
-  usuarioId: string;
-  email: string;
-  nombre: string;
-  apellido: string;
-  rol: string;
-  token: string;
-  ts: number;
-}
-
 interface AuthContextType {
   perfil: PerfilAnfitrion;
   anfitrionClave: 'carlos' | 'elena';
   isAuthenticated: boolean;
+  cargandoSSO: boolean;
   logout: () => void;
   darkMode: boolean;
   toggleDarkMode: () => void;
+  consultarSesionCentralSSO: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-/**
- * Resuelve la sesión activa mediante SSO Handshake sin depender de caché persistente en localStorage.
- */
-function resolverSesionInicial(): { clave: 'carlos' | 'elena'; autenticado: boolean } {
-  // Limpieza defensiva de cualquier residuo previo en localStorage (cero caché de credenciales)
-  try {
-    localStorage.removeItem('alojate_jwt_token');
-    localStorage.removeItem('alojate_user_profile');
-  } catch {}
-
-  if (typeof window !== 'undefined') {
-    // 1. Extraer ticket SSO de los parámetros de la URL
-    const searchParams = new URLSearchParams(window.location.search);
-    const ssoTicket = searchParams.get('sso_ticket');
-
-    if (ssoTicket) {
-      try {
-        const decoded = decodeURIComponent(escape(atob(ssoTicket)));
-        const data: SSOSessionData = JSON.parse(decoded);
-        if (data && (data.email || data.nombre)) {
-          const email = (data.email || '').toLowerCase();
-          const nombre = (data.nombre || '').toLowerCase();
-          const clave: 'carlos' | 'elena' = (email.includes('elena') || nombre.includes('elena')) ? 'elena' : 'carlos';
-
-          // Guardar estrictamente en sessionStorage de la pestaña activa (se destruye al cerrar navegador/pestaña)
-          sessionStorage.setItem('alojate_sso_session', JSON.stringify({ data, clave }));
-
-          // Limpiar inmediatamente el ticket de la barra de direcciones para mantener la URL pulcra
-          window.history.replaceState({}, document.title, window.location.pathname);
-          return { clave, autenticado: true };
-        }
-      } catch (err) {
-        console.warn('[SSO] Error al decodificar ticket SSO:', err);
-      }
-    }
-
-    // 2. Si no viene en la URL, verificar la memoria de la pestaña activa (sessionStorage para recargas F5)
-    try {
-      const sesionVolatil = sessionStorage.getItem('alojate_sso_session');
-      if (sesionVolatil) {
-        const parsed = JSON.parse(sesionVolatil);
-        if (parsed && parsed.clave) {
-          return { clave: parsed.clave, autenticado: true };
-        }
-      }
-    } catch {}
-  }
-
-  // 3. Si no hay ticket ni sesión volátil en la pestaña, el usuario NO está autenticado
-  return { clave: 'carlos', autenticado: false };
-}
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [authData, setAuthData] = useState(() => resolverSesionInicial());
+  const [anfitrionClave, setAnfitrionClave] = useState<'carlos' | 'elena'>('carlos');
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [cargandoSSO, setCargandoSSO] = useState<boolean>(true);
 
   const [darkMode, setDarkMode] = useState<boolean>(() => {
     try {
@@ -119,6 +62,53 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return false;
     }
   });
+
+  // Limpieza defensiva de cualquier residuo previo en localStorage
+  useEffect(() => {
+    try {
+      localStorage.removeItem('alojate_jwt_token');
+      localStorage.removeItem('alojate_user_profile');
+      sessionStorage.removeItem('alojate_sso_session');
+    } catch {}
+  }, []);
+
+  const consultarSesionCentralSSO = async () => {
+    try {
+      const resp = await fetch('http://localhost:8080/api/v1/auth/sso/session');
+      if (resp.ok) {
+        const data = await resp.json();
+        if (data.authenticated && data.usuario) {
+          const email = (data.usuario.email || '').toLowerCase();
+          const nombre = (data.usuario.nombre || '').toLowerCase();
+          const clave: 'carlos' | 'elena' = (email.includes('elena') || nombre.includes('elena')) ? 'elena' : 'carlos';
+          
+          setAnfitrionClave(clave);
+          setIsAuthenticated(true);
+          setSSOToken(data.token || null);
+          setCargandoSSO(false);
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn('[SSO Anfitrión] Error al conectar con Gateway central:', err);
+    }
+
+    setIsAuthenticated(false);
+    setSSOToken(null);
+    setCargandoSSO(false);
+  };
+
+  useEffect(() => {
+    consultarSesionCentralSSO();
+
+    // Revalidación en caliente cada vez que la pestaña toma foco
+    const handleFocus = () => {
+      consultarSesionCentralSSO();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, []);
 
   useEffect(() => {
     if (darkMode) {
@@ -134,31 +124,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setDarkMode(prev => !prev);
   };
 
-  const logout = () => {
-    // 1. Purgar la sesión volátil de la pestaña
+  const logout = async () => {
     try {
-      sessionStorage.removeItem('alojate_sso_session');
-      sessionStorage.clear();
-      localStorage.removeItem('alojate_jwt_token');
-      localStorage.removeItem('alojate_user_profile');
-      localStorage.removeItem('alojate_mis_reservas');
+      // 1. Destrucción de la sesión en la autoridad central de SSO (Gateway)
+      await fetch('http://localhost:8080/api/v1/auth/sso/logout', { method: 'POST' });
     } catch {}
 
-    setAuthData({ clave: 'carlos', autenticado: false });
+    setIsAuthenticated(false);
+    setSSOToken(null);
 
-    // 2. Single Logout (SLO): Redirigir al portal central (:3000) ordenando revocar la sesión global
-    window.location.href = 'http://localhost:3000/?sso_logout=true#/catalogo';
+    // 2. Redirigir a la portada principal del portal de clientes
+    window.location.href = 'http://localhost:3000/#/catalogo';
   };
 
   return (
     <AuthContext.Provider
       value={{
-        perfil: PERFILES_ANFITRION[authData.clave],
-        anfitrionClave: authData.clave,
-        isAuthenticated: authData.autenticado,
+        perfil: PERFILES_ANFITRION[anfitrionClave],
+        anfitrionClave,
+        isAuthenticated,
+        cargandoSSO,
         logout,
         darkMode,
-        toggleDarkMode
+        toggleDarkMode,
+        consultarSesionCentralSSO
       }}
     >
       {children}

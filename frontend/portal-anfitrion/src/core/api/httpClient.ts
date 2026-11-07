@@ -1,6 +1,12 @@
 import axios from 'axios';
 import { API_BASE_URL } from './apiEndpoints';
 
+let ssoMemoryToken: string | null = null;
+
+export const setSSOToken = (token: string | null) => {
+  ssoMemoryToken = token;
+};
+
 export const httpClient = axios.create({
   baseURL: API_BASE_URL,
   timeout: 8000,
@@ -11,13 +17,8 @@ export const httpClient = axios.create({
 
 httpClient.interceptors.request.use(
   (config) => {
-    try {
-      const token = localStorage.getItem('alojate_jwt_token');
-      if (token && config.headers) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-    } catch {
-      // ignore
+    if (ssoMemoryToken && config.headers) {
+      config.headers.Authorization = `Bearer ${ssoMemoryToken}`;
     }
     return config;
   },

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './core/auth/AuthContext';
+import { TokenStorage } from './core/auth/TokenStorage';
 import { useAppRouter } from './core/router/useAppRouter';
 import { Navbar } from './shared/layout/Navbar';
 import { Footer } from './shared/layout/Footer';
@@ -73,10 +74,10 @@ export const AppContent: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [misReservas, setMisReservas] = useState<ReservaResponse[]>(() => {
     try {
-      const token = localStorage.getItem('alojate_jwt_token');
-      const savedUser = localStorage.getItem('alojate_user_profile');
+      const token = TokenStorage.getToken();
+      const savedUser = TokenStorage.getUser();
       if (!token || !savedUser) return [];
-      const saved = localStorage.getItem('alojate_mis_reservas');
+      const saved = sessionStorage.getItem('alojate_mis_reservas');
       return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
@@ -88,7 +89,7 @@ export const AppContent: React.FC = () => {
     setTimeout(() => {
       logout();
       setMisReservas([]);
-      localStorage.removeItem('alojate_mis_reservas');
+      sessionStorage.removeItem('alojate_mis_reservas');
       setCerrandoSesion(false);
       navigate.catalogo();
     }, 700);
