@@ -12,5 +12,11 @@ export interface IReservasRepository {
   // Inventario y Bloqueos
   guardarBloqueo(bloqueo: BloqueoInventarioEntity): Promise<BloqueoInventarioEntity>;
   eliminarBloqueoPorReserva(idUnidad: string, idReserva: string): Promise<void>;
-  obtenerBloqueosPorRango(idUnidad: string, fechaInicio: string, fechaFin: string): Promise<BloqueoInventarioEntity[]>;
+  /** `excluirReservaId`: ignora los bloqueos de esa reserva (para saber si SUS fechas siguen libres). */
+  obtenerBloqueosPorRango(
+    idUnidad: string,
+    fechaInicio: string,
+    fechaFin: string,
+    excluirReservaId?: string,
+  ): Promise<BloqueoInventarioEntity[]>;
 }

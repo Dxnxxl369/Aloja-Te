@@ -244,15 +244,53 @@ export class ReservasService {
     if (!reserva) {
       throw new NotFoundException(`Reserva con id ${idReserva} no encontrada.`);
     }
-    return reserva;
+    return this.expirarSiVencida(reserva);
   }
 
   async listarPorCliente(idCliente: string): Promise<ReservaEntity[]> {
-    return this.repository.listarReservasPorCliente(idCliente);
+    const reservas = await this.repository.listarReservasPorCliente(idCliente);
+    return Promise.all(reservas.map((r) => this.expirarSiVencida(r)));
   }
 
   async listarPorAnfitrion(idAnfitrion: string): Promise<ReservaEntity[]> {
-    return this.repository.listarReservasPorAnfitrion(idAnfitrion);
+    const reservas = await this.repository.listarReservasPorAnfitrion(idAnfitrion);
+    return Promise.all(reservas.map((r) => this.expirarSiVencida(r)));
+  }
+
+  /** ¿Sigue pendiente de pago pero su plazo (ttl, epoch en segundos) ya pasó? */
+  private estaVencida(reserva: ReservaEntity): boolean {
+    return (
+      reserva.estado === EstadoReserva.PENDIENTE_PAGO &&
+      typeof reserva.ttl === 'number' &&
+      reserva.ttl * 1000 <= Date.now()
+    );
+  }
+
+  /**
+   * Plazo de pago vencido => EXPIRADA, y se liberan las fechas. Se hace al consultar la reserva
+   * (no hay tarea programada): así el estado que ve el cliente siempre es el real.
+   */
+  private async expirarSiVencida(reserva: ReservaEntity): Promise<ReservaEntity> {
+    if (!this.estaVencida(reserva)) return reserva;
+
+    await this.repository.eliminarBloqueoPorReserva(reserva.idUnidad, reserva.idReserva);
+    reserva.estado = EstadoReserva.EXPIRADA;
+    reserva.fechaActualizacion = new Date().toISOString();
+    if (!reserva.historialEventos) reserva.historialEventos = [];
+    reserva.historialEventos.push({
+      tipoEvento: 'RESERVA_EXPIRADA',
+      origen: 'ms-reservas-estadias',
+      fechaEvento: reserva.fechaActualizacion,
+      payload: { motivo: 'No se pagó dentro del plazo' },
+    });
+    const guardada = await this.repository.guardarReserva(reserva);
+
+    await this.sagaService.publicarEvento('reserva.expirada', {
+      idReserva: guardada.idReserva,
+      sagaId: guardada.sagaId,
+    });
+    this.logger.log(`Reserva ${guardada.idReserva} EXPIRADA: no se pagó a tiempo; fechas liberadas.`);
+    return guardada;
   }
 
   async listarTodas(): Promise<ReservaEntity[]> {

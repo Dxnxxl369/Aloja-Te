@@ -169,20 +169,34 @@ export class DynamoDBReservasRepository implements IReservasRepository {
     }
   }
 
-  async obtenerBloqueosPorRango(idUnidad: string, fechaInicio: string, fechaFin: string): Promise<BloqueoInventarioEntity[]> {
+  async obtenerBloqueosPorRango(
+    idUnidad: string,
+    fechaInicio: string,
+    fechaFin: string,
+    excluirReservaId?: string,
+  ): Promise<BloqueoInventarioEntity[]> {
     const bloqueosDirectos = Array.from(this.memoryBloqueos.values()).filter(
-      (b) => b.idUnidad === idUnidad && b.fecha >= fechaInicio && b.fecha < fechaFin,
+      (b) =>
+        b.idUnidad === idUnidad &&
+        b.fecha >= fechaInicio &&
+        b.fecha < fechaFin &&
+        b.idReserva !== excluirReservaId,
     );
     if (bloqueosDirectos.length > 0) {
       return bloqueosDirectos;
     }
 
-    // Verificar también en reservas activas de la unidad
+    // Verificar también en reservas activas de la unidad.
+    // Una reserva pendiente cuyo plazo de pago ya venció NO ocupa las fechas.
+    const ahora = Date.now();
     const reservasOcupadas = Array.from(this.memoryReservas.values()).filter(
       (r) =>
         r.idUnidad === idUnidad &&
+        r.idReserva !== excluirReservaId &&
         r.estado !== 'CANCELADA' &&
         r.estado !== 'EXPIRADA' &&
+        r.estado !== 'RECHAZADA_COMPENSADA' &&
+        !(r.estado === 'PENDIENTE_PAGO' && typeof r.ttl === 'number' && r.ttl * 1000 <= ahora) &&
         r.checkIn < fechaFin &&
         r.checkOut > fechaInicio,
     );
