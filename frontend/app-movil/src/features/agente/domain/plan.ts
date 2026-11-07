@@ -127,3 +127,37 @@ export function interpretarConfirmacion(texto: string): 'SI' | 'NO' | null {
 export function descripcionOpcion(o: Opcion, n: number): string {
   return `${n}. ${o.titulo} – ${o.unidadNombre} (${o.ciudad}) · hasta ${o.capacidad} personas · Bs ${o.precioNoche.toFixed(2)} por noche`;
 }
+
+/**
+ * Qué opción recomienda el agente y por qué. Solo usa datos reales de las opciones:
+ * mejor calificación, luego menor precio. Devuelve null si hay una sola opción o ningún motivo claro.
+ */
+export function recomendar(opciones: Opcion[], c: Criterios): { indice: number; motivo: string } | null {
+  if (opciones.length < 2) return null;
+  const conNota = opciones.filter((o) => typeof o.calificacion === 'number');
+  const mejorNota = conNota.length ? Math.max(...conNota.map((o) => o.calificacion as number)) : null;
+  const barata = Math.min(...opciones.map((o) => o.precioNoche));
+
+  let indice = 0;
+  let mejor = -Infinity;
+  opciones.forEach((o, i) => {
+    // La nota pesa más que el precio: 1 estrella de diferencia vale lo mismo que 200 Bs por noche.
+    const puntos = (o.calificacion ?? 0) * 200 - o.precioNoche;
+    if (puntos > mejor) {
+      mejor = puntos;
+      indice = i;
+    }
+  });
+
+  const o = opciones[indice] as Opcion;
+  const motivos: string[] = [];
+  if (mejorNota !== null && o.calificacion === mejorNota && conNota.length > 1) {
+    motivos.push(`tiene la mejor calificación (${mejorNota.toFixed(1)})`);
+  }
+  if (o.precioNoche === barata) motivos.push('es la opción más económica');
+  if (c.presupuestoMaxNoche && o.precioNoche <= c.presupuestoMaxNoche) {
+    motivos.push(`entra en tu presupuesto de Bs ${c.presupuestoMaxNoche}`);
+  }
+  if (motivos.length === 0) return null;
+  return { indice, motivo: `Te recomiendo ${o.titulo} porque ${motivos.join(' y ')}.` };
+}

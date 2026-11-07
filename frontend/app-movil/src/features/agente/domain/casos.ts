@@ -23,6 +23,7 @@ import {
   mezclar,
   planInicial,
   preguntaPara,
+  recomendar,
   reiniciarDesde,
 } from './plan';
 
@@ -89,7 +90,9 @@ export function crearCasosAgente(deps: {
     }
     s = paso(paso({ ...s, fase: 'ELIGIENDO', opciones }, 'BUSCAR', 'HECHO', `${opciones.length} opciones`), 'ELEGIR', 'EN_CURSO');
     const lista = opciones.map((o, i) => descripcionOpcion(o, i + 1)).join('\n');
-    return decir(s, 'agente', `Encontré estas opciones:\n${lista}\n\nToca una o escribe su número.`);
+    const rec = recomendar(opciones, s.criterios);
+    const consejo = rec ? `\n\n${rec.motivo}` : '';
+    return decir(s, 'agente', `Encontré estas opciones:\n${lista}${consejo}\n\nToca una o escribe su número.`);
   }
 
   /** ELEGIR -> VERIFICAR -> CONFIRMAR */
