@@ -158,10 +158,25 @@ const guardarReservasLocales = (reservas: ReservaResponse[]) => {
 export const reservasService = {
   /**
    * Obtiene todos los rangos de fechas ya ocupadas/bloqueadas para una unidad o habitación específica.
+   * Auto-purga en caliente reservas en PENDIENTE_PAGO con más de 15 minutos para evitar bloqueos huérfanos.
    */
   async obtenerRangosOcupados(idUnidad: string): Promise<RangoOcupado[]> {
     const todas = obtenerReservasLocales();
-    return todas
+    const now = Date.now();
+
+    // Auto-purga reactiva de reservas locales pendientes de pago con más de 15 minutos
+    const actualizadas = todas.map((r) => {
+      if (r.estado === 'PENDIENTE_PAGO' && r.fechaCreacion) {
+        const transcurridoSegundos = (now - new Date(r.fechaCreacion).getTime()) / 1000;
+        if (transcurridoSegundos > 15 * 60) {
+          return { ...r, estado: 'EXPIRADA' as const };
+        }
+      }
+      return r;
+    });
+    guardarReservasLocales(actualizadas);
+
+    return actualizadas
       .filter((r) => r.idUnidad === idUnidad && r.estado !== 'CANCELADA' && r.estado !== 'EXPIRADA')
       .map((r) => ({
         idReserva: r.idReserva,
