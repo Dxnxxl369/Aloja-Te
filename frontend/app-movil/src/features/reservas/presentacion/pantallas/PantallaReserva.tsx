@@ -9,6 +9,7 @@
 // no hay foto ni ubicación en el modelo, por eso la cabecera usa un ícono en lugar de una imagen.
 
 import { Building2, Calendar, CalendarCheck, CheckCircle2, Hourglass, Lock, Moon, Users } from 'lucide-react-native';
+import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -25,7 +26,12 @@ interface Props {
   casos: CasosReservas;
   reservaId: string;
   alPagar: (reserva: Reserva) => void;
+  /** true cuando el usuario viene de pagar: la reserva se confirma sola cuando el servidor la actualice. */
+  pagoRecibido?: boolean;
 }
+
+/** Segundos de espera antes de avisar que la confirmación tarda más de lo normal. */
+const ESPERA_LARGA_S = 45;
 
 const TEXTO_ESTADO: Record<Reserva['estado'], string> = {
   PENDIENTE_PAGO: 'Pendiente de pago',
@@ -47,9 +53,15 @@ const TONO_ESTADO: Record<Reserva['estado'], Tono> = {
   RECHAZADA_COMPENSADA: 'error',
 };
 
-export function PantallaReserva({ casos, reservaId, alPagar }: Props) {
+export function PantallaReserva({ casos, reservaId, alPagar, pagoRecibido = false }: Props) {
   const { reserva, error, segundos, sePuedePagar } = useReserva(casos, reservaId);
   const insets = useSafeAreaInsets();
+  const [esperaLarga, setEsperaLarga] = useState(false);
+  useEffect(() => {
+    if (!pagoRecibido) return;
+    const t = setTimeout(() => setEsperaLarga(true), ESPERA_LARGA_S * 1000);
+    return () => clearTimeout(t);
+  }, [pagoRecibido]);
 
   if (!reserva) {
     return (
@@ -83,7 +95,21 @@ export function PantallaReserva({ casos, reservaId, alPagar }: Props) {
         </View>
 
         {/* Cuenta regresiva */}
-        {pendiente && segundos !== null && (
+        {pendiente && pagoRecibido && (
+          <View style={estilos.confirmando}>
+            {esperaLarga ? <Hourglass color={COLOR.aviso} size={22} /> : <ActivityIndicator color={COLOR.primario} />}
+            <View style={{ flex: 1 }}>
+              <Text style={estilos.confirmandoTitulo}>Pago recibido, confirmando tu reserva…</Text>
+              <Text style={estilos.confirmandoTexto}>
+                {esperaLarga
+                  ? 'Está tardando más de lo normal. Tu pago quedó registrado: esta pantalla se actualiza sola y puedes volver a revisar en unos minutos.'
+                  : 'Esto toma unos segundos. No cierres la app.'}
+              </Text>
+            </View>
+          </View>
+        )}
+
+        {pendiente && !pagoRecibido && segundos !== null && (
           <View style={estilos.cuenta}>
             <View style={estilos.cuentaCabecera}>
               <View style={estilos.cuentaIcono}>
@@ -139,17 +165,22 @@ export function PantallaReserva({ casos, reservaId, alPagar }: Props) {
 
         {reserva.estado === 'CONFIRMADA' && (
           <View style={estilos.confirmada}>
-            <CheckCircle2 color={COLOR.exito} size={22} />
-            <View style={{ flex: 1 }}>
-              <Text style={estilos.confirmadaTitulo}>¡Reserva confirmada!</Text>
-              <Text style={estilos.confirmadaTexto}>Código de check-in: {reserva.codigoCheckin}</Text>
+            <CheckCircle2 color={COLOR.exito} size={36} />
+            <Text style={estilos.confirmadaTitulo}>¡Tu reserva está confirmada!</Text>
+            <Text style={estilos.confirmadaTexto}>Muestra este PIN en recepción para hacer el check-in:</Text>
+            <View style={estilos.pinCaja} accessibilityLabel={`PIN de check-in ${reserva.codigoCheckin.split('').join(' ')}`}>
+              {reserva.codigoCheckin.split('').map((d, i) => (
+                <Text key={i} style={estilos.pinDigito}>
+                  {d}
+                </Text>
+              ))}
             </View>
           </View>
         )}
 
         {error && <Text style={estilos.error}>Sin conexión con el servidor: se muestra el último dato guardado.</Text>}
 
-        {pendiente && (
+        {pendiente && !pagoRecibido && (
           <View style={estilos.seguro}>
             <Lock color={COLOR.primario} size={16} />
             <Text style={estilos.seguroTexto}>Transacción cifrada y protegida con QR Simple</Text>
@@ -157,7 +188,7 @@ export function PantallaReserva({ casos, reservaId, alPagar }: Props) {
         )}
       </ScrollView>
 
-      {pendiente && (
+      {pendiente && !pagoRecibido && (
         <View style={[estilos.barraInferior, { paddingBottom: ESPACIO.l + insets.bottom }]}>
           <Boton
             titulo={`Pagar ahora • ${total}`}
@@ -217,9 +248,28 @@ const estilos = StyleSheet.create({
   separador: { height: 1, backgroundColor: COLOR.borde, marginVertical: ESPACIO.xs },
   total: { fontFamily: FUENTE.tituloFuerte, fontSize: 24, color: COLOR.primario },
 
-  confirmada: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.m, backgroundColor: COLOR.exitoFondo, borderWidth: 1, borderColor: COLOR.exitoBorde, borderRadius: RADIO.tarjeta, padding: ESPACIO.l },
-  confirmadaTitulo: { fontFamily: FUENTE.semi, fontSize: 15, color: COLOR.exito },
-  confirmadaTexto: { fontFamily: FUENTE.normal, fontSize: 14, color: COLOR.texto },
+  confirmada: { alignItems: 'center', gap: ESPACIO.s, backgroundColor: COLOR.exitoFondo, borderWidth: 1, borderColor: COLOR.exitoBorde, borderRadius: RADIO.tarjeta, padding: ESPACIO.xl },
+  confirmadaTitulo: { fontFamily: FUENTE.titulo, fontSize: 22, color: COLOR.exito, textAlign: 'center' },
+  confirmadaTexto: { fontFamily: FUENTE.normal, fontSize: 15, color: COLOR.texto, textAlign: 'center' },
+  pinCaja: { flexDirection: 'row', gap: ESPACIO.s, marginTop: ESPACIO.s },
+  pinDigito: {
+    width: 44,
+    height: 56,
+    textAlign: 'center',
+    textAlignVertical: 'center',
+    lineHeight: 56,
+    fontFamily: FUENTE.fuerte,
+    fontSize: 28,
+    color: COLOR.texto,
+    backgroundColor: '#fff',
+    borderRadius: RADIO.control,
+    borderWidth: 1,
+    borderColor: COLOR.exitoBorde,
+    overflow: 'hidden',
+  },
+  confirmando: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.m, backgroundColor: COLOR.primarioSuave, borderWidth: 1, borderColor: '#bfdbfe', borderRadius: RADIO.tarjeta, padding: ESPACIO.l },
+  confirmandoTitulo: { fontFamily: FUENTE.semi, fontSize: 15, color: COLOR.primario },
+  confirmandoTexto: { fontFamily: FUENTE.normal, fontSize: 13, lineHeight: 19, color: COLOR.texto, marginTop: 2 },
 
   seguro: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: ESPACIO.s },
   seguroTexto: { fontFamily: FUENTE.medio, fontSize: 12, color: COLOR.textoSuave },
