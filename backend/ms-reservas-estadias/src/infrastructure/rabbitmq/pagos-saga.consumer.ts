@@ -1,4 +1,4 @@
-import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnApplicationBootstrap, OnModuleDestroy } from '@nestjs/common';
 import * as amqp from 'amqplib';
 import { ReservasService } from '../../application/reservas.service';
 import { PagoConfirmadoEvento } from '../../application/dtos/pago-confirmado.evento';
@@ -18,11 +18,11 @@ const MAX_REINTENTOS = 10;
  *   finanzas.pago.confirmado  ->  la reserva pasa a CONFIRMADA (ReservasService.procesarPagoConfirmado)
  *                                 o, si ya no se puede honrar, se pide el reembolso a MS-03 (compensación)
  *
- * - No bloquea el arranque: si RabbitMQ no está, reintenta cada 5 s.
+ * - No bloquea el arranque y espera a que la app esté lista; si RabbitMQ no está, reintenta cada 5 s.
  * - Un fallo inesperado reintenta el mensaje (hasta MAX_REINTENTOS); los resultados de negocio se confirman (ack).
  */
 @Injectable()
-export class PagosSagaConsumer implements OnModuleInit, OnModuleDestroy {
+export class PagosSagaConsumer implements OnApplicationBootstrap, OnModuleDestroy {
   private readonly logger = new Logger(PagosSagaConsumer.name);
   private connection: any = null;
   private channel: any = null;
@@ -35,7 +35,11 @@ export class PagosSagaConsumer implements OnModuleInit, OnModuleDestroy {
     private readonly pagos: PagosHttpClient,
   ) {}
 
-  onModuleInit(): void {
+  /**
+   * Se empieza a escuchar solo cuando TODA la app terminó de iniciar (también DynamoDB). Así una instancia a medio
+   * arrancar nunca le quita mensajes a las demás, ni procesa pagos sin poder leer las reservas.
+   */
+  onApplicationBootstrap(): void {
     void this.conectar();
   }
 
