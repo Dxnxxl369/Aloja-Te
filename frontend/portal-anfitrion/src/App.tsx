@@ -9,10 +9,10 @@ import { ReportesGenerativosIA } from './features/reportes/components/ReportesGe
 import { useAnfitrionAuth } from './core/auth/AuthContext';
 import { alojamientoService } from './features/alojamientos/services/alojamientoService';
 import { Alojamiento } from './core/types/anfitrion.types';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, Lock, ExternalLink } from 'lucide-react';
 
 export const AppContent: React.FC = () => {
-  const { anfitrionClave } = useAnfitrionAuth();
+  const { anfitrionClave, isAuthenticated } = useAnfitrionAuth();
   
   // Estado de sección activa
   const [seccionActiva, setSeccionActiva] = useState<string>('dashboard');
@@ -82,6 +82,31 @@ export const AppContent: React.FC = () => {
   };
 
   const headerInfo = getHeaderInfo();
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6 text-slate-100 font-sans">
+        <div className="max-w-md w-full p-8 rounded-3xl bg-slate-800/90 border border-slate-700/80 shadow-2xl space-y-6 text-center animate-fade-in">
+          <div className="w-16 h-16 mx-auto rounded-3xl bg-blue-600/20 border border-blue-500/30 text-blue-400 flex items-center justify-center">
+            <Lock className="w-8 h-8" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="font-serif text-2xl font-bold text-white">Sesión Requerida</h2>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Para ingresar al Panel de Control del Anfitrión debes iniciar sesión con tu cuenta desde la plataforma principal de Aloja-Te Bolivia.
+            </p>
+          </div>
+          <a
+            href="http://localhost:3000/#/catalogo"
+            className="flex items-center justify-center gap-2 w-full py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:opacity-95 text-white font-bold text-xs shadow-lg shadow-blue-500/25 transition cursor-pointer"
+          >
+            <span>Ir al Portal Principal</span>
+            <ExternalLink className="w-3.5 h-3.5" />
+          </a>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-slate-100 dark:bg-[#0B0F19] text-slate-800 dark:text-slate-100">

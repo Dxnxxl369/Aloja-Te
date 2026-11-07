@@ -25,16 +25,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
 
   useEffect(() => {
-    const savedToken = TokenStorage.getToken();
-    const savedUser = TokenStorage.getUser();
-    if (savedToken && savedUser) {
-      setToken(savedToken);
-      setUser(savedUser);
-      setActiveRole(savedUser.rol);
-    } else {
-      setToken(null);
-      setUser(null);
-    }
+    const syncFromStorage = () => {
+      const savedToken = TokenStorage.getToken();
+      const savedUser = TokenStorage.getUser();
+      if (savedToken && savedUser) {
+        setToken(savedToken);
+        setUser(savedUser);
+        setActiveRole(savedUser.rol);
+      } else {
+        setToken(null);
+        setUser(null);
+      }
+    };
+
+    syncFromStorage();
+    window.addEventListener('storage', syncFromStorage);
+    return () => window.removeEventListener('storage', syncFromStorage);
   }, []);
 
   const loginSuccess = (newToken: string, newUser: UsuarioSesion) => {

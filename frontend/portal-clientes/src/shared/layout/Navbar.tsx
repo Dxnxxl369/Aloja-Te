@@ -17,7 +17,26 @@ export const Navbar: React.FC<NavbarProps> = ({
   onToggleDarkMode,
   onLogout,
 }) => {
-  const { user, openAuthModal, logout, activeRole, setRole } = useAuth();
+  const { user, token, openAuthModal, logout, activeRole, setRole } = useAuth();
+
+  const getSsoPortalAnfitrionUrl = () => {
+    if (!user) return 'http://localhost:3005';
+    try {
+      const ssoPayload = {
+        usuarioId: user.id,
+        email: user.email,
+        nombre: user.nombre,
+        apellido: user.apellido,
+        rol: user.rol,
+        token: token || '',
+        ts: Date.now()
+      };
+      const ssoTicket = btoa(unescape(encodeURIComponent(JSON.stringify(ssoPayload))));
+      return `http://localhost:3005/?sso_ticket=${encodeURIComponent(ssoTicket)}`;
+    } catch {
+      return 'http://localhost:3005';
+    }
+  };
 
   return (
     <header className="sticky top-0 z-40 bg-[#f8fafc]/90 dark:bg-[#0b0f17]/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 transition-colors">
@@ -88,7 +107,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
 
               <a
-                href="http://localhost:3005"
+                href={getSsoPortalAnfitrionUrl()}
                 target="_blank"
                 rel="noreferrer"
                 className="px-3 py-2 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/60 border border-blue-200 dark:border-blue-800 transition flex items-center gap-1.5 font-bold text-xs shadow-sm"

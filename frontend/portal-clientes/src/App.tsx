@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './core/auth/AuthContext';
 import { useAppRouter } from './core/router/useAppRouter';
 import { Navbar } from './shared/layout/Navbar';
@@ -48,6 +48,23 @@ export const AppContent: React.FC = () => {
       navigate.catalogo();
     }
   }, [user, currentView, navigate]);
+
+  // Single Logout (SLO): Detección de revocación global de sesión desde Portal Anfitrión (:3005)
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const hashPart = window.location.hash || '';
+    const hashParams = hashPart.includes('?') 
+      ? new URLSearchParams(hashPart.split('?')[1]) 
+      : null;
+    
+    if (searchParams.get('sso_logout') === 'true' || hashParams?.get('sso_logout') === 'true') {
+      logout();
+      setMisReservas([]);
+      localStorage.removeItem('alojate_mis_reservas');
+      const cleanUrl = window.location.pathname + '#/catalogo';
+      window.history.replaceState({}, document.title, cleanUrl);
+    }
+  }, [logout]);
   
   // Data States
   const [alojamientos, setAlojamientos] = useState<Alojamiento[]>([]);
