@@ -63,7 +63,17 @@ class PagoController
         $monto = isset($body['monto']) ? (float) $body['monto'] : null;
         $motivo = $body['motivo'] ?? 'Cancelación de estadía vía SAGA';
 
-        $resultado = $this->reembolsoUseCase->ejecutar($reservaId, $monto, $motivo);
+        try {
+            $resultado = $this->reembolsoUseCase->ejecutar($reservaId, $monto, $motivo);
+        } catch (\InvalidArgumentException $e) {
+            // No hay pago para esa reserva.
+            http_response_code(404);
+            return ['error' => $e->getMessage(), 'mensaje' => $e->getMessage(), 'codigo' => 'PAGO_NO_ENCONTRADO'];
+        } catch (\DomainException $e) {
+            // El pago no es reembolsable (p. ej. ya se devolvió): no es un error del servidor.
+            http_response_code(409);
+            return ['error' => $e->getMessage(), 'mensaje' => $e->getMessage(), 'codigo' => 'PAGO_NO_REEMBOLSABLE'];
+        }
         $this->sagaPublisher->publicarOutboxPendientes();
 
         http_response_code(200);
