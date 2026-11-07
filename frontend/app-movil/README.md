@@ -111,3 +111,25 @@ Notas:
 | Cambié el `.env` y no se nota | `pnpm start --clear` |
 | Expo Go dice "incompatible SDK" | Instala la versión de Expo Go compatible con SDK 58 |
 | No aparece el botón "Simular pago del banco" | Pon `EXPO_PUBLIC_PAGO_SIMULADO=1` en `.env` y reinicia con `--clear` |
+
+## Qué hace la app
+
+| Pantalla | Para qué |
+|---|---|
+| Inicio de sesión | Entrar con correo y contraseña (cuenta del seed de MS-01, ej. `cliente@alojate.bo`) |
+| Asistente | Chat que arma la reserva: tarjetas con foto, servicios y calificación, recomendación y respuestas rápidas |
+| Mis reservas | Lista de reservas del usuario (funciona sin red con lo último guardado) |
+| Reserva | Cuenta regresiva de 15 min, estado y, al confirmarse, el PIN de check-in para recepción |
+| Pago | QR Simple con estados: pendiente, aprobado, rechazado y vencido |
+| IA local | Descargar, activar o borrar el modelo (se toca el indicador "modo básico" del asistente) |
+
+La IA local se descarga en Expo Go, pero **activarla** exige un development build (`pnpm exec expo run:android`).
+
+## Cambios en los servicios (Saga de reserva y pago)
+
+- **MS-03** valida la reserva en MS-02 (por el Gateway) antes de cobrar y cobra el importe del servidor. Variables: `GATEWAY_URL` (por defecto `http://localhost:8080`) y `VALIDAR_RESERVA_ANTES_DE_COBRAR=false` para apagarlo.
+- **MS-03** ya no marca un evento como publicado si RabbitMQ falló: se reintenta en la siguiente petición.
+- **MS-02** escucha `finanzas.pago.confirmado` (cola `ms-reservas.pagos`) y confirma la reserva. Si ya no se puede honrar, pide el reembolso a MS-03 por el Gateway. Una reserva sin pagar a tiempo pasa a `EXPIRADA` y libera las fechas.
+- **MS-01**: la búsqueda de alojamientos ya no falla con filtros vacíos (`lower(bytea)`).
+
+Aviso: si el contenedor `alojate-dynamodb` falla con `unable to open database file`, MS-02 se queda esperando a DynamoDB al arrancar. Para probar sin DynamoDB: `DYNAMODB_ENDPOINT=http://127.0.0.1:9` (usa memoria).
