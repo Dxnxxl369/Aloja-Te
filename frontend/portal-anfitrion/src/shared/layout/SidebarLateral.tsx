@@ -10,7 +10,8 @@ import {
   ExternalLink,
   LogOut,
   X,
-  ShieldCheck
+  ShieldCheck,
+  Sparkles
 } from 'lucide-react';
 import { useAnfitrionAuth } from '../../core/auth/AuthContext';
 
@@ -205,14 +206,19 @@ export const SidebarLateral: React.FC<SidebarLateralProps> = ({
           <button
             type="button"
             onClick={() => onCambiarSeccion('reportes')}
-            className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold transition ${
+            className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-semibold transition ${
               seccionActiva === 'reportes'
                 ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25'
                 : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/80'
             }`}
           >
-            <TrendingUp className="w-4 h-4 text-indigo-500" />
-            <span>Tendencias &amp; Opiniones</span>
+            <div className="flex items-center gap-3">
+              <Sparkles className="w-4 h-4 text-amber-500" />
+              <span>Reportes con IA</span>
+            </div>
+            <span className="px-1.5 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 text-[9px] font-bold">
+              IA
+            </span>
           </button>
         </nav>
 

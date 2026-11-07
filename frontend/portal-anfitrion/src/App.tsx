@@ -5,7 +5,7 @@ import { TableroEjecutivo } from './features/dashboard/components/TableroEjecuti
 import { ListaAlojamientos } from './features/alojamientos/components/ListaAlojamientos';
 import { RecepcionPinControl } from './features/recepcion/components/RecepcionPinControl';
 import { LiquidacionesBNB } from './features/finanzas/components/LiquidacionesBNB';
-import { TendenciasDemanda } from './features/reportes/components/TendenciasDemanda';
+import { ReportesGenerativosIA } from './features/reportes/components/ReportesGenerativosIA';
 import { useAnfitrionAuth } from './core/auth/AuthContext';
 import { alojamientoService } from './features/alojamientos/services/alojamientoService';
 import { Alojamiento } from './core/types/anfitrion.types';
@@ -70,8 +70,8 @@ export const AppContent: React.FC = () => {
         };
       case 'reportes':
         return {
-          titulo: 'Tendencias de Demanda & Calidad',
-          subtitulo: 'Análisis estratégico del mercado turístico y reputación de huéspedes'
+          titulo: 'Reportes Generativos con Inteligencia Artificial',
+          subtitulo: 'Consultas en lenguaje natural, reordenamiento interactivo y exportación optimizada para Excel'
         };
       default:
         return {
@@ -153,7 +153,10 @@ export const AppContent: React.FC = () => {
           )}
 
           {seccionActiva === 'reportes' && (
-            <TendenciasDemanda onMostrarToast={mostrarToast} />
+            <ReportesGenerativosIA
+              alojamientos={alojamientos}
+              onMostrarToast={mostrarToast}
+            />
           )}
         </main>
       </div>
