@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { DynamoDBService } from './infrastructure/dynamodb/dynamodb.service';
 import { DynamoDBReservasRepository } from './infrastructure/dynamodb/dynamodb-reservas.repository';
 import { RabbitMQSagaService } from './infrastructure/rabbitmq/rabbitmq-saga.service';
+import { PagosSagaConsumer } from './infrastructure/rabbitmq/pagos-saga.consumer';
 import { ReservasService } from './application/reservas.service';
 import { ReservasController } from './presentation/reservas.controller';
 
@@ -15,6 +16,7 @@ import { ReservasController } from './presentation/reservas.controller';
     DynamoDBService,
     DynamoDBReservasRepository,
     RabbitMQSagaService,
+    PagosSagaConsumer,
     ReservasService,
   ],
 })

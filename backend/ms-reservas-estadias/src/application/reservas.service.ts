@@ -7,6 +7,7 @@ import { EstadoReserva } from '../domain/enums/estado-reserva.enum';
 import { CrearReservaDto } from './dtos/crear-reserva.dto';
 import { ConfirmarPagoDto } from './dtos/confirmar-pago.dto';
 import { RealizarCheckInDto } from './dtos/checkin.dto';
+import { PagoConfirmadoEvento, ResultadoPagoConfirmado } from './dtos/pago-confirmado.evento';
 import { RabbitMQSagaService } from '../infrastructure/rabbitmq/rabbitmq-saga.service';
 import { DynamoDBReservasRepository } from '../infrastructure/dynamodb/dynamodb-reservas.repository';
 
@@ -255,6 +256,63 @@ export class ReservasService {
   async listarPorAnfitrion(idAnfitrion: string): Promise<ReservaEntity[]> {
     const reservas = await this.repository.listarReservasPorAnfitrion(idAnfitrion);
     return Promise.all(reservas.map((r) => this.expirarSiVencida(r)));
+  }
+
+  /**
+   * Reacción al evento `finanzas.pago.confirmado` (Saga por coreografía).
+   * Es idempotente: recibir el mismo aviso dos veces no cambia nada la segunda vez.
+   * Aquí NO se usa obtenerReservaPorId, porque ese método expira reservas y esta decisión es de la Saga.
+   */
+  async procesarPagoConfirmado(evento: PagoConfirmadoEvento): Promise<ResultadoPagoConfirmado> {
+    const reserva = await this.repository.buscarReservaPorId(evento.reservaId);
+    if (!reserva) {
+      this.logger.warn(`[SAGA] Pago ${evento.pagoId} recibido para una reserva inexistente (${evento.reservaId}).`);
+      return 'REEMBOLSAR';
+    }
+
+    switch (reserva.estado) {
+      case EstadoReserva.CONFIRMADA:
+      case EstadoReserva.CHECKIN_REALIZADO:
+      case EstadoReserva.COMPLETADA:
+        return 'YA_CONFIRMADA';
+      case EstadoReserva.CANCELADA:
+      case EstadoReserva.RECHAZADA_COMPENSADA:
+        return 'REEMBOLSAR';
+      default:
+        break; // PENDIENTE_PAGO o EXPIRADA: se sigue abajo
+    }
+
+    // El pago llegó después del plazo: solo se honra si las fechas siguen libres.
+    if (reserva.estado === EstadoReserva.EXPIRADA || this.estaVencida(reserva)) {
+      const ocupadas = await this.repository.obtenerBloqueosPorRango(
+        reserva.idUnidad,
+        reserva.checkIn,
+        reserva.checkOut,
+        reserva.idReserva,
+      );
+      if (ocupadas.length > 0) {
+        await this.expirarSiVencida(reserva); // no hace nada si ya estaba EXPIRADA
+        return 'REEMBOLSAR';
+      }
+      reserva.estado = EstadoReserva.PENDIENTE_PAGO;
+      reserva.ttl = undefined;
+      reserva.fechaActualizacion = new Date().toISOString();
+      if (!reserva.historialEventos) reserva.historialEventos = [];
+      reserva.historialEventos.push({
+        tipoEvento: 'RESERVA_REACTIVADA_POR_PAGO',
+        origen: 'ms-reservas-estadias',
+        fechaEvento: reserva.fechaActualizacion,
+        payload: { pagoId: evento.pagoId },
+      });
+      await this.repository.guardarReserva(reserva);
+    }
+
+    await this.confirmarPagoSaga(reserva.idReserva, {
+      pagoId: evento.pagoId,
+      metodoPago: 'QR_SIMPLE_BNB',
+      transaccionBancariaRef: evento.transaccionBancariaRef,
+    } as ConfirmarPagoDto);
+    return 'CONFIRMADA';
   }
 
   /** ¿Sigue pendiente de pago pero su plazo (ttl, epoch en segundos) ya pasó? */
