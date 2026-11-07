@@ -27,6 +27,7 @@ export const OFFSET_BOLIVIA_MS = -4 * 60 * 60 * 1000;
 export const CACHE = {
   PREFIJO_RESERVA: 'reserva:',
   PREFIJO_CLAVE: 'reserva-clave:',
+  PREFIJO_LISTA: 'reservas-cliente:',
   TTL_MS: 24 * 60 * 60 * 1000,
 } as const;
 

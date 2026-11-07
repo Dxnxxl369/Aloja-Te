@@ -14,12 +14,15 @@ export interface RepositorioReservas {
   /** Reserva creada desde la cola offline, buscada por su idempotencyKey. null si aún no se envió. */
   obtenerPorClave(idempotencyKey: string): Promise<Reserva | null>;
   disponibilidad(unidadId: string, checkIn: string, checkOut: string): Promise<Disponibilidad>;
+  /** Reservas del cliente, de la más reciente a la más antigua. Sin red usa lo último guardado. */
+  listarPorCliente(clienteId: string): Promise<Reserva[]>;
 }
 
 export interface CasosReservas {
   crearReserva(solicitud: SolicitudReserva): Promise<ResultadoCrear>;
   obtenerReserva(id: string): Promise<Reserva>;
   obtenerReservaPorClave(idempotencyKey: string): Promise<Reserva | null>;
+  listarReservasDeCliente(clienteId: string): Promise<Reserva[]>;
   verificarDisponibilidad(unidadId: string, checkIn: string, checkOut: string): Promise<Disponibilidad>;
   /** Mensaje de error si las fechas no sirven para reservar (formato, orden, pasado, máximo); null si están bien. */
   validarFechas(checkIn: string, checkOut: string): string | null;

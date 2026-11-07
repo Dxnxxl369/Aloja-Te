@@ -76,6 +76,7 @@ export function crearCasosReservas(deps: {
     },
     obtenerReserva: (id) => repo.obtener(id),
     obtenerReservaPorClave: (clave) => repo.obtenerPorClave(clave),
+    listarReservasDeCliente: (clienteId) => repo.listarPorCliente(clienteId),
     verificarDisponibilidad: (unidadId, checkIn, checkOut) => {
       if (noches(checkIn, checkOut) === null) throw new Error('Las fechas no son válidas.');
       return repo.disponibilidad(unidadId, checkIn, checkOut);

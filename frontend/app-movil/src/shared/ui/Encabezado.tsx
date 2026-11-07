@@ -6,7 +6,7 @@
 // NO VA AQUÍ: Navegación ni sesión: solo avisa con `alVolver` y `alPerfil`.
 // ======================================================================
 
-import { ArrowLeft, User } from 'lucide-react-native';
+import { ArrowLeft, CalendarDays, User } from 'lucide-react-native';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLOR, ESPACIO, FUENTE } from './tema';
@@ -15,9 +15,11 @@ interface Props {
   titulo: string;
   alVolver?: () => void;
   alPerfil?: () => void;
+  /** Si se pasa, muestra el acceso a "Mis reservas". */
+  alMisReservas?: () => void;
 }
 
-export function Encabezado({ titulo, alVolver, alPerfil }: Props) {
+export function Encabezado({ titulo, alVolver, alPerfil, alMisReservas }: Props) {
   const insets = useSafeAreaInsets();
   return (
     <View style={[estilos.barra, { paddingTop: insets.top + ESPACIO.s }]}>
@@ -31,11 +33,30 @@ export function Encabezado({ titulo, alVolver, alPerfil }: Props) {
           {titulo}
         </Text>
       </View>
-      {alPerfil ? (
-        <Pressable accessibilityRole="button" accessibilityLabel="Mi cuenta" onPress={alPerfil} style={estilos.avatar}>
-          <User color="#fff" size={18} />
-        </Pressable>
-      ) : null}
+      <View style={estilos.derecha}>
+        {alMisReservas ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Mis reservas"
+            onPress={alMisReservas}
+            style={estilos.icono}
+            hitSlop={4}
+          >
+            <CalendarDays color={COLOR.primario} size={20} />
+          </Pressable>
+        ) : null}
+        {alPerfil ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Mi cuenta"
+            onPress={alPerfil}
+            style={estilos.avatar}
+            hitSlop={4}
+          >
+            <User color="#fff" size={18} />
+          </Pressable>
+        ) : null}
+      </View>
     </View>
   );
 }
@@ -50,6 +71,15 @@ const estilos = StyleSheet.create({
     backgroundColor: COLOR.fondo,
     borderBottomWidth: 1,
     borderBottomColor: COLOR.borde,
+  },
+  derecha: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.s },
+  icono: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: COLOR.primarioSuave,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   izquierda: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.l, flex: 1 },
   titulo: { fontFamily: FUENTE.titulo, fontSize: 20, color: COLOR.texto, flexShrink: 1 },

@@ -14,6 +14,7 @@ import type { Api, Cola } from '../../../core';
 import { esSinRed } from '../../../core';
 import { CACHE, RUTA_RESERVAS, TIPO_OP_CREAR_RESERVA } from '../constantes';
 import type { RepositorioReservas } from '../domain/interfaces';
+import type { Reserva } from '../domain/modelos';
 import { disponibilidadDesdeDto, dtoDesdeSolicitud, reservaDesdeDto } from './mapeadores';
 import type { CrearReservaDto, DisponibilidadDto, ReservaDto } from './modelos';
 
@@ -70,6 +71,30 @@ export function crearRepositorioReservas(deps: DepsRepositorioReservas): Reposit
       if (!id) return null;
       const dto = await leerCache<ReservaDto>(CACHE.PREFIJO_RESERVA + id);
       return dto ? reservaDesdeDto(dto) : null;
+    },
+
+    async listarPorCliente(clienteId) {
+      const clave = CACHE.PREFIJO_LISTA + clienteId;
+      let dtos: ReservaDto[];
+      try {
+        dtos = await api.get<ReservaDto[]>(`${RUTA_RESERVAS}/cliente/${clienteId}`);
+        await guardarCache(clave, dtos, CACHE.TTL_MS);
+      } catch (e) {
+        if (!esSinRed(e)) throw e;
+        const guardadas = await leerCache<ReservaDto[]>(clave);
+        if (!guardadas) throw e;
+        dtos = guardadas;
+      }
+      // Una reserva con un estado desconocido no debe tumbar toda la lista.
+      const reservas: Reserva[] = [];
+      for (const d of dtos) {
+        try {
+          reservas.push(reservaDesdeDto(d));
+        } catch {
+          /* se omite */
+        }
+      }
+      return reservas.sort((a, b) => b.checkIn.localeCompare(a.checkIn));
     },
 
     async disponibilidad(unidadId, checkIn, checkOut) {

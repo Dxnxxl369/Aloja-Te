@@ -15,11 +15,11 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { createContext, useCallback, useContext, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { Alert, View } from 'react-native';
-import { modeloLocal, useEstadoSync, useSesion } from '../core';
+import { modeloLocal, useEstadoModelo, useEstadoSync, useSesion } from '../core';
 import { PantallaAgente } from '../features/agente';
 import { PantallaPago } from '../features/pagos';
 import type { SolicitudPago } from '../features/pagos';
-import { PantallaReserva } from '../features/reservas';
+import { PantallaMisReservas, PantallaReserva } from '../features/reservas';
 import { AvisoSinRed } from '../shared/ui/AvisoSinRed';
 import { Encabezado } from '../shared/ui/Encabezado';
 import { COLOR } from '../shared/ui/tema';
@@ -27,7 +27,8 @@ import type { Features } from './features';
 
 type Rutas = {
   Agente: undefined;
-  Reserva: { reservaId: string };
+  MisReservas: undefined;
+  Reserva: { reservaId: string; pagoRecibido?: boolean };
   Pago: { solicitud: SolicitudPago };
 };
 
@@ -41,7 +42,17 @@ function useFeatures(): Features {
 }
 
 /** Cabecera + aviso de conexión + el contenido de la pantalla. */
-function Marco({ titulo, alVolver, children }: { titulo: string; alVolver?: () => void; children: ReactNode }) {
+function Marco({
+  titulo,
+  alVolver,
+  alMisReservas,
+  children,
+}: {
+  titulo: string;
+  alVolver?: () => void;
+  alMisReservas?: () => void;
+  children: ReactNode;
+}) {
   const { sesion, cerrarSesion } = useSesion();
   const sync = useEstadoSync();
 
@@ -53,7 +64,7 @@ function Marco({ titulo, alVolver, children }: { titulo: string; alVolver?: () =
 
   return (
     <View style={{ flex: 1, backgroundColor: COLOR.fondo }}>
-      <Encabezado titulo={titulo} alVolver={alVolver} alPerfil={abrirCuenta} />
+      <Encabezado titulo={titulo} alVolver={alVolver} alPerfil={abrirCuenta} alMisReservas={alMisReservas} />
       <AvisoSinRed conectado={sync.conectado} pendientes={sync.pendientes} />
       <View style={{ flex: 1 }}>{children}</View>
     </View>
@@ -86,13 +97,31 @@ function RutaAgente({ navigation }: NativeStackScreenProps<Rutas, 'Agente'>) {
     async (clave: string) => (await reservas.casos.obtenerReservaPorClave(clave))?.id ?? null,
     [reservas],
   );
+  const estadoModelo = useEstadoModelo();
   return (
-    <Marco titulo="Asistente de reservas">
+    <Marco titulo="Asistente de reservas" alMisReservas={() => navigation.navigate('MisReservas')}>
       <PantallaAgente
         casos={agente.casos}
         alPagar={(reservaId) => navigation.navigate('Reserva', { reservaId })}
         resolverReservaEnCola={resolverReservaEnCola}
+        modoIa={estadoModelo === 'CARGADO' ? 'local' : 'basico'}
       />
+    </Marco>
+  );
+}
+
+function RutaMisReservas({ navigation }: NativeStackScreenProps<Rutas, 'MisReservas'>) {
+  const { reservas } = useFeatures();
+  const { sesion } = useSesion();
+  return (
+    <Marco titulo="Mis reservas" alVolver={navigation.goBack}>
+      {sesion ? (
+        <PantallaMisReservas
+          casos={reservas.casos}
+          clienteId={sesion.usuarioId}
+          alAbrir={(reservaId) => navigation.navigate('Reserva', { reservaId })}
+        />
+      ) : null}
     </Marco>
   );
 }
@@ -104,6 +133,7 @@ function RutaReserva({ navigation, route }: NativeStackScreenProps<Rutas, 'Reser
       <PantallaReserva
         casos={reservas.casos}
         reservaId={route.params.reservaId}
+        pagoRecibido={route.params.pagoRecibido}
         alPagar={(r) =>
           navigation.navigate('Pago', {
             solicitud: {
@@ -123,7 +153,16 @@ function RutaPago({ navigation, route }: NativeStackScreenProps<Rutas, 'Pago'>) 
   const { pagos } = useFeatures();
   return (
     <Marco titulo="Pago con QR" alVolver={navigation.goBack}>
-      <PantallaPago casos={pagos.casos} solicitud={route.params.solicitud} alTerminar={() => navigation.goBack()} />
+      <PantallaPago
+        casos={pagos.casos}
+        solicitud={route.params.solicitud}
+        alTerminar={(completado) =>
+          completado
+            ? // Vuelve a la reserva (sin apilar otra) avisando que el pago ya llegó.
+              navigation.popTo('Reserva', { reservaId: route.params.solicitud.reservaId, pagoRecibido: true })
+            : navigation.goBack()
+        }
+      />
     </Marco>
   );
 }
@@ -136,6 +175,7 @@ export function NavegacionApp({ features }: { features: Features }) {
       <NavigationContainer theme={TEMA}>
         <Stack.Navigator initialRouteName="Agente" screenOptions={{ headerShown: false }}>
           <Stack.Screen name="Agente" component={RutaAgente} />
+          <Stack.Screen name="MisReservas" component={RutaMisReservas} />
           <Stack.Screen name="Reserva" component={RutaReserva} />
           <Stack.Screen name="Pago" component={RutaPago} />
         </Stack.Navigator>
