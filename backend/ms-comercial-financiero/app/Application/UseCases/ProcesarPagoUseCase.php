@@ -7,6 +7,8 @@ use App\Application\DTOs\PagoResponseDTO;
 use App\Domain\Entities\Pago;
 use App\Domain\Entities\OutboxEvento;
 use App\Domain\Enums\EstadoPago;
+use App\Domain\Exceptions\PagoRechazadoException;
+use App\Domain\Services\ReservaConsultaInterface;
 use App\Domain\Repositories\PagoRepositoryInterface;
 use App\Domain\Repositories\PromocionRepositoryInterface;
 use App\Domain\Repositories\ReglaMonetizacionRepositoryInterface;
@@ -19,7 +21,9 @@ class ProcesarPagoUseCase
         private readonly PagoRepositoryInterface $pagoRepository,
         private readonly PromocionRepositoryInterface $promocionRepository,
         private readonly ReglaMonetizacionRepositoryInterface $reglaRepository,
-        private readonly OutboxRepositoryInterface $outboxRepository
+        private readonly OutboxRepositoryInterface $outboxRepository,
+        /** Si es null no se valida la reserva (solo para correr MS-03 sin MS-02). */
+        private readonly ?ReservaConsultaInterface $reservaConsulta = null
     ) {}
 
     public function ejecutar(ProcesarPagoDTO $dto): array
@@ -37,6 +41,10 @@ class ProcesarPagoUseCase
         if ($pagoPorReserva !== null && $pagoPorReserva->getEstado() === EstadoPago::COMPLETADO) {
             return PagoResponseDTO::fromEntity($pagoPorReserva);
         }
+
+        // 2b. Validar la reserva en MS-02 ANTES de cobrar: existe, sigue pendiente de pago, no venció
+        //     y el monto es el del servidor (no el que mande el cliente).
+        $dto = $this->validarContraReserva($dto);
 
         // 3. Aplicar promoción si corresponde
         $descuento = 0.0;
@@ -100,5 +108,65 @@ class ProcesarPagoUseCase
         ];
 
         return PagoResponseDTO::fromEntity($pago, $qrSimpleData);
+    }
+
+    /**
+     * @throws PagoRechazadoException si la reserva no se puede cobrar.
+     */
+    private function validarContraReserva(ProcesarPagoDTO $dto): ProcesarPagoDTO
+    {
+        if ($this->reservaConsulta === null) {
+            return $dto;
+        }
+
+        $reserva = $this->reservaConsulta->obtener($dto->reservaId);
+        if ($reserva === null) {
+            throw new PagoRechazadoException('La reserva no existe.', 404, 'RESERVA_NO_ENCONTRADA');
+        }
+
+        $estado = (string) ($reserva['estado'] ?? '');
+        if ($estado !== 'PENDIENTE_PAGO') {
+            throw new PagoRechazadoException(
+                "La reserva no está pendiente de pago (estado actual: {$estado}).",
+                409,
+                'RESERVA_NO_PAGABLE'
+            );
+        }
+
+        $ttl = $reserva['ttl'] ?? null;
+        if (is_numeric($ttl) && (int) $ttl <= time()) {
+            throw new PagoRechazadoException(
+                'La reserva venció: el tiempo para pagar terminó.',
+                409,
+                'RESERVA_VENCIDA'
+            );
+        }
+
+        if (isset($reserva['idAnfitrion']) && strcasecmp((string) $reserva['idAnfitrion'], $dto->anfitrionId) !== 0) {
+            throw new PagoRechazadoException('El anfitrión no corresponde a la reserva.', 409, 'ANFITRION_NO_COINCIDE');
+        }
+
+        $totalServidor = (float) ($reserva['importeTotal'] ?? 0);
+        if ($totalServidor <= 0) {
+            throw new PagoRechazadoException('La reserva no tiene un importe válido.', 409, 'RESERVA_SIN_IMPORTE');
+        }
+        if (abs($totalServidor - $dto->subtotal) > 0.01) {
+            throw new PagoRechazadoException(
+                sprintf('El monto no coincide con la reserva (corresponde Bs %.2f).', $totalServidor),
+                409,
+                'MONTO_NO_COINCIDE'
+            );
+        }
+
+        // Se cobra siempre el importe del servidor.
+        return new ProcesarPagoDTO(
+            reservaId: $dto->reservaId,
+            anfitrionId: $dto->anfitrionId,
+            subtotal: $totalServidor,
+            metodoPago: $dto->metodoPago,
+            codigoPromocion: $dto->codigoPromocion,
+            idempotencyKey: $dto->idempotencyKey,
+            sagaId: $dto->sagaId
+        );
     }
 }

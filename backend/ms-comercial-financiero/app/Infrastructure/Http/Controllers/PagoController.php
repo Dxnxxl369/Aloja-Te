@@ -8,6 +8,7 @@ use App\Application\DTOs\PagoResponseDTO;
 use App\Application\UseCases\ProcesarPagoUseCase;
 use App\Application\UseCases\ConfirmarPagoWebhookUseCase;
 use App\Application\UseCases\ProcesarReembolsoSagaUseCase;
+use App\Domain\Exceptions\PagoRechazadoException;
 use App\Domain\Repositories\PagoRepositoryInterface;
 use App\Infrastructure\Messaging\RabbitMQSagaPublisher;
 
@@ -29,7 +30,13 @@ class PagoController
         }
 
         $dto = ProcesarPagoDTO::fromArray($body);
-        $resultado = $this->procesarPagoUseCase->ejecutar($dto);
+        try {
+            $resultado = $this->procesarPagoUseCase->ejecutar($dto);
+        } catch (PagoRechazadoException $e) {
+            http_response_code($e->getEstadoHttp());
+            // `mensaje` lo leen los clientes (app móvil); `error` se conserva por compatibilidad.
+            return ['error' => $e->getMessage(), 'mensaje' => $e->getMessage(), 'codigo' => $e->getCodigo()];
+        }
         $this->sagaPublisher->publicarOutboxPendientes();
 
         http_response_code(201);

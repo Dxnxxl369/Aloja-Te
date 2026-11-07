@@ -11,6 +11,7 @@ use App\Infrastructure\Persistence\Repositories\PdoPromocionRepository;
 use App\Infrastructure\Persistence\Repositories\PdoMovimientoContableRepository;
 use App\Infrastructure\Persistence\Repositories\PdoOutboxRepository;
 use App\Infrastructure\Messaging\RabbitMQSagaPublisher;
+use App\Infrastructure\Http\ReservasHttpClient;
 use App\Application\UseCases\ProcesarPagoUseCase;
 use App\Application\UseCases\ConfirmarPagoWebhookUseCase;
 use App\Application\UseCases\GenerarLiquidacionAnfitrionUseCase;
@@ -26,7 +27,9 @@ $contabilidadRepo = new PdoMovimientoContableRepository();
 $outboxRepo = new PdoOutboxRepository();
 $sagaPublisher = new RabbitMQSagaPublisher($outboxRepo);
 
-$procesarPagoUC = new ProcesarPagoUseCase($pagoRepo, $promocionRepo, $reglaRepo, $outboxRepo);
+// Antes de cobrar se valida la reserva en MS-02 (por el Gateway). VALIDAR_RESERVA_ANTES_DE_COBRAR=false lo apaga.
+$reservaConsulta = strtolower((string) getenv('VALIDAR_RESERVA_ANTES_DE_COBRAR')) === 'false' ? null : new ReservasHttpClient();
+$procesarPagoUC = new ProcesarPagoUseCase($pagoRepo, $promocionRepo, $reglaRepo, $outboxRepo, $reservaConsulta);
 $confirmarPagoUC = new ConfirmarPagoWebhookUseCase($pagoRepo, $comisionRepo, $reglaRepo, $contabilidadRepo, $outboxRepo);
 $liquidacionUC = new GenerarLiquidacionAnfitrionUseCase($comisionRepo, $liquidacionRepo, $contabilidadRepo, $outboxRepo);
 $reembolsoUC = new ProcesarReembolsoSagaUseCase($pagoRepo, $contabilidadRepo, $outboxRepo);
