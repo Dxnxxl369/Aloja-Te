@@ -12,11 +12,12 @@
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { createContext, useCallback, useContext, useEffect } from 'react';
+import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Alert, View } from 'react-native';
-import { modeloLocal, useEstadoModelo, useEstadoSync, useSesion } from '../core';
+import { MODELO_IA, modeloLocal, useEstadoModelo, useEstadoSync, useSesion } from '../core';
 import { PantallaAgente } from '../features/agente';
+import { PantallaModeloIa } from '../features/ia';
 import { PantallaPago } from '../features/pagos';
 import type { SolicitudPago } from '../features/pagos';
 import { PantallaMisReservas, PantallaReserva } from '../features/reservas';
@@ -28,6 +29,7 @@ import type { Features } from './features';
 type Rutas = {
   Agente: undefined;
   MisReservas: undefined;
+  ModeloIa: undefined;
   Reserva: { reservaId: string; pagoRecibido?: boolean };
   Pago: { solicitud: SolicitudPago };
 };
@@ -105,6 +107,66 @@ function RutaAgente({ navigation }: NativeStackScreenProps<Rutas, 'Agente'>) {
         alPagar={(reservaId) => navigation.navigate('Reserva', { reservaId })}
         resolverReservaEnCola={resolverReservaEnCola}
         modoIa={estadoModelo === 'CARGADO' ? 'local' : 'basico'}
+        alAbrirIa={() => navigation.navigate('ModeloIa')}
+      />
+    </Marco>
+  );
+}
+
+/** Descargar, activar y borrar el modelo de IA local (core/ia lo hace; la pantalla solo muestra). */
+function RutaModeloIa({ navigation }: NativeStackScreenProps<Rutas, 'ModeloIa'>) {
+  const estado = useEstadoModelo();
+  const [progreso, setProgreso] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    void modeloLocal.refrescar().catch(() => undefined);
+  }, []);
+
+  const mensaje = (e: unknown, porDefecto: string) => (e instanceof Error ? e.message : porDefecto);
+
+  const descargar = async () => {
+    setError(null);
+    setProgreso(0);
+    try {
+      await modeloLocal.descargar(setProgreso);
+    } catch (e) {
+      setError(mensaje(e, 'No se pudo descargar el modelo.'));
+    }
+  };
+  const activar = async () => {
+    setError(null);
+    try {
+      await modeloLocal.cargar();
+    } catch (e) {
+      setError(
+        `${mensaje(e, 'No se pudo activar el modelo.')} Si estás usando Expo Go, la IA local solo se puede activar en una versión instalada de la app (development build).`,
+      );
+    }
+  };
+  const eliminar = () =>
+    Alert.alert('Borrar el modelo', 'Se libera el espacio y el asistente vuelve al modo básico. Podrás descargarlo de nuevo.', [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Borrar',
+        style: 'destructive',
+        onPress: () => {
+          setError(null);
+          modeloLocal.eliminar().catch((e) => setError(mensaje(e, 'No se pudo borrar el modelo.')));
+        },
+      },
+    ]);
+
+  return (
+    <Marco titulo="IA local" alVolver={navigation.goBack}>
+      <PantallaModeloIa
+        estado={estado}
+        progreso={progreso}
+        tamanoMb={Math.round(MODELO_IA.tamanoBytes / 1_000_000)}
+        error={error}
+        alDescargar={() => void descargar()}
+        alActivar={() => void activar()}
+        alEliminar={eliminar}
       />
     </Marco>
   );
@@ -176,6 +238,7 @@ export function NavegacionApp({ features }: { features: Features }) {
         <Stack.Navigator initialRouteName="Agente" screenOptions={{ headerShown: false }}>
           <Stack.Screen name="Agente" component={RutaAgente} />
           <Stack.Screen name="MisReservas" component={RutaMisReservas} />
+          <Stack.Screen name="ModeloIa" component={RutaModeloIa} />
           <Stack.Screen name="Reserva" component={RutaReserva} />
           <Stack.Screen name="Pago" component={RutaPago} />
         </Stack.Navigator>

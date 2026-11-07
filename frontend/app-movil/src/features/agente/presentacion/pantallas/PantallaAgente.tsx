@@ -44,6 +44,8 @@ interface Props {
   resolverReservaEnCola?: (claveCola: string) => Promise<string | null>;
   /** "local" si el modelo de IA del celular está cargado; "basico" si entiende con reglas. */
   modoIa?: 'local' | 'basico';
+  /** Si se pasa, tocar el indicador de modo abre la pantalla para descargar o activar la IA local. */
+  alAbrirIa?: () => void;
 }
 
 const POLL_COLA_MS = 3_000;
@@ -97,7 +99,7 @@ function insigniasDe(indice: number, o: Opcion, todas: Opcion[], indiceRecomenda
   return etiquetas;
 }
 
-export function PantallaAgente({ casos, alPagar, resolverReservaEnCola, modoIa = 'basico' }: Props) {
+export function PantallaAgente({ casos, alPagar, resolverReservaEnCola, modoIa = 'basico', alAbrirIa }: Props) {
   const { estado, ocupado, enviar, elegir, confirmar, rechazar, reiniciar } = useAgente(casos);
   const [texto, setTexto] = useState('');
   const [verPlan, setVerPlan] = useState(false);
@@ -158,12 +160,19 @@ export function PantallaAgente({ casos, alPagar, resolverReservaEnCola, modoIa =
 
   return (
     <KeyboardAvoidingView style={estilos.pantalla} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <View style={estilos.estadoFila}>
+      <Pressable
+        accessibilityRole={alAbrirIa ? 'button' : 'text'}
+        accessibilityLabel="Modo del asistente"
+        disabled={!alAbrirIa}
+        onPress={alAbrirIa}
+        style={estilos.estadoFila}
+      >
         <View style={[estilos.punto, { backgroundColor: modoIa === 'local' ? COLOR.exito : COLOR.aviso }]} />
         <Text style={estilos.estadoTexto}>
           {modoIa === 'local' ? 'Asistente · IA local en el dispositivo' : 'Asistente · modo básico (sin IA local)'}
         </Text>
-      </View>
+        {alAbrirIa && <Text style={estilos.estadoEnlace}>{modoIa === 'local' ? 'Gestionar' : 'Activar IA'}</Text>}
+      </Pressable>
 
       <ScrollView
         ref={scroll}
@@ -291,6 +300,7 @@ const estilos = StyleSheet.create({
   estadoFila: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.s, paddingHorizontal: ESPACIO.l, paddingTop: ESPACIO.s },
   punto: { width: 8, height: 8, borderRadius: 4 },
   estadoTexto: { fontFamily: FUENTE.medio, fontSize: 13, color: COLOR.textoSuave },
+  estadoEnlace: { fontFamily: FUENTE.semi, fontSize: 13, color: COLOR.primario },
 
   filaMensaje: { flexDirection: 'row', alignItems: 'flex-end', gap: ESPACIO.s },
   avatar: { width: 32, height: 32, borderRadius: 16, backgroundColor: COLOR.primarioSuave, alignItems: 'center', justifyContent: 'center' },

@@ -99,5 +99,12 @@ export function crearModeloLocal(deps: {
       await runtime.liberar();
       poner('LISTO');
     },
+
+    async eliminar() {
+      if (actual() === 'DESCARGANDO') throw new AppError('DESCONOCIDO', 'Espera a que termine la descarga');
+      if (actual() === 'CARGADO') await runtime.liberar();
+      await FileSystem.deleteAsync(ruta, { idempotent: true });
+      poner('NO_DESCARGADO');
+    },
   };
 }

@@ -30,4 +30,6 @@ export interface ModeloLocal {
   generar(prompt: string, opciones?: OpcionesGeneracion): Promise<string>;
   /** Liberar memoria al salir del chat. */
   liberar(): Promise<void>;
+  /** Borra el archivo del modelo para recuperar espacio (si estaba cargado, lo libera antes). */
+  eliminar(): Promise<void>;
 }
