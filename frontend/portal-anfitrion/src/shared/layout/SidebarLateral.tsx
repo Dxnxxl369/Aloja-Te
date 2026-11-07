@@ -8,7 +8,9 @@ import {
   Moon,
   Sun,
   ExternalLink,
-  X
+  LogOut,
+  X,
+  ShieldCheck
 } from 'lucide-react';
 import { useAnfitrionAuth } from '../../core/auth/AuthContext';
 
@@ -29,7 +31,7 @@ export const SidebarLateral: React.FC<SidebarLateralProps> = ({
   menuMovilAbierto,
   onCerrarMenuMovil
 }) => {
-  const { perfil, anfitrionClave, cambiarPerfil, darkMode, toggleDarkMode } = useAnfitrionAuth();
+  const { perfil, logout, darkMode, toggleDarkMode } = useAnfitrionAuth();
 
   return (
     <>
@@ -75,60 +77,52 @@ export const SidebarLateral: React.FC<SidebarLateralProps> = ({
           </button>
         </div>
 
-        {/* Tarjeta de Anfitrión Verificado */}
+        {/* Tarjeta de Anfitrión Activo Autenticado (Sin conmutadores artificiales) */}
         <div className="p-4 border-b border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/40">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-700 text-white font-serif text-lg font-bold flex items-center justify-center shadow-md shadow-blue-500/20 shrink-0">
-              {perfil.nombre.charAt(0)}
+            <div className="relative">
+              <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-700 text-white font-serif text-lg font-bold flex items-center justify-center shadow-md shadow-blue-500/20 shrink-0">
+                {perfil.nombre.charAt(0)}
+              </div>
+              {perfil.verificado && (
+                <span
+                  className="absolute -bottom-1 -right-1 w-4 h-4 bg-blue-600 text-white rounded-full flex items-center justify-center ring-2 ring-white dark:ring-slate-900 shadow-sm"
+                  title="Anfitrión Oficialmente Verificado"
+                >
+                  <svg className="w-2.5 h-2.5 fill-current" viewBox="0 0 24 24">
+                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                  </svg>
+                </span>
+              )}
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1.5">
                 <h4 className="font-bold text-xs text-slate-900 dark:text-white truncate">
                   {perfil.nombre}
                 </h4>
-                {/* Insignia Azul de Verificado */}
-                <span className="inline-flex items-center text-blue-600 dark:text-blue-400 shrink-0" title="Anfitrión Oficialmente Acreditado">
-                  <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1.2 14.2l-4-4 1.41-1.41L10.8 13.38l6.79-6.79 1.41 1.41-8.2 8.2z" />
-                  </svg>
-                </span>
               </div>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
                 {perfil.ciudad} • {conteoAlojamientos} Alojamientos
               </p>
+              <div className="flex items-center gap-1 mt-0.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[10px] text-slate-400 font-medium truncate">
+                  Sesión activa: {perfil.email}
+                </span>
+              </div>
             </div>
           </div>
 
-          {/* Conmutador de Anfitrión Demostrativo (Carlos vs Elena) */}
-          <div className="mt-3 pt-2.5 border-t border-slate-200/60 dark:border-slate-800/80 flex items-center justify-between text-[11px]">
-            <span className="text-slate-400 text-[10px] uppercase font-bold tracking-wider">
-              Cambiar Anfitrión:
-            </span>
-            <div className="flex items-center gap-1">
-              <button
-                type="button"
-                onClick={() => cambiarPerfil('carlos')}
-                className={`px-2 py-1 rounded-lg font-bold text-[10px] transition ${
-                  anfitrionClave === 'carlos'
-                    ? 'bg-blue-600 text-white shadow-sm'
-                    : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-blue-600 border border-slate-200 dark:border-slate-700'
-                }`}
-              >
-                Carlos
-              </button>
-              <button
-                type="button"
-                onClick={() => cambiarPerfil('elena')}
-                className={`px-2 py-1 rounded-lg font-bold text-[10px] transition ${
-                  anfitrionClave === 'elena'
-                    ? 'bg-blue-600 text-white shadow-sm'
-                    : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-blue-600 border border-slate-200 dark:border-slate-700'
-                }`}
-              >
-                Elena
-              </button>
+          {perfil.verificado ? (
+            <div className="mt-2.5 px-2.5 py-1 rounded-xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200/80 dark:border-blue-800/60 flex items-center gap-1.5 text-[10px] text-blue-700 dark:text-blue-300 font-bold">
+              <ShieldCheck className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
+              <span>Anfitrión Verificado (CI &amp; NIT Validados)</span>
             </div>
-          </div>
+          ) : (
+            <div className="mt-2.5 px-2.5 py-1 rounded-xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200/80 dark:border-amber-800/60 flex items-center gap-1.5 text-[10px] text-amber-700 dark:text-amber-300 font-medium">
+              <span>Verificación de documentos en trámite</span>
+            </div>
+          )}
         </div>
 
         {/* Menú de navegación principal */}
@@ -222,7 +216,7 @@ export const SidebarLateral: React.FC<SidebarLateralProps> = ({
           </button>
         </nav>
 
-        {/* Pie del Sidebar: Tema y regreso al Portal de Clientes */}
+        {/* Pie del Sidebar: Tema, catálogo y Cerrar Sesión */}
         <div className="p-4 border-t border-slate-200/80 dark:border-slate-800 space-y-2 bg-slate-50/50 dark:bg-slate-900/30">
           <div className="flex items-center justify-between px-2 py-1 text-xs text-slate-500 dark:text-slate-400">
             <span>Modo Oscuro</span>
@@ -241,8 +235,17 @@ export const SidebarLateral: React.FC<SidebarLateralProps> = ({
             className="flex items-center justify-center gap-2 w-full py-2.5 rounded-2xl text-xs font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-400 hover:text-blue-600 transition shadow-sm"
           >
             <ExternalLink className="w-3.5 h-3.5 text-blue-500" />
-            <span>Ir al Portal de Viajeros</span>
+            <span>Ir al Catálogo de Huéspedes</span>
           </a>
+
+          <button
+            type="button"
+            onClick={logout}
+            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-2xl text-xs font-semibold text-rose-600 dark:text-rose-400 bg-rose-50/80 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 hover:bg-rose-100 dark:hover:bg-rose-900/60 transition shadow-sm cursor-pointer"
+          >
+            <LogOut className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
+            <span>Cerrar Sesión</span>
+          </button>
         </div>
       </aside>
     </>

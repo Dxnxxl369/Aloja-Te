@@ -39,7 +39,8 @@ export const PERFILES_ANFITRION: Record<string, PerfilAnfitrion> = {
 interface AuthContextType {
   perfil: PerfilAnfitrion;
   anfitrionClave: 'carlos' | 'elena';
-  cambiarPerfil: (clave: 'carlos' | 'elena') => void;
+  isAuthenticated: boolean;
+  logout: () => void;
   darkMode: boolean;
   toggleDarkMode: () => void;
 }
@@ -47,7 +48,33 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [anfitrionClave, setAnfitrionClave] = useState<'carlos' | 'elena'>('carlos');
+  // Detección estricta y profesional de la sesión activa desde localStorage (portal-clientes)
+  const [anfitrionClave, setAnfitrionClave] = useState<'carlos' | 'elena'>(() => {
+    try {
+      const rawUser = localStorage.getItem('alojate_user_profile');
+      if (rawUser) {
+        const u = JSON.parse(rawUser);
+        const email = (u.email || '').toLowerCase();
+        const nombre = (u.nombre || '').toLowerCase();
+        if (email.includes('elena') || nombre.includes('elena')) {
+          return 'elena';
+        }
+        return 'carlos';
+      }
+    } catch {}
+    return 'carlos';
+  });
+
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    try {
+      const token = localStorage.getItem('alojate_jwt_token');
+      const user = localStorage.getItem('alojate_user_profile');
+      return !!(token && user);
+    } catch {
+      return false;
+    }
+  });
+
   const [darkMode, setDarkMode] = useState<boolean>(() => {
     try {
       return localStorage.getItem('alojate_dark_mode') === 'true';
@@ -55,6 +82,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return false;
     }
   });
+
+  // Sincronizar en caliente si la sesión cambia en otra pestaña o en portal-clientes
+  useEffect(() => {
+    const sincronizarSesion = () => {
+      try {
+        const rawUser = localStorage.getItem('alojate_user_profile');
+        const token = localStorage.getItem('alojate_jwt_token');
+        setIsAuthenticated(!!(token && rawUser));
+
+        if (rawUser) {
+          const u = JSON.parse(rawUser);
+          const email = (u.email || '').toLowerCase();
+          const nombre = (u.nombre || '').toLowerCase();
+          if (email.includes('elena') || nombre.includes('elena')) {
+            setAnfitrionClave('elena');
+          } else {
+            setAnfitrionClave('carlos');
+          }
+        }
+      } catch {}
+    };
+
+    window.addEventListener('storage', sincronizarSesion);
+    return () => window.removeEventListener('storage', sincronizarSesion);
+  }, []);
 
   useEffect(() => {
     if (darkMode) {
@@ -66,12 +118,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [darkMode]);
 
-  const cambiarPerfil = (clave: 'carlos' | 'elena') => {
-    setAnfitrionClave(clave);
-  };
-
   const toggleDarkMode = () => {
     setDarkMode(prev => !prev);
+  };
+
+  const logout = () => {
+    try {
+      localStorage.removeItem('alojate_jwt_token');
+      localStorage.removeItem('alojate_user_profile');
+      localStorage.removeItem('alojate_mis_reservas');
+      sessionStorage.clear();
+    } catch {}
+    setIsAuthenticated(false);
+    // Redirigir limpiamente a la portada principal
+    window.location.href = 'http://localhost:3000/#/catalogo';
   };
 
   return (
@@ -79,7 +139,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       value={{
         perfil: PERFILES_ANFITRION[anfitrionClave],
         anfitrionClave,
-        cambiarPerfil,
+        isAuthenticated,
+        logout,
         darkMode,
         toggleDarkMode
       }}
