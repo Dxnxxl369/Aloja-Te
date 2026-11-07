@@ -1,6 +1,13 @@
 import { Component, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import {
+  ReportAdminService,
+  ReportQueryResultAdmin,
+  ReportColumnAdmin,
+  ReportKPIAdmin,
+  SVGChartAdmin
+} from './report-admin.service';
 
 export interface MovimientoContable {
   movimientoId: number;
@@ -911,13 +918,20 @@ export const VALORACIONES_ADMIN_DEMO: ValoracionAdmin[] = [
                       </div>
 
                       <h4 (click)="inspeccionarAlojamiento(a, 'general')" class="font-serif text-lg font-bold text-slate-900 dark:text-white cursor-pointer hover:text-blue-600 transition">{{ a.titulo }}</h4>
-                      <p class="text-xs text-slate-500 dark:text-stone-400 flex items-center gap-1.5 flex-wrap">
-                        <span>Anfitrión: <strong class="text-slate-700 dark:text-stone-300">{{ a.anfitrion }}</strong></span>
-                        <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-700 dark:bg-blue-950/70 dark:text-blue-300 text-[9px] font-bold border border-blue-200 dark:border-blue-800 shadow-sm" title="Anfitrión Verificado con C.I. y Documentos">
-                          <svg class="w-2.5 h-2.5 text-blue-600 dark:text-blue-400 fill-current" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1.2 14.2l-4-4 1.41-1.41L10.8 13.38l6.79-6.79 1.41 1.41-8.2 8.2z"/></svg>
-                          <span>Verificado</span>
-                        </span>
-                        <span>• {{ a.ciudad }}</span>
+                      <p class="text-xs text-slate-500 dark:text-stone-400 flex items-center gap-1.5 flex-wrap">
+
+                        <span>Anfitrión: <strong class="text-slate-700 dark:text-stone-300">{{ a.anfitrion }}</strong></span>
+
+                        <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-700 dark:bg-blue-950/70 dark:text-blue-300 text-[9px] font-bold border border-blue-200 dark:border-blue-800 shadow-sm" title="Anfitrión Verificado con C.I. y Documentos">
+
+                          <svg class="w-2.5 h-2.5 text-blue-600 dark:text-blue-400 fill-current" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1.2 14.2l-4-4 1.41-1.41L10.8 13.38l6.79-6.79 1.41 1.41-8.2 8.2z"/></svg>
+
+                          <span>Verificado</span>
+
+                        </span>
+
+                        <span>• {{ a.ciudad }}</span>
+
                       </p>
                     </div>
 
@@ -1121,152 +1135,348 @@ export const VALORACIONES_ADMIN_DEMO: ValoracionAdmin[] = [
 
           </div>
 
-          <!-- ======================================================== -->
+                    <!-- ======================================================== -->
           <!-- VISTA 5: REPORTES GENERATIVOS CON INTELIGENCIA ARTIFICIAL-->
           <!-- ======================================================== -->
           <div *ngIf="activeTab === 'reportes-ia'" class="space-y-6 animate-fade-in">
             
-            <!-- Generador de Informes Estratégicos -->
-            <div class="p-6 rounded-3xl liquid-card border-blue-500/30 space-y-5">
-              <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                  <div class="flex items-center gap-2 mb-1">
-                    <span class="w-2.5 h-2.5 rounded-full bg-cyan-500 animate-ping"></span>
-                    <span class="text-[10px] font-bold uppercase tracking-widest text-cyan-600 dark:text-cyan-400">
-                      Motor de Analítica Predictiva & Generativa
-                    </span>
-                  </div>
-                  <h3 class="font-serif text-2xl font-bold text-slate-900 dark:text-white">Generador de Informes de Negocio con Inteligencia Artificial</h3>
-                  <p class="text-xs text-slate-500 dark:text-stone-400 mt-1">Sintetiza tendencias de ocupación regional, simulación fiscal y proyecciones estratégicas</p>
+            <!-- Barra de Consulta Multimodal con IA -->
+            <div class="p-6 rounded-3xl bg-white dark:bg-stone-900 border border-slate-200 dark:border-stone-800 shadow-xl relative overflow-hidden">
+              <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-2 text-xs font-bold text-blue-600 dark:text-blue-400">
+                  <span class="w-2.5 h-2.5 rounded-full bg-cyan-500 animate-ping"></span>
+                  <span class="uppercase tracking-widest text-[10px]">Motor de Analítica Predictiva & Generativa Nacional</span>
                 </div>
 
-                <button
-                  (click)="generarReporteIA()"
-                  [disabled]="generandoReporte"
-                  class="px-5 py-3 rounded-2xl bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-600 hover:opacity-95 text-white font-bold text-xs shadow-xl shadow-blue-500/25 flex items-center justify-center gap-2 disabled:opacity-50 transition shrink-0"
-                >
-                  <svg *ngIf="!generandoReporte" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                <div *ngIf="resultadoIAAdmin" class="flex items-center gap-2 text-[11px] text-slate-400 font-mono">
+                  <span>{{ resultadoIAAdmin.tiempoMs }} ms • {{ resultadoIAAdmin.proveedorIA }}</span>
+                </div>
+              </div>
+
+              <!-- Input y botones de acción -->
+              <form (submit)="ejecutarReporteIAAdmin(); $event.preventDefault()" class="flex items-center gap-2.5">
+                <div class="relative flex-1">
+                  <input
+                    type="text"
+                    [(ngModel)]="queryIAAdmin"
+                    name="queryIAAdmin"
+                    placeholder="Consulta ejecutiva: 'Comisiones por departamento', 'Anfitriones pendientes de verificación', 'Solo 3 columnas'..."
+                    class="w-full pl-11 pr-4 py-3.5 rounded-2xl bg-slate-50 dark:bg-stone-800/80 border border-slate-200 dark:border-stone-700 text-xs font-medium text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <svg class="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
-                  <svg *ngIf="generandoReporte" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                </div>
+
+                <!-- Botón de Voz -->
+                <button
+                  type="button"
+                  (click)="toggleVozAdmin()"
+                  [class]="escuchandoVozAdmin ? 'p-3.5 rounded-2xl bg-rose-500 text-white border border-rose-600 animate-pulse ring-4 ring-rose-500/30 shrink-0 cursor-pointer' : 'p-3.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-stone-800 dark:hover:bg-stone-700 text-slate-700 dark:text-stone-300 border border-slate-200 dark:border-stone-700 shrink-0 cursor-pointer'"
+                  title="Hablar por micrófono (Español Bolivia)"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                  </svg>
+                </button>
+
+                <!-- Botón de Ejecutar -->
+                <button
+                  type="submit"
+                  [disabled]="cargandoIAAdmin"
+                  class="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-600 hover:opacity-95 text-white text-xs font-bold shadow-lg shadow-blue-500/25 transition disabled:opacity-50 cursor-pointer shrink-0 flex items-center gap-2"
+                >
+                  <svg *ngIf="cargandoIAAdmin" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
                   </svg>
-                  <span>{{ generandoReporte ? 'Procesando Datos y Generando...' : 'Generar Informe Ejecutivo con IA' }}</span>
+                  <svg *ngIf="!cargandoIAAdmin" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  <span>{{ cargandoIAAdmin ? 'Consultando IA...' : 'Generar Reporte' }}</span>
                 </button>
-              </div>
+              </form>
 
-              <!-- Selector de Tipo de Reporte -->
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
+              <!-- Píldoras de sugerencias rápidas administrativas -->
+              <div class="flex flex-wrap items-center gap-2 mt-3.5 pt-3 border-t border-slate-100 dark:border-stone-800/80">
+                <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Consultas Estratégicas:</span>
                 <button
-                  (click)="tipoReporteSeleccionado = 1"
-                  [class]="tipoReporteSeleccionado === 1 ? 'p-4 rounded-2xl bg-blue-50 dark:bg-blue-950/60 border-2 border-blue-600 text-left space-y-1 shadow-md shadow-blue-500/10 transition' : 'p-4 rounded-2xl bg-slate-50 dark:bg-stone-900/60 border border-slate-200 dark:border-stone-800 text-left space-y-1 hover:border-slate-300 dark:hover:border-stone-700 transition'"
+                  type="button"
+                  (click)="ejecutarReporteIAAdmin('Comisiones y facturación consolidada por departamento')"
+                  class="px-3 py-1 rounded-xl bg-slate-100 dark:bg-stone-800 hover:bg-blue-50 dark:hover:bg-blue-950 text-slate-600 dark:text-stone-300 hover:text-blue-600 dark:hover:text-blue-400 text-[11px] font-semibold transition border border-slate-200/60 dark:border-stone-700/60 cursor-pointer"
                 >
-                  <span class="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider block">Auditoría & Proyección</span>
-                  <h4 class="text-xs font-bold text-slate-900 dark:text-white">Cierre Fiscal & Rendimiento</h4>
-                  <p class="text-[11px] text-slate-500 dark:text-stone-400 leading-relaxed">Balance contable, retenciones impositivas y margen neto de comisiones.</p>
+                  Comisiones por Departamento
                 </button>
-
                 <button
-                  (click)="tipoReporteSeleccionado = 2"
-                  [class]="tipoReporteSeleccionado === 2 ? 'p-4 rounded-2xl bg-blue-50 dark:bg-blue-950/60 border-2 border-blue-600 text-left space-y-1 shadow-md shadow-blue-500/10 transition' : 'p-4 rounded-2xl bg-slate-50 dark:bg-stone-900/60 border border-slate-200 dark:border-stone-800 text-left space-y-1 hover:border-slate-300 dark:hover:border-stone-700 transition'"
+                  type="button"
+                  (click)="ejecutarReporteIAAdmin('Anfitriones pendientes de verificación legal')"
+                  class="px-3 py-1 rounded-xl bg-slate-100 dark:bg-stone-800 hover:bg-blue-50 dark:hover:bg-blue-950 text-slate-600 dark:text-stone-300 hover:text-blue-600 dark:hover:text-blue-400 text-[11px] font-semibold transition border border-slate-200/60 dark:border-stone-700/60 cursor-pointer"
                 >
-                  <span class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider block">Tendencia Regional</span>
-                  <h4 class="text-xs font-bold text-slate-900 dark:text-white">Demanda Festividades 2026</h4>
-                  <p class="text-[11px] text-slate-500 dark:text-stone-400 leading-relaxed">Predicción de ocupación en Chiquitanía, Carnaval de Oruro y Lago Titicaca.</p>
+                  Verificación de Anfitriones
                 </button>
-
                 <button
-                  (click)="tipoReporteSeleccionado = 3"
-                  [class]="tipoReporteSeleccionado === 3 ? 'p-4 rounded-2xl bg-cyan-50 dark:bg-cyan-950/60 border-2 border-cyan-600 text-left space-y-1 shadow-md shadow-cyan-500/10 transition' : 'p-4 rounded-2xl bg-slate-50 dark:bg-stone-900/60 border border-slate-200 dark:border-stone-800 text-left space-y-1 hover:border-slate-300 dark:hover:border-stone-700 transition'"
+                  type="button"
+                  (click)="ejecutarReporteIAAdmin('Reservas canceladas o expiradas por 15 min')"
+                  class="px-3 py-1 rounded-xl bg-slate-100 dark:bg-stone-800 hover:bg-blue-50 dark:hover:bg-blue-950 text-slate-600 dark:text-stone-300 hover:text-blue-600 dark:hover:text-blue-400 text-[11px] font-semibold transition border border-slate-200/60 dark:border-stone-700/60 cursor-pointer"
                 >
-                  <span class="text-[10px] font-bold text-cyan-600 dark:text-cyan-400 uppercase tracking-wider block">Calidad & Detección</span>
-                  <h4 class="text-xs font-bold text-slate-900 dark:text-white">Detección de Anomalías</h4>
-                  <p class="text-[11px] text-slate-500 dark:text-stone-400 leading-relaxed">Monitoreo de cancelaciones inusuales y auditoría de precios por noche.</p>
+                  Reservas Expiradas (15 min)
+                </button>
+                <button
+                  type="button"
+                  (click)="ejecutarReporteIAAdmin('Liquidaciones pagadas a anfitriones')"
+                  class="px-3 py-1 rounded-xl bg-slate-100 dark:bg-stone-800 hover:bg-blue-50 dark:hover:bg-blue-950 text-slate-600 dark:text-stone-300 hover:text-blue-600 dark:hover:text-blue-400 text-[11px] font-semibold transition border border-slate-200/60 dark:border-stone-700/60 cursor-pointer"
+                >
+                  Desembolsos Netos BNB
+                </button>
+                <button
+                  type="button"
+                  (click)="ejecutarReporteIAAdmin('Solo 3 columnas: Alojamiento, Departamento y Precio')"
+                  class="px-3 py-1 rounded-xl bg-slate-100 dark:bg-stone-800 hover:bg-blue-50 dark:hover:bg-blue-950 text-slate-600 dark:text-stone-300 hover:text-blue-600 dark:hover:text-blue-400 text-[11px] font-semibold transition border border-slate-200/60 dark:border-stone-700/60 cursor-pointer"
+                >
+                  Solo 3 Columnas Clave
                 </button>
               </div>
             </div>
 
-            <!-- Previsualización del Informe Generado -->
-            <div *ngIf="reporteActual" class="p-8 rounded-3xl liquid-card border-slate-200 dark:border-stone-800 space-y-8 animate-fade-in shadow-xl">
+            <!-- Tarjetas de KPIs Ejecutivos Automáticos -->
+            <div *ngIf="resultadoIAAdmin && resultadoIAAdmin.kpis.length > 0" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div *ngFor="let kpi of resultadoIAAdmin.kpis" class="p-5 rounded-3xl bg-white dark:bg-stone-900 border border-slate-200/80 dark:border-stone-800 shadow-sm">
+                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">{{ kpi.label }}</span>
+                <div [class]="'font-serif text-2xl font-bold mt-1 ' + (kpi.color || 'text-slate-900 dark:text-white')">
+                  {{ kpi.valor }}
+                </div>
+                <p *ngIf="kpi.subtexto" class="text-[10px] text-slate-500 dark:text-stone-400 mt-0.5">{{ kpi.subtexto }}</p>
+              </div>
+            </div>
+
+            <!-- Contenedor Principal: Pestañas de Vista & Tabla Dinámica -->
+            <div *ngIf="resultadoIAAdmin" class="bg-white dark:bg-stone-900 rounded-3xl border border-slate-200/80 dark:border-stone-800 shadow-xl overflow-hidden">
               
-              <!-- Encabezado del Documento -->
-              <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-6 border-b border-slate-200 dark:border-stone-800">
-                <div>
-                  <div class="flex items-center gap-2 mb-1.5">
-                    <span class="px-2.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 text-[10px] font-bold uppercase tracking-wider border border-blue-200 dark:border-blue-800">
-                      {{ reporteActual.categoria }}
-                    </span>
-                    <span class="text-xs text-slate-400 dark:text-stone-500 font-mono">• Emitido: {{ reporteActual.fechaEmision }}</span>
-                  </div>
-                  <h2 class="font-serif text-2xl font-bold text-slate-900 dark:text-white">{{ reporteActual.titulo }}</h2>
-                  <p class="text-xs text-slate-500 dark:text-stone-400 mt-1">Período evaluado: {{ reporteActual.periodo }}</p>
+              <!-- Header de Herramientas -->
+              <div class="p-4 sm:p-5 border-b border-slate-100 dark:border-stone-800 flex flex-wrap items-center justify-between gap-3 bg-slate-50/50 dark:bg-stone-900/50">
+                
+                <!-- Selector de Pestañas: Tabla, Gráfico SVG, Consulta SQL, Informes Estratégicos -->
+                <div class="flex items-center gap-1.5 p-1 rounded-2xl bg-slate-200/70 dark:bg-stone-800 text-xs font-bold">
+                  <button
+                    type="button"
+                    (click)="tabReporteAdmin = 'tabla'"
+                    [class]="tabReporteAdmin === 'tabla' ? 'flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white dark:bg-stone-900 text-blue-600 dark:text-blue-400 shadow-sm transition' : 'flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-slate-600 dark:text-stone-400 hover:text-slate-900 transition'"
+                  >
+                    <span>Tabla de Datos</span>
+                    <span class="px-1.5 py-0.2 rounded-md bg-slate-100 dark:bg-stone-800 text-[10px]">{{ resultadoIAAdmin.totalFilas }}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    (click)="tabReporteAdmin = 'grafico'"
+                    [class]="tabReporteAdmin === 'grafico' ? 'flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white dark:bg-stone-900 text-blue-600 dark:text-blue-400 shadow-sm transition' : 'flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-slate-600 dark:text-stone-400 hover:text-slate-900 transition'"
+                  >
+                    <span>Gráficos Ejecutivos</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    (click)="tabReporteAdmin = 'sql'"
+                    [class]="tabReporteAdmin === 'sql' ? 'flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white dark:bg-stone-900 text-blue-600 dark:text-blue-400 shadow-sm transition' : 'flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-slate-600 dark:text-stone-400 hover:text-slate-900 transition'"
+                  >
+                    <span>Consulta SQL</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    (click)="tabReporteAdmin = 'informes'"
+                    [class]="tabReporteAdmin === 'informes' ? 'flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white dark:bg-stone-900 text-indigo-600 dark:text-indigo-400 shadow-sm transition' : 'flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-slate-600 dark:text-stone-400 hover:text-slate-900 transition'"
+                  >
+                    <span>Informes Ejecutivos</span>
+                  </button>
                 </div>
 
+                <!-- Acciones de Tabla: Selector de Columnas y Descarga Excel -->
                 <div class="flex items-center gap-2">
-                  <button
-                    (click)="exportarPdfSimulado()"
-                    class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-stone-800 dark:hover:bg-stone-700 text-slate-700 hover:text-slate-900 dark:text-stone-200 text-xs font-semibold flex items-center gap-2 transition border border-slate-200 dark:border-stone-700"
-                  >
-                    <svg class="w-4 h-4 text-slate-500 dark:text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    <span>Descargar PDF</span>
-                  </button>
+                  <!-- Selector de Columnas -->
+                  <div class="relative">
+                    <button
+                      type="button"
+                      (click)="mostrarSelectorColsAdmin = !mostrarSelectorColsAdmin"
+                      class="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white dark:bg-stone-800 text-slate-700 dark:text-stone-200 border border-slate-200 dark:border-stone-700 hover:bg-slate-50 text-xs font-bold transition shadow-sm cursor-pointer"
+                    >
+                      <span>Columnas ({{ columnasVisiblesAdmin.length }})</span>
+                      <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
 
+                    <div *ngIf="mostrarSelectorColsAdmin" class="absolute right-0 mt-2 w-64 p-3 rounded-2xl bg-white dark:bg-stone-900 border border-slate-200 dark:border-stone-800 shadow-2xl z-30 space-y-2 animate-fade-in">
+                      <div class="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-stone-800">
+                        <span class="text-[11px] font-bold text-slate-900 dark:text-white">Personalizar Columnas</span>
+                        <button type="button" (click)="restaurarColumnasAdmin()" class="text-[10px] text-blue-600 font-bold hover:underline">Restaurar todas</button>
+                      </div>
+
+                      <div class="max-h-52 overflow-y-auto space-y-1">
+                        <button
+                          *ngFor="let col of resultadoIAAdmin.columnas"
+                          type="button"
+                          (click)="toggleColumnaAdmin(col.key)"
+                          class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-stone-800 text-xs text-left"
+                        >
+                          <span class="text-slate-700 dark:text-stone-200 truncate">{{ col.label }}</span>
+                          <span class="text-[10px] font-bold text-blue-600">✓</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Botón Exportar a Excel -->
                   <button
-                    (click)="exportarExcelSimulado()"
-                    class="px-4 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 border border-emerald-200 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs font-semibold flex items-center gap-2 transition"
+                    type="button"
+                    (click)="exportarExcelDinamicoAdmin()"
+                    class="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-sm cursor-pointer"
                   >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                     </svg>
-                    <span>Exportar Excel</span>
+                    <span>Exportar a Excel</span>
                   </button>
                 </div>
               </div>
 
-              <!-- Métricas Clave del Informe -->
-              <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div *ngFor="let k of reporteActual.kpis" class="p-4 rounded-2xl bg-slate-50 dark:bg-stone-900/80 border border-slate-200 dark:border-stone-800 space-y-1">
-                  <span class="text-[11px] text-slate-500 dark:text-stone-400 font-semibold">{{ k.etiqueta }}</span>
-                  <div class="text-2xl font-black text-slate-900 dark:text-white font-sans">{{ k.valor }}</div>
-                  <div [class]="k.esPositivo ? 'text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold' : 'text-[11px] text-blue-600 dark:text-blue-400 font-semibold'">
-                    {{ k.variacion }}
+              <!-- PESTAÑA 1: TABLA DINÁMICA CON ARRASTRE Y DESGLOSE -->
+              <div *ngIf="tabReporteAdmin === 'tabla'" class="overflow-x-auto">
+                <div class="px-4 py-2 bg-blue-50/50 dark:bg-blue-950/20 text-[11px] text-blue-700 dark:text-blue-300 flex items-center gap-2 border-b border-blue-100 dark:border-blue-900/50">
+                  <span>💡 Tip: Puedes <strong>arrastrar los encabezados</strong> para reordenar las columnas y hacer <strong>clic en cualquier fila</strong> para ver su desglose pormenorizado.</span>
+                </div>
+
+                <table class="w-full text-left text-xs text-slate-600 dark:text-stone-300">
+                  <thead class="bg-slate-50 dark:bg-stone-800/60 text-slate-900 dark:text-white uppercase font-bold text-[10px] tracking-wider select-none">
+                    <tr>
+                      <th class="px-4 py-3.5 w-10 text-center">#</th>
+                      <th
+                        *ngFor="let col of columnasVisiblesAdmin; let idx = index"
+                        draggable="true"
+                        (dragstart)="dragStartColAdmin(idx)"
+                        (dragover)="dragOverColAdmin($event, idx)"
+                        (dragend)="dragEndColAdmin()"
+                        [class]="'px-4 py-3.5 cursor-grab active:cursor-grabbing hover:bg-blue-100/60 dark:hover:bg-blue-900/40 transition border-r border-slate-200/40 dark:border-stone-800/60 last:border-r-0 ' + (columnaArrastradaAdmin === idx ? 'bg-blue-200/70 dark:bg-blue-800/70' : '')"
+                        title="Arrastra para reordenar esta columna"
+                      >
+                        <div class="flex items-center justify-between gap-2">
+                          <span class="truncate">{{ col.label }}</span>
+                          <span class="text-slate-400 opacity-60">⇄</span>
+                        </div>
+                      </th>
+                      <th class="px-4 py-3.5 text-right">Desglose</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100 dark:divide-stone-800">
+                    <tr
+                      *ngFor="let fila of resultadoIAAdmin.filas; let fIdx = index"
+                      (click)="desglosarFilaAdmin(fila)"
+                      class="hover:bg-blue-50/40 dark:hover:bg-stone-800/50 transition cursor-pointer"
+                    >
+                      <td class="px-4 py-3 text-center text-slate-400 font-mono text-[10px]">{{ fIdx + 1 }}</td>
+                      <td *ngFor="let col of columnasVisiblesAdmin" class="px-4 py-3 font-medium">
+                        <span *ngIf="col.type === 'currency'" class="font-bold text-slate-900 dark:text-white">
+                          Bs. {{ fila[col.key] | number:'1.2-2' }}
+                        </span>
+                        <span *ngIf="col.type === 'badge'" [class]="'inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold ' + (fila[col.key]?.toString().includes('Verificado') || fila[col.key]?.toString().includes('PUBLICADO') || fila[col.key]?.toString().includes('ACTIVO') ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300')">
+                          {{ fila[col.key] || 'Activo' }}
+                        </span>
+                        <span *ngIf="col.type !== 'currency' && col.type !== 'badge'">
+                          {{ fila[col.key] !== null && fila[col.key] !== undefined ? fila[col.key] : '—' }}
+                        </span>
+                      </td>
+                      <td class="px-4 py-3 text-right">
+                        <span class="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-700">
+                          <span>Ver</span>
+                          <span>→</span>
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- PESTAÑA 2: GRÁFICOS EJECUTIVOS SVG -->
+              <div *ngIf="tabReporteAdmin === 'grafico'" class="p-6 sm:p-8 space-y-6">
+                <div *ngIf="resultadoIAAdmin.grafico">
+                  <h4 class="font-serif text-lg font-bold text-slate-900 dark:text-white mb-2">{{ resultadoIAAdmin.grafico.titulo }}</h4>
+                  <p class="text-xs text-slate-400 mb-6">Distribución comparativa calculada automáticamente en tiempo real.</p>
+                  <div class="space-y-4">
+                    <div *ngFor="let etiq of resultadoIAAdmin.grafico.etiquetas; let i = index" class="space-y-1">
+                      <div class="flex items-center justify-between text-xs font-semibold">
+                        <span class="text-slate-800 dark:text-stone-200 truncate">{{ etiq }}</span>
+                        <span class="font-bold text-blue-600 dark:text-blue-400">
+                          {{ resultadoIAAdmin.grafico.formato === 'moneda' ? 'Bs. ' + (resultadoIAAdmin.grafico.valores[i] | number:'1.2-2') : resultadoIAAdmin.grafico.valores[i] }}
+                        </span>
+                      </div>
+                      <div class="w-full h-3 rounded-full bg-slate-100 dark:bg-stone-800 overflow-hidden">
+                        <div class="h-full rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500" style="width: 75%"></div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <!-- Resumen Ejecutivo -->
-              <div class="p-5 rounded-2xl bg-slate-50 dark:bg-stone-900/50 border border-slate-200 dark:border-stone-800/80 space-y-2">
-                <h4 class="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">Resumen Ejecutivo</h4>
-                <p class="text-xs leading-relaxed text-slate-700 dark:text-stone-300">
-                  {{ reporteActual.resumenEjecutivo }}
-                </p>
+              <!-- PESTAÑA 3: SENTENCIA SQL GENERADA -->
+              <div *ngIf="tabReporteAdmin === 'sql'" class="p-6 bg-slate-950 text-slate-100 font-mono text-xs overflow-x-auto space-y-3">
+                <div class="flex items-center justify-between text-slate-400 text-[11px] pb-2 border-b border-slate-800">
+                  <span>Consulta ANSI SQL generada por el Copiloto IA (Rol Administrador):</span>
+                  <span class="px-2 py-0.5 rounded-md bg-blue-900/60 text-blue-300 font-sans font-bold">{{ resultadoIAAdmin.proveedorIA }}</span>
+                </div>
+                <pre class="text-emerald-400 font-mono leading-relaxed">{{ resultadoIAAdmin.sqlEjecutado }}</pre>
               </div>
 
-              <!-- Puntos Clave & Hallazgos -->
-              <div class="space-y-3">
-                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-stone-400">Hallazgos Principales</h4>
-                <ul class="space-y-2.5 text-xs text-slate-700 dark:text-stone-300">
-                  <li *ngFor="let punto of reporteActual.puntosClave" class="flex items-start gap-2.5">
-                    <span class="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 shrink-0"></span>
-                    <span class="leading-relaxed">{{ punto }}</span>
-                  </li>
-                </ul>
+              <!-- PESTAÑA 4: INFORMES ESTRATÉGICOS PREGENERADOS -->
+              <div *ngIf="tabReporteAdmin === 'informes'" class="p-6 space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <button (click)="tipoReporteSeleccionado = 1; generarReporteIA()" [class]="tipoReporteSeleccionado === 1 ? 'p-4 rounded-2xl bg-blue-50 dark:bg-blue-950/60 border-2 border-blue-600 text-left space-y-1 cursor-pointer' : 'p-4 rounded-2xl bg-slate-50 dark:bg-stone-900/60 border border-slate-200 dark:border-stone-800 text-left space-y-1 cursor-pointer'">
+                    <span class="text-[10px] font-bold text-blue-600 uppercase tracking-wider block">Auditoría & Proyección</span>
+                    <h4 class="text-xs font-bold text-slate-900 dark:text-white">Cierre Fiscal & Rendimiento</h4>
+                  </button>
+                  <button (click)="tipoReporteSeleccionado = 2; generarReporteIA()" [class]="tipoReporteSeleccionado === 2 ? 'p-4 rounded-2xl bg-blue-50 dark:bg-blue-950/60 border-2 border-blue-600 text-left space-y-1 cursor-pointer' : 'p-4 rounded-2xl bg-slate-50 dark:bg-stone-900/60 border border-slate-200 dark:border-stone-800 text-left space-y-1 cursor-pointer'">
+                    <span class="text-[10px] font-bold text-indigo-600 uppercase tracking-wider block">Tendencia Regional</span>
+                    <h4 class="text-xs font-bold text-slate-900 dark:text-white">Demanda Festividades 2026</h4>
+                  </button>
+                  <button (click)="tipoReporteSeleccionado = 3; generarReporteIA()" [class]="tipoReporteSeleccionado === 3 ? 'p-4 rounded-2xl bg-cyan-50 dark:bg-cyan-950/60 border-2 border-cyan-600 text-left space-y-1 cursor-pointer' : 'p-4 rounded-2xl bg-slate-50 dark:bg-stone-900/60 border border-slate-200 dark:border-stone-800 text-left space-y-1 cursor-pointer'">
+                    <span class="text-[10px] font-bold text-cyan-600 uppercase tracking-wider block">Calidad & Detección</span>
+                    <h4 class="text-xs font-bold text-slate-900 dark:text-white">Detección de Anomalías</h4>
+                  </button>
+                </div>
+
+                <div *ngIf="reporteActual" class="p-6 rounded-3xl bg-slate-50 dark:bg-stone-900/80 border border-slate-200 dark:border-stone-800 space-y-4">
+                  <div class="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-stone-800">
+                    <div>
+                      <span class="text-[10px] font-bold uppercase text-blue-600">{{ reporteActual.categoria }}</span>
+                      <h3 class="font-serif text-xl font-bold text-slate-900 dark:text-white">{{ reporteActual.titulo }}</h3>
+                    </div>
+                    <span class="text-xs text-slate-400 font-mono">{{ reporteActual.fechaEmision }}</span>
+                  </div>
+                  <p class="text-xs text-slate-600 dark:text-stone-300 leading-relaxed">{{ reporteActual.resumenEjecutivo }}</p>
+                </div>
               </div>
 
-              <!-- Recomendaciones Estratégicas para la Dirección -->
-              <div class="p-5 rounded-2xl bg-blue-50/60 dark:bg-gradient-to-br dark:from-blue-950/40 dark:to-carbon-900 border border-blue-200 dark:border-blue-500/30 space-y-3">
-                <h4 class="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">Recomendaciones Estratégicas</h4>
-                <ul class="space-y-2 text-xs text-slate-800 dark:text-stone-200">
-                  <li *ngFor="let rec of reporteActual.recomendacionesEstrategicas" class="flex items-start gap-2.5">
-                    <span class="text-emerald-600 dark:text-emerald-400 font-bold shrink-0">✓</span>
-                    <span class="leading-relaxed">{{ rec }}</span>
-                  </li>
-                </ul>
-              </div>
+            </div>
 
+            <!-- Modal / Panel Desglose Detallado de Fila (Drill-Down) -->
+            <div *ngIf="filaDesglosadaAdmin" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+              <div class="relative w-full max-w-lg p-6 bg-white dark:bg-stone-900 rounded-3xl border border-slate-200 dark:border-stone-800 shadow-2xl space-y-4 animate-modal-in">
+                <div class="flex items-start justify-between pb-3 border-b border-slate-100 dark:border-stone-800">
+                  <div>
+                    <span class="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider block">Desglose Operativo Pormenorizado</span>
+                    <h3 class="font-serif text-xl font-bold text-slate-900 dark:text-white mt-0.5">Detalle del Registro Seleccionado</h3>
+                  </div>
+                  <button type="button" (click)="cerrarDesgloseAdmin()" class="p-1.5 rounded-xl bg-slate-100 dark:bg-stone-800 text-slate-400 hover:text-slate-600 transition cursor-pointer">✕</button>
+                </div>
+
+                <div class="space-y-2.5 max-h-96 overflow-y-auto pr-1">
+                  <div *ngFor="let item of obtenerEntradasFila(filaDesglosadaAdmin)" class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-stone-800/60 text-xs">
+                    <span class="text-slate-400 font-bold uppercase text-[10px]">{{ item.key }}</span>
+                    <span class="font-semibold text-slate-900 dark:text-white text-right ml-4">{{ item.valor }}</span>
+                  </div>
+                </div>
+
+                <button type="button" (click)="cerrarDesgloseAdmin()" class="w-full py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-500/25 transition cursor-pointer">Cerrar Desglose</button>
+              </div>
             </div>
 
           </div>
@@ -2258,6 +2468,18 @@ export class AppComponent implements OnInit {
   generandoReporte: boolean = false;
   reporteActual: ReporteGenerativo | null = null;
 
+  // Reportes Generativos con IA Avanzados para Administrador
+  private reportAdminService = new ReportAdminService();
+  queryIAAdmin: string = 'Comisiones y facturación consolidada por departamento';
+  cargandoIAAdmin: boolean = false;
+  escuchandoVozAdmin: boolean = false;
+  tabReporteAdmin: 'tabla' | 'grafico' | 'sql' | 'informes' = 'tabla';
+  resultadoIAAdmin: ReportQueryResultAdmin | null = null;
+  columnasVisiblesAdmin: ReportColumnAdmin[] = [];
+  mostrarSelectorColsAdmin: boolean = false;
+  columnaArrastradaAdmin: number | null = null;
+  filaDesglosadaAdmin: Record<string, any> | null = null;
+
   ngOnInit() {
     // 1. Inicializar Tema persistente desde LocalStorage
     try {
@@ -2285,6 +2507,7 @@ export class AppComponent implements OnInit {
     this.cargarMovimientos();
     this.cargarAlojamientos();
     this.generarReporteIA();
+    this.ejecutarReporteIAAdmin();
   }
 
   toggleTheme() {
@@ -3312,5 +3535,131 @@ export class AppComponent implements OnInit {
 
   exportarExcelSimulado() {
     alert('Exportando Libro Diario y métricas consolidadas en formato XLSX...');
+  }
+
+  // ==========================================
+  // METODOS DEL GENERADOR DE REPORTES CON IA (ADMIN)
+  // ==========================================
+  async ejecutarReporteIAAdmin(consulta?: string) {
+    const q = consulta || this.queryIAAdmin;
+    if (!q || !q.trim()) return;
+    this.queryIAAdmin = q;
+    this.cargandoIAAdmin = true;
+    this.filaDesglosadaAdmin = null;
+
+    try {
+      const res = await this.reportAdminService.resolverReporteAdmin(q, {
+        alojamientos: this.alojamientos,
+        liquidaciones: this.liquidaciones,
+        valoraciones: this.resenasHabitacionActual.length > 0 ? this.resenasHabitacionActual : VALORACIONES_ADMIN_DEMO
+      });
+      this.resultadoIAAdmin = res;
+      this.columnasVisiblesAdmin = [...res.columnas];
+    } catch (e) {
+      console.warn('Error en reporte IA admin:', e);
+    } finally {
+      this.cargandoIAAdmin = false;
+    }
+  }
+
+  toggleVozAdmin() {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert('El navegador no admite reconocimiento de voz nativo en este entorno.');
+      return;
+    }
+
+    if (this.escuchandoVozAdmin) {
+      this.escuchandoVozAdmin = false;
+      return;
+    }
+
+    try {
+      const rec = new SpeechRecognition();
+      rec.lang = 'es-BO';
+      rec.continuous = false;
+      rec.interimResults = false;
+
+      rec.onstart = () => {
+        this.escuchandoVozAdmin = true;
+      };
+
+      rec.onresult = (event: any) => {
+        const transcrito = event.results[0][0].transcript;
+        this.queryIAAdmin = transcrito;
+        this.escuchandoVozAdmin = false;
+        this.ejecutarReporteIAAdmin(transcrito);
+      };
+
+      rec.onerror = () => {
+        this.escuchandoVozAdmin = false;
+      };
+
+      rec.onend = () => {
+        this.escuchandoVozAdmin = false;
+      };
+
+      rec.start();
+    } catch {
+      this.escuchandoVozAdmin = false;
+    }
+  }
+
+  dragStartColAdmin(idx: number) {
+    this.columnaArrastradaAdmin = idx;
+  }
+
+  dragOverColAdmin(e: Event, idx: number) {
+    e.preventDefault();
+    if (this.columnaArrastradaAdmin === null || this.columnaArrastradaAdmin === idx) return;
+
+    const nuevas = [...this.columnasVisiblesAdmin];
+    const [arrastrada] = nuevas.splice(this.columnaArrastradaAdmin, 1);
+    nuevas.splice(idx, 0, arrastrada);
+    this.columnaArrastradaAdmin = idx;
+    this.columnasVisiblesAdmin = nuevas;
+  }
+
+  dragEndColAdmin() {
+    this.columnaArrastradaAdmin = null;
+  }
+
+  toggleColumnaAdmin(key: string) {
+    if (!this.resultadoIAAdmin) return;
+    const existe = this.columnasVisiblesAdmin.some(c => c.key === key);
+    if (existe) {
+      if (this.columnasVisiblesAdmin.length <= 1) return;
+      this.columnasVisiblesAdmin = this.columnasVisiblesAdmin.filter(c => c.key !== key);
+    } else {
+      const original = this.resultadoIAAdmin.columnas.find(c => c.key === key);
+      if (original) {
+        this.columnasVisiblesAdmin = [...this.columnasVisiblesAdmin, original];
+      }
+    }
+  }
+
+  restaurarColumnasAdmin() {
+    if (this.resultadoIAAdmin) {
+      this.columnasVisiblesAdmin = [...this.resultadoIAAdmin.columnas];
+    }
+  }
+
+  exportarExcelDinamicoAdmin() {
+    if (this.resultadoIAAdmin && this.resultadoIAAdmin.filas.length > 0) {
+      this.reportAdminService.exportarCSV(this.resultadoIAAdmin.filas, 'reporte_admin_nacional_alojate.csv');
+    }
+  }
+
+  desglosarFilaAdmin(fila: any) {
+    this.filaDesglosadaAdmin = fila;
+  }
+
+  cerrarDesgloseAdmin() {
+    this.filaDesglosadaAdmin = null;
+  }
+
+  obtenerEntradasFila(obj: any): { key: string; valor: any }[] {
+    if (!obj) return [];
+    return Object.entries(obj).map(([k, v]) => ({ key: k, valor: v }));
   }
 }
