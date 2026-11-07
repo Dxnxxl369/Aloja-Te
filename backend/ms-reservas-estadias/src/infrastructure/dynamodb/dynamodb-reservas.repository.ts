@@ -169,6 +169,12 @@ export class DynamoDBReservasRepository implements IReservasRepository {
     }
   }
 
+  /** ¿Esa reserva sigue pendiente de pago pero su plazo ya venció? (no debe ocupar fechas) */
+  private reservaVencida(idReserva?: string): boolean {
+    const r = idReserva ? this.memoryReservas.get(idReserva) : undefined;
+    return !!r && r.estado === 'PENDIENTE_PAGO' && typeof r.ttl === 'number' && r.ttl * 1000 <= Date.now();
+  }
+
   async obtenerBloqueosPorRango(
     idUnidad: string,
     fechaInicio: string,
@@ -180,7 +186,8 @@ export class DynamoDBReservasRepository implements IReservasRepository {
         b.idUnidad === idUnidad &&
         b.fecha >= fechaInicio &&
         b.fecha < fechaFin &&
-        b.idReserva !== excluirReservaId,
+        b.idReserva !== excluirReservaId &&
+        !this.reservaVencida(b.idReserva),
     );
     if (bloqueosDirectos.length > 0) {
       return bloqueosDirectos;
