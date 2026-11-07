@@ -1,0 +1,145 @@
+// ======================================================================
+// ARCHIVO: app/navegacion.tsx      IMPORTANCIA: ★★ MEDIA
+// QUÉ ES: Las pantallas de la sesión iniciada y cómo se pasa de una a otra: Agente -> Reserva -> Pago.
+// PARA QUÉ SIRVE: Conecta los features sin que se conozcan entre sí: aquí se arma la solicitud de pago a partir de la reserva.
+// SIN ÉL: Cada feature tendría que importar al otro para navegar.
+// NO VA AQUÍ: Reglas de negocio (están en cada feature) ni el login (es App.tsx).
+// ======================================================================
+// Cada pantalla va dentro de un <Marco>: cabecera + franja de "sin internet / pendientes".
+// Las pantallas son componentes de módulo (no funciones en línea) para que React Navigation
+// no las vuelva a montar en cada render y la conversación del agente no se pierda.
+
+import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { createContext, useCallback, useContext, useEffect } from 'react';
+import type { ReactNode } from 'react';
+import { Alert, View } from 'react-native';
+import { modeloLocal, useEstadoSync, useSesion } from '../core';
+import { PantallaAgente } from '../features/agente';
+import { PantallaPago } from '../features/pagos';
+import type { SolicitudPago } from '../features/pagos';
+import { PantallaReserva } from '../features/reservas';
+import { AvisoSinRed } from '../shared/ui/AvisoSinRed';
+import { Encabezado } from '../shared/ui/Encabezado';
+import { COLOR } from '../shared/ui/tema';
+import type { Features } from './features';
+
+type Rutas = {
+  Agente: undefined;
+  Reserva: { reservaId: string };
+  Pago: { solicitud: SolicitudPago };
+};
+
+const Stack = createNativeStackNavigator<Rutas>();
+const ContextoFeatures = createContext<Features | null>(null);
+
+function useFeatures(): Features {
+  const f = useContext(ContextoFeatures);
+  if (!f) throw new Error('useFeatures debe usarse dentro de <NavegacionApp>');
+  return f;
+}
+
+/** Cabecera + aviso de conexión + el contenido de la pantalla. */
+function Marco({ titulo, alVolver, children }: { titulo: string; alVolver?: () => void; children: ReactNode }) {
+  const { sesion, cerrarSesion } = useSesion();
+  const sync = useEstadoSync();
+
+  const abrirCuenta = () =>
+    Alert.alert(sesion?.nombre || 'Mi cuenta', sesion?.email, [
+      { text: 'Cancelar', style: 'cancel' },
+      { text: 'Cerrar sesión', style: 'destructive', onPress: () => void cerrarSesion() },
+    ]);
+
+  return (
+    <View style={{ flex: 1, backgroundColor: COLOR.fondo }}>
+      <Encabezado titulo={titulo} alVolver={alVolver} alPerfil={abrirCuenta} />
+      <AvisoSinRed conectado={sync.conectado} pendientes={sync.pendientes} />
+      <View style={{ flex: 1 }}>{children}</View>
+    </View>
+  );
+}
+
+/** IA local: se carga al abrir el agente (si el celular la soporta y está descargada) y se libera al salir. */
+function useIaLocal() {
+  useEffect(() => {
+    let vivo = true;
+    (async () => {
+      try {
+        const estado = await modeloLocal.refrescar();
+        if (vivo && estado === 'LISTO') await modeloLocal.cargar();
+      } catch (e) {
+        console.warn('IA local no disponible, el agente usará la nube o las reglas', e instanceof Error ? e.message : e);
+      }
+    })();
+    return () => {
+      vivo = false;
+      void modeloLocal.liberar().catch(() => undefined);
+    };
+  }, []);
+}
+
+function RutaAgente({ navigation }: NativeStackScreenProps<Rutas, 'Agente'>) {
+  const { agente, reservas } = useFeatures();
+  useIaLocal();
+  const resolverReservaEnCola = useCallback(
+    async (clave: string) => (await reservas.casos.obtenerReservaPorClave(clave))?.id ?? null,
+    [reservas],
+  );
+  return (
+    <Marco titulo="Asistente de reservas">
+      <PantallaAgente
+        casos={agente.casos}
+        alPagar={(reservaId) => navigation.navigate('Reserva', { reservaId })}
+        resolverReservaEnCola={resolverReservaEnCola}
+      />
+    </Marco>
+  );
+}
+
+function RutaReserva({ navigation, route }: NativeStackScreenProps<Rutas, 'Reserva'>) {
+  const { reservas } = useFeatures();
+  return (
+    <Marco titulo="Detalle de reserva" alVolver={navigation.goBack}>
+      <PantallaReserva
+        casos={reservas.casos}
+        reservaId={route.params.reservaId}
+        alPagar={(r) =>
+          navigation.navigate('Pago', {
+            solicitud: {
+              reservaId: r.id,
+              anfitrionId: r.anfitrionId,
+              subtotal: r.total,
+              reservaBloqueadaHasta: r.bloqueadaHasta,
+            },
+          })
+        }
+      />
+    </Marco>
+  );
+}
+
+function RutaPago({ navigation, route }: NativeStackScreenProps<Rutas, 'Pago'>) {
+  const { pagos } = useFeatures();
+  return (
+    <Marco titulo="Pago con QR" alVolver={navigation.goBack}>
+      <PantallaPago casos={pagos.casos} solicitud={route.params.solicitud} alTerminar={() => navigation.goBack()} />
+    </Marco>
+  );
+}
+
+const TEMA = { ...DefaultTheme, colors: { ...DefaultTheme.colors, background: COLOR.fondo, primary: COLOR.primario } };
+
+export function NavegacionApp({ features }: { features: Features }) {
+  return (
+    <ContextoFeatures.Provider value={features}>
+      <NavigationContainer theme={TEMA}>
+        <Stack.Navigator initialRouteName="Agente" screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="Agente" component={RutaAgente} />
+          <Stack.Screen name="Reserva" component={RutaReserva} />
+          <Stack.Screen name="Pago" component={RutaPago} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </ContextoFeatures.Provider>
+  );
+}
