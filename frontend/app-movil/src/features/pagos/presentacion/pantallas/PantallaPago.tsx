@@ -8,9 +8,10 @@
 // Diseño: mockup "5. Pago con QR Simple". El QR se dibuja con react-native-qrcode-svg.
 // Solo se muestran datos reales del pago (descuento y cargo de servicio vienen de MS-03).
 
-import { CheckCircle2, Clock, Lock, QrCode, Tag, XCircle } from 'lucide-react-native';
+import { CheckCircle2, Clock, Lock, Maximize2, QrCode, Tag, XCircle } from 'lucide-react-native';
+import { useState } from 'react';
 import QRCode from 'react-native-qrcode-svg';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Boton } from '../../../../shared/ui/Boton';
 import { COLOR, ESPACIO, FUENTE, RADIO } from '../../../../shared/ui/tema';
 import type { CasosPagos } from '../../domain/interfaces';
@@ -25,6 +26,7 @@ interface Props {
 
 export function PantallaPago({ casos, solicitud, alTerminar }: Props) {
   const { pago, error, cargando, segundosQr, reintentar, simular } = usePago(casos, solicitud);
+  const [qrGrande, setQrGrande] = useState(false);
 
   if (cargando && !pago) {
     return (
@@ -44,6 +46,12 @@ export function PantallaPago({ casos, solicitud, alTerminar }: Props) {
   }
 
   const dinero = (n: number) => `${pago.moneda} ${n.toFixed(2)}`;
+  const vencido = segundosQr === 0;
+  const idCorto = pago.id.slice(0, 8).toUpperCase();
+  const horaLimite =
+    segundosQr !== null && segundosQr > 0
+      ? new Date(Date.now() + segundosQr * 1000).toLocaleTimeString('es-BO', { hour: '2-digit', minute: '2-digit' })
+      : null;
 
   return (
     <ScrollView contentContainerStyle={estilos.pagina} style={{ backgroundColor: COLOR.fondo }}>
@@ -80,16 +88,42 @@ export function PantallaPago({ casos, solicitud, alTerminar }: Props) {
               <Text style={estilos.suave}>
                 {pago.qr.banco} · {pago.qr.alias}
               </Text>
-              <View style={estilos.marcoQr}>
-                <View style={estilos.fondoQr}>
-                  <QRCode value={pago.qr.cadena} size={200} color={COLOR.texto} backgroundColor="#ffffff" />
+              {vencido ? (
+                <View style={estilos.vencido}>
+                  <XCircle color={COLOR.error} size={32} />
+                  <Text style={estilos.vencidoTitulo}>El código QR ha vencido</Text>
+                  <Text style={estilos.suave}>
+                    Si ya pagaste, espera unos segundos: tu reserva se confirma sola. Si no, vuelve a la reserva.
+                  </Text>
+                  <View style={{ alignSelf: 'stretch' }}>
+                    <Boton variante="contorno" titulo="Volver a la reserva" onPress={() => alTerminar(false)} />
+                  </View>
                 </View>
-              </View>
+              ) : (
+                <>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Ampliar código QR"
+                    onPress={() => setQrGrande(true)}
+                    style={estilos.marcoQr}
+                  >
+                    <View style={estilos.fondoQr}>
+                      <QRCode value={pago.qr.cadena} size={200} color={COLOR.texto} backgroundColor="#ffffff" />
+                    </View>
+                  </Pressable>
+                  <Pressable accessibilityRole="button" onPress={() => setQrGrande(true)} style={estilos.ampliar}>
+                    <Maximize2 color={COLOR.primario} size={16} />
+                    <Text style={estilos.ampliarTexto}>Ampliar QR</Text>
+                  </Pressable>
+                </>
+              )}
               <View style={estilos.glosa}>
                 <Text style={estilos.glosaTexto}>
                   Glosa: <Text selectable style={estilos.glosaValor}>{pago.qr.glosa}</Text>
                 </Text>
               </View>
+              <Text style={estilos.suave}>Transacción {idCorto}</Text>
+              {horaLimite && <Text style={estilos.suave}>Paga antes de las {horaLimite}</Text>}
             </>
           ) : (
             <Text style={estilos.aviso}>
@@ -128,7 +162,8 @@ export function PantallaPago({ casos, solicitud, alTerminar }: Props) {
       {pago.estado === 'COMPLETADO' && (
         <View style={[estilos.tarjeta, estilos.exito]}>
           <CheckCircle2 color={COLOR.exito} size={40} />
-          <Text style={estilos.exitoTitulo}>¡Pago confirmado!</Text>
+          <Text style={estilos.exitoTitulo}>¡Pago aprobado!</Text>
+          <Text style={estilos.suave}>Transacción {idCorto}</Text>
           {pago.comprobantes.map((c) => (
             <Text key={c.id} style={estilos.suave}>
               {c.tipo} {c.numero}
@@ -143,7 +178,10 @@ export function PantallaPago({ casos, solicitud, alTerminar }: Props) {
       {(pago.estado === 'FALLIDO' || pago.estado === 'REEMBOLSADO') && (
         <View style={[estilos.tarjeta, estilos.fallo]}>
           <XCircle color={COLOR.error} size={40} />
-          <Text style={estilos.error}>{pago.estado === 'FALLIDO' ? 'El pago falló.' : 'El pago fue reembolsado.'}</Text>
+          <Text style={estilos.error}>
+            {pago.estado === 'FALLIDO' ? 'No se pudo completar el pago' : 'El pago fue reembolsado'}
+          </Text>
+          <Text style={estilos.suave}>Transacción {idCorto}</Text>
           <View style={{ alignSelf: 'stretch' }}>
             <Boton variante="contorno" titulo="Volver" onPress={() => alTerminar(false)} />
           </View>
@@ -156,6 +194,15 @@ export function PantallaPago({ casos, solicitud, alTerminar }: Props) {
         <Lock color={COLOR.primario} size={16} />
         <Text style={estilos.seguroTexto}>Transacción protegida · Pago con QR Simple</Text>
       </View>
+
+      <Modal visible={qrGrande} transparent animationType="fade" onRequestClose={() => setQrGrande(false)}>
+        <Pressable style={estilos.fondoModal} onPress={() => setQrGrande(false)} accessibilityLabel="Cerrar QR ampliado">
+          <View style={estilos.cajaModal}>
+            {pago.qr && <QRCode value={pago.qr.cadena} size={280} color={COLOR.texto} backgroundColor="#ffffff" />}
+            <Text style={estilos.suave}>Toca para cerrar</Text>
+          </View>
+        </Pressable>
+      </Modal>
     </ScrollView>
   );
 }
@@ -208,6 +255,13 @@ const estilos = StyleSheet.create({
   esperaTexto: { flex: 1, fontFamily: FUENTE.normal, fontSize: 14, color: COLOR.texto },
   expira: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.s },
   expiraTiempo: { fontFamily: FUENTE.fuerte, color: COLOR.texto },
+
+  ampliar: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.xs, minHeight: 44 },
+  ampliarTexto: { fontFamily: FUENTE.semi, fontSize: 14, color: COLOR.primario },
+  vencido: { alignSelf: 'stretch', alignItems: 'center', gap: ESPACIO.s, backgroundColor: COLOR.errorFondo, borderWidth: 1, borderColor: COLOR.errorBorde, borderRadius: RADIO.tarjeta, padding: ESPACIO.l },
+  vencidoTitulo: { fontFamily: FUENTE.titulo, fontSize: 18, color: COLOR.error },
+  fondoModal: { flex: 1, backgroundColor: COLOR.scrim, alignItems: 'center', justifyContent: 'center', padding: ESPACIO.xl },
+  cajaModal: { backgroundColor: '#fff', borderRadius: RADIO.tarjeta, padding: ESPACIO.xl, alignItems: 'center', gap: ESPACIO.m },
 
   exito: { alignItems: 'center', backgroundColor: COLOR.exitoFondo, borderColor: COLOR.exitoBorde },
   exitoTitulo: { fontFamily: FUENTE.titulo, fontSize: 22, color: COLOR.exito },
