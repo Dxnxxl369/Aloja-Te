@@ -11,6 +11,7 @@ export const COLOR = {
   primario: '#2563eb',
   primarioPresionado: '#1d4ed8',
   primarioSuave: '#eff6ff',
+  primarioBorde: '#bfdbfe',
   fondo: '#f8fafc',
   tarjeta: '#ffffff',
   campo: '#f2f3ff', // relleno de los campos de texto
@@ -27,6 +28,10 @@ export const COLOR = {
   errorFondo: '#fef2f2',
   errorBorde: '#fecaca',
   scrim: 'rgba(15, 23, 42, 0.4)',
+  /** Fondo de las etiquetas que van sobre una foto (ubicación, contador de fotos). */
+  sobreFoto: 'rgba(15, 23, 42, 0.55)',
+  /** Fondo de las píldoras blancas sobre una foto (calificación, "Verificado"). */
+  sobreFotoClaro: 'rgba(255, 255, 255, 0.92)',
 } as const;
 
 /** Nombres de las fuentes cargadas en App.tsx (@expo-google-fonts). */
