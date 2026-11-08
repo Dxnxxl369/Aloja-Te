@@ -1,3 +1,4 @@
+import { AnfitrionVerificadoBadge } from './AnfitrionVerificadoBadge';
 import React, { useState, useEffect } from 'react';
 import { 
   ArrowLeft, Star, MapPin, Users, Bed, Bath, Sparkles, Check, 
@@ -9,6 +10,7 @@ import {
 import { Alojamiento, UnidadReservable, ValoracionCliente, ResumenValoraciones } from '../types/catalogo.types';
 import { catalogoService } from '../services/catalogoService';
 import { reservasService } from '../../reservas/services/reservasService';
+import { RangoOcupado } from '../../reservas/types/reserva.types';
 import { useAuth } from '../../../core/auth/AuthContext';
 import { ImageLightboxModal } from '../modals/ImageLightboxModal';
 
@@ -43,6 +45,7 @@ export const DetalleAlojamientoView: React.FC<DetalleAlojamientoViewProps> = ({
   const [verificandoDisponibilidad, setVerificandoDisponibilidad] = useState(false);
   const [estaDisponible, setEstaDisponible] = useState(true);
   const [fechasBloqueadas, setFechasBloqueadas] = useState<string[]>([]);
+  const [rangosOcupados, setRangosOcupados] = useState<RangoOcupado[]>([]);
 
   // Detección de auto-reserva (Anfitrión propietario del alojamiento)
   const esMiPropiedad = Boolean(
@@ -58,6 +61,9 @@ export const DetalleAlojamientoView: React.FC<DetalleAlojamientoViewProps> = ({
   // Lightbox State
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+
+  // Pantalla Dedicada para Habitación Individual de Hotel
+  const [habitacionEnDetalle, setHabitacionEnDetalle] = useState<UnidadReservable | null>(null);
 
   // Perfil del Anfitrión Modal State
   const [perfilAnfitrionOpen, setPerfilAnfitrionOpen] = useState(false);
@@ -84,8 +90,8 @@ export const DetalleAlojamientoView: React.FC<DetalleAlojamientoViewProps> = ({
   const [mensajeExito, setMensajeExito] = useState<string | null>(null);
 
   const esHotel = alojamiento.modalidad === 'HOTEL_HOSTAL';
-  const unidadActiva = alojamiento.unidades?.find(u => u.idUnidad === selectedUnidadId) || alojamiento.unidades?.[0] || {
-    idUnidad: 'u-def',
+  const unidadActiva = habitacionEnDetalle || alojamiento.unidades?.find(u => u.idUnidad === selectedUnidadId) || alojamiento.unidades?.[0] || {
+    idUnidad: '00547b62-d2f5-4aa8-80a5-8662b2e028ec',
     nombre: 'Alojamiento Completo',
     capacidadPersonas: 4,
     cantidadCamas: 2,
@@ -95,6 +101,14 @@ export const DetalleAlojamientoView: React.FC<DetalleAlojamientoViewProps> = ({
     moneda: 'BOB',
     activo: true,
   };
+
+  // Cargar ocupación previa de la unidad seleccionada
+  useEffect(() => {
+    if (!unidadActiva?.idUnidad) return;
+    reservasService.obtenerRangosOcupados(unidadActiva.idUnidad).then((rangos) => {
+      setRangosOcupados(rangos);
+    });
+  }, [unidadActiva?.idUnidad]);
 
   // Verificación reactiva de disponibilidad en fechas seleccionadas
   useEffect(() => {
@@ -123,8 +137,15 @@ export const DetalleAlojamientoView: React.FC<DetalleAlojamientoViewProps> = ({
     };
   }, [unidadActiva?.idUnidad, checkIn, checkOut]);
 
-  // Fotos para Galería y Lightbox
-  const todasFotos = (alojamiento.fotografias || []).map(f => f.url).filter(Boolean);
+  // Fotos para Galería y Lightbox (General del Hotel vs Exclusiva de la Habitación)
+  const fotosHabitacion = habitacionEnDetalle
+    ? (habitacionEnDetalle.fotos || (habitacionEnDetalle.fotografias || []).map(f => f.url).filter(Boolean))
+    : [];
+
+  const todasFotos = (habitacionEnDetalle && fotosHabitacion.length > 0)
+    ? fotosHabitacion
+    : (alojamiento.fotografias || []).map(f => f.url).filter(Boolean);
+
   if (todasFotos.length === 0) {
     todasFotos.push('https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1200&q=80');
   }
@@ -213,10 +234,7 @@ export const DetalleAlojamientoView: React.FC<DetalleAlojamientoViewProps> = ({
         calificacionServicio: servicio ?? puntuacionGeneral,
         calificacionComodidad: comodidad ?? puntuacionGeneral,
         esAnonimo,
-        comentario: comentario.trim(),
-        sentimientoNlp: puntuacionGeneral >= 4 ? 'POSITIVO' : (puntuacionGeneral === 3 ? 'NEUTRO' : 'NEGATIVO'),
-        confianzaNlp: 0.95,
-        topicoPredicho: 'Experiencia General'
+        comentario: comentario.trim()
       });
 
       setMensajeExito(esAnonimo 
@@ -243,50 +261,137 @@ export const DetalleAlojamientoView: React.FC<DetalleAlojamientoViewProps> = ({
     }
   };
 
+  const estadoActual = alojamiento.estadoPublicacion || alojamiento.estado || 'PUBLICADO';
+  const esPublico = estadoActual === 'PUBLICADO' || (estadoActual === 'OBSERVADO' && ((alojamiento.origenUltimoCambio || '').toUpperCase().includes('NLP') || (alojamiento.origenUltimoCambio || '').toUpperCase().includes('RESENA')));
+
+  if (!esPublico && !esMiPropiedad && user?.rol !== 'ADMINISTRADOR') {
+    return (
+      <div className="max-w-xl mx-auto px-4 py-24 text-center space-y-6 animate-fade-in">
+        <div className="w-16 h-16 rounded-3xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-600 dark:text-amber-400 mx-auto shadow-lg shadow-amber-500/10">
+          <AlertCircle className="w-8 h-8" />
+        </div>
+        <div>
+          <h3 className="font-serif text-2xl font-bold text-slate-900 dark:text-white">
+            Alojamiento no disponible para reservas
+          </h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 max-w-sm mx-auto">
+            {estadoActual === 'SUSPENDIDO'
+              ? 'Esta propiedad se encuentra temporalmente en pausa preventiva por auditoría de calidad.'
+              : 'Esta propiedad se encuentra actualmente en proceso de revisión y moderación.'}
+          </p>
+        </div>
+        <button
+          onClick={onVolver}
+          className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition shadow-md shadow-blue-500/25"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>Volver al Catálogo</span>
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#f8fafc] dark:bg-[#0b0f17] text-slate-900 dark:text-slate-100 transition-colors duration-300 pb-20">
       
+      {/* Banner de Aviso de Estado para el Propietario */}
+      {!esPublico && esMiPropiedad && (
+        <div className="bg-amber-500/15 border-b border-amber-500/30 px-4 py-2.5 text-center text-xs text-amber-800 dark:text-amber-300 font-medium">
+          ⚠️ <strong>Aviso para el Anfitrión:</strong> Tu propiedad está en estado <strong>{estadoActual}</strong>. {alojamiento.motivoObservacionRechazo ? `Motivo registrado: "${alojamiento.motivoObservacionRechazo}"` : 'Aún no está disponible para reservas públicas.'}
+        </div>
+      )}
+
       {/* 1. Barra Superior de Retorno & Breadcrumbs Reales */}
       <div className="border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur sticky top-20 z-30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
-          <button
-            onClick={onVolver}
-            className="inline-flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>← Volver al Catálogo</span>
-          </button>
-
-          {/* Breadcrumbs Funcionales e Interactivos */}
-          <div className="hidden md:flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-4">
+          {habitacionEnDetalle ? (
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setHabitacionEnDetalle(null);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className="inline-flex items-center gap-2 text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline transition cursor-pointer"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>← Volver a Instalaciones del Hotel</span>
+              </button>
+              <span className="text-slate-300 dark:text-slate-700">/</span>
+              <span className="text-xs font-bold text-slate-800 dark:text-white truncate max-w-xs sm:max-w-none">
+                {habitacionEnDetalle.nombre}
+              </span>
+            </div>
+          ) : (
             <button
-              type="button"
               onClick={onVolver}
-              className="hover:text-blue-600 dark:hover:text-blue-400 hover:underline transition font-medium cursor-pointer"
+              className="inline-flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition"
             >
-              Alojamientos
+              <ArrowLeft className="w-4 h-4" />
+              <span>← Volver al Catálogo</span>
             </button>
-            <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-            <button
-              type="button"
-              onClick={() => onFiltrarDepartamento ? onFiltrarDepartamento(alojamiento.departamento) : onVolver()}
-              className="hover:text-blue-600 dark:hover:text-blue-400 hover:underline transition font-medium cursor-pointer"
-            >
-              {alojamiento.departamento}
-            </button>
-            <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-            <button
-              type="button"
-              onClick={() => onFiltrarCiudad ? onFiltrarCiudad(alojamiento.ciudad) : (onFiltrarDepartamento ? onFiltrarDepartamento(alojamiento.departamento) : onVolver())}
-              className="hover:text-blue-600 dark:hover:text-blue-400 hover:underline transition font-medium cursor-pointer"
-            >
-              {alojamiento.ciudad}
-            </button>
-            <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-            <span className="font-semibold text-slate-800 dark:text-slate-200 line-clamp-1">
-              {alojamiento.titulo}
-            </span>
-          </div>
+          )}
+
+          {/* Selector Rápido de Habitaciones si está en vista de Habitación o Breadcrumbs */}
+          {habitacionEnDetalle && esHotel && alojamiento.unidades && alojamiento.unidades.length > 1 ? (
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] uppercase font-bold text-slate-400 hidden md:inline">Otras opciones:</span>
+              <div className="flex items-center gap-1.5">
+                {alojamiento.unidades.map((u) => {
+                  const activa = u.idUnidad === habitacionEnDetalle.idUnidad;
+                  return (
+                    <button
+                      key={u.idUnidad}
+                      type="button"
+                      onClick={() => {
+                        setSelectedUnidadId(u.idUnidad);
+                        setHabitacionEnDetalle(u);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      className={`px-3 py-1 rounded-xl text-xs font-bold transition cursor-pointer ${
+                        activa
+                          ? 'bg-blue-600 text-white shadow-sm'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                      }`}
+                    >
+                      {u.nombre.includes('Suite') ? 'Suite Presidencial' : 'Doble Twin'}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            /* Breadcrumbs Funcionales e Interactivos */
+            <div className="hidden md:flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+              <button
+                type="button"
+                onClick={onVolver}
+                className="hover:text-blue-600 dark:hover:text-blue-400 hover:underline transition font-medium cursor-pointer"
+              >
+                Alojamientos
+              </button>
+              <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+              <button
+                type="button"
+                onClick={() => onFiltrarDepartamento ? onFiltrarDepartamento(alojamiento.departamento) : onVolver()}
+                className="hover:text-blue-600 dark:hover:text-blue-400 hover:underline transition font-medium cursor-pointer"
+              >
+                {alojamiento.departamento}
+              </button>
+              <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+              <button
+                type="button"
+                onClick={() => onFiltrarCiudad ? onFiltrarCiudad(alojamiento.ciudad) : (onFiltrarDepartamento ? onFiltrarDepartamento(alojamiento.departamento) : onVolver())}
+                className="hover:text-blue-600 dark:hover:text-blue-400 hover:underline transition font-medium cursor-pointer"
+              >
+                {alojamiento.ciudad}
+              </button>
+              <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+              <span className="font-semibold text-slate-800 dark:text-slate-200 line-clamp-1">
+                {alojamiento.titulo}
+              </span>
+            </div>
+          )}
 
           <div className="flex items-center gap-2">
             <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
@@ -306,7 +411,7 @@ export const DetalleAlojamientoView: React.FC<DetalleAlojamientoViewProps> = ({
         <div>
           <div className="flex items-center gap-2 mb-2 flex-wrap">
             <span className="px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 text-xs font-bold">
-              {alojamiento.tipoPropiedad || 'Alojamiento Tradicional'}
+              {habitacionEnDetalle ? `🏨 Habitación de ${alojamiento.titulo}` : (alojamiento.tipoPropiedad || 'Alojamiento Tradicional')}
             </span>
             <span className="text-slate-400">•</span>
             <a
@@ -322,12 +427,18 @@ export const DetalleAlojamientoView: React.FC<DetalleAlojamientoViewProps> = ({
           </div>
 
           <h1 className="font-serif text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white tracking-tight">
-            {alojamiento.titulo}
+            {habitacionEnDetalle ? habitacionEnDetalle.nombre : alojamiento.titulo}
           </h1>
 
           <p className="mt-2 flex items-center gap-1.5 text-xs sm:text-sm text-slate-600 dark:text-slate-400">
             <MapPin className="w-4 h-4 text-blue-600 shrink-0" />
-            <span>{alojamiento.direccion ? `${alojamiento.direccion}, ` : ''}{alojamiento.ciudad}, Departamento de {alojamiento.departamento}, Bolivia</span>
+            <span>
+              {habitacionEnDetalle ? (
+                <>Ubicada en <strong>{alojamiento.titulo}</strong> — {alojamiento.direccion ? `${alojamiento.direccion}, ` : ''}{alojamiento.ciudad}, {alojamiento.departamento}</>
+              ) : (
+                <>{alojamiento.direccion ? `${alojamiento.direccion}, ` : ''}{alojamiento.ciudad}, Departamento de {alojamiento.departamento}, Bolivia</>
+              )}
+            </span>
           </p>
         </div>
 
@@ -341,11 +452,11 @@ export const DetalleAlojamientoView: React.FC<DetalleAlojamientoViewProps> = ({
             >
               <img
                 src={heroFoto}
-                alt={alojamiento.titulo}
+                alt={habitacionEnDetalle ? habitacionEnDetalle.nombre : alojamiento.titulo}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               />
               <span className="absolute bottom-4 left-4 px-3 py-1 rounded-full bg-blue-600/90 text-white text-[11px] font-bold backdrop-blur-md shadow-md">
-                ⭐ Portada Principal
+                {habitacionEnDetalle ? `📸 Vista de ${habitacionEnDetalle.nombre}` : '⭐ Portada Principal'}
               </span>
               <div className="absolute top-4 right-4 px-3 py-1.5 rounded-xl bg-black/60 backdrop-blur-md text-white text-[11px] font-semibold opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1.5">
                 <ImageIcon className="w-3.5 h-3.5 text-blue-400" />
@@ -396,9 +507,7 @@ export const DetalleAlojamientoView: React.FC<DetalleAlojamientoViewProps> = ({
                     <h3 className="font-bold text-base text-slate-900 dark:text-white">
                       {alojamiento.nombreAnfitrion || 'Carlos Mendoza'}
                     </h3>
-                    <span className="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 text-[10px] font-bold border border-blue-200 dark:border-blue-800">
-                      Anfitrión Verificado
-                    </span>
+                    <AnfitrionVerificadoBadge nombre={alojamiento.nombreAnfitrion || 'Carlos Mendoza'} tamano="md" />
                   </div>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                     Hospitalidad y calidad garantizada • Respuesta habitual en menos de 15 minutos
@@ -427,24 +536,69 @@ export const DetalleAlojamientoView: React.FC<DetalleAlojamientoViewProps> = ({
               </p>
             </div>
 
-            {/* SECCIÓN ESPECIAL PARA HOTELES: CATÁLOGO EXPANDIDO DE HABITACIONES */}
+            {/* SECCIÓN ESPECIAL PARA HOTELES: CATÁLOGO EXPANDIDO DE HABITACIONES O HABITACIÓN EN DETALLE */}
             {esHotel && alojamiento.unidades && alojamiento.unidades.length > 0 && (
               <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-                <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-                  <div>
-                    <h3 className="font-serif text-xl font-bold text-slate-900 dark:text-white">
-                      Habitaciones Disponibles en el Hotel ({alojamiento.unidades.length})
-                    </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                      Selecciona la categoría que mejor se ajuste a tu viaje. Cada habitación tiene su propio inventario.
-                    </p>
-                  </div>
-                  <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 text-xs font-bold">
-                    Inventario en Tiempo Real
-                  </span>
-                </div>
+                {habitacionEnDetalle ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 flex-wrap gap-2">
+                      <div>
+                        <span className="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400 block mb-0.5">
+                          Habitación en pantalla individual
+                        </span>
+                        <h3 className="font-serif text-xl font-bold text-slate-900 dark:text-white">
+                          {habitacionEnDetalle.nombre}
+                        </h3>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setHabitacionEnDetalle(null);
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
+                        className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 cursor-pointer"
+                      >
+                        <ArrowLeft className="w-3.5 h-3.5" />
+                        <span>Ver todas las habitaciones del hotel</span>
+                      </button>
+                    </div>
 
-                <div className="space-y-4">
+                    <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                      {habitacionEnDetalle.descripcion}
+                    </p>
+
+                    {/* Ficha técnica y comodidades exclusivas */}
+                    <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 space-y-3">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                        Equipamiento y Servicios Incluidos en esta Habitación:
+                      </h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-700 dark:text-slate-300">
+                        {(habitacionEnDetalle.servicios || ['Cama King / Twin Confortable', 'Baño Privado con Ducha Termostática', 'Conexión WiFi de Alta Velocidad', 'Climatización Frío/Calor', 'Desayuno Buffet']).map((amenidad, idx) => (
+                          <div key={idx} className="flex items-center gap-2">
+                            <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                            <span>{amenidad}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                      <div>
+                        <h3 className="font-serif text-xl font-bold text-slate-900 dark:text-white">
+                          Habitaciones Disponibles en el Hotel ({alojamiento.unidades.length})
+                        </h3>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                          Selecciona la categoría que mejor se ajuste a tu viaje. Cada habitación tiene su propio inventario y galería fotográfica.
+                        </p>
+                      </div>
+                      <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 text-xs font-bold">
+                        Inventario en Tiempo Real
+                      </span>
+                    </div>
+
+                    <div className="space-y-4">
                   {alojamiento.unidades.map((unidad) => {
                     const esSeleccionada = unidad.idUnidad === selectedUnidadId;
                     return (
@@ -459,9 +613,9 @@ export const DetalleAlojamientoView: React.FC<DetalleAlojamientoViewProps> = ({
                       >
                         <div className="flex items-start sm:items-center gap-4">
                           <img
-                            src={heroFoto}
+                            src={unidad.fotos?.[0] || unidad.fotografias?.[0]?.url || heroFoto}
                             alt={unidad.nombre}
-                            className="w-20 h-20 rounded-xl object-cover shrink-0 border border-slate-200 dark:border-slate-700"
+                            className="w-24 h-24 rounded-2xl object-cover shrink-0 border border-slate-200 dark:border-slate-700 shadow-sm"
                           />
                           <div className="space-y-1.5">
                             <div className="flex items-center gap-2">
@@ -475,6 +629,10 @@ export const DetalleAlojamientoView: React.FC<DetalleAlojamientoViewProps> = ({
                               )}
                             </div>
                             
+                            <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1">
+                              {unidad.descripcion || 'Habitación exclusiva equipada con baño privado y servicios de primer nivel.'}
+                            </p>
+
                             <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
                               <span className="flex items-center gap-1">
                                 <Users className="w-3.5 h-3.5 text-blue-600" />
@@ -483,12 +641,12 @@ export const DetalleAlojamientoView: React.FC<DetalleAlojamientoViewProps> = ({
                               <span>•</span>
                               <span className="flex items-center gap-1">
                                 <Bed className="w-3.5 h-3.5 text-blue-600" />
-                                {unidad.cantidadCamas} Camas
+                                {unidad.cantidadCamas} Cama(s)
                               </span>
                               <span>•</span>
                               <span className="flex items-center gap-1">
                                 <Bath className="w-3.5 h-3.5 text-blue-600" />
-                                {unidad.cantidadBanios || 1} Baño privado
+                                {unidad.cantidadBanios || 1} Baño(s)
                               </span>
                             </div>
 
@@ -498,7 +656,7 @@ export const DetalleAlojamientoView: React.FC<DetalleAlojamientoViewProps> = ({
                           </div>
                         </div>
 
-                        <div className="flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-200 dark:border-slate-800">
+                        <div className="flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-200 dark:border-slate-800 gap-2">
                           <div className="sm:text-right">
                             <span className="text-[10px] uppercase font-bold text-slate-400 block">Tarifa por Noche</span>
                             <div className="flex items-baseline gap-1">
@@ -511,21 +669,44 @@ export const DetalleAlojamientoView: React.FC<DetalleAlojamientoViewProps> = ({
                             </div>
                           </div>
 
-                          <button
-                            type="button"
-                            className={`mt-2 px-4 py-1.5 rounded-xl text-xs font-bold transition ${
-                              esSeleccionada
-                                ? 'bg-blue-600 text-white shadow-sm'
-                                : 'border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800'
-                            }`}
-                          >
-                            {esSeleccionada ? '✓ Elegida' : 'Elegir habitación'}
-                          </button>
+                          <div className="flex items-center gap-2 mt-1">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedUnidadId(unidad.idUnidad);
+                                setHabitacionEnDetalle(unidad);
+                                setActiveReviewTab('HABITACION');
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                              }}
+                              className="px-3 py-1.5 rounded-xl text-xs font-bold bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/60 border border-blue-200 dark:border-blue-800 transition flex items-center gap-1.5 cursor-pointer shadow-sm"
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                              <span>Ver Fotos y Detalles</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedUnidadId(unidad.idUnidad);
+                              }}
+                              className={`px-4 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+                                esSeleccionada
+                                  ? 'bg-blue-600 text-white shadow-sm'
+                                  : 'border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800'
+                              }`}
+                            >
+                              {esSeleccionada ? '✓ Elegida' : 'Elegir'}
+                            </button>
+                          </div>
                         </div>
                       </div>
                     );
                   })}
                 </div>
+                  </>
+                )}
               </div>
             )}
 
@@ -819,6 +1000,46 @@ export const DetalleAlojamientoView: React.FC<DetalleAlojamientoViewProps> = ({
                 </div>
               )}
 
+              {/* Bloque de Fechas y Horas ya Ocupadas */}
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-xs space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                    Fechas &amp; Horarios Ocupados
+                  </span>
+                  <span className="text-[10px] font-bold text-slate-400">
+                    {rangosOcupados.length} {rangosOcupados.length === 1 ? 'bloqueo' : 'bloqueos'}
+                  </span>
+                </div>
+
+                {rangosOcupados.length > 0 ? (
+                  <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+                    {rangosOcupados.map((ro) => (
+                      <div
+                        key={ro.idReserva}
+                        className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between text-[11px]"
+                      >
+                        <div>
+                          <div className="font-bold text-slate-800 dark:text-slate-200">
+                            {ro.checkIn} al {ro.checkOut}
+                          </div>
+                          <span className="text-[10px] text-slate-500 dark:text-slate-400">
+                            Ingreso: {ro.horaEntrada} • Salida: {ro.horaSalida}
+                          </span>
+                        </div>
+                        <span className="px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 text-[9px] font-bold border border-rose-200 dark:border-rose-900">
+                          Ocupado
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
+                    ✓ Totalmente libre: no existen fechas ocupadas para esta unidad.
+                  </p>
+                )}
+              </div>
+
               {/* Controles de Selección de Fecha */}
               <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-2">
@@ -863,6 +1084,19 @@ export const DetalleAlojamientoView: React.FC<DetalleAlojamientoViewProps> = ({
                   </select>
                 </div>
               </div>
+
+              {/* Indicador de Disponibilidad Confirmada */}
+              {estaDisponible && !esMiPropiedad && (
+                <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 text-[11px] flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <div>
+                    <span className="font-bold block">Fechas Disponibles para Reserva Inmediata</span>
+                    <span className="text-[10px] text-emerald-700 dark:text-emerald-300">
+                      Check-in desde las {alojamiento.horarioEntrada || '14:00'} • Check-out hasta las {alojamiento.horarioSalida || '11:00'}
+                    </span>
+                  </div>
+                </div>
+              )}
 
               {/* Control de Acciones: Administrar si es propio vs Disponibilidad vs Reservar */}
               {esMiPropiedad ? (
@@ -960,14 +1194,17 @@ export const DetalleAlojamientoView: React.FC<DetalleAlojamientoViewProps> = ({
                   {alojamiento.nombreAnfitrion ? alojamiento.nombreAnfitrion.charAt(0) : 'A'}
                 </div>
                 <div>
-                  <h3 className="font-serif text-xl font-bold text-slate-900 dark:text-white">
-                    {alojamiento.nombreAnfitrion || 'Carlos Mendoza'}
-                  </h3>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="font-serif text-xl font-bold text-slate-900 dark:text-white">
+                      {alojamiento.nombreAnfitrion || 'Carlos Mendoza'}
+                    </h3>
+                    <AnfitrionVerificadoBadge nombre={alojamiento.nombreAnfitrion || 'Carlos Mendoza'} tamano="md" />
+                  </div>
                   <span className="text-xs text-blue-600 dark:text-blue-400 font-semibold block mt-0.5">
-                    Anfitrión en la Red Aloja-Te
+                    Anfitrión Verificado Oficial en Aloja-Te Bolivia
                   </span>
                   <span className="text-[11px] text-slate-400">
-                    Miembro registrado en Bolivia desde 2024
+                    C.I. y Documentos de Operador Validados • Miembro desde 2024
                   </span>
                 </div>
               </div>
@@ -979,6 +1216,36 @@ export const DetalleAlojamientoView: React.FC<DetalleAlojamientoViewProps> = ({
               >
                 <X className="w-4 h-4" />
               </button>
+            </div>
+
+            {/* Estado de Verificación y Documentación */}
+            <div className="p-4 rounded-2xl bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-800 text-xs space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-blue-900 dark:text-blue-200 text-xs">
+                  Insignia Oficial de Anfitrión Verificado
+                </span>
+                <AnfitrionVerificadoBadge tamano="sm" textoPersonalizado="Verificación Completa" />
+              </div>
+              <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                Para brindar máxima seguridad a los viajeros en Bolivia, este anfitrión ha completado satisfactoriamente los protocolos de auditoría documental requeridos antes de publicar:
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[11px] text-slate-700 dark:text-slate-300">
+                <div className="flex items-center gap-1.5 font-medium">
+                  <span className="text-blue-600 dark:text-blue-400 font-bold">✓</span> Cédula de Identidad / Pasaporte validado
+                </div>
+                <div className="flex items-center gap-1.5 font-medium">
+                  <span className="text-blue-600 dark:text-blue-400 font-bold">✓</span> Teléfono verificado con código SMS
+                </div>
+                <div className="flex items-center gap-1.5 font-medium">
+                  <span className="text-blue-600 dark:text-blue-400 font-bold">✓</span> Domicilio y registro turístico legal
+                </div>
+                <div className="flex items-center gap-1.5 font-medium">
+                  <span className="text-blue-600 dark:text-blue-400 font-bold">✓</span> Cuenta bancaria BNB para cobro seguro
+                </div>
+              </div>
+              <p className="text-[10px] text-slate-400 dark:text-slate-500 italic pt-1 border-t border-blue-200/50 dark:border-blue-900/50">
+                * Al registrarse solo se solicitan datos básicos. Para publicar y operar hospedajes es obligatorio contar con la insignia de verificación.
+              </p>
             </div>
 
             {/* Métricas de Calidad */}

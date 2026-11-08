@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './core/auth/AuthContext';
+import { TokenStorage } from './core/auth/TokenStorage';
 import { useAppRouter } from './core/router/useAppRouter';
 import { Navbar } from './shared/layout/Navbar';
 import { Footer } from './shared/layout/Footer';
@@ -16,12 +17,13 @@ import { ValidadorPinCheckin } from './features/anfitrion/components/ValidadorPi
 import { GestorRolesPermisos } from './features/anfitrion/components/GestorRolesPermisos';
 import { LiquidacionesResumen } from './features/anfitrion/components/LiquidacionesResumen';
 import { ListingWizardModal } from './features/anfitrion/modals/ListingWizardModal';
+import { EditorHotelHabitacionesModal } from './features/anfitrion/modals/EditorHotelHabitacionesModal';
 import { catalogoService } from './features/catalogo/services/catalogoService';
 import { Alojamiento, UnidadReservable } from './features/catalogo/types/catalogo.types';
 import { ReservaResponse } from './features/reservas/types/reserva.types';
 import { httpClient } from './core/api/httpClient';
 import { ENDPOINTS } from './core/api/apiEndpoints';
-import { Plus, Building2, Home, Hotel, Eye, ShieldCheck, AlertCircle, ArrowLeft, Loader2 } from 'lucide-react';
+import { Plus, Building2, Home, Hotel, Eye, ShieldCheck, AlertCircle, ArrowLeft, Loader2, Edit3 } from 'lucide-react';
 
 export const AppContent: React.FC = () => {
   const { user, logout } = useAuth();
@@ -47,17 +49,35 @@ export const AppContent: React.FC = () => {
       navigate.catalogo();
     }
   }, [user, currentView, navigate]);
+
+  // Single Logout (SLO): Detección de revocación global de sesión desde Portal Anfitrión (:3005)
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const hashPart = window.location.hash || '';
+    const hashParams = hashPart.includes('?') 
+      ? new URLSearchParams(hashPart.split('?')[1]) 
+      : null;
+    
+    if (searchParams.get('sso_logout') === 'true' || hashParams?.get('sso_logout') === 'true') {
+      logout();
+      setMisReservas([]);
+      localStorage.removeItem('alojate_mis_reservas');
+      const cleanUrl = window.location.pathname + '#/catalogo';
+      window.history.replaceState({}, document.title, cleanUrl);
+    }
+  }, [logout]);
   
   // Data States
   const [alojamientos, setAlojamientos] = useState<Alojamiento[]>([]);
+  const [misAlojamientosAnfitrion, setMisAlojamientosAnfitrion] = useState<Alojamiento[]>([]);
   const [departamento, setDepartamento] = useState(params.depto || 'Todos');
   const [loading, setLoading] = useState(true);
   const [misReservas, setMisReservas] = useState<ReservaResponse[]>(() => {
     try {
-      const token = localStorage.getItem('alojate_jwt_token');
-      const savedUser = localStorage.getItem('alojate_user_profile');
+      const token = TokenStorage.getToken();
+      const savedUser = TokenStorage.getUser();
       if (!token || !savedUser) return [];
-      const saved = localStorage.getItem('alojate_mis_reservas');
+      const saved = sessionStorage.getItem('alojate_mis_reservas');
       return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
@@ -69,7 +89,7 @@ export const AppContent: React.FC = () => {
     setTimeout(() => {
       logout();
       setMisReservas([]);
-      localStorage.removeItem('alojate_mis_reservas');
+      sessionStorage.removeItem('alojate_mis_reservas');
       setCerrandoSesion(false);
       navigate.catalogo();
     }, 700);
@@ -91,6 +111,8 @@ export const AppContent: React.FC = () => {
   const [pagoCompletadoData, setPagoCompletadoData] = useState<any | null>(null);
   const [pinConfirmado, setPinConfirmado] = useState<string>('');
   const [wizardAbierto, setWizardAbierto] = useState(false);
+  const [editorHotelAbierto, setEditorHotelAbierto] = useState(false);
+  const [alojamientoEnEdicion, setAlojamientoEnEdicion] = useState<Alojamiento | null>(null);
 
   // Sincronizar parámetro de departamento si viene en la URL
   useEffect(() => {
@@ -147,16 +169,31 @@ export const AppContent: React.FC = () => {
     }
   }, [darkMode]);
 
-  // Cargar Catálogo de Alojamientos
+  // Cargar Catálogo de Alojamientos Publicados para Clientes
   useEffect(() => {
     const cargar = async () => {
       setLoading(true);
-      const data = await catalogoService.listarAlojamientos(departamento);
+      const data = await catalogoService.listarAlojamientosPublicados(departamento);
       setAlojamientos(data);
       setLoading(false);
     };
     cargar();
   }, [departamento]);
+
+  // Cargar Alojamientos propios del Anfitrión
+  useEffect(() => {
+    if (user?.rol === 'ANFITRION') {
+      catalogoService.listarAlojamientosPorAnfitrion({
+        id: user.id,
+        email: user.email,
+        nombre: user.nombre
+      }).then(data => {
+        setMisAlojamientosAnfitrion(data);
+      });
+    } else {
+      setMisAlojamientosAnfitrion([]);
+    }
+  }, [user, currentView]);
 
   // Sincronizar Reservas del Cliente (MS-02 y LocalStorage)
   useEffect(() => {
@@ -422,15 +459,42 @@ export const AppContent: React.FC = () => {
               </button>
             </div>
 
+            {/* Estado Oficial de Verificación del Anfitrión */}
+            <div className="p-4 rounded-3xl bg-gradient-to-r from-blue-50/90 to-indigo-50/90 dark:from-blue-950/40 dark:to-indigo-950/40 border border-blue-200/80 dark:border-blue-900/60 flex items-center justify-between gap-4 flex-wrap">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-md shadow-blue-500/25 shrink-0">
+                  <svg className="w-5 h-5 text-white fill-current" viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1.2 14.2l-4-4 1.41-1.41L10.8 13.38l6.79-6.79 1.41 1.41-8.2 8.2z" />
+                  </svg>
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h4 className="font-bold text-xs text-slate-900 dark:text-white">
+                      Anfitrión Oficialmente Verificado
+                    </h4>
+                    <span className="px-2 py-0.5 rounded-full bg-blue-600 text-white text-[9px] font-bold shadow-sm">
+                      ✓ Acreditado
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-0.5">
+                    Tu Cédula de Identidad y acreditación de operador turístico están validadas al 100%. Cuentas con autorización total para publicar y recibir pagos con QR Simple BNB.
+                  </p>
+                </div>
+              </div>
+              <span className="text-[10px] font-semibold text-blue-700 dark:text-blue-300 bg-white dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-blue-200 dark:border-blue-800 shadow-sm shrink-0">
+                Auditoría Documental: Aprobada
+              </span>
+            </div>
+
             {/* Alojamientos del Anfitrión */}
             <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="font-serif text-lg font-bold text-slate-900 dark:text-white">
-                    Tus Propiedades Registradas ({alojamientos.length})
+                    Tus Propiedades Registradas ({misAlojamientosAnfitrion.length})
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Propiedades en catálogo o en espera de aprobación
+                    Propiedades en catálogo o en espera de aprobación de auditoría
                   </p>
                 </div>
                 <button
@@ -444,7 +508,7 @@ export const AppContent: React.FC = () => {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {alojamientos.map((a) => (
+                {misAlojamientosAnfitrion.map((a) => (
                   <div
                     key={a.idAlojamiento}
                     className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/40 hover:border-blue-400 transition flex items-center justify-between gap-3"
@@ -462,28 +526,75 @@ export const AppContent: React.FC = () => {
                           <span>•</span>
                           <span className="font-semibold">{a.modalidad === 'HOTEL_HOSTAL' ? '🏨 Hotel' : '🏡 Casa'}</span>
                         </div>
-                        <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-[9px] font-bold ${
-                          a.estadoPublicacion === 'PUBLICADO'
-                            ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400'
-                            : 'bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300'
-                        }`}>
-                          {a.estadoPublicacion || 'PUBLICADO'}
-                        </span>
+                        {(() => {
+                          const est = a.estadoPublicacion || a.estado || 'PUBLICADO';
+                          const motivo = a.motivoObservacionRechazo || a.motivoRechazo;
+                          let estilo = 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300';
+                          let label: string = est;
+
+                          if (est === 'PUBLICADO') {
+                            estilo = 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400';
+                            label = '✅ Publicado en Catálogo';
+                          } else if (est === 'PENDIENTE') {
+                            estilo = 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300';
+                            label = '🕒 Pendiente de Revisión';
+                          } else if (est === 'EN_REVISION') {
+                            estilo = 'bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300';
+                            label = '🔍 En Revisión Automática';
+                          } else if (est === 'OBSERVADO') {
+                            estilo = 'bg-amber-100 text-amber-900 dark:bg-amber-950/80 dark:text-amber-200 border border-amber-300 dark:border-amber-700';
+                            label = '⚠️ Observado por Auditoría';
+                          } else if (est === 'SUSPENDIDO') {
+                            estilo = 'bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-300';
+                            label = '⛔ Suspendido Temporalmente';
+                          } else if (est === 'RECHAZADO') {
+                            estilo = 'bg-red-100 text-red-700 dark:bg-red-950/60 dark:text-red-400';
+                            label = '❌ Rechazado';
+                          }
+
+                          return (
+                            <div className="mt-1 space-y-0.5">
+                              <span className={`inline-block px-2 py-0.5 rounded-full text-[9px] font-bold ${estilo}`}>
+                                {label}
+                              </span>
+                              {motivo && (est === 'OBSERVADO' || est === 'RECHAZADO' || est === 'SUSPENDIDO') && (
+                                <p className="text-[10px] text-amber-600 dark:text-amber-400 font-medium italic line-clamp-1">
+                                  Motivo: {motivo}
+                                </p>
+                              )}
+                            </div>
+                          );
+                        })()}
                       </div>
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setDetalleAlojamiento(a);
-                        navigate.detalle(a.idAlojamiento);
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                      }}
-                      className="p-2 rounded-xl text-slate-400 hover:text-blue-600 hover:bg-white dark:hover:bg-slate-800 transition"
-                      title="Ver Pantalla Completa"
-                    >
-                      <Eye className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAlojamientoEnEdicion(a);
+                          setEditorHotelAbierto(true);
+                        }}
+                        className="px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
+                        title="Administrar Información, Fotos y Habitaciones"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" />
+                        <span>{a.modalidad === 'HOTEL_HOSTAL' ? 'Administrar Hotel' : 'Editar'}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setDetalleAlojamiento(a);
+                          navigate.detalle(a.idAlojamiento);
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
+                        className="p-2 rounded-xl text-slate-400 hover:text-blue-600 hover:bg-white dark:hover:bg-slate-800 transition"
+                        title="Ver como Viajero"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -537,7 +648,27 @@ export const AppContent: React.FC = () => {
         onClose={() => setWizardAbierto(false)}
         onAlojamientoCreado={(nuevo) => {
           catalogoService.guardarAlojamientoLocal(nuevo);
-          setAlojamientos((prev) => [nuevo, ...prev]);
+          setMisAlojamientosAnfitrion((prev) => [nuevo, ...prev]);
+        }}
+      />
+
+      <EditorHotelHabitacionesModal
+        isOpen={editorHotelAbierto}
+        onClose={() => {
+          setEditorHotelAbierto(false);
+          setAlojamientoEnEdicion(null);
+        }}
+        alojamiento={alojamientoEnEdicion}
+        onAlojamientoActualizado={(actualizado) => {
+          setMisAlojamientosAnfitrion((prev) =>
+            prev.map((item) => (item.idAlojamiento === actualizado.idAlojamiento ? actualizado : item))
+          );
+          setAlojamientos((prev) =>
+            prev.map((item) => (item.idAlojamiento === actualizado.idAlojamiento ? actualizado : item))
+          );
+          if (detalleAlojamiento?.idAlojamiento === actualizado.idAlojamiento) {
+            setDetalleAlojamiento(actualizado);
+          }
         }}
       />
 

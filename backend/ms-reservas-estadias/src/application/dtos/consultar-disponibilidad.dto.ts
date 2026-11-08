@@ -1,7 +1,7 @@
-import { IsNotEmpty, IsString, Matches, IsUUID } from 'class-validator';
+import { IsNotEmpty, IsString, Matches } from 'class-validator';
 
 export class ConsultarDisponibilidadDto {
-  @IsUUID()
+  @IsString()
   @IsNotEmpty()
   idUnidad: string;
 

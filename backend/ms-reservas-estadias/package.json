@@ -1,6 +1,6 @@
 {
   "name": "ms-reservas-estadias",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MS-02: Microservicio de Reservas y Estadías (Aloja-Te) con NestJS y DynamoDB",
   "author": "Aloja-Te",
   "private": true,

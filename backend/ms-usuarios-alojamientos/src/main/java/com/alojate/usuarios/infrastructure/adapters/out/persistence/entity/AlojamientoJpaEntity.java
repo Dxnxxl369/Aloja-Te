@@ -70,6 +70,12 @@ public class AlojamientoJpaEntity {
     @Column(name = "motivo_rechazo", columnDefinition = "TEXT")
     private String motivoRechazo;
 
+    @Column(name = "motivo_observacion_rechazo", columnDefinition = "TEXT")
+    private String motivoObservacionRechazo;
+
+    @Column(name = "origen_ultimo_cambio", length = 100)
+    private String origenUltimoCambio;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "estado_publicacion", nullable = false, length = 30)
     private EstadoPublicacion estadoPublicacion;

@@ -13,6 +13,9 @@ public interface AlojamientoUseCase {
     Alojamiento crearAlojamiento(Alojamiento alojamiento, Set<Integer> serviciosIds);
     Alojamiento actualizarAlojamiento(UUID idAlojamiento, Alojamiento alojamiento, Set<Integer> serviciosIds);
     Alojamiento cambiarEstado(UUID idAlojamiento, EstadoPublicacion nuevoEstado);
+    Alojamiento cambiarEstado(UUID idAlojamiento, EstadoPublicacion nuevoEstado, String motivo, String origen);
+    Alojamiento observarAlojamiento(UUID idAlojamiento, String motivo, String origen);
+    List<Alojamiento> listarPorEstado(EstadoPublicacion estado);
     Alojamiento obtenerPorId(UUID idAlojamiento);
     List<Alojamiento> listarTodos();
     List<Alojamiento> listarPorAnfitrion(UUID idAnfitrion);

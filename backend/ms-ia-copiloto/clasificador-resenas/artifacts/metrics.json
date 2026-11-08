@@ -1,0 +1,645 @@
+{
+  "version": "20261030-064623",
+  "trained_at": "2026-10-30T06:46:23+00:00",
+  "seed": 42,
+  "labels": [
+    "negativo",
+    "neutro",
+    "positivo"
+  ],
+  "dataset": {
+    "cleaning": {
+      "total_inicial": 3230,
+      "nulos_eliminados": 12,
+      "duplicados_eliminados": 139,
+      "total_final": 3079
+    },
+    "eda": {
+      "distribucion_clases": {
+        "positivo": 1343,
+        "negativo": 1020,
+        "neutro": 716
+      },
+      "proporciones_clases": {
+        "positivo": 43.6,
+        "negativo": 33.1,
+        "neutro": 23.3
+      },
+      "longitudes": {
+        "palabras_mediana": 21.0,
+        "palabras_max": 33,
+        "palabras_min": 10,
+        "caracteres_mediana": 131.0,
+        "caracteres_max": 214,
+        "caracteres_min": 60
+      },
+      "top_palabras": {
+        "negativo": [
+          [
+            "no",
+            888
+          ],
+          [
+            "experiencia",
+            230
+          ],
+          [
+            "emojinegativo",
+            187
+          ],
+          [
+            "nada",
+            178
+          ],
+          [
+            "internet",
+            177
+          ],
+          [
+            "anfitrion",
+            160
+          ],
+          [
+            "muy",
+            150
+          ],
+          [
+            "ruido",
+            147
+          ],
+          [
+            "total",
+            142
+          ],
+          [
+            "sucre",
+            140
+          ]
+        ],
+        "neutro": [
+          [
+            "no",
+            362
+          ],
+          [
+            "pero",
+            276
+          ],
+          [
+            "regular",
+            262
+          ],
+          [
+            "sin",
+            238
+          ],
+          [
+            "muy",
+            208
+          ],
+          [
+            "ni",
+            190
+          ],
+          [
+            "desayuno",
+            151
+          ],
+          [
+            "internet",
+            109
+          ],
+          [
+            "aunque",
+            104
+          ],
+          [
+            "pesar",
+            103
+          ]
+        ],
+        "positivo": [
+          [
+            "excelente",
+            479
+          ],
+          [
+            "sin",
+            384
+          ],
+          [
+            "emojipositivo",
+            366
+          ],
+          [
+            "no",
+            351
+          ],
+          [
+            "maravillosa",
+            252
+          ],
+          [
+            "muy",
+            239
+          ],
+          [
+            "encanto",
+            226
+          ],
+          [
+            "primera",
+            222
+          ],
+          [
+            "anfitrion",
+            204
+          ],
+          [
+            "experiencia",
+            202
+          ]
+        ]
+      }
+    },
+    "train_size": 2463,
+    "test_size": 616,
+    "train_counts": {
+      "positivo": 1074,
+      "negativo": 816,
+      "neutro": 573
+    },
+    "test_counts": {
+      "positivo": 269,
+      "negativo": 204,
+      "neutro": 143
+    }
+  },
+  "production": {
+    "name": "naive_bayes",
+    "label": "Naive Bayes Multinomial",
+    "config": {
+      "model": "naive_bayes",
+      "normalizer": "lemma",
+      "stopword_list": "default",
+      "ngram_range": [
+        1,
+        2
+      ],
+      "hyperparameters": {
+        "alpha": 0.5,
+        "fit_prior": false
+      }
+    },
+    "cv_f1_macro": 0.9347,
+    "test_f1_macro": 0.9203,
+    "test_accuracy": 0.9269
+  },
+  "models": [
+    {
+      "name": "logistic_regression",
+      "label": "Regresión Logística",
+      "config": {
+        "model": "logistic_regression",
+        "normalizer": "stem",
+        "stopword_list": "default",
+        "ngram_range": [
+          1,
+          1
+        ],
+        "hyperparameters": {
+          "C": 1.0,
+          "class_weight": "balanced"
+        }
+      },
+      "cv_f1_macro": 0.9343,
+      "cv_f1_macro_std": 0.0111,
+      "test": {
+        "accuracy": 0.9269,
+        "f1_macro": 0.9203,
+        "precision_macro": 0.9202,
+        "recall_macro": 0.9348,
+        "f1_por_clase": {
+          "negativo": 0.9375,
+          "neutro": 0.864,
+          "positivo": 0.9594
+        },
+        "matriz_confusion": {
+          "etiquetas": [
+            "negativo",
+            "neutro",
+            "positivo"
+          ],
+          "valores": [
+            [
+              180,
+              24,
+              0
+            ],
+            [
+              0,
+              143,
+              0
+            ],
+            [
+              0,
+              21,
+              248
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "name": "naive_bayes",
+      "label": "Naive Bayes Multinomial",
+      "config": {
+        "model": "naive_bayes",
+        "normalizer": "lemma",
+        "stopword_list": "default",
+        "ngram_range": [
+          1,
+          2
+        ],
+        "hyperparameters": {
+          "alpha": 0.5,
+          "fit_prior": false
+        }
+      },
+      "cv_f1_macro": 0.9347,
+      "cv_f1_macro_std": 0.0112,
+      "test": {
+        "accuracy": 0.9269,
+        "f1_macro": 0.9203,
+        "precision_macro": 0.9202,
+        "recall_macro": 0.9348,
+        "f1_por_clase": {
+          "negativo": 0.9375,
+          "neutro": 0.864,
+          "positivo": 0.9594
+        },
+        "matriz_confusion": {
+          "etiquetas": [
+            "negativo",
+            "neutro",
+            "positivo"
+          ],
+          "valores": [
+            [
+              180,
+              24,
+              0
+            ],
+            [
+              0,
+              143,
+              0
+            ],
+            [
+              0,
+              21,
+              248
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "name": "baseline",
+      "label": "Línea Base (Dummy)",
+      "config": {
+        "model": "baseline",
+        "hyperparameters": {
+          "strategy": "most_frequent"
+        }
+      },
+      "cv_f1_macro": 0.2024,
+      "cv_f1_macro_std": 0.0002,
+      "test": {
+        "accuracy": 0.4367,
+        "f1_macro": 0.2026,
+        "precision_macro": 0.1456,
+        "recall_macro": 0.3333,
+        "f1_por_clase": {
+          "negativo": 0.0,
+          "neutro": 0.0,
+          "positivo": 0.6079
+        },
+        "matriz_confusion": {
+          "etiquetas": [
+            "negativo",
+            "neutro",
+            "positivo"
+          ],
+          "valores": [
+            [
+              0,
+              0,
+              204
+            ],
+            [
+              0,
+              0,
+              143
+            ],
+            [
+              0,
+              0,
+              269
+            ]
+          ]
+        }
+      }
+    }
+  ],
+  "experiments": [
+    {
+      "model": "naive_bayes",
+      "normalizer": "lemma",
+      "stopword_list": "default",
+      "ngram_range": "1-2",
+      "hyperparameters": {
+        "alpha": 0.5,
+        "fit_prior": false
+      },
+      "cv_f1_macro": 0.9347,
+      "cv_f1_macro_std": 0.0112
+    },
+    {
+      "model": "naive_bayes",
+      "normalizer": "lemma",
+      "stopword_list": "adjusted",
+      "ngram_range": "1-2",
+      "hyperparameters": {
+        "alpha": 1.0,
+        "fit_prior": false
+      },
+      "cv_f1_macro": 0.9343,
+      "cv_f1_macro_std": 0.0111
+    },
+    {
+      "model": "logistic_regression",
+      "normalizer": "stem",
+      "stopword_list": "default",
+      "ngram_range": "1-1",
+      "hyperparameters": {
+        "C": 1.0,
+        "class_weight": "balanced"
+      },
+      "cv_f1_macro": 0.9343,
+      "cv_f1_macro_std": 0.0111
+    },
+    {
+      "model": "logistic_regression",
+      "normalizer": "stem",
+      "stopword_list": "adjusted",
+      "ngram_range": "1-1",
+      "hyperparameters": {
+        "C": 0.5,
+        "class_weight": "balanced"
+      },
+      "cv_f1_macro": 0.9343,
+      "cv_f1_macro_std": 0.0111
+    },
+    {
+      "model": "naive_bayes",
+      "normalizer": "stem",
+      "stopword_list": "default",
+      "ngram_range": "1-2",
+      "hyperparameters": {
+        "alpha": 0.5,
+        "fit_prior": false
+      },
+      "cv_f1_macro": 0.9343,
+      "cv_f1_macro_std": 0.0111
+    },
+    {
+      "model": "naive_bayes",
+      "normalizer": "stem",
+      "stopword_list": "adjusted",
+      "ngram_range": "1-2",
+      "hyperparameters": {
+        "alpha": 0.1,
+        "fit_prior": true
+      },
+      "cv_f1_macro": 0.9343,
+      "cv_f1_macro_std": 0.0114
+    },
+    {
+      "model": "logistic_regression",
+      "normalizer": "lemma",
+      "stopword_list": "default",
+      "ngram_range": "1-1",
+      "hyperparameters": {
+        "C": 0.5,
+        "class_weight": "balanced"
+      },
+      "cv_f1_macro": 0.9343,
+      "cv_f1_macro_std": 0.0111
+    },
+    {
+      "model": "naive_bayes",
+      "normalizer": "lemma",
+      "stopword_list": "default",
+      "ngram_range": "1-1",
+      "hyperparameters": {
+        "alpha": 0.1,
+        "fit_prior": false
+      },
+      "cv_f1_macro": 0.9343,
+      "cv_f1_macro_std": 0.0111
+    },
+    {
+      "model": "naive_bayes",
+      "normalizer": "stem",
+      "stopword_list": "adjusted",
+      "ngram_range": "1-1",
+      "hyperparameters": {
+        "alpha": 1.0,
+        "fit_prior": false
+      },
+      "cv_f1_macro": 0.9343,
+      "cv_f1_macro_std": 0.0111
+    },
+    {
+      "model": "naive_bayes",
+      "normalizer": "lemma",
+      "stopword_list": "adjusted",
+      "ngram_range": "1-1",
+      "hyperparameters": {
+        "alpha": 0.1,
+        "fit_prior": false
+      },
+      "cv_f1_macro": 0.9343,
+      "cv_f1_macro_std": 0.0111
+    },
+    {
+      "model": "logistic_regression",
+      "normalizer": "lemma",
+      "stopword_list": "adjusted",
+      "ngram_range": "1-1",
+      "hyperparameters": {
+        "C": 0.5,
+        "class_weight": "balanced"
+      },
+      "cv_f1_macro": 0.9343,
+      "cv_f1_macro_std": 0.0111
+    },
+    {
+      "model": "logistic_regression",
+      "normalizer": "lemma",
+      "stopword_list": "default",
+      "ngram_range": "1-2",
+      "hyperparameters": {
+        "C": 0.5,
+        "class_weight": "balanced"
+      },
+      "cv_f1_macro": 0.9339,
+      "cv_f1_macro_std": 0.0113
+    },
+    {
+      "model": "logistic_regression",
+      "normalizer": "stem",
+      "stopword_list": "default",
+      "ngram_range": "1-2",
+      "hyperparameters": {
+        "C": 0.5,
+        "class_weight": "balanced"
+      },
+      "cv_f1_macro": 0.9339,
+      "cv_f1_macro_std": 0.0113
+    },
+    {
+      "model": "logistic_regression",
+      "normalizer": "lemma",
+      "stopword_list": "adjusted",
+      "ngram_range": "1-2",
+      "hyperparameters": {
+        "C": 0.5,
+        "class_weight": "balanced"
+      },
+      "cv_f1_macro": 0.9339,
+      "cv_f1_macro_std": 0.0117
+    },
+    {
+      "model": "logistic_regression",
+      "normalizer": "stem",
+      "stopword_list": "adjusted",
+      "ngram_range": "1-2",
+      "hyperparameters": {
+        "C": 0.5,
+        "class_weight": "balanced"
+      },
+      "cv_f1_macro": 0.9339,
+      "cv_f1_macro_std": 0.0117
+    },
+    {
+      "model": "naive_bayes",
+      "normalizer": "stem",
+      "stopword_list": "default",
+      "ngram_range": "1-1",
+      "hyperparameters": {
+        "alpha": 0.1,
+        "fit_prior": false
+      },
+      "cv_f1_macro": 0.9338,
+      "cv_f1_macro_std": 0.0102
+    },
+    {
+      "model": "baseline",
+      "normalizer": "-",
+      "stopword_list": "-",
+      "ngram_range": "-",
+      "hyperparameters": {
+        "strategy": "most_frequent"
+      },
+      "cv_f1_macro": 0.2024,
+      "cv_f1_macro_std": 0.0002
+    }
+  ],
+  "factor_effects": {
+    "normalizer": {
+      "lemma": 0.9347,
+      "stem": 0.9343
+    },
+    "stopword_list": {
+      "adjusted": 0.9343,
+      "default": 0.9347
+    },
+    "ngram_range": {
+      "1-1": 0.9343,
+      "1-2": 0.9347
+    },
+    "model": {
+      "logistic_regression": 0.9343,
+      "naive_bayes": 0.9347
+    }
+  },
+  "tfidf": {
+    "max_features": 4000,
+    "min_df": 2,
+    "max_df": 0.9,
+    "sublinear_tf": true
+  },
+  "vocabulary_size": 1714,
+  "accuracy_by_phenomenon": {
+    "etiqueta_ruidosa": {
+      "total_muestras": 22,
+      "exactitud": 1.0
+    },
+    "ironia": {
+      "total_muestras": 31,
+      "exactitud": 1.0
+    },
+    "mixta": {
+      "total_muestras": 123,
+      "exactitud": 0.634
+    },
+    "negacion": {
+      "total_muestras": 126,
+      "exactitud": 1.0
+    },
+    "simple": {
+      "total_muestras": 314,
+      "exactitud": 1.0
+    }
+  },
+  "error_examples": [
+    {
+      "texto": "La atención del anfitrión fue sumamente cordial y amable, sin embargo el internet wifi se cortaba a cada rato y era lentísimo.",
+      "etiqueta_real": "positivo",
+      "predicho": "neutro",
+      "fenomeno": "mixta",
+      "confianza": 0.954
+    },
+    {
+      "texto": "La ubicación es inmejorable, a pasos de la plaza principal, pero el anfitrión nunca contestó las llamadas ni los mensajes.",
+      "etiqueta_real": "positivo",
+      "predicho": "neutro",
+      "fenomeno": "mixta",
+      "confianza": 0.863
+    },
+    {
+      "texto": "El internet wifi se cortaba a cada rato y era lentísimo, por otra parte el agua caliente salió con excelente presión todo el tiempo.",
+      "etiqueta_real": "negativo",
+      "predicho": "neutro",
+      "fenomeno": "mixta",
+      "confianza": 0.949
+    },
+    {
+      "texto": "Las sábanas tenían manchas sospechosas y olor a humedad, pero la atención del anfitrión fue sumamente cordial y amable.",
+      "etiqueta_real": "negativo",
+      "predicho": "neutro",
+      "fenomeno": "mixta",
+      "confianza": 0.798
+    },
+    {
+      "texto": "Estadía en Villa Tunari Eco Resort (Santa Cruz): El check-in fue rápido, sin demoras ni trámites molestos, pero la limpieza del baño dejaba muchísimo que desear.",
+      "etiqueta_real": "positivo",
+      "predicho": "neutro",
+      "fenomeno": "mixta",
+      "confianza": 0.708
+    }
+  ],
+  "top_terms": {}
+}

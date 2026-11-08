@@ -33,6 +33,8 @@ public class AlojamientoDto {
     private String horarioEntrada;
     private String horarioSalida;
     private String motivoRechazo;
+    private String motivoObservacionRechazo;
+    private String origenUltimoCambio;
     private EstadoPublicacion estadoPublicacion;
     private LocalDateTime fechaCreacion;
     private Set<ServicioDto> servicios;

@@ -1,3 +1,5 @@
+export type EstadoPublicacion = 'PENDIENTE' | 'EN_REVISION' | 'PUBLICADO' | 'OBSERVADO' | 'SUSPENDIDO' | 'RECHAZADO';
+
 export interface UnidadReservable {
   idUnidad: string;
   nombre: string;
@@ -12,6 +14,9 @@ export interface UnidadReservable {
   inventarioTotal: number;
   activo: boolean;
   estado?: string;
+  fotografias?: Fotografia[];
+  fotos?: string[];
+  servicios?: string[];
 }
 
 export interface Fotografia {
@@ -49,8 +54,10 @@ export interface Alojamiento {
   moneda: string;
   calificacionPromedio: number;
   totalResenas: number;
-  estado: string;
-  estadoPublicacion?: string;
+  estado: EstadoPublicacion;
+  estadoPublicacion?: EstadoPublicacion;
+  motivoObservacionRechazo?: string;
+  origenUltimoCambio?: string;
   fotografias: Fotografia[];
   unidades: UnidadReservable[];
   servicios: ServicioAlojamiento[];

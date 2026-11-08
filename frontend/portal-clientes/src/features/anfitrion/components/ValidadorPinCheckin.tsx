@@ -21,6 +21,7 @@ export const ValidadorPinCheckin: React.FC<ValidadorPinCheckinProps> = ({
   const [loading, setLoading] = useState(false);
   const [resultado, setResultado] = useState<any | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const reservaSeleccionada = reservasPendientes.find(r => r.idReserva === reservaId);
 
   // Modal Checkout Anfitrión
   const [reservaACheckout, setReservaACheckout] = useState<ReservaResponse | null>(null);
@@ -256,18 +257,27 @@ export const ValidadorPinCheckin: React.FC<ValidadorPinCheckinProps> = ({
 
       {/* Formulario de Verificación de PIN */}
       <form onSubmit={handleSubmit} className="space-y-3.5 text-xs">
-        <div>
-          <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
-            Código ID de Reserva
-          </label>
-          <input
-            type="text"
-            value={reservaId}
-            onChange={(e) => setReservaId(e.target.value)}
-            required
-            placeholder="Selecciona una reserva o ingresa el código"
-            className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-mono text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-          />
+        {/* Huésped Seleccionado para Recepción (Sin exponer UUIDs) */}
+        <div className="p-4 rounded-2xl bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 text-xs space-y-1">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700 dark:text-blue-300">
+              Huésped para Recepción
+            </span>
+            {reservaSeleccionada && (
+              <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 font-bold">
+                {reservaSeleccionada.nombreUnidad || 'Habitación / Alojamiento'}
+              </span>
+            )}
+          </div>
+          <div className="font-bold text-sm text-slate-900 dark:text-white">
+            {reservaSeleccionada?.nombreCliente || (reservasPendientes.length > 0 ? 'Selecciona una de las reservas de la lista arriba' : 'Sin reservas pendientes')}
+          </div>
+          {reservaSeleccionada && (
+            <div className="text-[11px] text-slate-500 dark:text-slate-400">
+              Estadía: {reservaSeleccionada.checkIn} al {reservaSeleccionada.checkOut}
+              {reservaSeleccionada.horaEstimadaLlegada ? ` • Hora estimada de llegada: ${reservaSeleccionada.horaEstimadaLlegada} hrs` : ''}
+            </div>
+          )}
         </div>
 
         <div>

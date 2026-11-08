@@ -42,6 +42,8 @@ public class AlojamientoPersistenceAdapter implements AlojamientoRepositoryPort 
                 existing.setHorarioEntrada(alojamiento.getHorarioEntrada());
                 existing.setHorarioSalida(alojamiento.getHorarioSalida());
                 existing.setMotivoRechazo(alojamiento.getMotivoRechazo());
+                existing.setMotivoObservacionRechazo(alojamiento.getMotivoObservacionRechazo() != null ? alojamiento.getMotivoObservacionRechazo() : alojamiento.getMotivoRechazo());
+                existing.setOrigenUltimoCambio(alojamiento.getOrigenUltimoCambio());
                 existing.setEstadoPublicacion(alojamiento.getEstadoPublicacion());
                 AlojamientoJpaEntity guardado = repository.save(existing);
                 return toDomain(guardado);
@@ -122,7 +124,9 @@ public class AlojamientoPersistenceAdapter implements AlojamientoRepositoryPort 
                 .horarioEntrada(domain.getHorarioEntrada())
                 .horarioSalida(domain.getHorarioSalida())
                 .motivoRechazo(domain.getMotivoRechazo())
-                .estadoPublicacion(domain.getEstadoPublicacion() != null ? domain.getEstadoPublicacion() : EstadoPublicacion.BORRADOR)
+                .motivoObservacionRechazo(domain.getMotivoObservacionRechazo() != null ? domain.getMotivoObservacionRechazo() : domain.getMotivoRechazo())
+                .origenUltimoCambio(domain.getOrigenUltimoCambio())
+                .estadoPublicacion(domain.getEstadoPublicacion() != null ? domain.getEstadoPublicacion() : EstadoPublicacion.PENDIENTE)
                 .fechaCreacion(domain.getFechaCreacion() != null ? domain.getFechaCreacion() : java.time.LocalDateTime.now())
                 .build();
     }
@@ -188,6 +192,8 @@ public class AlojamientoPersistenceAdapter implements AlojamientoRepositoryPort 
                 .horarioEntrada(entity.getHorarioEntrada())
                 .horarioSalida(entity.getHorarioSalida())
                 .motivoRechazo(entity.getMotivoRechazo())
+                .motivoObservacionRechazo(entity.getMotivoObservacionRechazo() != null ? entity.getMotivoObservacionRechazo() : entity.getMotivoRechazo())
+                .origenUltimoCambio(entity.getOrigenUltimoCambio())
                 .estadoPublicacion(entity.getEstadoPublicacion())
                 .fechaCreacion(entity.getFechaCreacion())
                 .servicios(servicios)

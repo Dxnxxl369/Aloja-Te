@@ -1,73 +1,254 @@
 import { httpClient } from '../../../core/api/httpClient';
 import { ENDPOINTS } from '../../../core/api/apiEndpoints';
-import { Alojamiento } from '../types/catalogo.types';
+import { Alojamiento, ValoracionCliente, ResumenValoraciones } from '../types/catalogo.types';
 
-// Fallback seed data if backend is starting up
+// Fuente Canónica Unificada de Alojamientos Demo (Compartida con Portal Admin y Base de Datos)
 const ALOJAMIENTOS_DEMO: Alojamiento[] = [
   {
-    idAlojamiento: 'bf6c3afa-a6ab-4053-a9c2-d131a4f7539e',
-    idAnfitrion: '5211de5d-bd9e-4cb7-8912-3fbf6a0184b0',
-    nombreAnfitrion: 'Carlos Mendoza (Anfitrión Superhost)',
-    titulo: 'Cabaña Chiquitana El Palmar',
-    descripcion: 'Hermosa cabaña rústica con acabados en madera de tajibo y galería tradicional chiquitana. Ubicada a pasos de la plaza misional, con piscina, hamacas y vistas a la serranía.',
+    idAlojamiento: '49768530-76ae-459e-9bbe-faf2f3d488ba',
+    idAnfitrion: 'a0000000-0000-4000-8000-000000000002',
+    nombreAnfitrion: 'Carlos Mendoza',
+    titulo: 'Hotel Boutique Los Tajibos Colonial',
+    descripcion: 'Exclusivo hotel boutique con arquitectura chiquitana colonial, restaurante de autor, piscina tropical, spa y jardines en el prestigioso barrio Equipetrol.',
     departamento: 'Santa Cruz',
-    ciudad: 'San Javier',
-    direccion: 'Av. Las Misiones #45, Zona El Palmar',
+    ciudad: 'Santa Cruz de la Sierra',
+    direccion: 'Av. San Martín #120, Barrio Equipetrol',
+    tipoPropiedad: 'HOTEL_BOUTIQUE',
+    tipoEspacio: 'HABITACION_PRIVADA',
+    modalidad: 'HOTEL_HOSTAL',
+    politicas: 'Recepción 24 horas. Desayuno buffet incluido de 07:00 a 10:30.',
+    horarioEntrada: '15:00',
+    horarioSalida: '12:00',
+    precioBaseNoche: 480,
+    moneda: 'BOB',
+    calificacionPromedio: 4.96,
+    totalResenas: 74,
+    estado: 'PUBLICADO',
+    estadoPublicacion: 'PUBLICADO',
+    fotografias: [
+      {
+        idFotografia: 'f-tajibos-1',
+        url: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80',
+        esPrincipal: true,
+        orden: 1,
+        descripcion: 'Piscina tropical y fachada colonial de Los Tajibos Colonial'
+      },
+      {
+        idFotografia: 'f-tajibos-2',
+        url: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80',
+        esPrincipal: false,
+        orden: 2,
+        descripcion: 'Suite presidencial con balcón y acabados de lujo'
+      },
+      {
+        idFotografia: 'f-tajibos-3',
+        url: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80',
+        esPrincipal: false,
+        orden: 3,
+        descripcion: 'Habitación doble ejecutiva colonial'
+      }
+    ],
+    unidades: [
+      {
+        idUnidad: 'u-tajibos-1',
+        nombre: 'Suite Presidencial con Balcón & Vista a Jardines',
+        descripcion: 'Exclusiva master suite de 65 m² con cama King Size artesanal, terraza privada con vista a los jardines tropicales, tina de hidromasaje y servicio de desayuno buffet incluido.',
+        capacidadPersonas: 2,
+        cantidadCamas: 1,
+        cantidadBanios: 2,
+        precioNoche: 950,
+        moneda: 'BOB',
+        inventarioTotal: 3,
+        activo: true,
+        servicios: ['Cama King Size', 'Jacuzzi Hidromasaje', 'Balcón Panorámico', 'Desayuno Buffet Gourmet', 'Smart TV 65"', 'Aire Acondicionado Central'],
+        fotos: [
+          'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=1200&q=80',
+          'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80',
+          'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=80'
+        ],
+        fotografias: [
+          {
+            idFotografia: 'f-suite-1',
+            url: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=1200&q=80',
+            esPrincipal: true,
+            orden: 1,
+            descripcion: 'Dormitorio principal con cama King y ventanales'
+          },
+          {
+            idFotografia: 'f-suite-2',
+            url: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80',
+            esPrincipal: false,
+            orden: 2,
+            descripcion: 'Balcón terraza privado con vista a jardines'
+          },
+          {
+            idFotografia: 'f-suite-3',
+            url: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=80',
+            esPrincipal: false,
+            orden: 3,
+            descripcion: 'Baño de mármol con tina de hidromasaje'
+          }
+        ]
+      },
+      {
+        idUnidad: 'u-tajibos-2',
+        nombre: 'Habitación Ejecutiva Doble Twin',
+        descripcion: 'Habitación ejecutiva de 40 m² equipada con 2 camas individuales confortables, estación de trabajo ergonómica, internet satelital de alta velocidad y baño privado contemporáneo.',
+        capacidadPersonas: 2,
+        cantidadCamas: 2,
+        cantidadBanios: 1,
+        precioNoche: 480,
+        moneda: 'BOB',
+        inventarioTotal: 12,
+        activo: true,
+        servicios: ['2 Camas Twin Individuales', 'Escritorio Ergonómico', 'WiFi Starlink 300 Mbps', 'Cafetera Nespresso', 'Caja Fuerte Digital'],
+        fotos: [
+          'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&w=1200&q=80',
+          'https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=800&q=80',
+          'https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?auto=format&fit=crop&w=800&q=80'
+        ],
+        fotografias: [
+          {
+            idFotografia: 'f-twin-1',
+            url: 'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&w=1200&q=80',
+            esPrincipal: true,
+            orden: 1,
+            descripcion: 'Habitación doble twin con camas confortables y luz natural'
+          },
+          {
+            idFotografia: 'f-twin-2',
+            url: 'https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=800&q=80',
+            esPrincipal: false,
+            orden: 2,
+            descripcion: 'Área de escritorio y ambiente de trabajo'
+          },
+          {
+            idFotografia: 'f-twin-3',
+            url: 'https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?auto=format&fit=crop&w=800&q=80',
+            esPrincipal: false,
+            orden: 3,
+            descripcion: 'Baño privado moderno con acabados en cerámica'
+          }
+        ]
+      }
+    ],
+    servicios: [
+      { idServicio: 1, nombre: 'Piscina Tropical & Bar', categoria: 'BIENESTAR' },
+      { idServicio: 2, nombre: 'Desayuno Buffet Gourmet', categoria: 'GASTRONOMIA' },
+      { idServicio: 3, nombre: 'Wi-Fi de Alta Velocidad', categoria: 'CONECTIVIDAD' },
+      { idServicio: 4, nombre: 'Recepción & Valet 24 Horas', categoria: 'SEGURIDAD' }
+    ]
+  },
+  {
+    idAlojamiento: '93fce18e-32fa-400c-8f49-8d4f2fe2f5bb',
+    idAnfitrion: 'a0000000-0000-4000-8000-000000000002',
+    nombreAnfitrion: 'Carlos Mendoza',
+    titulo: 'Cabaña Chiquitana El Palmar',
+    descripcion: 'Hermosa cabaña rústica colonial con acabados en madera de tajibo, galería chiquitana con hamacas, piscina privada y churrasquera.',
+    departamento: 'Santa Cruz',
+    ciudad: 'San José de Chiquitos',
+    direccion: 'Camino a San José Km 5',
     tipoPropiedad: 'CABAÑA',
     tipoEspacio: 'ALOJAMIENTO_ENTERO',
+    modalidad: 'CASA_DEPARTAMENTO',
+    politicas: 'Ambiente familiar. Check-in 14:00 - Check-out 11:00.',
+    horarioEntrada: '14:00',
+    horarioSalida: '11:00',
     precioBaseNoche: 650,
     moneda: 'BOB',
     calificacionPromedio: 4.95,
     totalResenas: 48,
     estado: 'PUBLICADO',
+    estadoPublicacion: 'PUBLICADO',
     fotografias: [
       {
-        idFotografia: 'f1',
+        idFotografia: 'f-palmar-1',
         url: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1200&q=80',
         esPrincipal: true,
         orden: 1,
-        descripcion: 'Fachada colonial con tejas de arcilla y galería'
+        descripcion: 'Fachada campestre tradicional chiquitana'
       },
       {
-        idFotografia: 'f2',
-        url: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80',
-        esPrincipal: false,
-        orden: 2,
-        descripcion: 'Dormitorio principal con vigas de madera a la vista'
-      },
-      {
-        idFotografia: 'f3',
+        idFotografia: 'f-palmar-2',
         url: 'https://images.unsplash.com/photo-1584132967334-10e028bd69f7?auto=format&fit=crop&w=800&q=80',
         esPrincipal: false,
-        orden: 3,
-        descripcion: 'Piscina y área de descanso'
+        orden: 2,
+        descripcion: 'Piscina y galería de descanso'
       }
     ],
     unidades: [
       {
         idUnidad: '00547b62-d2f5-4aa8-80a5-8662b2e028ec',
-        nombre: 'Master Suite Chiquitana',
-        descripcion: 'Cama King, aire acondicionado, baño privado con ducha de hidromasaje y balcón privado.',
-        capacidadPersonas: 4,
-        cantidadCamas: 2,
-        cantidadBanios: 1,
+        nombre: 'Cabaña Completa con Galería y Piscina',
+        descripcion: 'Cabaña entera con 2 habitaciones, cocina equipada, parrillero y piscina.',
+        capacidadPersonas: 6,
+        cantidadCamas: 4,
+        cantidadBanios: 2,
         precioNoche: 650,
         moneda: 'BOB',
-        inventarioTotal: 3,
+        inventarioTotal: 1,
         activo: true
       }
     ],
     servicios: [
-      { idServicio: 1, nombre: 'Wi-Fi Starlink', categoria: 'CONECTIVIDAD' },
-      { idServicio: 2, nombre: 'Piscina Templada', categoria: 'BIENESTAR' },
-      { idServicio: 3, nombre: 'Churrasquera & Horno de Barro', categoria: 'GASTRONOMIA' },
-      { idServicio: 4, nombre: 'Aire Acondicionado', categoria: 'CLIMATIZACION' },
+      { idServicio: 5, nombre: 'Piscina Privada', categoria: 'BIENESTAR' },
+      { idServicio: 6, nombre: 'Churrasquera & Horno', categoria: 'GASTRONOMIA' },
+      { idServicio: 7, nombre: 'Wi-Fi Satelital Starlink', categoria: 'CONECTIVIDAD' }
+    ]
+  },
+  {
+    idAlojamiento: '045579cf-cc3b-4893-920f-f32246153025',
+    idAnfitrion: 'a0000000-0000-4000-8000-000000000002',
+    nombreAnfitrion: 'Carlos Mendoza',
+    titulo: 'Casa de Campo La Rinconada — Valles Cruceños',
+    descripcion: 'Casa campestre en Samaipata con huerto orgánico, fogatero exterior y vista panorámica a los valles.',
+    departamento: 'Santa Cruz',
+    ciudad: 'Samaipata',
+    direccion: 'Km 12 Camino a La Pajcha',
+    tipoPropiedad: 'CASA_CAMPO',
+    tipoEspacio: 'ALOJAMIENTO_ENTERO',
+    modalidad: 'CASA_DEPARTAMENTO',
+    politicas: 'Ecoturismo y descanso. Respeto al entorno natural.',
+    horarioEntrada: '13:00',
+    horarioSalida: '11:00',
+    precioBaseNoche: 520,
+    moneda: 'BOB',
+    calificacionPromedio: 4.89,
+    totalResenas: 19,
+    estado: 'PUBLICADO',
+    estadoPublicacion: 'PUBLICADO',
+    fotografias: [
+      {
+        idFotografia: 'f-rinconada-1',
+        url: 'https://images.unsplash.com/photo-1518780664697-55e3ad937233?auto=format&fit=crop&w=1200&q=80',
+        esPrincipal: true,
+        orden: 1,
+        descripcion: 'Entorno campestre y vista panorámica a las colinas'
+      }
+    ],
+    unidades: [
+      {
+        idUnidad: '351b4c06-6bdf-4dc6-9d3b-0d4221123600',
+        nombre: 'Casa de Campo Completa con Fogata',
+        descripcion: 'Alojamiento completo de 2 plantas con fogatero exterior.',
+        capacidadPersonas: 6,
+        cantidadCamas: 4,
+        cantidadBanios: 2,
+        precioNoche: 520,
+        moneda: 'BOB',
+        inventarioTotal: 1,
+        activo: true
+      }
+    ],
+    servicios: [
+      { idServicio: 8, nombre: 'Fogatero Exterior', categoria: 'EXPERIENCIA' },
+      { idServicio: 9, nombre: 'Estacionamiento Privado', categoria: 'COMODIDAD' }
     ]
   },
   {
     idAlojamiento: 'ca4d2e81-7b90-41f2-9854-1b3a88c22110',
-    idAnfitrion: '5211de5d-bd9e-4cb7-8912-3fbf6a0184b0',
-    nombreAnfitrion: 'Doña Elena Calbimontes',
+    idAnfitrion: 'a0000000-0000-4000-8000-000000000003',
+    nombreAnfitrion: 'Elena Morales',
     titulo: 'Chalet Boutique Los Viñedos',
     descripcion: 'Encantadora villa boutique rodeada de viñedos en el Valle de la Concepción. Catas privadas de vino tarijeño de altura y fogatas bajo las estrellas.',
     departamento: 'Tarija',
@@ -75,23 +256,28 @@ const ALOJAMIENTOS_DEMO: Alojamiento[] = [
     direccion: 'Camino a Calamuchita Km 4',
     tipoPropiedad: 'CASA_CAMPO',
     tipoEspacio: 'ALOJAMIENTO_ENTERO',
+    modalidad: 'CASA_DEPARTAMENTO',
+    politicas: 'Prohibido fiestas ruidosas. Check-in 14:00 - Check-out 11:00.',
+    horarioEntrada: '14:00',
+    horarioSalida: '11:00',
     precioBaseNoche: 780,
     moneda: 'BOB',
     calificacionPromedio: 4.98,
     totalResenas: 62,
     estado: 'PUBLICADO',
+    estadoPublicacion: 'PUBLICADO',
     fotografias: [
       {
-        idFotografia: 'f4',
-        url: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80',
+        idFotografia: 'f-vinedos-1',
+        url: 'https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?auto=format&fit=crop&w=1200&q=80',
         esPrincipal: true,
         orden: 1,
-        descripcion: 'Vista panorámica al viñedo y terraza privada'
+        descripcion: 'Viñedo de altura y arquitectura rústica de piedra en Tarija'
       }
     ],
     unidades: [
       {
-        idUnidad: 'u-tarija-1',
+        idUnidad: 'd1a4e802-5c31-4a29-b612-426614174002',
         nombre: 'Villa Malbec del Valle',
         descripcion: 'Chalet completo con chimenea rústica y cava de vinos.',
         capacidadPersonas: 5,
@@ -104,15 +290,14 @@ const ALOJAMIENTOS_DEMO: Alojamiento[] = [
       }
     ],
     servicios: [
-      { idServicio: 5, nombre: 'Cata de Vinos de Altura', categoria: 'EXPERIENCIA' },
-      { idServicio: 1, nombre: 'Wi-Fi Fibra Óptica', categoria: 'CONECTIVIDAD' },
-      { idServicio: 6, nombre: 'Desayuno Chapaco Incluido', categoria: 'GASTRONOMIA' }
+      { idServicio: 10, nombre: 'Cata de Vinos de Altura', categoria: 'EXPERIENCIA' },
+      { idServicio: 11, nombre: 'Desayuno Chapaco Típico', categoria: 'GASTRONOMIA' }
     ]
   },
   {
     idAlojamiento: 'ea199203-91aa-42a1-bf00-881273918a22',
-    idAnfitrion: '5211de5d-bd9e-4cb7-8912-3fbf6a0184b0',
-    nombreAnfitrion: 'Albergue Andino Illimani',
+    idAnfitrion: 'a0000000-0000-4000-8000-000000000003',
+    nombreAnfitrion: 'Elena Morales',
     titulo: 'Lodge Mirador del Illimani',
     descripcion: 'Espectacular refugio ecológico con ventanales de piso a techo hacia el majestuoso nevado Illimani. Calefacción ecológica y senderos de trekking.',
     departamento: 'La Paz',
@@ -120,23 +305,30 @@ const ALOJAMIENTOS_DEMO: Alojamiento[] = [
     direccion: 'Colina del Cóndor s/n',
     tipoPropiedad: 'ECO_LODGE',
     tipoEspacio: 'HABITACION_PRIVADA',
+    modalidad: 'CASA_DEPARTAMENTO',
+    politicas: 'Refugio de montaña silencioso. Check-in 14:00.',
+    horarioEntrada: '14:00',
+    horarioSalida: '11:00',
     precioBaseNoche: 520,
     moneda: 'BOB',
     calificacionPromedio: 4.88,
     totalResenas: 35,
-    estado: 'PUBLICADO',
+    estado: 'OBSERVADO',
+    estadoPublicacion: 'OBSERVADO',
+    motivoObservacionRechazo: 'Revisión preventiva por comentarios sobre baja temperatura nocturna',
+    origenUltimoCambio: 'NLP_TOPICOS_RESENAS',
     fotografias: [
       {
-        idFotografia: 'f5',
-        url: 'https://images.unsplash.com/photo-1510798831971-661eb04b3739?auto=format&fit=crop&w=1200&q=80',
+        idFotografia: 'f-illimani-1',
+        url: 'https://images.unsplash.com/photo-1502784444187-359ac186c5bb?auto=format&fit=crop&w=1200&q=80',
         esPrincipal: true,
         orden: 1,
-        descripcion: 'Mirador panorámico al atardecer sobre el Illimani'
+        descripcion: 'Refugio de montaña con vista al nevado Illimani'
       }
     ],
     unidades: [
       {
-        idUnidad: 'u-lapaz-1',
+        idUnidad: 'd1a4e803-5c31-4a29-b612-426614174003',
         nombre: 'Suite Cóndor Real',
         descripcion: 'Cama Queen térmica, estufa a leña y telescopio astronómico.',
         capacidadPersonas: 2,
@@ -149,9 +341,8 @@ const ALOJAMIENTOS_DEMO: Alojamiento[] = [
       }
     ],
     servicios: [
-      { idServicio: 7, nombre: 'Estufa a Leña', categoria: 'CALEFACCION' },
-      { idServicio: 8, nombre: 'Telescopio de Observación', categoria: 'EXPERIENCIA' },
-      { idServicio: 1, nombre: 'Wi-Fi Satelital', categoria: 'CONECTIVIDAD' }
+      { idServicio: 12, nombre: 'Estufa a Leña', categoria: 'CALEFACCION' },
+      { idServicio: 13, nombre: 'Telescopio de Observación', categoria: 'EXPERIENCIA' }
     ]
   }
 ];
@@ -182,6 +373,9 @@ function normalizarAlojamiento(raw: any): Alojamiento {
     calificacionPromedio: Number(raw.calificacionPromedio ?? 4.92),
     totalResenas: Number(raw.totalResenas ?? 32),
     estado: raw.estadoPublicacion || raw.estado || 'PUBLICADO',
+    estadoPublicacion: raw.estadoPublicacion || raw.estado || 'PUBLICADO',
+    motivoObservacionRechazo: raw.motivoObservacionRechazo || raw.motivoRechazo,
+    origenUltimoCambio: raw.origenUltimoCambio,
     fotografias: (raw.fotografias && raw.fotografias.length > 0)
       ? raw.fotografias.map((f: any, idx: number) => ({
           idFotografia: f.idFotografia || `foto-${idx}`,
@@ -201,7 +395,7 @@ function normalizarAlojamiento(raw: any): Alojamiento {
         ],
     unidades: (raw.unidades && raw.unidades.length > 0)
       ? raw.unidades.map((u: any) => ({
-          idUnidad: u.idUnidad || 'u-default',
+          idUnidad: u.idUnidad || 'd1a4e800-5c31-4a29-b612-426614174000',
           nombre: u.nombre || 'Unidad Principal',
           descripcion: u.descripcion || '',
           capacidadPersonas: u.capacidadHuespedes ?? u.capacidadPersonas ?? 4,
@@ -211,11 +405,15 @@ function normalizarAlojamiento(raw: any): Alojamiento {
           precioNoche: Number(u.precioNoche ?? precioCalculado),
           moneda: 'BOB',
           inventarioTotal: u.inventarioTotal ?? 1,
-          activo: u.estado === 'DISPONIBLE' || u.activo !== false
+          activo: u.estado === 'DISPONIBLE' || u.activo !== false,
+          estado: u.estado || 'DISPONIBLE',
+          fotos: u.fotos || (u.fotografias || []).map((f: any) => f.url || f),
+          fotografias: u.fotografias || (u.fotos ? u.fotos.map((url: string, i: number) => ({ idFotografia: `f-${i}`, url, esPrincipal: i === 0, orden: i + 1 })) : undefined),
+          servicios: u.servicios || []
         }))
       : [
           {
-            idUnidad: 'u-default',
+            idUnidad: 'd1a4e800-5c31-4a29-b612-426614174000',
             nombre: 'Suite Estándar',
             descripcion: 'Alojamiento completo equipado',
             capacidadPersonas: 4,
@@ -240,6 +438,320 @@ function normalizarAlojamiento(raw: any): Alojamiento {
   };
 }
 
+function sincronizarConDecisionesAdmin(lista: Alojamiento[]): Alojamiento[] {
+  try {
+    const adminRaw = localStorage.getItem('alojate_admin_alojamientos');
+    if (adminRaw) {
+      const adminItems: any[] = JSON.parse(adminRaw);
+      const adminMap = new Map<string, any>();
+      adminItems.forEach(item => {
+        if (item.id) adminMap.set(item.id, item);
+        if (item.idAlojamiento) adminMap.set(item.idAlojamiento, item);
+      });
+
+      return lista.map(a => {
+        const adminItem = adminMap.get(a.idAlojamiento);
+        if (adminItem) {
+          return {
+            ...a,
+            estado: adminItem.estado,
+            estadoPublicacion: adminItem.estado,
+            motivoRechazo: adminItem.motivoRechazo || adminItem.motivoObservacionRechazo,
+            motivoObservacionRechazo: adminItem.motivoObservacionRechazo || adminItem.motivoRechazo,
+            origenUltimoCambio: adminItem.origenUltimoCambio || a.origenUltimoCambio
+          };
+        }
+        return a;
+      });
+    }
+  } catch (e) {
+    console.warn('Error sincronizando con moderación de admin local:', e);
+  }
+  return lista;
+}
+
+// =========================================================================
+// VALORACIONES CANÓNICAS Y ANÁLISIS DE TÓPICOS NLP
+// =========================================================================
+export const VALORACIONES_DEMO: ValoracionCliente[] = [
+  // --- Hotel Boutique Los Tajibos Colonial (General) ---
+  {
+    idValoracion: 'val-taj-gen-1',
+    idAlojamiento: '49768530-76ae-459e-9bbe-faf2f3d488ba',
+    idUsuario: '075eabd5-7aca-4ec2-a00d-67064b8eccdf',
+    nombreUsuario: 'Mateo Zalles',
+    puntuacionGeneral: 5,
+    calificacionLimpieza: 5,
+    calificacionUbicacion: 5,
+    calificacionCalidadPrecio: 4.8,
+    calificacionServicio: 5,
+    calificacionComodidad: 5,
+    esAnonimo: false,
+    comentario: 'Excelente atención en la recepción y los jardines con la piscina son hermosos. El desayuno buffet típico cruceño espectacular, volveremos siempre.',
+    sentimientoNlp: 'POSITIVO',
+    confianzaNlp: 0.96,
+    topicoPredicho: 'AREAS_COMUNES_Y_DESAYUNO',
+    fechaCreacion: '2026-10-24T10:15:00Z'
+  },
+  {
+    idValoracion: 'val-taj-gen-2',
+    idAlojamiento: '49768530-76ae-459e-9bbe-faf2f3d488ba',
+    idUsuario: '3b892a01-51f2-4bc9-8800-47bf1b14a220',
+    nombreUsuario: 'Camila Vaca',
+    puntuacionGeneral: 4,
+    calificacionLimpieza: 5,
+    calificacionUbicacion: 5,
+    calificacionCalidadPrecio: 4,
+    calificacionServicio: 4.5,
+    calificacionComodidad: 4,
+    esAnonimo: false,
+    comentario: 'Ubicación inmejorable en pleno Equipetrol, muy seguro y tranquilo. El personal de conserjería fue muy atento durante toda la estancia.',
+    sentimientoNlp: 'POSITIVO',
+    confianzaNlp: 0.91,
+    topicoPredicho: 'UBICACION_Y_SEGURIDAD',
+    fechaCreacion: '2026-10-21T18:30:00Z'
+  },
+
+  // --- Suite Presidencial con Balcón & Vista a Jardines (u-tajibos-1) ---
+  {
+    idValoracion: 'val-taj-u1-1',
+    idAlojamiento: '49768530-76ae-459e-9bbe-faf2f3d488ba',
+    idUnidad: 'u-tajibos-1',
+    idUsuario: '6c1a8902-33dd-45ab-9912-78814aa88231',
+    nombreUsuario: 'Roberto Fernández',
+    puntuacionGeneral: 5,
+    calificacionLimpieza: 5,
+    calificacionUbicacion: 5,
+    calificacionCalidadPrecio: 5,
+    calificacionServicio: 5,
+    calificacionComodidad: 5,
+    esAnonimo: false,
+    comentario: 'La suite es maravillosa, la tina de hidromasaje en mármol y la vista al jardín botánico valen cada centavo. Cama King super cómoda y silencio absoluto.',
+    sentimientoNlp: 'POSITIVO',
+    confianzaNlp: 0.98,
+    topicoPredicho: 'CONFORT_Y_LUJO',
+    fechaCreacion: '2026-10-26T14:20:00Z'
+  },
+  {
+    idValoracion: 'val-taj-u1-2',
+    idAlojamiento: '49768530-76ae-459e-9bbe-faf2f3d488ba',
+    idUnidad: 'u-tajibos-1',
+    idUsuario: '8f220199-77aa-42a1-bb00-112233445566',
+    nombreUsuario: 'Sofía Banegas',
+    puntuacionGeneral: 5,
+    calificacionLimpieza: 5,
+    calificacionUbicacion: 5,
+    calificacionCalidadPrecio: 4.8,
+    calificacionServicio: 5,
+    calificacionComodidad: 5,
+    esAnonimo: false,
+    comentario: 'Inolvidable estadía de aniversario. El balcón privado hacia las palmeras y el room service fueron impecables. 100% recomendado.',
+    sentimientoNlp: 'POSITIVO',
+    confianzaNlp: 0.95,
+    topicoPredicho: 'EXPERIENCIA_Y_VISTAS',
+    fechaCreacion: '2026-10-27T11:00:00Z'
+  },
+
+  // --- Habitación Ejecutiva Doble Twin (u-tajibos-2) (CON RESEÑAS NEGATIVAS DETECTADAS POR IA NLP) ---
+  {
+    idValoracion: 'val-taj-u2-1',
+    idAlojamiento: '49768530-76ae-459e-9bbe-faf2f3d488ba',
+    idUnidad: 'u-tajibos-2',
+    idUsuario: '99aa0011-22bb-43cc-88dd-776655443322',
+    nombreUsuario: 'Javier Arnez',
+    puntuacionGeneral: 2,
+    calificacionLimpieza: 3,
+    calificacionUbicacion: 4,
+    calificacionCalidadPrecio: 2,
+    calificacionServicio: 2,
+    calificacionComodidad: 1,
+    esAnonimo: false,
+    comentario: 'El aire acondicionado hacía un ruido metálico ensordecedor toda la noche y apenas enfriaba. Tuvimos que abrir la ventana y entraron mosquitos, pésima noche de descanso.',
+    sentimientoNlp: 'NEGATIVO',
+    confianzaNlp: 0.94,
+    topicoPredicho: 'CLIMATIZACION_Y_RUIDO',
+    fechaCreacion: '2026-10-29T08:45:00Z'
+  },
+  {
+    idValoracion: 'val-taj-u2-2',
+    idAlojamiento: '49768530-76ae-459e-9bbe-faf2f3d488ba',
+    idUnidad: 'u-tajibos-2',
+    idUsuario: '55bb6677-88cc-49dd-a0ee-112233445577',
+    nombreUsuario: 'Carla Mercado',
+    puntuacionGeneral: 2,
+    calificacionLimpieza: 4,
+    calificacionUbicacion: 5,
+    calificacionCalidadPrecio: 2,
+    calificacionServicio: 2,
+    calificacionComodidad: 2,
+    esAnonimo: true,
+    comentario: 'El agua de la ducha salía completamente fría en la mañana. Llamé a recepción y dijeron que el termotanque del bloque ejecutivo estaba en mantenimiento. Inaceptable para la tarifa que cobran.',
+    sentimientoNlp: 'NEGATIVO',
+    confianzaNlp: 0.92,
+    topicoPredicho: 'AGUA_CALIENTE_Y_BANO',
+    fechaCreacion: '2026-10-30T09:12:00Z'
+  },
+  {
+    idValoracion: 'val-taj-u2-3',
+    idAlojamiento: '49768530-76ae-459e-9bbe-faf2f3d488ba',
+    idUnidad: 'u-tajibos-2',
+    idUsuario: '11aa22bb-33cc-44dd-55ee-6677889900aa',
+    nombreUsuario: 'Andrés Guidi',
+    puntuacionGeneral: 3,
+    calificacionLimpieza: 4,
+    calificacionUbicacion: 4.5,
+    calificacionCalidadPrecio: 3,
+    calificacionServicio: 3.5,
+    calificacionComodidad: 3,
+    esAnonimo: false,
+    comentario: 'El escritorio ejecutivo y el internet son buenos para trabajar, pero deberían revisar el aislamiento acústico y el clima de estas habitaciones.',
+    sentimientoNlp: 'NEUTRO',
+    confianzaNlp: 0.82,
+    topicoPredicho: 'EQUIPAMIENTO_Y_TRABAJO',
+    fechaCreacion: '2026-10-30T17:00:00Z'
+  },
+
+  // --- Lodge Mirador del Illimani (ea199203-91aa-42a1-bf00-881273918a22 - OBSERVADO POR NLP) ---
+  {
+    idValoracion: 'val-illi-1',
+    idAlojamiento: 'ea199203-91aa-42a1-bf00-881273918a22',
+    idUsuario: '44cc55dd-66ee-47ff-88aa-99bb00112233',
+    nombreUsuario: 'Diego Morales',
+    puntuacionGeneral: 2,
+    calificacionLimpieza: 4,
+    calificacionUbicacion: 4.5,
+    calificacionCalidadPrecio: 2,
+    calificacionServicio: 3,
+    calificacionComodidad: 1.5,
+    esAnonimo: false,
+    comentario: 'La vista al majestuoso nevado Illimani es insuperable, pero por la noche la estufa a leña no dio abasto y pasamos un frío extremo en el dormitorio. No había frazadas térmicas suficientes.',
+    sentimientoNlp: 'NEGATIVO',
+    confianzaNlp: 0.96,
+    topicoPredicho: 'TEMPERATURA_Y_CALEFACCION',
+    fechaCreacion: '2026-10-17T22:30:00Z'
+  },
+  {
+    idValoracion: 'val-illi-2',
+    idAlojamiento: 'ea199203-91aa-42a1-bf00-881273918a22',
+    idUsuario: '77dd88ee-99ff-40aa-bb11-223344556677',
+    nombreUsuario: 'Valeria Soliz',
+    puntuacionGeneral: 3,
+    calificacionLimpieza: 4,
+    calificacionUbicacion: 5,
+    calificacionCalidadPrecio: 3,
+    calificacionServicio: 4,
+    calificacionComodidad: 2.5,
+    esAnonimo: false,
+    comentario: 'Lugar mágico para desconectar de la ciudad, pero vengan muy preparados para las bajas temperaturas porque las noches son realmente heladas en Mecapaca.',
+    sentimientoNlp: 'NEUTRO',
+    confianzaNlp: 0.88,
+    topicoPredicho: 'CLIMA_Y_TEMPERATURA',
+    fechaCreacion: '2026-10-18T07:15:00Z'
+  },
+
+  // --- Chalet Boutique Los Viñedos (ca4d2e81-7b90-41f2-9854-1b3a88c22110) ---
+  {
+    idValoracion: 'val-tari-1',
+    idAlojamiento: 'ca4d2e81-7b90-41f2-9854-1b3a88c22110',
+    idUsuario: '88ee99ff-00aa-41bb-cc22-334455667788',
+    nombreUsuario: 'Sebastián Farfán',
+    puntuacionGeneral: 5,
+    calificacionLimpieza: 5,
+    calificacionUbicacion: 5,
+    calificacionCalidadPrecio: 5,
+    calificacionServicio: 5,
+    calificacionComodidad: 5,
+    esAnonimo: false,
+    comentario: 'Una de las mejores experiencias en Tarija. El viñedo privado, la cata de vinos guiada y el desayuno chapaco fueron de diez. Doña Elena es una anfitriona de primer nivel.',
+    sentimientoNlp: 'POSITIVO',
+    confianzaNlp: 0.97,
+    topicoPredicho: 'HOSPITALIDAD_Y_VINOS',
+    fechaCreacion: '2026-10-23T16:00:00Z'
+  },
+
+  // --- Cabaña Chiquitana El Palmar (93fce18e-32fa-400c-8f49-8d4f2fe2f5bb) ---
+  {
+    idValoracion: 'val-chiqui-1',
+    idAlojamiento: '93fce18e-32fa-400c-8f49-8d4f2fe2f5bb',
+    idUsuario: '22ff33aa-44bb-42cc-dd33-445566778899',
+    nombreUsuario: 'Mariana Roca',
+    puntuacionGeneral: 5,
+    calificacionLimpieza: 5,
+    calificacionUbicacion: 4.8,
+    calificacionCalidadPrecio: 5,
+    calificacionServicio: 5,
+    calificacionComodidad: 5,
+    esAnonimo: false,
+    comentario: 'Hermosa cabaña en San José de Chiquitos, la galería con hamacas y la piscina privada son perfectas para desconectarse en familia bajo el cielo estrellado.',
+    sentimientoNlp: 'POSITIVO',
+    confianzaNlp: 0.95,
+    topicoPredicho: 'DESCANSO_Y_FAMILIA',
+    fechaCreacion: '2026-10-26T20:00:00Z'
+  }
+];
+
+function obtenerValoracionesLocales(): ValoracionCliente[] {
+  try {
+    const raw = localStorage.getItem('alojate_valoraciones_local');
+    if (raw) {
+      const parsed: ValoracionCliente[] = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        const ids = new Set(parsed.map(p => p.idValoracion));
+        const combinadas = [...parsed];
+        VALORACIONES_DEMO.forEach(v => {
+          if (!ids.has(v.idValoracion)) combinadas.push(v);
+        });
+        return combinadas;
+      }
+    }
+  } catch {}
+  return [...VALORACIONES_DEMO];
+}
+
+function calcularResumenLocal(lista: ValoracionCliente[]): ResumenValoraciones {
+  if (!lista || lista.length === 0) {
+    return {
+      calificacionPromedio: 5.0,
+      totalResenas: 0,
+      promedioLimpieza: 5.0,
+      promedioUbicacion: 5.0,
+      promedioCalidadPrecio: 5.0,
+      promedioServicio: 5.0,
+      promedioComodidad: 5.0,
+      conteoPositivos: 0,
+      conteoNeutros: 0,
+      conteoNegativos: 0
+    };
+  }
+  const total = lista.length;
+  let sumGen = 0, sumLimp = 0, sumUbi = 0, sumCal = 0, sumServ = 0, sumCom = 0;
+  let pos = 0, neu = 0, neg = 0;
+  for (const v of lista) {
+    sumGen += v.puntuacionGeneral;
+    sumLimp += (v.calificacionLimpieza ?? v.puntuacionGeneral);
+    sumUbi += (v.calificacionUbicacion ?? v.puntuacionGeneral);
+    sumCal += (v.calificacionCalidadPrecio ?? v.puntuacionGeneral);
+    sumServ += (v.calificacionServicio ?? v.puntuacionGeneral);
+    sumCom += (v.calificacionComodidad ?? v.puntuacionGeneral);
+    const sent = (v.sentimientoNlp || '').toUpperCase();
+    if (sent === 'POSITIVO' || v.puntuacionGeneral >= 4) pos++;
+    else if (sent === 'NEUTRO' || v.puntuacionGeneral === 3) neu++;
+    else neg++;
+  }
+  return {
+    calificacionPromedio: Number((sumGen / total).toFixed(2)),
+    totalResenas: total,
+    promedioLimpieza: Number((sumLimp / total).toFixed(1)),
+    promedioUbicacion: Number((sumUbi / total).toFixed(1)),
+    promedioCalidadPrecio: Number((sumCal / total).toFixed(1)),
+    promedioServicio: Number((sumServ / total).toFixed(1)),
+    promedioComodidad: Number((sumCom / total).toFixed(1)),
+    conteoPositivos: pos,
+    conteoNeutros: neu,
+    conteoNegativos: neg
+  };
+}
+
 export const catalogoService = {
   async listarAlojamientos(departamento?: string): Promise<Alojamiento[]> {
     let baseList: Alojamiento[] = [];
@@ -249,7 +761,6 @@ export const catalogoService = {
         baseList = response.data.map(normalizarAlojamiento);
       }
     } catch {
-      // Fallback a demo con datos sembrados
       baseList = ALOJAMIENTOS_DEMO;
     }
 
@@ -257,12 +768,17 @@ export const catalogoService = {
       baseList = ALOJAMIENTOS_DEMO;
     }
 
+    // Unir alojamientos canónicos demo si el backend no los devolvió todos
+    const demoMap = new Map<string, Alojamiento>();
+    ALOJAMIENTOS_DEMO.forEach(demo => demoMap.set(demo.idAlojamiento, demo));
+    baseList.forEach(item => demoMap.set(item.idAlojamiento, item));
+    baseList = Array.from(demoMap.values());
+
     // Agregar alojamientos personalizados creados por el anfitrión (persistencia local)
     try {
       const customRaw = localStorage.getItem('alojate_alojamientos_custom');
       if (customRaw) {
         const customItems: Alojamiento[] = JSON.parse(customRaw);
-        // Filtrar duplicados por idAlojamiento
         const map = new Map<string, Alojamiento>();
         baseList.forEach(item => map.set(item.idAlojamiento, item));
         customItems.forEach(item => map.set(item.idAlojamiento, item));
@@ -272,8 +788,44 @@ export const catalogoService = {
       console.warn('Error al leer alojamientos locales:', e);
     }
 
+    // Sincronizar con decisiones administrativas tomadas en el panel de control
+    baseList = sincronizarConDecisionesAdmin(baseList);
+
     if (!departamento || departamento === 'Todos') return baseList;
     return baseList.filter(a => a.departamento.toLowerCase() === departamento.toLowerCase());
+  },
+
+  async listarAlojamientosPublicados(departamento?: string): Promise<Alojamiento[]> {
+    const todos = await this.listarAlojamientos(departamento);
+    // Filtro estricto del Catálogo de Clientes:
+    // Solo publicar alojamientos aprobados (PUBLICADO) o aquellos OBSERVADO derivados de NLP que siguen en servicio
+    return todos.filter(a => {
+      const estado = a.estadoPublicacion || a.estado;
+      if (estado === 'PUBLICADO') return true;
+      if (estado === 'OBSERVADO') {
+        const origen = (a.origenUltimoCambio || '').toUpperCase();
+        return origen.includes('NLP') || origen.includes('RESENA') || origen.includes('RESEÑA');
+      }
+      return false;
+    });
+  },
+
+  async listarAlojamientosPorAnfitrion(criterio: { id?: string; email?: string; nombre?: string }): Promise<Alojamiento[]> {
+    const todos = await this.listarAlojamientos();
+    return todos.filter(a => {
+      if (criterio.id && a.idAnfitrion === criterio.id) return true;
+      const anfitrionNombre = (a.nombreAnfitrion || '').toLowerCase();
+      const userEmail = (criterio.email || '').toLowerCase();
+      const userNombre = (criterio.nombre || '').toLowerCase();
+
+      if (userEmail.includes('carlos') || userEmail.includes('anfitrion@alojate.bo') || userNombre.includes('carlos')) {
+        return anfitrionNombre.includes('carlos');
+      }
+      if (userEmail.includes('elena') || userNombre.includes('elena')) {
+        return anfitrionNombre.includes('elena');
+      }
+      return false;
+    });
   },
 
   async obtenerPorId(id: string): Promise<Alojamiento> {
@@ -312,49 +864,173 @@ export const catalogoService = {
       const customItems: Alojamiento[] = customRaw ? JSON.parse(customRaw) : [];
       const actualizados = [alojamiento, ...customItems.filter(a => a.idAlojamiento !== alojamiento.idAlojamiento)];
       localStorage.setItem('alojate_alojamientos_custom', JSON.stringify(actualizados));
+
+      // Sincronizar también con el panel de administración
+      const adminRaw = localStorage.getItem('alojate_admin_alojamientos');
+      const adminList: any[] = adminRaw ? JSON.parse(adminRaw) : [];
+      const nuevoParaAdmin = {
+        id: alojamiento.idAlojamiento,
+        titulo: alojamiento.titulo,
+        anfitrion: alojamiento.nombreAnfitrion,
+        departamento: alojamiento.departamento,
+        ciudad: alojamiento.ciudad,
+        direccion: alojamiento.direccion,
+        tipoPropiedad: alojamiento.tipoPropiedad,
+        modalidad: alojamiento.modalidad || 'CASA_DEPARTAMENTO',
+        precioNoche: alojamiento.precioBaseNoche,
+        capacidad: alojamiento.unidades?.[0]?.capacidadPersonas || 4,
+        habitaciones: alojamiento.unidades?.[0]?.cantidadDormitorios || 1,
+        estado: alojamiento.estadoPublicacion || alojamiento.estado || 'PENDIENTE',
+        fechaRegistro: new Date().toISOString(),
+        imagen: alojamiento.fotografias?.[0]?.url || 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1200&q=80',
+        fotos: (alojamiento.fotografias || []).map(f => f.url),
+        descripcion: alojamiento.descripcion,
+        politicas: alojamiento.politicas,
+        horarioEntrada: alojamiento.horarioEntrada,
+        horarioSalida: alojamiento.horarioSalida,
+        unidades: (alojamiento.unidades || []).map(u => ({
+          idUnidad: u.idUnidad,
+          nombre: u.nombre,
+          capacidadHuespedes: u.capacidadPersonas,
+          cantidadCamas: u.cantidadCamas,
+          cantidadBanos: u.cantidadBanios,
+          inventarioTotal: u.inventarioTotal,
+          precioNoche: u.precioNoche,
+          estado: 'DISPONIBLE'
+        })),
+        servicios: (alojamiento.servicios || []).map(s => s.nombre)
+      };
+
+      const adminActualizados = [nuevoParaAdmin, ...adminList.filter(a => a.id !== alojamiento.idAlojamiento)];
+      localStorage.setItem('alojate_admin_alojamientos', JSON.stringify(adminActualizados));
     } catch (e) {
       console.warn('No se pudo guardar en localStorage:', e);
     }
   },
 
-  async listarValoraciones(idAlojamiento: string): Promise<any[]> {
+  async listarValoraciones(idAlojamiento: string): Promise<ValoracionCliente[]> {
     try {
-      const res = await httpClient.get<any[]>(ENDPOINTS.ALOJAMIENTOS.VALORACIONES(idAlojamiento));
-      return res.data || [];
-    } catch (e) {
-      return [];
-    }
+      const res = await httpClient.get<ValoracionCliente[]>(ENDPOINTS.ALOJAMIENTOS.VALORACIONES(idAlojamiento));
+      if (res.data && res.data.length > 0) return res.data;
+    } catch (e) {}
+    const locales = obtenerValoracionesLocales();
+    return locales.filter(v => v.idAlojamiento === idAlojamiento);
   },
 
-  async listarValoracionesGeneralesHotel(idAlojamiento: string): Promise<any[]> {
+  async listarValoracionesGeneralesHotel(idAlojamiento: string): Promise<ValoracionCliente[]> {
     try {
-      const res = await httpClient.get<any[]>(ENDPOINTS.ALOJAMIENTOS.VALORACIONES_HOTEL(idAlojamiento));
-      return res.data || [];
-    } catch (e) {
-      return [];
-    }
+      const res = await httpClient.get<ValoracionCliente[]>(ENDPOINTS.ALOJAMIENTOS.VALORACIONES_HOTEL(idAlojamiento));
+      if (res.data && res.data.length > 0) return res.data;
+    } catch (e) {}
+    const locales = obtenerValoracionesLocales();
+    return locales.filter(v => v.idAlojamiento === idAlojamiento && !v.idUnidad);
   },
 
-  async listarValoracionesUnidad(idUnidad: string): Promise<any[]> {
+  async listarValoracionesUnidad(idUnidad: string): Promise<ValoracionCliente[]> {
     try {
-      const res = await httpClient.get<any[]>(ENDPOINTS.ALOJAMIENTOS.VALORACIONES_UNIDAD(idUnidad));
-      return res.data || [];
-    } catch (e) {
-      return [];
-    }
+      const res = await httpClient.get<ValoracionCliente[]>(ENDPOINTS.ALOJAMIENTOS.VALORACIONES_UNIDAD(idUnidad));
+      if (res.data && res.data.length > 0) return res.data;
+    } catch (e) {}
+    const locales = obtenerValoracionesLocales();
+    return locales.filter(v => v.idUnidad === idUnidad);
   },
 
-  async crearValoracion(idAlojamiento: string, req: any): Promise<any> {
-    const res = await httpClient.post<any>(ENDPOINTS.ALOJAMIENTOS.VALORACIONES(idAlojamiento), req);
-    return res.data;
-  },
-
-  async obtenerResumenValoraciones(idAlojamiento: string): Promise<any> {
+  async clasificarResenaNLP(texto: string, idAlojamiento?: string, idUnidad?: string, puntuacion?: number) {
     try {
-      const res = await httpClient.get<any>(ENDPOINTS.ALOJAMIENTOS.RESUMEN_VALORACIONES(idAlojamiento));
+      const res = await httpClient.post<any>(ENDPOINTS.IA.CLASIFICAR_RESENA, {
+        texto,
+        idAlojamiento,
+        idUnidad,
+        puntuacionGeneral: puntuacion
+      });
       return res.data;
     } catch (e) {
+      console.warn('[NLP Service] Error al clasificar:', e);
       return null;
     }
+  },
+
+  async crearValoracion(idAlojamiento: string, req: any): Promise<ValoracionCliente> {
+    let sentimientoCalculado = req.sentimientoNlp;
+    let confianzaCalculada = req.confianzaNlp;
+    let topicoCalculado = req.topicoPredicho;
+
+    // Conexión directa con el Microservicio de IA (NLP Review Classifier)
+    if (req.comentario && req.comentario.trim().length >= 3) {
+      try {
+        const iaRes = await httpClient.post<any>(ENDPOINTS.IA.CLASIFICAR_RESENA, {
+          texto: req.comentario.trim(),
+          idAlojamiento,
+          idUnidad: req.idUnidad,
+          puntuacionGeneral: req.puntuacionGeneral
+        });
+        if (iaRes.data && iaRes.data.status === 'success') {
+          sentimientoCalculado = iaRes.data.sentimiento;
+          confianzaCalculada = iaRes.data.confianza;
+          topicoCalculado = iaRes.data.topico;
+        }
+      } catch (iaError) {
+        console.warn('[NLP Copiloto] Clasificación local/offline aplicada:', iaError);
+      }
+    }
+
+    if (!sentimientoCalculado) {
+      sentimientoCalculado = req.puntuacionGeneral >= 4 ? 'POSITIVO' : (req.puntuacionGeneral === 3 ? 'NEUTRO' : 'NEGATIVO');
+    }
+    if (!confianzaCalculada) {
+      confianzaCalculada = 0.92;
+    }
+    if (!topicoCalculado) {
+      topicoCalculado = 'EXPERIENCIA_GENERAL';
+    }
+
+    const payloadBackend = {
+      ...req,
+      sentimientoNlp: sentimientoCalculado,
+      confianzaNlp: confianzaCalculada,
+      topicoPredicho: topicoCalculado
+    };
+
+    const nueva: ValoracionCliente = {
+      idValoracion: `val-${Date.now()}`,
+      idAlojamiento,
+      idUnidad: req.idUnidad,
+      idUsuario: req.idUsuario,
+      nombreUsuario: req.esAnonimo ? 'Huésped Anónimo' : (req.nombreUsuario || 'Viajero Aloja-Te'),
+      puntuacionGeneral: req.puntuacionGeneral || 5,
+      calificacionLimpieza: req.calificacionLimpieza,
+      calificacionUbicacion: req.calificacionUbicacion,
+      calificacionCalidadPrecio: req.calificacionCalidadPrecio,
+      calificacionServicio: req.calificacionServicio,
+      calificacionComodidad: req.calificacionComodidad,
+      esAnonimo: Boolean(req.esAnonimo),
+      comentario: req.comentario || '',
+      sentimientoNlp: sentimientoCalculado,
+      confianzaNlp: confianzaCalculada,
+      topicoPredicho: topicoCalculado,
+      fechaCreacion: new Date().toISOString()
+    };
+
+    try {
+      const actuales = obtenerValoracionesLocales();
+      const actualizadas = [nueva, ...actuales];
+      localStorage.setItem('alojate_valoraciones_local', JSON.stringify(actualizadas));
+    } catch {}
+
+    try {
+      const res = await httpClient.post<any>(ENDPOINTS.ALOJAMIENTOS.VALORACIONES(idAlojamiento), payloadBackend);
+      return res.data;
+    } catch {
+      return nueva;
+    }
+  },
+
+  async obtenerResumenValoraciones(idAlojamiento: string): Promise<ResumenValoraciones> {
+    try {
+      const res = await httpClient.get<ResumenValoraciones>(ENDPOINTS.ALOJAMIENTOS.RESUMEN_VALORACIONES(idAlojamiento));
+      if (res.data) return res.data;
+    } catch (e) {}
+    const locales = obtenerValoracionesLocales().filter(v => v.idAlojamiento === idAlojamiento);
+    return calcularResumenLocal(locales);
   }
 };

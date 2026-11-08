@@ -13,7 +13,7 @@ export class DynamoDBReservasRepository implements IReservasRepository {
   private readonly memoryReservas: Map<string, ReservaEntity> = new Map();
   private readonly memoryBloqueos: Map<string, BloqueoInventarioEntity> = new Map();
 
-  constructor(private readonly dynamoService: DynamoDBService) {}
+  constructor(private readonly dynamoService: DynamoDBService) { }
 
   async guardarReserva(reserva: ReservaEntity): Promise<ReservaEntity> {
     this.memoryReservas.set(reserva.idReserva, reserva);
@@ -36,6 +36,7 @@ export class DynamoDBReservasRepository implements IReservasRepository {
   }
 
   async buscarReservaPorId(idReserva: string): Promise<ReservaEntity | null> {
+    this.purgarExpiradas();
     if (this.dynamoService.isAvailable()) {
       try {
         const response = await this.dynamoService.getDocClient().send(
@@ -48,7 +49,13 @@ export class DynamoDBReservasRepository implements IReservasRepository {
           }),
         );
         if (response.Item) {
-          return new ReservaEntity(response.Item as Partial<ReservaEntity>);
+          const itemRes = new ReservaEntity(response.Item as Partial<ReservaEntity>);
+          const nowEpoch = Math.floor(Date.now() / 1000);
+          if (itemRes.estado === 'PENDIENTE_PAGO' && itemRes.ttl && itemRes.ttl <= nowEpoch) {
+            itemRes.estado = 'EXPIRADA' as any;
+            await this.eliminarBloqueoPorReserva(itemRes.idUnidad, itemRes.idReserva);
+          }
+          return itemRes;
         }
       } catch (err: any) {
         this.logger.warn(`Error al consultar DynamoDB: ${err.message}. Buscando en memoria.`);
@@ -56,10 +63,18 @@ export class DynamoDBReservasRepository implements IReservasRepository {
     }
 
     const item = this.memoryReservas.get(idReserva);
-    return item ? new ReservaEntity(item) : null;
+    if (!item) return null;
+
+    const nowEpoch = Math.floor(Date.now() / 1000);
+    if (item.estado === 'PENDIENTE_PAGO' && item.ttl && item.ttl <= nowEpoch) {
+      item.estado = 'EXPIRADA' as any;
+      await this.eliminarBloqueoPorReserva(item.idUnidad, item.idReserva);
+    }
+    return new ReservaEntity(item);
   }
 
   async listarReservasPorCliente(idCliente: string): Promise<ReservaEntity[]> {
+    this.purgarExpiradas();
     if (this.dynamoService.isAvailable()) {
       try {
         const response = await this.dynamoService.getDocClient().send(
@@ -86,6 +101,7 @@ export class DynamoDBReservasRepository implements IReservasRepository {
   }
 
   async listarReservasPorAnfitrion(idAnfitrion: string): Promise<ReservaEntity[]> {
+    this.purgarExpiradas();
     if (this.dynamoService.isAvailable()) {
       try {
         const response = await this.dynamoService.getDocClient().send(
@@ -112,12 +128,14 @@ export class DynamoDBReservasRepository implements IReservasRepository {
   }
 
   async listarReservasPorUnidad(idUnidad: string): Promise<ReservaEntity[]> {
+    this.purgarExpiradas();
     return Array.from(this.memoryReservas.values())
       .filter((r) => r.idUnidad === idUnidad)
       .map((r) => new ReservaEntity(r));
   }
 
   async listarTodas(): Promise<ReservaEntity[]> {
+    this.purgarExpiradas();
     if (this.dynamoService.isAvailable()) {
       try {
         const response = await this.dynamoService.getDocClient().send(
@@ -169,44 +187,68 @@ export class DynamoDBReservasRepository implements IReservasRepository {
     }
   }
 
-  /** ¿Esa reserva sigue pendiente de pago pero su plazo ya venció? (no debe ocupar fechas) */
-  private reservaVencida(idReserva?: string): boolean {
-    const r = idReserva ? this.memoryReservas.get(idReserva) : undefined;
-    return !!r && r.estado === 'PENDIENTE_PAGO' && typeof r.ttl === 'number' && r.ttl * 1000 <= Date.now();
+  /**
+   * Purgado reactivo de reservas en PENDIENTE_PAGO cuyo TTL de 15 minutos ya expiró.
+   * Libera automáticamente el inventario sin requerir jobs externos.
+   */
+  public purgarExpiradas(): void {
+    const nowEpoch = Math.floor(Date.now() / 1000);
+    const idsExpirados: string[] = [];
+
+    for (const [id, reserva] of this.memoryReservas.entries()) {
+      if (reserva.estado === 'PENDIENTE_PAGO' && reserva.ttl && reserva.ttl <= nowEpoch) {
+        reserva.estado = 'EXPIRADA' as any;
+        reserva.fechaActualizacion = new Date().toISOString();
+        idsExpirados.push(id);
+      }
+    }
+
+    if (idsExpirados.length > 0) {
+      for (const [key, bloqueo] of this.memoryBloqueos.entries()) {
+        if (bloqueo.idReserva && idsExpirados.includes(bloqueo.idReserva)) {
+          this.memoryBloqueos.delete(key);
+        }
+      }
+      this.logger.log(`[Auto-Purga TTL] ${idsExpirados.length} reservas expiradas purgadas de inventario.`);
+    }
   }
 
-  async obtenerBloqueosPorRango(
-    idUnidad: string,
-    fechaInicio: string,
-    fechaFin: string,
-    excluirReservaId?: string,
-  ): Promise<BloqueoInventarioEntity[]> {
-    const bloqueosDirectos = Array.from(this.memoryBloqueos.values()).filter(
-      (b) =>
-        b.idUnidad === idUnidad &&
-        b.fecha >= fechaInicio &&
-        b.fecha < fechaFin &&
-        b.idReserva !== excluirReservaId &&
-        !this.reservaVencida(b.idReserva),
-    );
+  async obtenerBloqueosPorRango(idUnidad: string, fechaInicio: string, fechaFin: string): Promise<BloqueoInventarioEntity[]> {
+    // 1. Ejecutar purga de reservas vencidas por temporizador de 15 minutos
+    this.purgarExpiradas();
+
+    const nowEpoch = Math.floor(Date.now() / 1000);
+
+    // 2. Filtrar bloqueos directos verificando que no pertenezcan a reservas canceladas o expiradas
+    const bloqueosDirectos = Array.from(this.memoryBloqueos.values()).filter((b) => {
+      if (b.idUnidad !== idUnidad || b.fecha < fechaInicio || b.fecha >= fechaFin) {
+        return false;
+      }
+      if (b.idReserva) {
+        const resAsociada = this.memoryReservas.get(b.idReserva);
+        if (resAsociada) {
+          if (resAsociada.estado === 'CANCELADA' || resAsociada.estado === 'EXPIRADA') {
+            return false;
+          }
+          if (resAsociada.estado === 'PENDIENTE_PAGO' && resAsociada.ttl && resAsociada.ttl <= nowEpoch) {
+            return false;
+          }
+        }
+      }
+      return true;
+    });
+
     if (bloqueosDirectos.length > 0) {
       return bloqueosDirectos;
     }
 
-    // Verificar también en reservas activas de la unidad.
-    // Una reserva pendiente cuyo plazo de pago ya venció NO ocupa las fechas.
-    const ahora = Date.now();
-    const reservasOcupadas = Array.from(this.memoryReservas.values()).filter(
-      (r) =>
-        r.idUnidad === idUnidad &&
-        r.idReserva !== excluirReservaId &&
-        r.estado !== 'CANCELADA' &&
-        r.estado !== 'EXPIRADA' &&
-        r.estado !== 'RECHAZADA_COMPENSADA' &&
-        !(r.estado === 'PENDIENTE_PAGO' && typeof r.ttl === 'number' && r.ttl * 1000 <= ahora) &&
-        r.checkIn < fechaFin &&
-        r.checkOut > fechaInicio,
-    );
+    // 3. Verificar también en reservas activas de la unidad
+    const reservasOcupadas = Array.from(this.memoryReservas.values()).filter((r) => {
+      if (r.idUnidad !== idUnidad) return false;
+      if (r.estado === 'CANCELADA' || r.estado === 'EXPIRADA') return false;
+      if (r.estado === 'PENDIENTE_PAGO' && r.ttl && r.ttl <= nowEpoch) return false;
+      return r.checkIn < fechaFin && r.checkOut > fechaInicio;
+    });
 
     if (reservasOcupadas.length > 0) {
       return reservasOcupadas.map(

@@ -52,5 +52,14 @@ export const ENDPOINTS = {
     ROL_PERMISOS: (id: number | string) => `${API_BASE_URL}/api/v1/seguridad/roles/${id}/permisos`,
     PERMISOS: `${API_BASE_URL}/api/v1/seguridad/permisos`,
     MODULOS: `${API_BASE_URL}/api/v1/seguridad/modulos`,
+  },
+
+  // MS-04: IA & Copiloto (Clasificador de Reseñas NLP & Reportes)
+  IA: {
+    CLASIFICAR_RESENA: `${API_BASE_URL}/api/v1/ia/clasificar-resena`,
+    PREDICT: `${API_BASE_URL}/api/v1/ia/predict`,
+    BATCH: `${API_BASE_URL}/api/v1/ia/batch`,
+    METRICAS: `${API_BASE_URL}/api/v1/ia/metricas-modelo`,
+    HEALTH: `${API_BASE_URL}/api/v1/ia/health`,
   }
 };

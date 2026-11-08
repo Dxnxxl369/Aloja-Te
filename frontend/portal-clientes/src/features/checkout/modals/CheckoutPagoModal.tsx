@@ -31,10 +31,26 @@ export const CheckoutPagoModal: React.FC<CheckoutPagoModalProps> = ({
 
   // Temporizador de 15 minutos
   useEffect(() => {
-    if (timeLeft <= 0) return;
+    if (timeLeft <= 0) {
+      if (reserva && reserva.estado === 'PENDIENTE_PAGO') {
+        reservasService.cancelarReserva(reserva.idReserva, 'EXPIRACION_15_MIN').catch(() => {});
+      }
+      return;
+    }
     const timer = setInterval(() => setTimeLeft((prev) => prev - 1), 1000);
     return () => clearInterval(timer);
-  }, [timeLeft]);
+  }, [timeLeft, reserva]);
+
+  const handleCerrar = async () => {
+    if (reserva && reserva.estado === 'PENDIENTE_PAGO') {
+      try {
+        await reservasService.cancelarReserva(reserva.idReserva, 'EXPIRACION_15_MIN');
+      } catch (e) {
+        console.warn('Liberación de inventario:', e);
+      }
+    }
+    onClose();
+  };
 
   const iniciarProcesoPago = async (codigoPromo?: string) => {
     if (!reserva) return;
@@ -111,7 +127,7 @@ export const CheckoutPagoModal: React.FC<CheckoutPagoModalProps> = ({
             Han transcurrido los 15 minutos asignados para completar el pago con QR. Para evitar sobreventas, el bloqueo temporal de inventario ha sido liberado en el sistema.
           </p>
           <button
-            onClick={onClose}
+            onClick={handleCerrar}
             className="w-full py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-lg shadow-blue-600/25 transition cursor-pointer"
           >
             Seleccionar Fechas y Reintentar
@@ -128,7 +144,7 @@ export const CheckoutPagoModal: React.FC<CheckoutPagoModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/60 backdrop-blur-md transition-all duration-300 animate-fade-in overflow-y-auto">
       {/* Click outside backdrop */}
-      <div className="absolute inset-0" onClick={onClose} />
+      <div className="absolute inset-0" onClick={handleCerrar} />
 
       {/* Main Container - Royal Blue & White / Dark Slate matching image.png */}
       <div className="relative w-full max-w-xl my-6 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 rounded-3xl shadow-2xl border border-slate-200/80 dark:border-slate-800 z-10 overflow-hidden animate-modal-in flex flex-col">
@@ -154,7 +170,7 @@ export const CheckoutPagoModal: React.FC<CheckoutPagoModalProps> = ({
             </div>
 
             <button
-              onClick={onClose}
+              onClick={handleCerrar}
               className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-700 dark:hover:text-white transition"
               title="Cerrar modal"
             >

@@ -1,10 +1,10 @@
 package com.alojate.usuarios.domain.model;
 
 public enum EstadoPublicacion {
-    BORRADOR,
+    PENDIENTE,
     EN_REVISION,
     PUBLICADO,
-    RECHAZADO,
-    PAUSADO,
-    SUSPENDIDO
+    OBSERVADO,
+    SUSPENDIDO,
+    RECHAZADO
 }
