@@ -56,6 +56,7 @@ export const EditorHotelHabitacionesModal: React.FC<EditorHotelHabitacionesModal
   const [nuevaFotoHabitacionUrl, setNuevaFotoHabitacionUrl] = useState('');
   const [guardando, setGuardando] = useState(false);
   const [mensajeExito, setMensajeExito] = useState<string | null>(null);
+  const habFileInputRef = React.useRef<HTMLInputElement | null>(null);
 
   // Inicializar cada vez que cambia el alojamiento seleccionado
   useEffect(() => {
@@ -315,6 +316,41 @@ export const EditorHotelHabitacionesModal: React.FC<EditorHotelHabitacionesModal
     }));
 
     setNuevaFotoHabitacionUrl('');
+  };
+
+  const handleArchivosLocalesHabitacion = (archivos: FileList | null) => {
+    if (!archivos || archivos.length === 0 || !habitacionActivaId) return;
+    const filesArray = Array.from(archivos);
+    filesArray.forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const dataUrl = e.target?.result as string;
+        if (dataUrl) {
+          setDraft(prev => ({
+            ...prev,
+            unidades: prev.unidades.map(u => {
+              if (u.idUnidad === habitacionActivaId) {
+                const actuales = u.fotos || (u.fotografias || []).map(f => f.url);
+                const nuevas = [...actuales, dataUrl];
+                const fotosObj: Fotografia[] = nuevas.map((url, i) => ({
+                  idFotografia: `fhab-${habitacionActivaId}-${i}`,
+                  url,
+                  esPrincipal: i === 0,
+                  orden: i
+                }));
+                return {
+                  ...u,
+                  fotos: nuevas,
+                  fotografias: fotosObj
+                };
+              }
+              return u;
+            })
+          }));
+        }
+      };
+      reader.readAsDataURL(file);
+    });
   };
 
   // =========================================================================
@@ -925,23 +961,46 @@ export const EditorHotelHabitacionesModal: React.FC<EditorHotelHabitacionesModal
               </div>
 
               {/* Input para añadir foto a la habitación */}
-              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center gap-3">
-                <input
-                  type="url"
-                  placeholder="URL de fotografía exclusiva de esta suite (https://...)"
-                  value={nuevaFotoHabitacionUrl}
-                  onChange={e => setNuevaFotoHabitacionUrl(e.target.value)}
-                  className="flex-1 w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
-                />
-                <button
-                  type="button"
-                  onClick={agregarFotoHabitacion}
-                  disabled={!nuevaFotoHabitacionUrl.trim()}
-                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Añadir a Habitación</span>
-                </button>
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3">
+                <div className="flex flex-col sm:flex-row items-center gap-3">
+                  <input
+                    ref={habFileInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={(e) => {
+                      if (e.target.files) {
+                        handleArchivosLocalesHabitacion(e.target.files);
+                      }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => habFileInputRef.current?.click()}
+                    className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-blue-300 dark:border-blue-700 hover:border-blue-500 bg-white dark:bg-slate-950 text-blue-600 dark:text-blue-400 text-xs font-bold transition flex items-center justify-center gap-2 shadow-sm shrink-0"
+                  >
+                    <UploadCloud className="w-4 h-4" />
+                    <span>Subir archivos locales</span>
+                  </button>
+
+                  <input
+                    type="url"
+                    placeholder="O pegar URL web de fotografía (ej. https://...)"
+                    value={nuevaFotoHabitacionUrl}
+                    onChange={e => setNuevaFotoHabitacionUrl(e.target.value)}
+                    className="flex-1 w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={agregarFotoHabitacion}
+                    disabled={!nuevaFotoHabitacionUrl.trim()}
+                    className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm shrink-0"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Añadir a Habitación</span>
+                  </button>
+                </div>
               </div>
 
               {/* Cuadrícula de fotos de la habitación */}

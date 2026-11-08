@@ -613,7 +613,7 @@ export const DetalleAlojamientoView: React.FC<DetalleAlojamientoViewProps> = ({
                       >
                         <div className="flex items-start sm:items-center gap-4">
                           <img
-                            src={unidad.fotos?.[0] || unidad.fotografias?.[0]?.url || heroFoto}
+                            src={(unidad.fotografias || []).find(f => f.esPrincipal)?.url || unidad.fotos?.[0] || unidad.fotografias?.[0]?.url || heroFoto}
                             alt={unidad.nombre}
                             className="w-24 h-24 rounded-2xl object-cover shrink-0 border border-slate-200 dark:border-slate-700 shadow-sm"
                           />

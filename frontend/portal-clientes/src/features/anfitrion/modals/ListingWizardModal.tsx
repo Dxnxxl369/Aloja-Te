@@ -4,7 +4,7 @@ import {
   Trash2, Plus, BedDouble, Users, Bath, Check, ArrowRight, ArrowLeft, 
   ShieldCheck, Clock, Loader2, DollarSign, UploadCloud, Edit3
 } from 'lucide-react';
-import { Alojamiento, UnidadReservable } from '../../catalogo/types/catalogo.types';
+import { Alojamiento, UnidadReservable, Fotografia } from '../../catalogo/types/catalogo.types';
 import { httpClient } from '../../../core/api/httpClient';
 import { ENDPOINTS } from '../../../core/api/apiEndpoints';
 import { useAuth } from '../../../core/auth/AuthContext';
@@ -15,6 +15,12 @@ interface ListingWizardModalProps {
   onAlojamientoCreado: (alojamiento: Alojamiento) => void;
 }
 
+interface FotoItem {
+  id: string;
+  url: string;
+  esPrincipal: boolean;
+}
+
 interface HabitacionDraft {
   id: string;
   nombre: string;
@@ -23,7 +29,7 @@ interface HabitacionDraft {
   banos: number;
   inventarioTotal: number;
   precioNoche: number;
-  fotoUrl: string;
+  fotos: FotoItem[];
   servicios: string[];
 }
 
@@ -34,6 +40,7 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
 }) => {
   const { user } = useAuth();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const habFileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Wizard Step (1 to 5)
   const [currentStep, setCurrentStep] = useState(1);
@@ -88,7 +95,13 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
       banos: 1,
       inventarioTotal: 4,
       precioNoche: 380,
-      fotoUrl: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80',
+      fotos: [
+        {
+          id: 'f-hab-1',
+          url: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80',
+          esPrincipal: true
+        }
+      ],
       servicios: ['Wifi Starlink', 'Aire Acondicionado', 'Frigobar']
     }
   ]);
@@ -102,7 +115,15 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
   const [habBanos, setHabBanos] = useState(1);
   const [habInventario, setHabInventario] = useState(6);
   const [habPrecio, setHabPrecio] = useState(280);
-  const [habFoto, setHabFoto] = useState('https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=800&q=80');
+  const [habFotos, setHabFotos] = useState<FotoItem[]>([
+    {
+      id: 'f-hab-default',
+      url: 'https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=800&q=80',
+      esPrincipal: true
+    }
+  ]);
+  const [nuevaFotoHabUrl, setNuevaFotoHabUrl] = useState('');
+  const [isDraggingHab, setIsDraggingHab] = useState(false);
 
   if (!isOpen) return null;
 
@@ -184,7 +205,65 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
     });
   };
 
-  // Manejo de Habitaciones en Hotel (Creación y Edición Completa)
+  // Manejo de Habitaciones en Hotel (Creación y Edición Completa con Fotos Múltiples)
+  const handleArchivosLocalesHabitacion = (archivos: FileList | null) => {
+    if (!archivos || archivos.length === 0) return;
+    const filesArray = Array.from(archivos);
+    filesArray.forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const dataUrl = e.target?.result as string;
+        if (dataUrl) {
+          setHabFotos(prev => [
+            ...prev,
+            {
+              id: `fhab-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+              url: dataUrl,
+              esPrincipal: prev.length === 0
+            }
+          ]);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const agregarFotoHabitacion = () => {
+    if (!nuevaFotoHabUrl.trim()) return;
+    const esPrimera = habFotos.length === 0;
+    setHabFotos(prev => [
+      ...prev,
+      {
+        id: `fhab-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+        url: nuevaFotoHabUrl.trim(),
+        esPrincipal: esPrimera
+      }
+    ]);
+    setNuevaFotoHabUrl('');
+  };
+
+  const marcarFotoPrincipalHabitacion = (id: string) => {
+    setHabFotos(prev => {
+      const seleccionada = prev.find(f => f.id === id);
+      if (!seleccionada) return prev;
+      const restantes = prev.filter(f => f.id !== id);
+      return [
+        { ...seleccionada, esPrincipal: true },
+        ...restantes.map(f => ({ ...f, esPrincipal: false }))
+      ];
+    });
+  };
+
+  const eliminarFotoHabitacion = (id: string) => {
+    setHabFotos(prev => {
+      const filtradas = prev.filter(f => f.id !== id);
+      if (filtradas.length > 0 && !filtradas.some(f => f.esPrincipal)) {
+        filtradas[0].esPrincipal = true;
+      }
+      return filtradas;
+    });
+  };
+
   const iniciarEdicionHabitacion = (h: HabitacionDraft) => {
     setEditandoHabId(h.id);
     setHabNombre(h.nombre);
@@ -193,7 +272,14 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
     setHabBanos(h.banos);
     setHabInventario(h.inventarioTotal);
     setHabPrecio(h.precioNoche);
-    setHabFoto(h.fotoUrl);
+    setHabFotos(h.fotos && h.fotos.length > 0 ? [...h.fotos] : [
+      {
+        id: `fhab-${Date.now()}`,
+        url: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80',
+        esPrincipal: true
+      }
+    ]);
+    setNuevaFotoHabUrl('');
     setCreandoHabitacion(true);
   };
 
@@ -205,12 +291,30 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
     setHabBanos(1);
     setHabInventario(5);
     setHabPrecio(320);
-    setHabFoto('https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80');
+    setHabFotos([
+      {
+        id: `fhab-${Date.now()}`,
+        url: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80',
+        esPrincipal: true
+      }
+    ]);
+    setNuevaFotoHabUrl('');
     setCreandoHabitacion(true);
   };
 
   const guardarHabitacionHotel = () => {
     if (!habNombre.trim()) return;
+
+    // Asegurar que al menos una foto sea la principal y esté de primera
+    const fotosAseguradas = [...habFotos];
+    if (fotosAseguradas.length > 0 && !fotosAseguradas.some(f => f.esPrincipal)) {
+      fotosAseguradas[0].esPrincipal = true;
+    }
+    const principal = fotosAseguradas.find(f => f.esPrincipal) || fotosAseguradas[0];
+    const restantes = fotosAseguradas.filter(f => f !== principal);
+    const fotosFinales = principal
+      ? [{ ...principal, esPrincipal: true }, ...restantes.map(f => ({ ...f, esPrincipal: false }))]
+      : [];
 
     if (editandoHabId) {
       setHabitacionesHotel(prev => prev.map(h => {
@@ -223,7 +327,7 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
             banos: habBanos,
             inventarioTotal: habInventario,
             precioNoche: habPrecio,
-            fotoUrl: habFoto,
+            fotos: fotosFinales,
           };
         }
         return h;
@@ -237,7 +341,7 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
         banos: habBanos,
         inventarioTotal: habInventario,
         precioNoche: habPrecio,
-        fotoUrl: habFoto,
+        fotos: fotosFinales,
         servicios: ['Wifi Starlink', 'Baño Privado']
       };
       setHabitacionesHotel(prev => [...prev, nueva]);
@@ -272,13 +376,23 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
     const anfitrionId = user?.id || '8fff278f-8dfd-47da-94bb-6e658b6f7178';
     const fotoPrincipalObj = fotos.find(f => f.esPrincipal) || fotos[0];
 
-    // Construcción de Unidades
+    // Construcción de Unidades con fotos independientes por habitación
     let unidadesFinales: UnidadReservable[] = [];
     if (modalidad === 'CASA_DEPARTAMENTO') {
+      const fotosCasaUrls = fotos.map(f => f.url);
+      const fotosCasaObj = fotos.map((f, i) => ({
+        idFotografia: f.id,
+        url: f.url,
+        esPrincipal: f.esPrincipal,
+        orden: i + 1,
+        descripcion: `Foto de la Casa`
+      }));
+
       unidadesFinales = [{
         idUnidad: `u-${Date.now()}`,
         nombre: 'Espacio Completo Entero',
         capacidadPersonas: capacidadCasa,
+        cantidadDormitorios: dormitoriosCasa,
         cantidadCamas: camasCasa,
         cantidadBanios: banosCasa,
         cantidadBanos: banosCasa,
@@ -286,22 +400,46 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
         precioNoche: precioCasa,
         moneda: 'BOB',
         activo: true,
-        estado: 'DISPONIBLE'
+        estado: 'DISPONIBLE',
+        fotos: fotosCasaUrls,
+        fotografias: fotosCasaObj,
+        servicios: serviciosSeleccionados
       }];
     } else {
-      unidadesFinales = habitacionesHotel.map(h => ({
-        idUnidad: h.id,
-        nombre: h.nombre,
-        capacidadPersonas: h.capacidad,
-        cantidadCamas: h.camas,
-        cantidadBanios: h.banos,
-        cantidadBanos: h.banos,
-        inventarioTotal: h.inventarioTotal,
-        precioNoche: h.precioNoche,
-        moneda: 'BOB',
-        activo: true,
-        estado: 'DISPONIBLE'
-      }));
+      unidadesFinales = habitacionesHotel.map((h) => {
+        const principal = (h.fotos || []).find(f => f.esPrincipal) || (h.fotos || [])[0];
+        const restantes = (h.fotos || []).filter(f => f !== principal);
+        const fotosOrdenadas = principal
+          ? [{ ...principal, esPrincipal: true }, ...restantes.map(f => ({ ...f, esPrincipal: false }))]
+          : [];
+        const fotosUrls = fotosOrdenadas.map(f => f.url).filter(Boolean);
+        const fotosObj: Fotografia[] = fotosOrdenadas.map((f, i) => ({
+          idFotografia: f.id || `fhab-${h.id}-${i}`,
+          url: f.url,
+          esPrincipal: i === 0,
+          orden: i + 1,
+          descripcion: `Foto de ${h.nombre}`
+        }));
+
+        return {
+          idUnidad: h.id,
+          nombre: h.nombre,
+          descripcion: `Habitación ${h.nombre} con baño privado y comodidades exclusivas.`,
+          capacidadPersonas: h.capacidad,
+          cantidadDormitorios: 1,
+          cantidadCamas: h.camas,
+          cantidadBanios: h.banos,
+          cantidadBanos: h.banos,
+          inventarioTotal: h.inventarioTotal,
+          precioNoche: h.precioNoche,
+          moneda: 'BOB',
+          activo: true,
+          estado: 'DISPONIBLE',
+          fotos: fotosUrls,
+          fotografias: fotosObj,
+          servicios: h.servicios || ['Wifi Starlink', 'Baño Privado']
+        };
+      });
     }
 
     const payloadBackend = {
@@ -895,27 +1033,131 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
                     </button>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 gap-3">
                     <div>
-                      <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">Nombre</label>
+                      <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">Nombre de la Habitación</label>
                       <input
                         type="text"
                         value={habNombre}
                         onChange={(e) => setHabNombre(e.target.value)}
-                        placeholder="Ej. Habitación Doble Twin"
+                        placeholder="Ej. Habitación Doble Twin, Suite Presidencial"
                         className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
-                    <div>
-                      <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">Foto de la Habitación (URL o local)</label>
+                  </div>
+
+                  {/* Sección de Fotografías Propias de la Habitación */}
+                  <div className="space-y-3 pt-2 border-t border-blue-200 dark:border-blue-800">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-blue-900 dark:text-blue-200 flex items-center gap-1.5">
+                        <ImagePlus className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                        <span>Fotografías de esta Habitación ({habFotos.length})</span>
+                      </label>
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400">
+                        La foto con <strong className="text-amber-500">★</strong> es la portada
+                      </span>
+                    </div>
+
+                    {/* Zona Drag & Drop / Subida Local para la Habitación */}
+                    <div
+                      onDragOver={(e) => { e.preventDefault(); setIsDraggingHab(true); }}
+                      onDragLeave={() => setIsDraggingHab(false)}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        setIsDraggingHab(false);
+                        if (e.dataTransfer.files) {
+                          handleArchivosLocalesHabitacion(e.dataTransfer.files);
+                        }
+                      }}
+                      onClick={() => habFileInputRef.current?.click()}
+                      className={`border-2 border-dashed rounded-2xl p-3.5 text-center cursor-pointer transition-all ${
+                        isDraggingHab
+                          ? 'border-blue-600 bg-blue-100/60 dark:bg-blue-900/40'
+                          : 'border-blue-300 dark:border-blue-700 hover:border-blue-500 bg-white dark:bg-slate-900/60'
+                      }`}
+                    >
+                      <input
+                        ref={habFileInputRef}
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        className="hidden"
+                        onChange={(e) => {
+                          if (e.target.files) {
+                            handleArchivosLocalesHabitacion(e.target.files);
+                          }
+                        }}
+                      />
+                      <div className="flex items-center justify-center gap-2 text-xs font-bold text-blue-700 dark:text-blue-300">
+                        <UploadCloud className="w-4 h-4" />
+                        <span>Subir fotos de esta habitación (o arrastrar JPG, PNG)</span>
+                      </div>
+                    </div>
+
+                    {/* Input de URL para la Habitación */}
+                    <div className="flex gap-2">
                       <input
                         type="url"
-                        value={habFoto}
-                        onChange={(e) => setHabFoto(e.target.value)}
-                        placeholder="https://..."
-                        className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        value={nuevaFotoHabUrl}
+                        onChange={(e) => setNuevaFotoHabUrl(e.target.value)}
+                        placeholder="O pegar URL web de la habitación (ej. https://...)"
+                        className="flex-1 px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
+                      <button
+                        type="button"
+                        onClick={agregarFotoHabitacion}
+                        disabled={!nuevaFotoHabUrl.trim()}
+                        className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white text-xs font-bold transition flex items-center gap-1 shrink-0"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Añadir</span>
+                      </button>
                     </div>
+
+                    {/* Grilla de Miniaturas de la Habitación con Portada */}
+                    {habFotos.length > 0 && (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-1">
+                        {habFotos.map((foto) => (
+                          <div
+                            key={foto.id}
+                            className={`relative rounded-xl overflow-hidden aspect-video border-2 group transition-all ${
+                              foto.esPrincipal
+                                ? 'border-blue-600 ring-2 ring-blue-500/40 shadow-sm'
+                                : 'border-slate-200 dark:border-slate-700'
+                            }`}
+                          >
+                            <img src={foto.url} alt="Foto habitación" className="w-full h-full object-cover" />
+                            
+                            {/* Badge o botón Portada Principal */}
+                            {foto.esPrincipal ? (
+                              <span className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-md bg-blue-600 text-white text-[9px] font-bold flex items-center gap-1 shadow-md">
+                                <Star className="w-3 h-3 fill-white" />
+                                <span>Portada</span>
+                              </span>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => marcarFotoPrincipalHabitacion(foto.id)}
+                                className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-md bg-black/60 hover:bg-blue-600 text-white text-[9px] font-bold opacity-0 group-hover:opacity-100 transition flex items-center gap-1 backdrop-blur-sm"
+                              >
+                                <Star className="w-3 h-3" />
+                                <span>Portada</span>
+                              </button>
+                            )}
+
+                            {/* Botón Eliminar */}
+                            <button
+                              type="button"
+                              onClick={() => eliminarFotoHabitacion(foto.id)}
+                              className="absolute top-1.5 right-1.5 p-1 rounded-md bg-black/60 hover:bg-red-600 text-white opacity-0 group-hover:opacity-100 transition backdrop-blur-sm"
+                              title="Eliminar foto"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-4 gap-2">
@@ -982,24 +1224,32 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
 
               {/* Lista de Habitaciones Existentes */}
               <div className="space-y-3">
-                {habitacionesHotel.map((h) => (
-                  <div
-                    key={h.id}
-                    className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-between gap-4 shadow-sm hover:border-blue-500/50 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <img src={h.fotoUrl} alt={h.nombre} className="w-16 h-14 object-cover rounded-xl shrink-0 border border-slate-200 dark:border-slate-800" />
-                      <div>
-                        <h5 className="font-bold text-xs text-slate-900 dark:text-white">{h.nombre}</h5>
-                        <div className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                          <span>{h.capacidad} Huéspedes</span>
-                          <span>•</span>
-                          <span>{h.camas} Camas</span>
-                          <span>•</span>
-                          <span className="font-semibold text-emerald-600 dark:text-emerald-400">{h.inventarioTotal} disponibles</span>
+                {habitacionesHotel.map((h) => {
+                  const fotoPortada = (h.fotos || []).find(f => f.esPrincipal)?.url || (h.fotos || [])[0]?.url || 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80';
+                  const cantFotos = (h.fotos || []).length;
+                  return (
+                    <div
+                      key={h.id}
+                      className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-between gap-4 shadow-sm hover:border-blue-500/50 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="relative shrink-0">
+                          <img src={fotoPortada} alt={h.nombre} className="w-16 h-14 object-cover rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm" />
+                          <span className="absolute -bottom-1 -right-1 px-1.5 py-0.5 rounded-md bg-blue-600 text-white text-[9px] font-bold shadow-sm">
+                            📷 {cantFotos}
+                          </span>
+                        </div>
+                        <div>
+                          <h5 className="font-bold text-xs text-slate-900 dark:text-white">{h.nombre}</h5>
+                          <div className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                            <span>{h.capacidad} Huéspedes</span>
+                            <span>•</span>
+                            <span>{h.camas} Camas</span>
+                            <span>•</span>
+                            <span className="font-semibold text-emerald-600 dark:text-emerald-400">{h.inventarioTotal} disponibles</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
                     <div className="flex items-center gap-2">
                       <div className="text-right mr-2">
@@ -1026,7 +1276,8 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
                       </button>
                     </div>
                   </div>
-                ))}
+                );
+              })}
               </div>
             </div>
           )}

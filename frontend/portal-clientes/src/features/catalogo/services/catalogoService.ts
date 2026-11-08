@@ -888,16 +888,29 @@ export const catalogoService = {
         politicas: alojamiento.politicas,
         horarioEntrada: alojamiento.horarioEntrada,
         horarioSalida: alojamiento.horarioSalida,
-        unidades: (alojamiento.unidades || []).map(u => ({
-          idUnidad: u.idUnidad,
-          nombre: u.nombre,
-          capacidadHuespedes: u.capacidadPersonas,
-          cantidadCamas: u.cantidadCamas,
-          cantidadBanos: u.cantidadBanios,
-          inventarioTotal: u.inventarioTotal,
-          precioNoche: u.precioNoche,
-          estado: 'DISPONIBLE'
-        })),
+        unidades: (alojamiento.unidades || []).map(u => {
+          const uFotos = (u.fotos && u.fotos.length > 0)
+            ? u.fotos
+            : (u.fotografias || []).map(f => f.url).filter(Boolean);
+          return {
+            idUnidad: u.idUnidad,
+            nombre: u.nombre,
+            descripcion: u.descripcion || '',
+            capacidadHuespedes: u.capacidadPersonas,
+            cantidadCamas: u.cantidadCamas,
+            cantidadBanos: u.cantidadBanios || u.cantidadBanos || 1,
+            inventarioTotal: u.inventarioTotal,
+            precioNoche: u.precioNoche,
+            estado: 'DISPONIBLE',
+            fotos: uFotos,
+            fotografias: u.fotografias || uFotos.map((url, i) => ({
+              idFotografia: `fhab-${u.idUnidad}-${i}`,
+              url,
+              esPrincipal: i === 0,
+              orden: i + 1
+            }))
+          };
+        }),
         servicios: (alojamiento.servicios || []).map(s => s.nombre)
       };
 

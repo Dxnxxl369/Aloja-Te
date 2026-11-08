@@ -494,7 +494,7 @@ export const EditorHotelPantalla: React.FC<EditorHotelPantallaProps> = ({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {(draft.unidades || []).map(u => {
-              const fotoPortada = (u.fotos && u.fotos[0]) || (u.fotografias && u.fotografias[0]?.url) || draft.fotografias[0]?.url;
+              const fotoPortada = (u.fotografias || []).find(f => f.esPrincipal)?.url || (u.fotos && u.fotos[0]) || (u.fotografias && u.fotografias[0]?.url) || draft.fotografias[0]?.url;
               const cantidadFotos = (u.fotos?.length || u.fotografias?.length || 0);
 
               return (

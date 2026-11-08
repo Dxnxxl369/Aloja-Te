@@ -1991,6 +1991,13 @@ export const VALORACIONES_ADMIN_DEMO: ValoracionAdmin[] = [
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div *ngFor="let u of alojamientoInspeccionado.unidades" class="p-4 rounded-2xl bg-slate-50 dark:bg-stone-950 border border-slate-200 dark:border-stone-800 space-y-3">
+                <!-- Miniatura de foto propia de la habitación -->
+                <div *ngIf="u.fotos && u.fotos.length > 0" class="h-28 rounded-xl overflow-hidden relative border border-slate-200 dark:border-stone-800 cursor-pointer group" (click)="abrirVistaClienteHabitacion(u)">
+                  <img [src]="u.fotos[0]" [alt]="u.nombre" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                  <span class="absolute bottom-1.5 left-1.5 px-2 py-0.5 rounded-md bg-black/75 backdrop-blur-sm text-white text-[10px] font-bold">
+                    📷 {{ u.fotos.length }} {{ u.fotos.length === 1 ? 'foto' : 'fotos' }}
+                  </span>
+                </div>
                 <div class="flex items-start justify-between gap-2">
                   <div>
                     <h5 class="text-sm font-bold text-slate-900 dark:text-white">{{ u.nombre }}</h5>
@@ -2897,16 +2904,24 @@ export class AppComponent implements OnInit {
           motivoRechazo: raw.motivoObservacionRechazo || raw.motivoRechazo || '',
           motivoObservacionRechazo: raw.motivoObservacionRechazo || raw.motivoRechazo || '',
           origenUltimoCambio: raw.origenUltimoCambio || '',
-          unidades: (raw.unidades || []).map((un: any) => ({
-            idUnidad: un.idUnidad,
-            nombre: un.nombre,
-            capacidadHuespedes: un.capacidadHuespedes ?? 2,
-            cantidadCamas: un.cantidadCamas ?? 1,
-            cantidadBanos: un.cantidadBanos ?? 1,
-            inventarioTotal: un.inventarioTotal ?? 1,
-            precioNoche: Number(un.precioNoche ?? 0),
-            estado: un.estado || 'DISPONIBLE'
-          })),
+          unidades: (raw.unidades || []).map((un: any) => {
+            const rawFotos: any[] = un.fotos || un.fotografias || (un.fotoUrl ? [un.fotoUrl] : []);
+            const fotosArray: string[] = rawFotos
+              .map((f: any) => (typeof f === 'string' ? f : f?.url))
+              .filter(Boolean);
+            return {
+              idUnidad: un.idUnidad,
+              nombre: un.nombre,
+              capacidadHuespedes: un.capacidadHuespedes ?? un.capacidadPersonas ?? 2,
+              cantidadCamas: un.cantidadCamas ?? 1,
+              cantidadBanos: un.cantidadBanos ?? un.cantidadBanios ?? 1,
+              inventarioTotal: un.inventarioTotal ?? 1,
+              precioNoche: Number(un.precioNoche ?? 0),
+              estado: un.estado || 'DISPONIBLE',
+              descripcion: un.descripcion || '',
+              fotos: fotosArray
+            };
+          }),
           servicios: (raw.servicios || []).length > 0
             ? (raw.servicios || []).map((s: any) => s.nombre || s)
             : ['WiFi de Alta Velocidad', 'Parqueo Privado Gratuito', 'Ambiente Climatizado', 'Agua Caliente 24/7']
@@ -2922,7 +2937,7 @@ export class AppComponent implements OnInit {
         }
         for (const item of rawData.map(mapAlojamiento)) {
           const existente = uniqueMap.get(item.id);
-          if (existente && (!item.unidades || item.unidades.length === 0 || !item.unidades.some(u => !!u.fotos && u.fotos.length > 0))) {
+          if (existente && (!item.unidades || item.unidades.length === 0)) {
             item.unidades = existente.unidades;
           }
           uniqueMap.set(item.id, item);

@@ -9,7 +9,8 @@ import {
   Users,
   BedDouble,
   Bath,
-  DollarSign
+  DollarSign,
+  UploadCloud
 } from 'lucide-react';
 import { UnidadReservable, Fotografia } from '../../../core/types/anfitrion.types';
 
@@ -28,6 +29,36 @@ export const PantallaHabitacionIndividual: React.FC<PantallaHabitacionIndividual
 }) => {
   const [draft, setDraft] = useState<UnidadReservable>(() => JSON.parse(JSON.stringify(habitacion)));
   const [nuevaFotoUrl, setNuevaFotoUrl] = useState('');
+  const habFileInputRef = React.useRef<HTMLInputElement | null>(null);
+
+  const handleArchivosLocales = (archivos: FileList | null) => {
+    if (!archivos || archivos.length === 0) return;
+    const filesArray = Array.from(archivos);
+    filesArray.forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const dataUrl = e.target?.result as string;
+        if (dataUrl) {
+          setDraft(prev => {
+            const actuales = prev.fotos && prev.fotos.length > 0 ? prev.fotos : (prev.fotografias || []).map(f => f.url);
+            const nuevas = [...actuales, dataUrl];
+            const fotosObj: Fotografia[] = nuevas.map((url, i) => ({
+              idFotografia: `fhab-${prev.idUnidad}-${i}`,
+              url,
+              esPrincipal: i === 0,
+              orden: i
+            }));
+            return {
+              ...prev,
+              fotos: nuevas,
+              fotografias: fotosObj
+            };
+          });
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  };
 
   const getFotos = (): string[] => {
     if (draft.fotos && draft.fotos.length > 0) return draft.fotos;
@@ -251,23 +282,46 @@ export const PantallaHabitacionIndividual: React.FC<PantallaHabitacionIndividual
           </div>
 
           {/* Formulario para añadir nueva foto a la habitación */}
-          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center gap-3">
-            <input
-              type="url"
-              placeholder="Pega la URL de una nueva fotografía para esta suite (https://...)"
-              value={nuevaFotoUrl}
-              onChange={e => setNuevaFotoUrl(e.target.value)}
-              className="flex-1 w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
-            />
-            <button
-              type="button"
-              onClick={agregarFoto}
-              disabled={!nuevaFotoUrl.trim()}
-              className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Añadir a Habitación</span>
-            </button>
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3">
+            <div className="flex flex-col sm:flex-row items-center gap-3">
+              <input
+                ref={habFileInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={(e) => {
+                  if (e.target.files) {
+                    handleArchivosLocales(e.target.files);
+                  }
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => habFileInputRef.current?.click()}
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-blue-300 dark:border-blue-700 hover:border-blue-500 bg-white dark:bg-slate-950 text-blue-600 dark:text-blue-400 text-xs font-bold transition flex items-center justify-center gap-2 shadow-sm shrink-0"
+              >
+                <UploadCloud className="w-4 h-4" />
+                <span>Subir archivos locales</span>
+              </button>
+
+              <input
+                type="url"
+                placeholder="O pega la URL web de una nueva fotografía (ej. https://...)"
+                value={nuevaFotoUrl}
+                onChange={e => setNuevaFotoUrl(e.target.value)}
+                className="flex-1 w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
+              />
+              <button
+                type="button"
+                onClick={agregarFoto}
+                disabled={!nuevaFotoUrl.trim()}
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm shrink-0"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Añadir a Habitación</span>
+              </button>
+            </div>
           </div>
 
           {/* Cuadrícula de fotos con "Poner como Principal" */}
