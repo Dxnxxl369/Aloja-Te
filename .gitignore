@@ -17,6 +17,11 @@ __pycache__/
 .pnp
 .pnp.js
 
+# Variables de entorno (usar .env.example como plantilla)
+.env
+.env.*
+!.env.example
+
 # Salidas de compilación
 target/
 build-target/
