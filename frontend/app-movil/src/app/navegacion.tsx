@@ -1,6 +1,6 @@
 // ======================================================================
 // ARCHIVO: app/navegacion.tsx      IMPORTANCIA: ★★ MEDIA
-// QUÉ ES: Las pantallas de la sesión iniciada y cómo se pasa de una a otra: Agente -> Reserva -> Pago.
+// QUÉ ES: Las pantallas de la sesión iniciada y cómo se pasa de una a otra: cuatro pestañas (Explorar, Reservas, Asistente, Perfil) y, encima, Detalle -> Reserva -> Pago.
 // PARA QUÉ SIRVE: Conecta los features sin que se conozcan entre sí: aquí se arma la solicitud de pago a partir de la reserva.
 // SIN ÉL: Cada feature tendría que importar al otro para navegar.
 // NO VA AQUÍ: Reglas de negocio (están en cada feature) ni el login (es App.tsx).
@@ -8,8 +8,12 @@
 // Cada pantalla va dentro de un <Marco>: cabecera + franja de "sin internet / pendientes".
 // Las pantallas son componentes de módulo (no funciones en línea) para que React Navigation
 // no las vuelva a montar en cada render y la conversación del agente no se pierda.
+// Las pestañas se mantienen montadas: el chat del asistente conserva su conversación al cambiar de pestaña.
 
-import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
+import { DefaultTheme, NavigationContainer, useFocusEffect } from '@react-navigation/native';
+import type { CompositeScreenProps, NavigatorScreenParams } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
@@ -17,24 +21,43 @@ import type { ReactNode } from 'react';
 import { Alert, View } from 'react-native';
 import { MODELO_IA, modeloLocal, useEstadoModelo, useEstadoSync, useSesion } from '../core';
 import { PantallaAgente } from '../features/agente';
+import { PantallaDetalleProvisional, PantallaExplorar } from '../features/catalogo';
+import { PantallaPerfil } from '../features/cuenta';
 import { PantallaModeloIa } from '../features/ia';
 import { PantallaPago } from '../features/pagos';
 import type { SolicitudPago } from '../features/pagos';
 import { PantallaMisReservas, PantallaReserva } from '../features/reservas';
 import { AvisoSinRed } from '../shared/ui/AvisoSinRed';
 import { Encabezado } from '../shared/ui/Encabezado';
+import type { DatosTarjetaAlojamiento } from '../shared/ui/TarjetaAlojamiento';
 import { COLOR } from '../shared/ui/tema';
+import { BarraTabs } from './BarraTabs';
 import type { Features } from './features';
 
-type Rutas = {
-  Agente: undefined;
+type RutasTabs = {
+  Explorar: undefined;
   MisReservas: undefined;
+  Agente: undefined;
+  Perfil: undefined;
+};
+
+type RutasRaiz = {
+  Tabs: NavigatorScreenParams<RutasTabs> | undefined;
+  Detalle: { datos: DatosTarjetaAlojamiento };
   ModeloIa: undefined;
   Reserva: { reservaId: string; pagoRecibido?: boolean };
   Pago: { solicitud: SolicitudPago };
 };
 
-const Stack = createNativeStackNavigator<Rutas>();
+/** Pantalla de una pestaña: puede navegar a las otras pestañas y a las pantallas de encima. */
+type PropsTab<R extends keyof RutasTabs> = CompositeScreenProps<
+  BottomTabScreenProps<RutasTabs, R>,
+  NativeStackScreenProps<RutasRaiz>
+>;
+type PropsRaiz<R extends keyof RutasRaiz> = NativeStackScreenProps<RutasRaiz, R>;
+
+const Stack = createNativeStackNavigator<RutasRaiz>();
+const Tab = createBottomTabNavigator<RutasTabs>();
 const ContextoFeatures = createContext<Features | null>(null);
 
 function useFeatures(): Features {
@@ -46,53 +69,69 @@ function useFeatures(): Features {
 /** Cabecera + aviso de conexión + el contenido de la pantalla. */
 function Marco({
   titulo,
+  marca,
   alVolver,
-  alMisReservas,
+  alPerfil,
   children,
 }: {
-  titulo: string;
+  titulo?: string;
+  marca?: boolean;
   alVolver?: () => void;
-  alMisReservas?: () => void;
+  alPerfil: () => void;
   children: ReactNode;
 }) {
-  const { sesion, cerrarSesion } = useSesion();
   const sync = useEstadoSync();
-
-  const abrirCuenta = () =>
-    Alert.alert(sesion?.nombre || 'Mi cuenta', sesion?.email, [
-      { text: 'Cancelar', style: 'cancel' },
-      { text: 'Cerrar sesión', style: 'destructive', onPress: () => void cerrarSesion() },
-    ]);
-
   return (
     <View style={{ flex: 1, backgroundColor: COLOR.fondo }}>
-      <Encabezado titulo={titulo} alVolver={alVolver} alPerfil={abrirCuenta} alMisReservas={alMisReservas} />
+      <Encabezado titulo={titulo} marca={marca} alVolver={alVolver} alPerfil={alPerfil} />
       <AvisoSinRed conectado={sync.conectado} pendientes={sync.pendientes} />
       <View style={{ flex: 1 }}>{children}</View>
     </View>
   );
 }
 
-/** IA local: se carga al abrir el agente (si el celular la soporta y está descargada) y se libera al salir. */
+/**
+ * IA local: se carga al abrir la pestaña del asistente (si el celular la soporta y está descargada) y se libera
+ * al salir de ella, para no gastar memoria mientras se explora.
+ */
 function useIaLocal() {
-  useEffect(() => {
-    let vivo = true;
-    (async () => {
-      try {
-        const estado = await modeloLocal.refrescar();
-        if (vivo && estado === 'LISTO') await modeloLocal.cargar();
-      } catch (e) {
-        console.warn('IA local no disponible, el agente usará la nube o las reglas', e instanceof Error ? e.message : e);
-      }
-    })();
-    return () => {
-      vivo = false;
-      void modeloLocal.liberar().catch(() => undefined);
-    };
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      let vivo = true;
+      (async () => {
+        try {
+          const estado = await modeloLocal.refrescar();
+          if (vivo && estado === 'LISTO') await modeloLocal.cargar();
+        } catch (e) {
+          console.warn('IA local no disponible, el agente usará la nube o las reglas', e instanceof Error ? e.message : e);
+        }
+      })();
+      return () => {
+        vivo = false;
+        void modeloLocal.liberar().catch(() => undefined);
+      };
+    }, []),
+  );
 }
 
-function RutaAgente({ navigation }: NativeStackScreenProps<Rutas, 'Agente'>) {
+function RutaExplorar({ navigation }: PropsTab<'Explorar'>) {
+  const { catalogo } = useFeatures();
+  const estadoModelo = useEstadoModelo();
+  return (
+    <Marco marca alPerfil={() => navigation.navigate('Perfil')}>
+      <PantallaExplorar
+        casos={catalogo.casos}
+        alVer={(datos) => navigation.navigate('Detalle', { datos })}
+        // Por ahora reservar es hablar con el asistente; la reserva manual llega en la Fase 4.
+        alReservar={() => navigation.navigate('Agente')}
+        alAbrirAsistente={() => navigation.navigate('Agente')}
+        iaLista={estadoModelo === 'CARGADO'}
+      />
+    </Marco>
+  );
+}
+
+function RutaAgente({ navigation }: PropsTab<'Agente'>) {
   const { agente, reservas } = useFeatures();
   useIaLocal();
   const resolverReservaEnCola = useCallback(
@@ -101,7 +140,7 @@ function RutaAgente({ navigation }: NativeStackScreenProps<Rutas, 'Agente'>) {
   );
   const estadoModelo = useEstadoModelo();
   return (
-    <Marco titulo="Asistente de reservas" alMisReservas={() => navigation.navigate('MisReservas')}>
+    <Marco titulo="Asistente de reservas" alPerfil={() => navigation.navigate('Perfil')}>
       <PantallaAgente
         casos={agente.casos}
         alPagar={(reservaId) => navigation.navigate('Reserva', { reservaId })}
@@ -113,8 +152,78 @@ function RutaAgente({ navigation }: NativeStackScreenProps<Rutas, 'Agente'>) {
   );
 }
 
+function RutaMisReservas({ navigation }: PropsTab<'MisReservas'>) {
+  const { reservas } = useFeatures();
+  const { sesion } = useSesion();
+  return (
+    <Marco titulo="Mis reservas" alPerfil={() => navigation.navigate('Perfil')}>
+      {sesion ? (
+        <PantallaMisReservas
+          casos={reservas.casos}
+          clienteId={sesion.usuarioId}
+          alAbrir={(reservaId) => navigation.navigate('Reserva', { reservaId })}
+        />
+      ) : null}
+    </Marco>
+  );
+}
+
+function RutaPerfil({ navigation }: PropsTab<'Perfil'>) {
+  const { sesion, cerrarSesion } = useSesion();
+  const estadoModelo = useEstadoModelo();
+  const confirmarSalida = () =>
+    Alert.alert('Cerrar sesión', '¿Quieres salir de tu cuenta?', [
+      { text: 'Cancelar', style: 'cancel' },
+      { text: 'Cerrar sesión', style: 'destructive', onPress: () => void cerrarSesion() },
+    ]);
+  return (
+    <Marco titulo="Mi perfil" alPerfil={() => undefined}>
+      {sesion ? (
+        <PantallaPerfil
+          nombre={sesion.nombre}
+          email={sesion.email}
+          rol={sesion.rol}
+          estadoIa={estadoModelo}
+          alAbrirIa={() => navigation.navigate('ModeloIa')}
+          alCerrarSesion={confirmarSalida}
+        />
+      ) : null}
+    </Marco>
+  );
+}
+
+/** Las cuatro pestañas. Cada una se queda montada al cambiar de pestaña. */
+function Pestanas() {
+  return (
+    <Tab.Navigator
+      initialRouteName="Explorar"
+      tabBar={(props) => <BarraTabs {...props} />}
+      screenOptions={{ headerShown: false }}
+    >
+      <Tab.Screen name="Explorar" component={RutaExplorar} />
+      <Tab.Screen name="MisReservas" component={RutaMisReservas} />
+      <Tab.Screen name="Agente" component={RutaAgente} />
+      <Tab.Screen name="Perfil" component={RutaPerfil} />
+    </Tab.Navigator>
+  );
+}
+
+/** Todas las pantallas de encima de las pestañas llevan al perfil de la misma forma. */
+const irAPerfil = (navigation: PropsRaiz<keyof RutasRaiz>['navigation']) => () =>
+  navigation.navigate('Tabs', { screen: 'Perfil' });
+
+function RutaDetalle({ navigation, route }: PropsRaiz<'Detalle'>) {
+  const irAlAsistente = () => navigation.navigate('Tabs', { screen: 'Agente' });
+  return (
+    <Marco titulo="Detalle del alojamiento" alVolver={navigation.goBack} alPerfil={irAPerfil(navigation)}>
+      {/* Ficha mínima: la pantalla completa llega en la Fase 3. */}
+      <PantallaDetalleProvisional datos={route.params.datos} alReservar={irAlAsistente} alAsistente={irAlAsistente} />
+    </Marco>
+  );
+}
+
 /** Descargar, activar y borrar el modelo de IA local (core/ia lo hace; la pantalla solo muestra). */
-function RutaModeloIa({ navigation }: NativeStackScreenProps<Rutas, 'ModeloIa'>) {
+function RutaModeloIa({ navigation }: PropsRaiz<'ModeloIa'>) {
   const estado = useEstadoModelo();
   const [progreso, setProgreso] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -158,7 +267,7 @@ function RutaModeloIa({ navigation }: NativeStackScreenProps<Rutas, 'ModeloIa'>)
     ]);
 
   return (
-    <Marco titulo="IA local" alVolver={navigation.goBack}>
+    <Marco titulo="IA local" alVolver={navigation.goBack} alPerfil={irAPerfil(navigation)}>
       <PantallaModeloIa
         estado={estado}
         progreso={progreso}
@@ -172,28 +281,13 @@ function RutaModeloIa({ navigation }: NativeStackScreenProps<Rutas, 'ModeloIa'>)
   );
 }
 
-function RutaMisReservas({ navigation }: NativeStackScreenProps<Rutas, 'MisReservas'>) {
-  const { reservas } = useFeatures();
-  const { sesion } = useSesion();
+function RutaReserva({ navigation, route }: PropsRaiz<'Reserva'>) {
+  const { reservas, fichaAlojamiento } = useFeatures();
   return (
-    <Marco titulo="Mis reservas" alVolver={navigation.goBack}>
-      {sesion ? (
-        <PantallaMisReservas
-          casos={reservas.casos}
-          clienteId={sesion.usuarioId}
-          alAbrir={(reservaId) => navigation.navigate('Reserva', { reservaId })}
-        />
-      ) : null}
-    </Marco>
-  );
-}
-
-function RutaReserva({ navigation, route }: NativeStackScreenProps<Rutas, 'Reserva'>) {
-  const { reservas } = useFeatures();
-  return (
-    <Marco titulo="Detalle de reserva" alVolver={navigation.goBack}>
+    <Marco titulo="Detalle de reserva" alVolver={navigation.goBack} alPerfil={irAPerfil(navigation)}>
       <PantallaReserva
         casos={reservas.casos}
+        cargarFicha={fichaAlojamiento}
         reservaId={route.params.reservaId}
         pagoRecibido={route.params.pagoRecibido}
         alPagar={(r) =>
@@ -211,10 +305,10 @@ function RutaReserva({ navigation, route }: NativeStackScreenProps<Rutas, 'Reser
   );
 }
 
-function RutaPago({ navigation, route }: NativeStackScreenProps<Rutas, 'Pago'>) {
+function RutaPago({ navigation, route }: PropsRaiz<'Pago'>) {
   const { pagos } = useFeatures();
   return (
-    <Marco titulo="Pago con QR" alVolver={navigation.goBack}>
+    <Marco titulo="Pago con QR" alVolver={navigation.goBack} alPerfil={irAPerfil(navigation)}>
       <PantallaPago
         casos={pagos.casos}
         solicitud={route.params.solicitud}
@@ -235,9 +329,9 @@ export function NavegacionApp({ features }: { features: Features }) {
   return (
     <ContextoFeatures.Provider value={features}>
       <NavigationContainer theme={TEMA}>
-        <Stack.Navigator initialRouteName="Agente" screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="Agente" component={RutaAgente} />
-          <Stack.Screen name="MisReservas" component={RutaMisReservas} />
+        <Stack.Navigator initialRouteName="Tabs" screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="Tabs" component={Pestanas} />
+          <Stack.Screen name="Detalle" component={RutaDetalle} />
           <Stack.Screen name="ModeloIa" component={RutaModeloIa} />
           <Stack.Screen name="Reserva" component={RutaReserva} />
           <Stack.Screen name="Pago" component={RutaPago} />

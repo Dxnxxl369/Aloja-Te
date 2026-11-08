@@ -13,8 +13,10 @@
 
 import { api, auth, cola, guardarCache, leerCache, modeloLocal, nuevoId, PAGO_SIMULADO_HABILITADO } from '../core';
 import { crearFeatureAgente } from '../features/agente';
+import { crearFeatureCatalogo } from '../features/catalogo';
 import { crearFeaturePagos } from '../features/pagos';
 import { crearFeatureReservas } from '../features/reservas';
+import { crearFichaAlojamiento } from './fichaAlojamiento';
 
 export function crearFeatures() {
   const reservas = crearFeatureReservas({ api, cola, nuevoId, guardarCache, leerCache });
@@ -29,7 +31,9 @@ export function crearFeatures() {
       return { id: s.usuarioId, nombre: s.nombre };
     },
   });
-  return { reservas, pagos, agente };
+  const catalogo = crearFeatureCatalogo({ api, guardarCache, leerCache });
+  const fichaAlojamiento = crearFichaAlojamiento({ api, guardarCache, leerCache });
+  return { reservas, pagos, agente, catalogo, fichaAlojamiento };
 }
 
 export type Features = ReturnType<typeof crearFeatures>;
