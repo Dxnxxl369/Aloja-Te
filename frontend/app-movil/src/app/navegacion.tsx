@@ -18,10 +18,10 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
-import { Alert, View } from 'react-native';
+import { Alert, Share, View } from 'react-native';
 import { MODELO_IA, modeloLocal, useEstadoModelo, useEstadoSync, useSesion } from '../core';
 import { PantallaAgente } from '../features/agente';
-import { PantallaDetalleProvisional, PantallaExplorar } from '../features/catalogo';
+import { PantallaDetalle, PantallaExplorar } from '../features/catalogo';
 import { PantallaPerfil } from '../features/cuenta';
 import { PantallaModeloIa } from '../features/ia';
 import { PantallaPago } from '../features/pagos';
@@ -72,18 +72,20 @@ function Marco({
   marca,
   alVolver,
   alPerfil,
+  alCompartir,
   children,
 }: {
   titulo?: string;
   marca?: boolean;
   alVolver?: () => void;
   alPerfil: () => void;
+  alCompartir?: () => void;
   children: ReactNode;
 }) {
   const sync = useEstadoSync();
   return (
     <View style={{ flex: 1, backgroundColor: COLOR.fondo }}>
-      <Encabezado titulo={titulo} marca={marca} alVolver={alVolver} alPerfil={alPerfil} />
+      <Encabezado titulo={titulo} marca={marca} alVolver={alVolver} alPerfil={alPerfil} alCompartir={alCompartir} />
       <AvisoSinRed conectado={sync.conectado} pendientes={sync.pendientes} />
       <View style={{ flex: 1 }}>{children}</View>
     </View>
@@ -213,11 +215,25 @@ const irAPerfil = (navigation: PropsRaiz<keyof RutasRaiz>['navigation']) => () =
   navigation.navigate('Tabs', { screen: 'Perfil' });
 
 function RutaDetalle({ navigation, route }: PropsRaiz<'Detalle'>) {
+  const { catalogo } = useFeatures();
+  const estadoModelo = useEstadoModelo();
+  const { datos } = route.params;
+  // Por ahora reservar es hablar con el asistente; la reserva manual llega en la Fase 4.
   const irAlAsistente = () => navigation.navigate('Tabs', { screen: 'Agente' });
+  const compartir = () => {
+    const lugar = [datos.ciudad, datos.departamento].filter(Boolean).join(', ');
+    const precio = typeof datos.precioNoche === 'number' ? ` desde Bs ${datos.precioNoche} por noche` : '';
+    void Share.share({ message: `${datos.titulo}${lugar ? ` en ${lugar}` : ''}${precio}. Míralo en Aloja-Te.` }).catch(() => undefined);
+  };
   return (
-    <Marco titulo="Detalle del alojamiento" alVolver={navigation.goBack} alPerfil={irAPerfil(navigation)}>
-      {/* Ficha mínima: la pantalla completa llega en la Fase 3. */}
-      <PantallaDetalleProvisional datos={route.params.datos} alReservar={irAlAsistente} alAsistente={irAlAsistente} />
+    <Marco titulo="Detalle del alojamiento" alVolver={navigation.goBack} alPerfil={irAPerfil(navigation)} alCompartir={compartir}>
+      <PantallaDetalle
+        casos={catalogo.casos}
+        datos={datos}
+        iaLista={estadoModelo === 'CARGADO'}
+        alReservar={irAlAsistente}
+        alAsistente={irAlAsistente}
+      />
     </Marco>
   );
 }

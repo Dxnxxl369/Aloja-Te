@@ -21,8 +21,15 @@ export interface AlojamientoDto {
   tipoPropiedadNombre?: string | null;
   titulo: string;
   descripcion?: string | null;
+  direccion?: string | null;
   ciudad: string;
   departamento?: string | null;
+  latitud?: number | string | null;
+  longitud?: number | string | null;
+  politicas?: string | null;
+  horarioEntrada?: string | null;
+  horarioSalida?: string | null;
+  servicios?: { nombre: string }[];
   fotografias?: { url: string; orden?: number }[];
   unidades?: UnidadDto[];
 }

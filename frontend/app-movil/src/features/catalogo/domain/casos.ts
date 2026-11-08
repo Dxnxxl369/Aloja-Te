@@ -24,6 +24,7 @@ export function crearCasosCatalogo(deps: { repo: RepositorioCatalogo }): CasosCa
   return {
     listarAlojamientos: (filtros) => repo.listar(filtros),
     listarTipos: () => repo.tipos(),
+    obtenerDetalle: (id) => repo.detalle(id),
 
     destacados(lista) {
       return lista

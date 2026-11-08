@@ -25,6 +25,7 @@ export const HUESPEDES_RAPIDOS = [1, 2, 3, 4, 6] as const;
 /** Prefijos de la caché local (tabla `cache` de core). */
 export const CACHE = {
   PREFIJO_LISTA: 'catalogo-lista:',
+  PREFIJO_DETALLE: 'catalogo-detalle:',
   TIPOS: 'catalogo-tipos',
   TTL_MS: 24 * 60 * 60 * 1000,
 } as const;

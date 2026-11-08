@@ -25,6 +25,31 @@ export interface AlojamientoCatalogo {
   capacidadMax: number | null;
 }
 
+/** Todo lo que se muestra en la ficha de un alojamiento. Los campos opcionales son los que MS-01 puede no enviar. */
+export interface DetalleAlojamiento {
+  id: string;
+  titulo: string;
+  tipo?: string;
+  ciudad: string;
+  departamento?: string;
+  direccion?: string;
+  descripcion?: string;
+  politicas?: string;
+  /** "HH:mm" */
+  horarioEntrada?: string;
+  /** "HH:mm" */
+  horarioSalida?: string;
+  latitud?: number;
+  longitud?: number;
+  /** URLs de las fotos, en el orden que indica MS-01. */
+  fotos: string[];
+  servicios: string[];
+  calificacion: number | null;
+  totalResenas: number;
+  precioDesde: number | null;
+  capacidadMax: number | null;
+}
+
 export interface TipoPropiedad {
   id: number;
   nombre: string;

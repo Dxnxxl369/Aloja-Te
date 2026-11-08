@@ -11,8 +11,8 @@ import type { Api } from '../../../core';
 import { esSinRed } from '../../../core';
 import { CACHE, MAX_RESUMENES, RUTA_ALOJAMIENTOS, RUTA_TIPOS_PROPIEDAD } from '../constantes';
 import type { RepositorioCatalogo } from '../domain/interfaces';
-import type { AlojamientoCatalogo, FiltrosServidor, TipoPropiedad } from '../domain/modelos';
-import { alojamientoDesdeDto, tipoDesdeDto } from './mapeadores';
+import type { AlojamientoCatalogo, DetalleAlojamiento, FiltrosServidor, TipoPropiedad } from '../domain/modelos';
+import { alojamientoDesdeDto, detalleDesdeDto, tipoDesdeDto } from './mapeadores';
 import type { AlojamientoDto, ResumenValoracionesDto, TipoPropiedadDto, UnidadDto } from './modelos';
 
 export interface DepsRepositorioCatalogo {
@@ -66,6 +66,22 @@ export function crearRepositorioCatalogo(deps: DepsRepositorioCatalogo): Reposit
         const guardada = await leerCache<AlojamientoCatalogo[]>(clave);
         if (!guardada) throw e;
         return { alojamientos: guardada, desdeCache: true };
+      }
+    },
+
+    async detalle(id) {
+      const clave = CACHE.PREFIJO_DETALLE + id;
+      try {
+        const dto = await api.get<AlojamientoDto>(`${RUTA_ALOJAMIENTOS}/${id}`);
+        const [unidades, resumen] = await Promise.all([unidadesDe(dto), resumenDe(dto)]);
+        const detalle: DetalleAlojamiento = detalleDesdeDto(dto, unidades, resumen);
+        await guardarCache(clave, detalle, CACHE.TTL_MS);
+        return detalle;
+      } catch (e) {
+        if (!esSinRed(e)) throw e;
+        const guardado = await leerCache<DetalleAlojamiento>(clave);
+        if (!guardado) throw e;
+        return guardado;
       }
     },
 

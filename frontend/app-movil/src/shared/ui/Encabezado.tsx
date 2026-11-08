@@ -6,7 +6,7 @@
 // NO VA AQUÍ: Navegación ni sesión: solo avisa con `alVolver` y `alPerfil`.
 // ======================================================================
 
-import { ArrowLeft, CalendarDays, User } from 'lucide-react-native';
+import { ArrowLeft, Share2, User } from 'lucide-react-native';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Insignia } from './Insignia';
@@ -20,11 +20,11 @@ interface Props {
   marca?: boolean;
   alVolver?: () => void;
   alPerfil?: () => void;
-  /** Si se pasa, muestra el acceso a "Mis reservas". */
-  alMisReservas?: () => void;
+  /** Si se pasa, muestra el botón de compartir junto al perfil. */
+  alCompartir?: () => void;
 }
 
-export function Encabezado({ titulo, marca, alVolver, alPerfil, alMisReservas }: Props) {
+export function Encabezado({ titulo, marca, alVolver, alPerfil, alCompartir }: Props) {
   const insets = useSafeAreaInsets();
   return (
     <View style={[estilos.barra, { paddingTop: insets.top + ESPACIO.s }]}>
@@ -49,15 +49,15 @@ export function Encabezado({ titulo, marca, alVolver, alPerfil, alMisReservas }:
         </View>
       )}
       <View style={estilos.derecha}>
-        {alMisReservas ? (
+        {alCompartir ? (
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Mis reservas"
-            onPress={alMisReservas}
+            accessibilityLabel="Compartir"
+            onPress={alCompartir}
             style={estilos.icono}
             hitSlop={4}
           >
-            <CalendarDays color={COLOR.primario} size={20} />
+            <Share2 color={COLOR.primario} size={20} />
           </Pressable>
         ) : null}
         {alPerfil ? (
