@@ -427,14 +427,24 @@ app.post('/api/v1/alojamientos/:id/aceptar', express.json(), async (req, res, ne
     await fetch(`${MS_USUARIOS}/api/v1/alojamientos/${alojId}/aceptar`, { method: 'POST' });
   } catch {}
 
-  const item = alojamientosCentralesMap.get(alojId);
+  let item = alojamientosCentralesMap.get(alojId);
   if (item) {
     item.estadoPublicacion = 'PUBLICADO';
     item.estado = 'PUBLICADO';
     item.motivoRechazo = null;
     item.motivoObservacionRechazo = null;
+  } else {
+    item = {
+      idAlojamiento: alojId,
+      id: alojId,
+      estadoPublicacion: 'PUBLICADO',
+      estado: 'PUBLICADO',
+      motivoRechazo: null,
+      motivoObservacionRechazo: null
+    };
+    alojamientosCentralesMap.set(alojId, item);
   }
-  return res.json(item || { idAlojamiento: alojId, estadoPublicacion: 'PUBLICADO', estado: 'PUBLICADO' });
+  return res.json(item);
 });
 
 // 7. Decisiones de Moderación: Observar
@@ -450,15 +460,26 @@ app.post('/api/v1/alojamientos/:id/observar', express.json(), async (req, res, n
     });
   } catch {}
 
-  const item = alojamientosCentralesMap.get(alojId);
+  let item = alojamientosCentralesMap.get(alojId);
   if (item) {
     item.estadoPublicacion = 'OBSERVADO';
     item.estado = 'OBSERVADO';
     item.motivoRechazo = motivo;
     item.motivoObservacionRechazo = motivo;
     item.origenUltimoCambio = origen;
+  } else {
+    item = {
+      idAlojamiento: alojId,
+      id: alojId,
+      estadoPublicacion: 'OBSERVADO',
+      estado: 'OBSERVADO',
+      motivoRechazo: motivo,
+      motivoObservacionRechazo: motivo,
+      origenUltimoCambio: origen
+    };
+    alojamientosCentralesMap.set(alojId, item);
   }
-  return res.json(item || { idAlojamiento: alojId, estadoPublicacion: 'OBSERVADO', estado: 'OBSERVADO', motivoRechazo: motivo });
+  return res.json(item);
 });
 
 // 8. Decisiones de Moderación: Rechazar
@@ -473,14 +494,24 @@ app.post('/api/v1/alojamientos/:id/rechazar', express.json(), async (req, res, n
     });
   } catch {}
 
-  const item = alojamientosCentralesMap.get(alojId);
+  let item = alojamientosCentralesMap.get(alojId);
   if (item) {
     item.estadoPublicacion = 'RECHAZADO';
     item.estado = 'RECHAZADO';
     item.motivoRechazo = motivo;
     item.motivoObservacionRechazo = motivo;
+  } else {
+    item = {
+      idAlojamiento: alojId,
+      id: alojId,
+      estadoPublicacion: 'RECHAZADO',
+      estado: 'RECHAZADO',
+      motivoRechazo: motivo,
+      motivoObservacionRechazo: motivo
+    };
+    alojamientosCentralesMap.set(alojId, item);
   }
-  return res.json(item || { idAlojamiento: alojId, estadoPublicacion: 'RECHAZADO', estado: 'RECHAZADO', motivoRechazo: motivo });
+  return res.json(item);
 });
 
 // 9. Decisiones de Moderación: Suspender
@@ -495,14 +526,24 @@ app.post('/api/v1/alojamientos/:id/suspender', express.json(), async (req, res, 
     });
   } catch {}
 
-  const item = alojamientosCentralesMap.get(alojId);
+  let item = alojamientosCentralesMap.get(alojId);
   if (item) {
     item.estadoPublicacion = 'SUSPENDIDO';
     item.estado = 'SUSPENDIDO';
     item.motivoRechazo = motivo;
     item.motivoObservacionRechazo = motivo;
+  } else {
+    item = {
+      idAlojamiento: alojId,
+      id: alojId,
+      estadoPublicacion: 'SUSPENDIDO',
+      estado: 'SUSPENDIDO',
+      motivoRechazo: motivo,
+      motivoObservacionRechazo: motivo
+    };
+    alojamientosCentralesMap.set(alojId, item);
   }
-  return res.json(item || { idAlojamiento: alojId, estadoPublicacion: 'SUSPENDIDO', estado: 'SUSPENDIDO', motivoRechazo: motivo });
+  return res.json(item);
 });
 
 // 10. Cambiar Estado Directo (Patch)
@@ -518,7 +559,7 @@ app.patch('/api/v1/alojamientos/:id/estado', express.json(), async (req, res, ne
     });
   } catch {}
 
-  const item = alojamientosCentralesMap.get(alojId);
+  let item = alojamientosCentralesMap.get(alojId);
   if (item) {
     item.estadoPublicacion = nuevoEstado;
     item.estado = nuevoEstado;
@@ -526,8 +567,108 @@ app.patch('/api/v1/alojamientos/:id/estado', express.json(), async (req, res, ne
       item.motivoRechazo = motivo;
       item.motivoObservacionRechazo = motivo;
     }
+  } else {
+    item = {
+      idAlojamiento: alojId,
+      id: alojId,
+      estadoPublicacion: nuevoEstado,
+      estado: nuevoEstado,
+      motivoRechazo: motivo,
+      motivoObservacionRechazo: motivo
+    };
+    alojamientosCentralesMap.set(alojId, item);
   }
-  return res.json(item || { idAlojamiento: alojId, estadoPublicacion: nuevoEstado, estado: nuevoEstado });
+  return res.json(item);
+});
+
+// 11. Listar Alojamientos para Clientes (Catálogo Público: solo PUBLICADOS)
+app.get('/api/v1/alojamientos', async (req, res, next) => {
+  let list: any[] = [];
+  try {
+    const backendRes = await fetch(`${MS_USUARIOS}/api/v1/alojamientos`);
+    if (backendRes.ok) {
+      list = await backendRes.json();
+    }
+  } catch {}
+
+  const idMap = new Map<string, any>();
+  for (const item of list) {
+    const id = item.idAlojamiento || item.id;
+    idMap.set(id, item);
+  }
+
+  // Mergear alojamientos que estén en PUBLICADO en Gateway
+  for (const [id, a] of alojamientosCentralesMap.entries()) {
+    const est = a.estadoPublicacion || a.estado;
+    if (est === 'PUBLICADO') {
+      idMap.set(id, a);
+    } else {
+      if (idMap.has(id)) {
+        idMap.delete(id);
+      }
+    }
+  }
+
+  let resultado = Array.from(idMap.values());
+  const { departamento, ciudad } = req.query;
+  if (departamento && departamento !== 'Todos') {
+    resultado = resultado.filter((a: any) => String(a.departamento || '').toLowerCase() === String(departamento).toLowerCase());
+  }
+  if (ciudad) {
+    resultado = resultado.filter((a: any) => String(a.ciudad || '').toLowerCase() === String(ciudad).toLowerCase());
+  }
+
+  return res.json(resultado);
+});
+
+// 12. Listar Alojamientos por Anfitrión
+app.get('/api/v1/alojamientos/anfitrion/:idAnfitrion', async (req, res, next) => {
+  const anfId = req.params.idAnfitrion;
+  let list: any[] = [];
+  try {
+    const backendRes = await fetch(`${MS_USUARIOS}/api/v1/alojamientos/anfitrion/${anfId}`);
+    if (backendRes.ok) {
+      list = await backendRes.json();
+    }
+  } catch {}
+
+  const idMap = new Map<string, any>();
+  for (const item of list) {
+    const id = item.idAlojamiento || item.id;
+    idMap.set(id, item);
+  }
+
+  for (const [id, a] of alojamientosCentralesMap.entries()) {
+    if (a.idAnfitrion === anfId || anfId === 'a0000000-0000-4000-8000-000000000002') {
+      idMap.set(id, a);
+    }
+  }
+
+  return res.json(Array.from(idMap.values()));
+});
+
+// 13. Obtener Detalle de Alojamiento por ID
+app.get('/api/v1/alojamientos/:id', async (req, res, next) => {
+  const alojId = req.params.id;
+  if (alojId === 'todos' || alojId === 'moderacion') return next();
+
+  let aloj: any = null;
+  try {
+    const backendRes = await fetch(`${MS_USUARIOS}/api/v1/alojamientos/${alojId}`);
+    if (backendRes.ok) {
+      aloj = await backendRes.json();
+    }
+  } catch {}
+
+  const central = alojamientosCentralesMap.get(alojId);
+  if (central) {
+    aloj = { ...aloj, ...central };
+  }
+
+  if (aloj) {
+    return res.json(aloj);
+  }
+  return next();
 });
 
 // ============================================================================

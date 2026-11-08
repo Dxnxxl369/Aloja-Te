@@ -350,12 +350,15 @@ const ALOJAMIENTOS_DEMO: Alojamiento[] = [
 // Normalizador para armonizar el DTO de Spring Boot con el frontend
 function normalizarAlojamiento(raw: any): Alojamiento {
   const unidadPrincipal = raw.unidades?.[0];
-  const precioCalculado = raw.precioBaseNoche ?? unidadPrincipal?.precioNoche ?? 650;
+  const precioCalculado = raw.precioBaseNoche ?? raw.precioNoche ?? unidadPrincipal?.precioNoche ?? 650;
+  const canonicalId = raw.idAlojamiento || raw.id || `aloj-${Date.now()}`;
+  const canonicalAnfitrionId = raw.idAnfitrion || raw.anfitrionId || 'a0000000-0000-4000-8000-000000000002';
+  const canonicalNombreAnfitrion = raw.nombreAnfitrion || raw.anfitrion || 'Carlos Mendoza';
 
   return {
-    idAlojamiento: raw.idAlojamiento || String(Math.random()),
-    idAnfitrion: raw.idAnfitrion || 'anfitrion-default',
-    nombreAnfitrion: raw.nombreAnfitrion || 'Anfitrión Verificado',
+    idAlojamiento: canonicalId,
+    idAnfitrion: canonicalAnfitrionId,
+    nombreAnfitrion: canonicalNombreAnfitrion,
     titulo: raw.titulo || 'Alojamiento Tradicional',
     descripcion: raw.descripcion || 'Sin descripción disponible.',
     departamento: raw.departamento || 'Santa Cruz',
@@ -378,7 +381,7 @@ function normalizarAlojamiento(raw: any): Alojamiento {
     origenUltimoCambio: raw.origenUltimoCambio,
     fotografias: (raw.fotografias && raw.fotografias.length > 0)
       ? raw.fotografias.map((f: any, idx: number) => ({
-          idFotografia: f.idFotografia || `foto-${idx}`,
+          idFotografia: f.idFotografia || f.id || `foto-${idx}`,
           url: f.url,
           esPrincipal: f.orden === 1 || f.esPrincipal === true || idx === 0,
           orden: f.orden ?? idx + 1,
@@ -387,7 +390,7 @@ function normalizarAlojamiento(raw: any): Alojamiento {
       : [
           {
             idFotografia: 'default',
-            url: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1200&q=80',
+            url: raw.imagen || 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1200&q=80',
             esPrincipal: true,
             orden: 1,
             descripcion: raw.titulo
@@ -395,11 +398,11 @@ function normalizarAlojamiento(raw: any): Alojamiento {
         ],
     unidades: (raw.unidades && raw.unidades.length > 0)
       ? raw.unidades.map((u: any) => ({
-          idUnidad: u.idUnidad || 'd1a4e800-5c31-4a29-b612-426614174000',
+          idUnidad: u.idUnidad || u.id || 'd1a4e800-5c31-4a29-b612-426614174000',
           nombre: u.nombre || 'Unidad Principal',
           descripcion: u.descripcion || '',
-          capacidadPersonas: u.capacidadHuespedes ?? u.capacidadPersonas ?? 4,
-          cantidadDormitorios: u.cantidadDormitorios ?? 1,
+          capacidadPersonas: u.capacidadHuespedes ?? u.capacidadPersonas ?? u.capacidad ?? 4,
+          cantidadDormitorios: u.cantidadDormitorios ?? u.habitaciones ?? 1,
           cantidadCamas: u.cantidadCamas ?? 2,
           cantidadBanios: u.cantidadBanos ?? u.cantidadBanios ?? 1,
           precioNoche: Number(u.precioNoche ?? precioCalculado),
@@ -422,7 +425,12 @@ function normalizarAlojamiento(raw: any): Alojamiento {
             precioNoche: Number(precioCalculado),
             moneda: 'BOB',
             inventarioTotal: 1,
-            activo: true
+            activo: true,
+            estado: 'DISPONIBLE',
+            fotos: [
+              raw.imagen || 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1200&q=80'
+            ],
+            servicios: ['Wi-Fi Starlink', 'Climatización', 'Desayuno Incluido']
           }
         ],
     servicios: (raw.servicios && raw.servicios.length > 0)
@@ -756,12 +764,24 @@ export const catalogoService = {
   async listarAlojamientos(departamento?: string): Promise<Alojamiento[]> {
     let baseList: Alojamiento[] = [];
     try {
-      const response = await httpClient.get<any[]>(ENDPOINTS.ALOJAMIENTOS.LISTAR);
-      if (response.data && response.data.length > 0) {
-        baseList = response.data.map(normalizarAlojamiento);
+      // 1. Intentar obtener el conjunto completo de alojamientos en tiempo real desde el Gateway
+      const resTodos = await httpClient.get<any[]>(ENDPOINTS.ALOJAMIENTOS.TODOS);
+      if (resTodos.data && resTodos.data.length > 0) {
+        baseList = resTodos.data.map(normalizarAlojamiento);
       }
     } catch {
-      baseList = ALOJAMIENTOS_DEMO;
+      // Fallback a listar publicados si el endpoint todos no está disponible
+    }
+
+    if (baseList.length === 0) {
+      try {
+        const response = await httpClient.get<any[]>(ENDPOINTS.ALOJAMIENTOS.LISTAR);
+        if (response.data && response.data.length > 0) {
+          baseList = response.data.map(normalizarAlojamiento);
+        }
+      } catch {
+        baseList = ALOJAMIENTOS_DEMO;
+      }
     }
 
     if (baseList.length === 0) {
@@ -771,17 +791,48 @@ export const catalogoService = {
     // Unir alojamientos canónicos demo si el backend no los devolvió todos
     const demoMap = new Map<string, Alojamiento>();
     ALOJAMIENTOS_DEMO.forEach(demo => demoMap.set(demo.idAlojamiento, demo));
-    baseList.forEach(item => demoMap.set(item.idAlojamiento, item));
+    baseList.forEach(item => {
+      const canon = demoMap.get(item.idAlojamiento);
+      if (canon) {
+        // Preservar estado oficial del servidor si fue moderado
+        demoMap.set(item.idAlojamiento, {
+          ...canon,
+          ...item,
+          estado: item.estadoPublicacion || item.estado || canon.estado,
+          estadoPublicacion: item.estadoPublicacion || item.estado || canon.estadoPublicacion
+        });
+      } else {
+        demoMap.set(item.idAlojamiento, item);
+      }
+    });
     baseList = Array.from(demoMap.values());
 
     // Agregar alojamientos personalizados creados por el anfitrión (persistencia local)
+    // Regla de Integridad: Si el servidor ya tiene el alojamiento con un estado actualizado
+    // (p. ej. el administrador lo cambió de PENDIENTE a PUBLICADO u OBSERVADO), se respeta la decisión del servidor.
     try {
       const customRaw = localStorage.getItem('alojate_alojamientos_custom');
       if (customRaw) {
         const customItems: Alojamiento[] = JSON.parse(customRaw);
         const map = new Map<string, Alojamiento>();
         baseList.forEach(item => map.set(item.idAlojamiento, item));
-        customItems.forEach(item => map.set(item.idAlojamiento, item));
+        
+        customItems.forEach(item => {
+          const existente = map.get(item.idAlojamiento);
+          if (existente) {
+            // Sincronizar: conservar fotografías y detalles del draft local pero tomar el estado oficial del servidor
+            map.set(item.idAlojamiento, {
+              ...item,
+              estado: existente.estadoPublicacion || existente.estado || item.estado,
+              estadoPublicacion: existente.estadoPublicacion || existente.estado || item.estadoPublicacion,
+              motivoRechazo: existente.motivoRechazo || item.motivoRechazo,
+              motivoObservacionRechazo: existente.motivoObservacionRechazo || item.motivoObservacionRechazo,
+              origenUltimoCambio: existente.origenUltimoCambio || item.origenUltimoCambio
+            });
+          } else {
+            map.set(item.idAlojamiento, item);
+          }
+        });
         baseList = Array.from(map.values());
       }
     } catch (e) {
@@ -812,20 +863,92 @@ export const catalogoService = {
 
   async listarAlojamientosPorAnfitrion(criterio: { id?: string; email?: string; nombre?: string }): Promise<Alojamiento[]> {
     const todos = await this.listarAlojamientos();
-    return todos.filter(a => {
-      if (criterio.id && a.idAnfitrion === criterio.id) return true;
+
+    // 1. Obtener IDs y alojamientos creados localmente en el draft del cliente
+    const customIds = new Set<string>();
+    try {
+      const customRaw = localStorage.getItem('alojate_alojamientos_custom');
+      if (customRaw) {
+        const customItems: Alojamiento[] = JSON.parse(customRaw);
+        customItems.forEach(c => {
+          if (c.idAlojamiento) customIds.add(c.idAlojamiento);
+        });
+      }
+    } catch {}
+
+    // 2. Intentar consultar endpoint dedicado del gateway por anfitrión si hay ID
+    let remotosPorAnfitrionMap = new Map<string, Alojamiento>();
+    if (criterio.id) {
+      try {
+        const res = await httpClient.get<any[]>(ENDPOINTS.ALOJAMIENTOS.ANFITRION(criterio.id));
+        if (Array.isArray(res.data) && res.data.length > 0) {
+          res.data.map(normalizarAlojamiento).forEach(item => {
+            remotosPorAnfitrionMap.set(item.idAlojamiento, item);
+          });
+        }
+      } catch {}
+    }
+
+    const filtrados = todos.filter(a => {
+      // Prioridad 1: Si fue creado en esta sesión / cliente local, siempre pertenece al anfitrión
+      if (customIds.has(a.idAlojamiento)) return true;
+
+      // Prioridad 2: Si vino de la consulta directa por idAnfitrion del Gateway
+      if (remotosPorAnfitrionMap.has(a.idAlojamiento)) return true;
+
+      // Prioridad 3: Si coincide por ID exacto de usuario o ID canónico demo
+      if (criterio.id) {
+        if (a.idAnfitrion === criterio.id) return true;
+        if (
+          (criterio.id === 'anf-carlos' || criterio.id === 'a0000000-0000-4000-8000-000000000002') &&
+          (a.idAnfitrion === 'a0000000-0000-4000-8000-000000000002' || a.idAnfitrion === 'anf-carlos')
+        ) {
+          return true;
+        }
+        if (
+          (criterio.id === 'anf-elena' || criterio.id === 'a0000000-0000-4000-8000-000000000003') &&
+          (a.idAnfitrion === 'a0000000-0000-4000-8000-000000000003' || a.idAnfitrion === 'anf-elena')
+        ) {
+          return true;
+        }
+      }
+
+      // Prioridad 4: Si coincide por Correo o Nombre
       const anfitrionNombre = (a.nombreAnfitrion || '').toLowerCase();
       const userEmail = (criterio.email || '').toLowerCase();
       const userNombre = (criterio.nombre || '').toLowerCase();
 
       if (userEmail.includes('carlos') || userEmail.includes('anfitrion@alojate.bo') || userNombre.includes('carlos')) {
-        return anfitrionNombre.includes('carlos');
+        return (
+          anfitrionNombre.includes('carlos') ||
+          !a.idAnfitrion ||
+          a.idAnfitrion === 'a0000000-0000-4000-8000-000000000002' ||
+          a.idAnfitrion === 'anf-carlos'
+        );
       }
       if (userEmail.includes('elena') || userNombre.includes('elena')) {
-        return anfitrionNombre.includes('elena');
+        return (
+          anfitrionNombre.includes('elena') ||
+          a.idAnfitrion === 'a0000000-0000-4000-8000-000000000003' ||
+          a.idAnfitrion === 'anf-elena'
+        );
+      }
+      if (userNombre && anfitrionNombre.includes(userNombre)) {
+        return true;
       }
       return false;
     });
+
+    // Asegurar que si remotosPorAnfitrionMap trajo elementos no presentes en todos, se incluyan
+    const resultadoMap = new Map<string, Alojamiento>();
+    filtrados.forEach(f => resultadoMap.set(f.idAlojamiento, f));
+    remotosPorAnfitrionMap.forEach((val, key) => {
+      if (!resultadoMap.has(key)) {
+        resultadoMap.set(key, val);
+      }
+    });
+
+    return Array.from(resultadoMap.values());
   },
 
   async obtenerPorId(id: string): Promise<Alojamiento> {

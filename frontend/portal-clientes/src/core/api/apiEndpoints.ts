@@ -8,6 +8,9 @@ export const ENDPOINTS = {
   },
   ALOJAMIENTOS: {
     LISTAR: `${API_BASE_URL}/api/v1/alojamientos`,
+    TODOS: `${API_BASE_URL}/api/v1/alojamientos/todos`,
+    ANFITRION: (idAnfitrion: string) => `${API_BASE_URL}/api/v1/alojamientos/anfitrion/${idAnfitrion}`,
+    PENDIENTES: `${API_BASE_URL}/api/v1/alojamientos/moderacion/pendientes`,
     DETALLE: (id: string) => `${API_BASE_URL}/api/v1/alojamientos/${id}`,
     UNIDADES: (id: string) => `${API_BASE_URL}/api/v1/alojamientos/${id}/unidades`,
     CATALOGOS: `${API_BASE_URL}/api/v1/catalogos`,

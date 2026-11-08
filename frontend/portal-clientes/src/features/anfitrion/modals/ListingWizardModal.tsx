@@ -445,6 +445,7 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
 
     const payloadBackend = {
       idAnfitrion: anfitrionId,
+      nombreAnfitrion: user ? `${user.nombre} ${user.apellido || ''}`.trim() : 'Carlos Mendoza',
       idTipoPropiedad: modalidad === 'HOTEL_HOSTAL' ? 5 : 3,
       titulo,
       descripcion: descripcion || `Hermoso alojamiento ubicado en ${ciudad}, ${departamento}.`,
