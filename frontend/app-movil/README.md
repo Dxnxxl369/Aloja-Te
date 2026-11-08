@@ -1,6 +1,6 @@
 # Aloja-Te · App móvil
 
-App React Native (Expo SDK 58) offline-first. Flujo: **Login → Asistente (agente que arma la reserva) → Reserva con cuenta regresiva → Pago con QR Simple**.
+App React Native (Expo SDK 58) offline-first. Flujo: **Login → Agente (arma la reserva) → Reserva con cuenta regresiva → Pago con QR Simple**.
 
 ## Requisitos
 
@@ -117,11 +117,11 @@ Notas:
 | Pantalla | Para qué |
 |---|---|
 | Inicio de sesión | Entrar con correo y contraseña (cuenta del seed de MS-01, ej. `cliente@alojate.bo`) |
-| Asistente | Chat que arma la reserva: tarjetas con foto, servicios y calificación, recomendación y respuestas rápidas |
+| Agente | Chat que arma la reserva: tarjetas con foto, servicios y calificación, recomendación y respuestas rápidas |
 | Mis reservas | Lista de reservas del usuario (funciona sin red con lo último guardado) |
 | Reserva | Cuenta regresiva de 15 min, estado y, al confirmarse, el PIN de check-in para recepción |
 | Pago | QR Simple con estados: pendiente, aprobado, rechazado y vencido |
-| IA local | Descargar, activar o borrar el modelo (se toca el indicador "modo básico" del asistente) |
+| IA local | Descargar, activar o borrar el modelo (se toca el indicador "modo básico" del agente) |
 
 La IA local se descarga en Expo Go, pero **activarla** exige un development build (`pnpm exec expo run:android`).
 

@@ -27,7 +27,7 @@ export interface Reservador {
 
 /** Cada operación recibe el estado actual y devuelve el nuevo: no hay estado escondido. */
 export interface CasosAgente {
-  /** Conversación nueva. Con `contexto`, el asistente ya sabe en qué alojamiento se va a reservar. */
+  /** Conversación nueva. Con `contexto`, el agente ya sabe en qué alojamiento se va a reservar. */
   iniciar(contexto?: ContextoAlojamiento): EstadoAgente;
   enviarMensaje(estado: EstadoAgente, texto: string): Promise<EstadoAgente>;
   elegirOpcion(estado: EstadoAgente, indice: number): Promise<EstadoAgente>;

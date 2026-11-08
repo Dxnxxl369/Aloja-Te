@@ -22,7 +22,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Boton } from '../../../../shared/ui/Boton';
 import { Logo } from '../../../../shared/ui/Logo';
-import { COLOR, ESPACIO, FUENTE, RADIO, SOMBRA_FLOTANTE } from '../../../../shared/ui/tema';
+import { COLOR, ESPACIO, FUENTE, RADIO, SOMBRA_FLOTANTE, TAMANO } from '../../../../shared/ui/tema';
 
 interface Props {
   /** Debe lanzar un Error con mensaje apto para el usuario si falla. */
@@ -115,11 +115,11 @@ export function PantallaLogin({ alIniciar }: Props) {
             </Pressable>
           </View>
 
-          {error && (
+          {error ? (
             <Text accessibilityRole="alert" style={estilos.error}>
               {error}
             </Text>
-          )}
+          ) : null}
 
           <View style={{ marginTop: ESPACIO.l }}>
             <Boton
@@ -146,12 +146,12 @@ const estilos = StyleSheet.create({
   contenido: { paddingHorizontal: ESPACIO.xl, gap: ESPACIO.xl, flexGrow: 1 },
 
   marca: { alignItems: 'center', gap: ESPACIO.s },
-  nombre: { fontFamily: FUENTE.tituloFuerte, fontSize: 32, color: COLOR.texto, marginTop: ESPACIO.s },
-  lema: { fontFamily: FUENTE.normal, fontSize: 14, color: COLOR.textoSuave },
+  nombre: { ...FUENTE.tituloFuerte, fontSize: TAMANO.display, color: COLOR.texto, marginTop: ESPACIO.s },
+  lema: { ...FUENTE.normal, fontSize: TAMANO.secundario, color: COLOR.textoSuave },
 
   tarjeta: { backgroundColor: COLOR.tarjeta, borderRadius: 20, padding: ESPACIO.xl, ...SOMBRA_FLOTANTE },
-  titulo: { fontFamily: FUENTE.tituloFuerte, fontSize: 26, color: COLOR.texto, marginBottom: ESPACIO.xs },
-  etiqueta: { fontFamily: FUENTE.medio, fontSize: 14, color: COLOR.texto, marginTop: ESPACIO.m, marginBottom: ESPACIO.s },
+  titulo: { ...FUENTE.tituloFuerte, fontSize: TAMANO.titular, color: COLOR.texto, marginBottom: ESPACIO.xs },
+  etiqueta: { ...FUENTE.medio, fontSize: TAMANO.secundario, color: COLOR.texto, marginTop: ESPACIO.m, marginBottom: ESPACIO.s },
   campo: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -161,9 +161,9 @@ const estilos = StyleSheet.create({
     borderRadius: RADIO.control,
     backgroundColor: COLOR.campo,
   },
-  input: { flex: 1, fontFamily: FUENTE.normal, fontSize: 16, color: COLOR.texto, paddingVertical: ESPACIO.m },
-  error: { fontFamily: FUENTE.medio, fontSize: 14, color: COLOR.error, marginTop: ESPACIO.m },
+  input: { flex: 1, ...FUENTE.normal, fontSize: TAMANO.cuerpo, color: COLOR.texto, paddingVertical: ESPACIO.m },
+  error: { ...FUENTE.medio, fontSize: TAMANO.secundario, color: COLOR.errorOscuro, marginTop: ESPACIO.m },
 
   seguro: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: ESPACIO.s },
-  seguroTexto: { fontFamily: FUENTE.medio, fontSize: 13, color: COLOR.textoSuave, letterSpacing: 0.3 },
+  seguroTexto: { ...FUENTE.medio, fontSize: TAMANO.secundario, color: COLOR.textoSuave, letterSpacing: 0.3 },
 });

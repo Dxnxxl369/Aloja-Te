@@ -9,7 +9,7 @@
 
 import { Star } from 'lucide-react-native';
 import { StyleSheet, Text, View } from 'react-native';
-import { COLOR, ESPACIO, FUENTE, RADIO } from './tema';
+import { COLOR, ESPACIO, FUENTE, RADIO, TAMANO } from './tema';
 
 interface Props {
   nota?: number | null;
@@ -42,5 +42,5 @@ const estilos = StyleSheet.create({
     borderRadius: RADIO.pildora,
     backgroundColor: COLOR.sobreFotoClaro,
   },
-  texto: { fontFamily: FUENTE.semi, fontSize: 13, color: COLOR.texto },
+  texto: { ...FUENTE.semi, fontSize: TAMANO.secundario, color: COLOR.texto },
 });

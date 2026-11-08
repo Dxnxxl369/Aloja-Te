@@ -10,7 +10,7 @@
 
 import type { ReactNode } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text } from 'react-native';
-import { COLOR, ESPACIO, FUENTE, RADIO } from './tema';
+import { COLOR, ESPACIO, FUENTE, RADIO, TAMANO } from './tema';
 
 type Variante = 'primario' | 'secundario' | 'contorno';
 
@@ -75,5 +75,5 @@ const estilos = StyleSheet.create({
     gap: ESPACIO.s,
   },
   inactivo: { opacity: 0.5 },
-  texto: { fontFamily: FUENTE.semi, fontSize: 15 },
+  texto: { ...FUENTE.semi, fontSize: TAMANO.cuerpo },
 });

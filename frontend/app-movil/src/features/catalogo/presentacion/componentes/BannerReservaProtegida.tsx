@@ -9,7 +9,7 @@
 
 import { QrCode, ShieldCheck } from 'lucide-react-native';
 import { StyleSheet, Text, View } from 'react-native';
-import { COLOR, ESPACIO, FUENTE, RADIO } from '../../../../shared/ui/tema';
+import { COLOR, ESPACIO, FUENTE, RADIO, TAMANO } from '../../../../shared/ui/tema';
 
 export function BannerReservaProtegida() {
   return (
@@ -38,7 +38,7 @@ const estilos = StyleSheet.create({
     backgroundColor: COLOR.primario,
   },
   titulo: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.s },
-  tituloTexto: { fontFamily: FUENTE.fuerte, fontSize: 13, letterSpacing: 0.8, color: '#fff' },
-  texto: { fontFamily: FUENTE.normal, fontSize: 14, lineHeight: 20, color: '#eff6ff' },
+  tituloTexto: { ...FUENTE.fuerte, fontSize: TAMANO.secundario, letterSpacing: 0.8, color: '#fff' },
+  texto: { ...FUENTE.normal, fontSize: TAMANO.secundario, lineHeight: 19, color: '#eff6ff' },
   qr: { width: 48, height: 48, borderRadius: RADIO.control, backgroundColor: 'rgba(255,255,255,0.18)', alignItems: 'center', justifyContent: 'center' },
 });

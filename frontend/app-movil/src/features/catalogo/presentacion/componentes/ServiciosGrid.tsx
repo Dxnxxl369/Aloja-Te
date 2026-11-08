@@ -11,7 +11,7 @@ import { Car, Check, Coffee, Dumbbell, Flame, PawPrint, ShowerHead, Snowflake, T
 import type { LucideIcon } from 'lucide-react-native';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { COLOR, ESPACIO, FUENTE, RADIO } from '../../../../shared/ui/tema';
+import { COLOR, ESPACIO, FUENTE, RADIO, TAMANO } from '../../../../shared/ui/tema';
 
 const MAX_INICIAL = 8;
 
@@ -79,7 +79,7 @@ const estilos = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLOR.borde,
   },
-  texto: { flex: 1, fontFamily: FUENTE.medio, fontSize: 13, color: COLOR.texto },
+  texto: { flex: 1, ...FUENTE.medio, fontSize: TAMANO.secundario, color: COLOR.texto },
   enlace: { minHeight: 44, alignItems: 'center', justifyContent: 'center' },
-  enlaceTexto: { fontFamily: FUENTE.semi, fontSize: 14, color: COLOR.primario },
+  enlaceTexto: { ...FUENTE.semi, fontSize: TAMANO.secundario, color: COLOR.primario },
 });

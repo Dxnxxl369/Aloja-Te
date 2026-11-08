@@ -7,11 +7,12 @@
 // ======================================================================
 // Solo muestra datos reales: si MS-01 no envía foto, calificación o servicios, esa parte no se dibuja.
 
+import { Image } from 'expo-image';
 import { Building2, Star, Users } from 'lucide-react-native';
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { Boton } from '../../../../shared/ui/Boton';
 import { Insignia } from '../../../../shared/ui/Insignia';
-import { COLOR, ESPACIO, FUENTE, RADIO } from '../../../../shared/ui/tema';
+import { COLOR, ESPACIO, FUENTE, RADIO, TAMANO } from '../../../../shared/ui/tema';
 import type { Opcion } from '../../domain/modelos';
 
 interface Props {
@@ -39,7 +40,9 @@ export function TarjetaOpcion({ opcion, numero, noches, insignias, deshabilitado
           source={{ uri: opcion.fotoUrl }}
           style={estilos.foto}
           accessibilityLabel={`Foto de ${opcion.titulo}`}
-          resizeMode="cover"
+          contentFit="cover"
+          transition={150}
+          cachePolicy="memory-disk"
         />
       ) : (
         <View style={[estilos.foto, estilos.sinFoto]}>
@@ -122,15 +125,15 @@ const estilos = StyleSheet.create({
   // Título a la izquierda y las etiquetas a la derecha, como en el mockup "3. Elegir alojamiento".
   filaTitulo: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: ESPACIO.s },
   insignias: { flexDirection: 'column', alignItems: 'flex-end', gap: ESPACIO.xs },
-  titulo: { flex: 1, fontFamily: FUENTE.titulo, fontSize: 19, color: COLOR.texto },
-  detalle: { fontFamily: FUENTE.normal, fontSize: 14, color: COLOR.textoSuave },
+  titulo: { flex: 1, ...FUENTE.titulo, fontSize: TAMANO.subtitulo, color: COLOR.texto },
+  detalle: { ...FUENTE.normal, fontSize: TAMANO.secundario, color: COLOR.textoSuave },
   fila: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.xs },
-  nota: { fontFamily: FUENTE.medio, fontSize: 13, color: COLOR.texto },
+  nota: { ...FUENTE.medio, fontSize: TAMANO.secundario, color: COLOR.texto },
   servicios: { flexDirection: 'row', flexWrap: 'wrap', gap: ESPACIO.xs },
   servicio: { backgroundColor: COLOR.campo, borderRadius: RADIO.pildora, paddingHorizontal: ESPACIO.m, paddingVertical: 4, maxWidth: '70%' },
-  servicioTexto: { fontFamily: FUENTE.medio, fontSize: 12, color: COLOR.textoSuave },
-  precio: { fontFamily: FUENTE.fuerte, fontSize: 20, color: COLOR.texto },
-  porNoche: { fontFamily: FUENTE.normal, fontSize: 14, color: COLOR.textoSuave },
-  total: { fontFamily: FUENTE.normal, fontSize: 13, color: COLOR.textoSuave },
-  flecha: { color: '#fff', fontSize: 18 },
+  servicioTexto: { ...FUENTE.medio, fontSize: TAMANO.pequeno, color: COLOR.textoSuave },
+  precio: { ...FUENTE.fuerte, fontSize: TAMANO.titulo, color: COLOR.texto },
+  porNoche: { ...FUENTE.normal, fontSize: TAMANO.secundario, color: COLOR.textoSuave },
+  total: { ...FUENTE.normal, fontSize: TAMANO.secundario, color: COLOR.textoSuave },
+  flecha: { color: '#fff', fontSize: TAMANO.subtitulo },
 });

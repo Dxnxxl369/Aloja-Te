@@ -9,7 +9,7 @@
 import { BadgeCheck } from 'lucide-react-native';
 import { StyleSheet, Text, View } from 'react-native';
 import { Insignia } from './Insignia';
-import { COLOR, ESPACIO, FUENTE, RADIO } from './tema';
+import { COLOR, ESPACIO, FUENTE, RADIO, TAMANO } from './tema';
 
 interface Props {
   texto?: string;
@@ -46,6 +46,6 @@ const estilos = StyleSheet.create({
     borderRadius: RADIO.pildora,
     backgroundColor: COLOR.sobreFotoClaro,
   },
-  texto: { fontFamily: FUENTE.semi, fontSize: 13, color: COLOR.primario },
-  textoSobreFoto: { fontSize: 11, letterSpacing: 0.4, textTransform: 'uppercase' },
+  texto: { ...FUENTE.semi, fontSize: TAMANO.secundario, color: COLOR.primario },
+  textoSobreFoto: { fontSize: TAMANO.micro, letterSpacing: 0.4, textTransform: 'uppercase' },
 });

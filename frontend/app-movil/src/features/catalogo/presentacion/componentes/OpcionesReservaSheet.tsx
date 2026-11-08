@@ -1,7 +1,7 @@
 // ======================================================================
 // ARCHIVO: catalogo/presentacion/componentes/OpcionesReservaSheet.tsx      IMPORTANCIA: ★★ MEDIA
-// QUÉ ES: La hoja "¿Cómo quieres reservar?" con las dos formas: por tu cuenta o con el asistente.
-// PARA QUÉ SIRVE: Que cada botón "Reservar" deje elegir entre llenar los datos a mano o hablar con el asistente.
+// QUÉ ES: La hoja "¿Cómo quieres reservar?" con las dos formas: por tu cuenta o con el agente.
+// PARA QUÉ SIRVE: Que cada botón "Reservar" deje elegir entre llenar los datos a mano o hablar con el agente.
 // SIN ÉL: "Reservar" tendría que escoger una sola forma por el usuario.
 // NO VA AQUÍ: Abrir cada forma de reserva: avisa con `alManual` y `alAsistente`.
 // ======================================================================
@@ -10,7 +10,7 @@ import { Bot, CalendarDays, ChevronRight } from 'lucide-react-native';
 import type { LucideIcon } from 'lucide-react-native';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { COLOR, ESPACIO, FUENTE, RADIO } from '../../../../shared/ui/tema';
+import { COLOR, ESPACIO, FUENTE, RADIO, TAMANO } from '../../../../shared/ui/tema';
 
 interface Props {
   visible: boolean;
@@ -42,7 +42,7 @@ export function OpcionesReservaSheet({ visible, titulo, alManual, alAsistente, a
         />
         <Opcion
           Icono={Bot}
-          titulo="Reservar con el asistente"
+          titulo="Reservar con el agente"
           detalle="Cuéntale tus fechas y cuántas personas son: él arma la reserva."
           alTocar={alAsistente}
         />
@@ -82,9 +82,9 @@ const estilos = StyleSheet.create({
     gap: ESPACIO.m,
   },
   agarre: { alignSelf: 'center', width: 40, height: 4, borderRadius: 2, backgroundColor: COLOR.borde },
-  titulo: { fontFamily: FUENTE.tituloFuerte, fontSize: 22, color: COLOR.texto },
-  suave: { fontFamily: FUENTE.normal, fontSize: 13, lineHeight: 18, color: COLOR.textoSuave },
+  titulo: { ...FUENTE.tituloFuerte, fontSize: TAMANO.titulo, color: COLOR.texto },
+  suave: { ...FUENTE.normal, fontSize: TAMANO.secundario, lineHeight: 19, color: COLOR.textoSuave },
   opcion: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.m, padding: ESPACIO.l, borderRadius: RADIO.tarjeta, borderWidth: 1, borderColor: COLOR.borde },
   icono: { width: 44, height: 44, borderRadius: 22, backgroundColor: COLOR.primarioSuave, alignItems: 'center', justifyContent: 'center' },
-  opcionTitulo: { fontFamily: FUENTE.semi, fontSize: 16, color: COLOR.texto },
+  opcionTitulo: { ...FUENTE.semi, fontSize: TAMANO.cuerpo, color: COLOR.texto },
 });

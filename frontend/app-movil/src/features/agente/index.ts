@@ -38,5 +38,6 @@ export function crearFeatureAgente(deps: {
 }
 
 export { PantallaAgente } from './presentacion/pantallas/PantallaAgente';
+export { IndicadorModoIa } from './presentacion/componentes/IndicadorModoIa';
 export type { CasosAgente } from './domain/interfaces';
 export type { Cliente, ContextoAlojamiento, EstadoAgente, Opcion } from './domain/modelos';

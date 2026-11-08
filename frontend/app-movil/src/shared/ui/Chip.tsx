@@ -10,7 +10,7 @@
 
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text } from 'react-native';
-import { COLOR, ESPACIO, FUENTE, RADIO } from './tema';
+import { COLOR, ESPACIO, FUENTE, RADIO, TAMANO } from './tema';
 
 interface Props {
   etiqueta: string;
@@ -43,7 +43,7 @@ export function Chip({ etiqueta, onPress, seleccionado = false, estiloSelecciona
       ]}
     >
       {icono?.(colorTexto)}
-      <Text style={[estilos.texto, { color: colorTexto }, seleccionado && { fontFamily: FUENTE.medio }]} numberOfLines={1}>
+      <Text style={[estilos.texto, { color: colorTexto }, seleccionado && { ...FUENTE.medio }]} numberOfLines={1}>
         {etiqueta}
       </Text>
     </Pressable>
@@ -52,7 +52,8 @@ export function Chip({ etiqueta, onPress, seleccionado = false, estiloSelecciona
 
 const estilos = StyleSheet.create({
   base: {
-    height: 36,
+    // minHeight (no height): con letra grande del sistema el chip crece en vez de cortar el texto.
+    minHeight: 36,
     paddingHorizontal: 14,
     flexDirection: 'row',
     alignItems: 'center',
@@ -64,5 +65,5 @@ const estilos = StyleSheet.create({
   },
   suave: { backgroundColor: COLOR.primarioSuave, borderColor: COLOR.primario },
   solido: { backgroundColor: COLOR.primario, borderColor: COLOR.primario },
-  texto: { fontFamily: FUENTE.normal, fontSize: 14 },
+  texto: { ...FUENTE.normal, fontSize: TAMANO.secundario },
 });

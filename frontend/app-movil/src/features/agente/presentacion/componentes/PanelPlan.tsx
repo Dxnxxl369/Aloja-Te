@@ -1,6 +1,6 @@
 // ======================================================================
 // ARCHIVO: agente/presentacion/componentes/PanelPlan.tsx      IMPORTANCIA: ★★ MEDIA
-// QUÉ ES: La lista visible del plan del agente con el estado de cada paso.
+// QUÉ ES: La línea de tiempo del plan del agente: un punto por paso, unidos por una línea, con el estado de cada uno.
 // PARA QUÉ SIRVE: El usuario (y el jurado) ve qué está haciendo el agente y por qué: transparencia del agente.
 // SIN ÉL: El plan existiría pero no se vería.
 // NO VA AQUÍ: Lógica del plan.
@@ -10,7 +10,7 @@
 import { Bot, Circle, CircleCheck, CircleX, Lock } from 'lucide-react-native';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { Insignia } from '../../../../shared/ui/Insignia';
-import { COLOR, ESPACIO, FUENTE, RADIO } from '../../../../shared/ui/tema';
+import { COLOR, ESPACIO, FUENTE, RADIO, TAMANO } from '../../../../shared/ui/tema';
 import type { EstadoPaso, Paso } from '../../domain/modelos';
 
 function IconoPaso({ paso }: { paso: Paso }) {
@@ -34,7 +34,7 @@ const COLOR_TITULO: Record<EstadoPaso, string> = {
   EN_CURSO: COLOR.texto,
   HECHO: COLOR.texto,
   BLOQUEADO: COLOR.textoSuave,
-  FALLIDO: COLOR.error,
+  FALLIDO: COLOR.errorOscuro,
 };
 
 /** "Paso N de 8": los pasos hechos más el que está en curso. */
@@ -54,21 +54,26 @@ export function PanelPlan({ plan }: { plan: Paso[] }) {
         <Insignia texto={`Paso ${pasoActual(plan)} de ${plan.length}`} />
       </View>
 
-      {plan.map((p) => (
-        <View key={p.id} style={[estilos.fila, p.estado === 'EN_CURSO' && p.id !== 'PAGAR' && estilos.filaActiva]}>
-          <View style={estilos.icono}>
-            <IconoPaso paso={p} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <View style={estilos.filaTitulo}>
-              <Text style={[estilos.paso, { color: COLOR_TITULO[p.estado] }, p.estado === 'EN_CURSO' && { fontFamily: FUENTE.semi }]}>
+      {/* Línea de tiempo: un punto por paso y una línea que los une (azul hasta donde ya se hizo). */}
+      {plan.map((p, i) => {
+        const ultimo = i === plan.length - 1;
+        return (
+          <View key={p.id} style={estilos.fila}>
+            <View style={estilos.riel}>
+              <View style={estilos.icono}>
+                <IconoPaso paso={p} />
+              </View>
+              {ultimo ? null : <View style={[estilos.conector, p.estado === 'HECHO' && estilos.conectorHecho]} />}
+            </View>
+            <View style={[estilos.contenido, !ultimo && { paddingBottom: ESPACIO.m }]}>
+              <Text style={[estilos.paso, { color: COLOR_TITULO[p.estado] }, p.estado === 'EN_CURSO' && { ...FUENTE.semi }]}>
                 {p.titulo}
               </Text>
+              {p.nota ? <Text style={estilos.nota}>{p.nota}</Text> : null}
             </View>
-            {p.nota ? <Text style={estilos.nota}>{p.nota}</Text> : null}
           </View>
-        </View>
-      ))}
+        );
+      })}
     </View>
   );
 }
@@ -84,11 +89,13 @@ const estilos = StyleSheet.create({
   },
   cabecera: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: ESPACIO.s, paddingHorizontal: ESPACIO.xs },
   cabeceraTitulo: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.s },
-  titulo: { fontFamily: FUENTE.semi, fontSize: 16, color: COLOR.texto },
-  fila: { flexDirection: 'row', gap: ESPACIO.m, alignItems: 'center', paddingVertical: ESPACIO.s, paddingHorizontal: ESPACIO.xs, borderRadius: RADIO.control },
-  filaActiva: { backgroundColor: COLOR.campo },
-  icono: { width: 26, alignItems: 'center' },
-  filaTitulo: { flexDirection: 'row', alignItems: 'center' },
-  paso: { fontFamily: FUENTE.normal, fontSize: 15 },
-  nota: { fontFamily: FUENTE.normal, fontSize: 13, color: COLOR.textoSuave, marginTop: 2 },
+  titulo: { ...FUENTE.semi, fontSize: TAMANO.cuerpo, color: COLOR.texto },
+  fila: { flexDirection: 'row', gap: ESPACIO.m, paddingHorizontal: ESPACIO.xs },
+  riel: { width: 26, alignItems: 'center' },
+  icono: { width: 26, height: 26, alignItems: 'center', justifyContent: 'center' },
+  conector: { flex: 1, width: 3, minHeight: 10, borderRadius: 2, backgroundColor: COLOR.borde },
+  conectorHecho: { backgroundColor: COLOR.primario },
+  contenido: { flex: 1, paddingTop: 2 },
+  paso: { ...FUENTE.normal, fontSize: TAMANO.cuerpo },
+  nota: { ...FUENTE.normal, fontSize: TAMANO.secundario, color: COLOR.textoSuave, marginTop: 2 },
 });

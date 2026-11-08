@@ -1,7 +1,7 @@
 // ======================================================================
 // ARCHIVO: reservas/presentacion/pantallas/PantallaMisReservas.tsx      IMPORTANCIA: ★★ MEDIA
-// QUÉ ES: La pestaña "Reservas": tus reservas separadas en activas y anteriores, con su estado, fechas y total.
-// PARA QUÉ SIRVE: Volver a ver una reserva (y su PIN de check-in) o pagar una pendiente sin pasar por el asistente.
+// QUÉ ES: La pantalla "Mis reservas" (se abre desde Perfil): tus reservas separadas en activas y anteriores, con su estado, fechas y total.
+// PARA QUÉ SIRVE: Volver a ver una reserva (y su PIN de check-in) o pagar una pendiente sin pasar por el agente.
 // SIN ÉL: Una reserva solo se vería justo después de crearla.
 // NO VA AQUÍ: El detalle de una reserva (es PantallaReserva): aquí solo avisa con `alAbrir`.
 // ======================================================================
@@ -16,7 +16,7 @@ import { Chip } from '../../../../shared/ui/Chip';
 import { formatearRango } from '../../../../shared/ui/fechas';
 import { Insignia } from '../../../../shared/ui/Insignia';
 import type { Tono } from '../../../../shared/ui/Insignia';
-import { COLOR, ESPACIO, FUENTE, RADIO } from '../../../../shared/ui/tema';
+import { COLOR, ESPACIO, FUENTE, RADIO, TAMANO } from '../../../../shared/ui/tema';
 import type { CasosReservas } from '../../domain/interfaces';
 import type { Reserva } from '../../domain/modelos';
 import type { FiltroReservas } from '../organizarReservas';
@@ -119,7 +119,7 @@ export function PantallaMisReservas({ casos, clienteId, alAbrir, alExplorar }: P
       contentContainerStyle={estilos.pagina}
       refreshControl={<RefreshControl refreshing={actualizando} onRefresh={() => void refrescar()} tintColor={COLOR.primario} colors={[COLOR.primario]} />}
     >
-      {error && <Text style={estilos.error}>Sin conexión: se muestra lo último guardado.</Text>}
+      {error ? <Text style={estilos.error}>Sin conexión: se muestra lo último guardado.</Text> : null}
 
       {reservas.length === 0 ? (
         <View style={estilos.vacio}>
@@ -128,13 +128,14 @@ export function PantallaMisReservas({ casos, clienteId, alAbrir, alExplorar }: P
           </View>
           <Text style={estilos.vacioTitulo}>Aún no tienes reservas</Text>
           <Text style={[estilos.suave, { textAlign: 'center' }]}>
-            Elige un alojamiento y resérvalo tú mismo o con ayuda del asistente.
+            Elige un alojamiento y resérvalo tú mismo o con ayuda del agente.
           </Text>
           {alExplorar ? <Boton titulo="Explorar alojamientos" onPress={alExplorar} /> : null}
         </View>
       ) : (
         <>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={estilos.filtros}>
+          {/* flexGrow: 0: sin esto la fila de filtros se estira hasta llenar toda la pantalla (la página usa flexGrow: 1). */}
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={estilos.filtrosScroll} contentContainerStyle={estilos.filtros}>
             {FILTROS.map((f) => (
               <Chip
                 key={f.clave}
@@ -221,24 +222,25 @@ function TarjetaReserva({ reserva: r, segundos, alAbrir }: { reserva: Reserva; s
 const estilos = StyleSheet.create({
   pagina: { padding: ESPACIO.l, gap: ESPACIO.m, paddingBottom: ESPACIO.xxl, flexGrow: 1 },
   centro: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: ESPACIO.l, gap: ESPACIO.m, backgroundColor: COLOR.fondo },
-  filtros: { gap: ESPACIO.s },
+  filtrosScroll: { flexGrow: 0 },
+  filtros: { gap: ESPACIO.s, alignItems: 'center' },
   tarjeta: { backgroundColor: COLOR.tarjeta, borderRadius: RADIO.tarjeta, borderWidth: 1, borderColor: COLOR.borde, padding: ESPACIO.l, gap: ESPACIO.s },
   cabecera: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: ESPACIO.s },
-  titulo: { flex: 1, fontFamily: FUENTE.titulo, fontSize: 18, color: COLOR.texto },
-  suave: { fontFamily: FUENTE.normal, fontSize: 14, color: COLOR.textoSuave },
+  titulo: { flex: 1, ...FUENTE.titulo, fontSize: TAMANO.subtitulo, color: COLOR.texto },
+  suave: { ...FUENTE.normal, fontSize: TAMANO.secundario, color: COLOR.textoSuave },
   fechas: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.s },
-  fechasTexto: { flexShrink: 1, fontFamily: FUENTE.medio, fontSize: 14, color: COLOR.texto },
+  fechasTexto: { flexShrink: 1, ...FUENTE.medio, fontSize: TAMANO.secundario, color: COLOR.texto },
   pie: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: ESPACIO.xs },
-  total: { fontFamily: FUENTE.tituloFuerte, fontSize: 18, color: COLOR.primario },
+  total: { ...FUENTE.tituloFuerte, fontSize: TAMANO.subtitulo, color: COLOR.primario },
   plazo: { gap: ESPACIO.s, padding: ESPACIO.m, borderRadius: RADIO.control, backgroundColor: COLOR.avisoFondo, borderWidth: 1, borderColor: COLOR.avisoBorde },
   plazoTexto: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.s },
-  plazoTitulo: { fontFamily: FUENTE.semi, fontSize: 14, color: '#92400e', fontVariant: ['tabular-nums'] },
+  plazoTitulo: { ...FUENTE.semi, fontSize: TAMANO.secundario, color: '#92400e', fontVariant: ['tabular-nums'] },
   vencida: { padding: ESPACIO.m, borderRadius: RADIO.control, backgroundColor: COLOR.errorFondo, borderWidth: 1, borderColor: COLOR.errorBorde },
-  vencidaTexto: { fontFamily: FUENTE.medio, fontSize: 13, color: COLOR.error },
+  vencidaTexto: { ...FUENTE.medio, fontSize: TAMANO.secundario, color: COLOR.errorOscuro },
   pin: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.s, backgroundColor: COLOR.exitoFondo, borderRadius: RADIO.control, padding: ESPACIO.s },
-  pinTexto: { fontFamily: FUENTE.medio, fontSize: 13, color: COLOR.exito },
+  pinTexto: { ...FUENTE.medio, fontSize: TAMANO.secundario, color: COLOR.exitoOscuro },
   vacio: { alignItems: 'center', gap: ESPACIO.m, paddingVertical: ESPACIO.xxl },
   vacioIcono: { width: 72, height: 72, borderRadius: 36, backgroundColor: COLOR.primarioSuave, alignItems: 'center', justifyContent: 'center' },
-  vacioTitulo: { fontFamily: FUENTE.titulo, fontSize: 20, color: COLOR.texto, textAlign: 'center' },
-  error: { fontFamily: FUENTE.medio, fontSize: 14, color: COLOR.error, textAlign: 'center' },
+  vacioTitulo: { ...FUENTE.titulo, fontSize: TAMANO.titulo, color: COLOR.texto, textAlign: 'center' },
+  error: { ...FUENTE.medio, fontSize: TAMANO.secundario, color: COLOR.errorOscuro, textAlign: 'center' },
 });

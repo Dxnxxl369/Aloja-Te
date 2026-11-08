@@ -8,7 +8,7 @@
 
 import { CloudUpload, WifiOff } from 'lucide-react-native';
 import { StyleSheet, Text, View } from 'react-native';
-import { COLOR, ESPACIO, FUENTE, RADIO, SOMBRA_FLOTANTE } from './tema';
+import { COLOR, ESPACIO, FUENTE, RADIO, SOMBRA_FLOTANTE, TAMANO } from './tema';
 
 interface Props {
   conectado: boolean;
@@ -25,7 +25,7 @@ export function AvisoSinRed({ conectado, pendientes }: Props) {
       ? `Sin internet · ${operaciones}`
       : 'Sin internet · puedes seguir usando la app'
     : `Enviando ${operaciones.replace(' de enviar', '')}…`;
-  const color = sinRed ? COLOR.error : COLOR.aviso;
+  const color = sinRed ? COLOR.errorOscuro : COLOR.avisoOscuro;
 
   return (
     <View
@@ -53,5 +53,5 @@ const estilos = StyleSheet.create({
     borderWidth: 1,
     ...SOMBRA_FLOTANTE,
   },
-  texto: { flex: 1, fontFamily: FUENTE.semi, fontSize: 13 },
+  texto: { flex: 1, ...FUENTE.semi, fontSize: TAMANO.secundario },
 });

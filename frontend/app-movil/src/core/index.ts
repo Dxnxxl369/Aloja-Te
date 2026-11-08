@@ -26,6 +26,7 @@ export { MODELO_IA, PAGO_SIMULADO_HABILITADO } from './base/constantes';
 export { SesionProvider, useSesion } from './auth/SesionProvider';
 export { consultar, consultarUno, ejecutar, guardarCache, leerCache, transaccion } from './db/db';
 export { esReintentable, esSinRed } from './base/errores';
+export { notificador } from './notificaciones/notificador';
 
 // Modelos (objetos con atributos)
 export { AppError } from './base/modelos';
@@ -35,9 +36,11 @@ export type { Migracion } from './db/modelos';
 export type { OpcionesPeticion } from './http/modelos'; // los DTO (LoginDto) y las filas (OperacionFila) NO se exportan: son internos
 export type { EstadoSync, Manejador, Operacion } from './offline/modelos';
 export type { EstadoModelo } from './ia/modelos';
+export type { AvisoLocal } from './notificaciones/modelos';
 
 // Interfaces (contratos)
 export type { ServicioAuth } from './auth/interfaces';
 export type { Api } from './http/interfaces';
 export type { Cola, Sincronizador } from './offline/interfaces';
 export type { ModeloLocal } from './ia/interfaces';
+export type { Notificador } from './notificaciones/interfaces';

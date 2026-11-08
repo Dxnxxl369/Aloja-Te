@@ -7,12 +7,11 @@
 // ======================================================================
 // Sin `precio` ni `etiquetaPrecio`, el botón ocupa todo el ancho (caso de "Pagar ahora").
 
-import { Bot } from 'lucide-react-native';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import type { ReactNode } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Boton } from './Boton';
-import { COLOR, ESPACIO, FUENTE, RADIO, SOMBRA_FLOTANTE } from './tema';
+import { COLOR, ESPACIO, FUENTE, SOMBRA_FLOTANTE, TAMANO } from './tema';
 
 interface Props {
   titulo: string;
@@ -26,8 +25,6 @@ interface Props {
   /** Línea pequeña bajo el precio, por ejemplo "Impuestos incluidos". */
   nota?: ReactNode;
   iconoDerecha?: (color: string) => ReactNode;
-  /** Si se pasa, aparece el botón del asistente IA junto al botón principal. */
-  alAsistente?: () => void;
 }
 
 export function BarraReserva({
@@ -39,7 +36,6 @@ export function BarraReserva({
   unidadPrecio,
   nota,
   iconoDerecha,
-  alAsistente,
 }: Props) {
   const insets = useSafeAreaInsets();
   const conPrecio = precio !== undefined;
@@ -53,16 +49,6 @@ export function BarraReserva({
           </Text>
           {nota ? <View style={estilos.nota}>{typeof nota === 'string' ? <Text style={estilos.notaTexto}>{nota}</Text> : nota}</View> : null}
         </View>
-      )}
-      {alAsistente && (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Hablar con el asistente de IA"
-          onPress={alAsistente}
-          style={({ pressed }) => [estilos.asistente, pressed && { backgroundColor: '#dbeafe' }]}
-        >
-          <Bot color={COLOR.primario} size={22} />
-        </Pressable>
       )}
       <View style={conPrecio ? estilos.botonConPrecio : { flex: 1 }}>
         <Boton titulo={titulo} onPress={alPresionar} deshabilitado={deshabilitado} cargando={cargando} iconoDerecha={iconoDerecha} />
@@ -84,17 +70,9 @@ const estilos = StyleSheet.create({
     ...SOMBRA_FLOTANTE,
   },
   precioCaja: { flex: 1, minWidth: 0 },
-  precio: { fontFamily: FUENTE.tituloFuerte, fontSize: 22, color: COLOR.texto },
-  unidad: { fontFamily: FUENTE.normal, fontSize: 13, color: COLOR.textoSuave },
+  precio: { ...FUENTE.tituloFuerte, fontSize: TAMANO.titulo, color: COLOR.texto },
+  unidad: { ...FUENTE.normal, fontSize: TAMANO.secundario, color: COLOR.textoSuave },
   nota: { marginTop: 2 },
-  notaTexto: { fontFamily: FUENTE.medio, fontSize: 11, color: COLOR.primario },
-  asistente: {
-    width: 48,
-    height: 48,
-    borderRadius: RADIO.control,
-    backgroundColor: COLOR.primarioSuave,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  notaTexto: { ...FUENTE.medio, fontSize: TAMANO.micro, color: COLOR.primario },
   botonConPrecio: { minWidth: 140 },
 });

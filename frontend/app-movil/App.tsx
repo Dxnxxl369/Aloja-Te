@@ -7,12 +7,11 @@
 // ======================================================================
 
 // Se importa cada peso por separado: el índice del paquete empaquetaría las ~40 fuentes.
+// Son los 4 pesos de Inter que usa FUENTE (shared/ui/tema.ts).
 import { Inter_400Regular } from '@expo-google-fonts/inter/400Regular';
 import { Inter_500Medium } from '@expo-google-fonts/inter/500Medium';
 import { Inter_600SemiBold } from '@expo-google-fonts/inter/600SemiBold';
 import { Inter_700Bold } from '@expo-google-fonts/inter/700Bold';
-import { PlayfairDisplay_600SemiBold } from '@expo-google-fonts/playfair-display/600SemiBold';
-import { PlayfairDisplay_700Bold } from '@expo-google-fonts/playfair-display/700Bold';
 import { useFonts } from 'expo-font';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
@@ -40,14 +39,7 @@ function iniciarApp(): Promise<Features> {
 }
 
 export default function App() {
-  const [fuentesListas, errorFuentes] = useFonts({
-    Inter_400Regular,
-    Inter_500Medium,
-    Inter_600SemiBold,
-    Inter_700Bold,
-    PlayfairDisplay_600SemiBold,
-    PlayfairDisplay_700Bold,
-  });
+  const [fuentesListas, errorFuentes] = useFonts({ Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold });
   const [features, setFeatures] = useState<Features | null>(null);
   const [errorInicio, setErrorInicio] = useState<string | null>(null);
 
@@ -121,5 +113,5 @@ function Centro({ children }: { children: React.ReactNode }) {
 
 const estilos = StyleSheet.create({
   centro: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: ESPACIO.xl, backgroundColor: COLOR.fondo },
-  error: { fontFamily: FUENTE.medio, fontSize: 15, color: COLOR.error, textAlign: 'center' },
+  error: { ...FUENTE.medio, fontSize: 15, color: COLOR.errorOscuro, textAlign: 'center' },
 });

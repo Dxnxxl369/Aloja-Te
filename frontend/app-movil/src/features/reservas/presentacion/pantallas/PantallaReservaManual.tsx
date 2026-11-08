@@ -1,11 +1,11 @@
 // ======================================================================
 // ARCHIVO: reservas/presentacion/pantallas/PantallaReservaManual.tsx      IMPORTANCIA: ★★★ MUCHA
 // QUÉ ES: La pantalla para reservar a mano: eliges habitación, fechas y huéspedes, ves la disponibilidad y el total, y reservas.
-// PARA QUÉ SIRVE: Es la otra forma de reservar (la primera es hablar con el asistente). Termina igual: una reserva pendiente de pago.
-// SIN ÉL: Solo se podría reservar con el asistente.
+// PARA QUÉ SIRVE: Es la otra forma de reservar (la primera es hablar con el agente). Termina igual: una reserva pendiente de pago.
+// SIN ÉL: Solo se podría reservar con el agente.
 // NO VA AQUÍ: Reglas de reserva (casos) ni navegar: avisa con `alCreada` y `alQuedoEnCola`.
 // ======================================================================
-// Usa las MISMAS reglas que el asistente (fechas válidas, máximo de noches, nada en el pasado): `casos.validarFechas`
+// Usa las MISMAS reglas que el agente (fechas válidas, máximo de noches, nada en el pasado): `casos.validarFechas`
 // y `casos.crearReserva`. Sin internet la reserva se guarda en la cola y se envía sola.
 
 import { CircleCheck, CircleX, Minus, Plus, Users, WifiOff } from 'lucide-react-native';
@@ -16,7 +16,7 @@ import { Boton } from '../../../../shared/ui/Boton';
 import { CampoFecha } from '../../../../shared/ui/CampoFecha';
 import { hoyTexto, sumarDias } from '../../../../shared/ui/fechas';
 import { formatearPrecio } from '../../../../shared/ui/TarjetaAlojamiento';
-import { COLOR, ESPACIO, FUENTE, RADIO } from '../../../../shared/ui/tema';
+import { COLOR, ESPACIO, FUENTE, RADIO, TAMANO } from '../../../../shared/ui/tema';
 import type { CasosReservas } from '../../domain/interfaces';
 import type { AlojamientoReservable, UnidadReservable } from '../../domain/modelos';
 
@@ -232,7 +232,7 @@ export function PantallaReservaManual({ casos, alojamiento, cliente, alCreada, a
           <View style={estilos.cola}>
             <WifiOff color={COLOR.aviso} size={22} />
             <Text style={estilos.colaTexto}>
-              No hay internet, pero guardamos tu reserva y se enviará sola cuando vuelva la conexión. Después podrás pagarla desde la pestaña Reservas.
+              No hay internet, pero guardamos tu reserva y se enviará sola cuando vuelva la conexión. Después podrás pagarla desde Perfil, en "Mis reservas".
             </Text>
             <Boton titulo="Ver mis reservas" onPress={alQuedoEnCola} />
           </View>
@@ -267,14 +267,14 @@ function Estado({ disponibilidad }: { disponibilidad: Disponibilidad }) {
       return (
         <View style={estilos.estado}>
           <CircleCheck color={COLOR.exito} size={18} />
-          <Text style={[estilos.estadoTexto, { color: COLOR.exito }]}>Disponible en esas fechas</Text>
+          <Text style={[estilos.estadoTexto, { color: COLOR.exitoOscuro }]}>Disponible en esas fechas</Text>
         </View>
       );
     case 'NO':
       return (
         <View style={estilos.estado}>
           <CircleX color={COLOR.error} size={18} />
-          <Text accessibilityRole="alert" style={[estilos.estadoTexto, { color: COLOR.error }]}>
+          <Text accessibilityRole="alert" style={[estilos.estadoTexto, { color: COLOR.errorOscuro }]}>
             No está disponible en esas fechas. Prueba otras fechas u otra habitación.
           </Text>
         </View>
@@ -283,7 +283,7 @@ function Estado({ disponibilidad }: { disponibilidad: Disponibilidad }) {
       return (
         <View style={estilos.estado}>
           <WifiOff color={COLOR.aviso} size={18} />
-          <Text style={[estilos.estadoTexto, { color: COLOR.aviso }]}>No se pudo verificar: se confirmará al enviar la reserva.</Text>
+          <Text style={[estilos.estadoTexto, { color: COLOR.avisoOscuro }]}>No se pudo verificar: se confirmará al enviar la reserva.</Text>
         </View>
       );
     default:
@@ -295,16 +295,16 @@ const estilos = StyleSheet.create({
   pantalla: { flex: 1, backgroundColor: COLOR.fondo },
   pagina: { padding: ESPACIO.l, gap: ESPACIO.xl, paddingBottom: ESPACIO.xxl },
   centro: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: ESPACIO.m, padding: ESPACIO.xl, backgroundColor: COLOR.fondo },
-  titulo: { fontFamily: FUENTE.tituloFuerte, fontSize: 26, lineHeight: 33, color: COLOR.texto },
-  tituloSeccion: { fontFamily: FUENTE.titulo, fontSize: 20, color: COLOR.texto },
-  suave: { fontFamily: FUENTE.normal, fontSize: 13, color: COLOR.textoSuave, textAlign: 'left' },
-  valor: { fontFamily: FUENTE.semi, fontSize: 15, color: COLOR.texto },
+  titulo: { ...FUENTE.tituloFuerte, fontSize: TAMANO.titular, lineHeight: 30, color: COLOR.texto },
+  tituloSeccion: { ...FUENTE.titulo, fontSize: TAMANO.titulo, color: COLOR.texto },
+  suave: { ...FUENTE.normal, fontSize: TAMANO.secundario, color: COLOR.textoSuave, textAlign: 'left' },
+  valor: { ...FUENTE.semi, fontSize: TAMANO.cuerpo, color: COLOR.texto },
   grupo: { gap: ESPACIO.m },
 
   unidad: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.m, padding: ESPACIO.l, borderRadius: RADIO.tarjeta, backgroundColor: COLOR.tarjeta, borderWidth: 1, borderColor: COLOR.borde },
   unidadElegida: { borderColor: COLOR.primario, backgroundColor: COLOR.primarioSuave },
-  unidadNombre: { fontFamily: FUENTE.semi, fontSize: 16, color: COLOR.texto },
-  unidadPrecio: { fontFamily: FUENTE.fuerte, fontSize: 16, color: COLOR.texto },
+  unidadNombre: { ...FUENTE.semi, fontSize: TAMANO.cuerpo, color: COLOR.texto },
+  unidadPrecio: { ...FUENTE.fuerte, fontSize: TAMANO.cuerpo, color: COLOR.texto },
   radio: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: COLOR.borde, alignItems: 'center', justifyContent: 'center' },
   radioElegido: { borderColor: COLOR.primario },
   radioPunto: { width: 10, height: 10, borderRadius: 5, backgroundColor: COLOR.primario },
@@ -312,15 +312,15 @@ const estilos = StyleSheet.create({
   filaFechas: { flexDirection: 'row', gap: ESPACIO.m },
   contador: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: ESPACIO.m, borderRadius: RADIO.tarjeta, backgroundColor: COLOR.tarjeta, borderWidth: 1, borderColor: COLOR.borde },
   contadorTexto: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.m },
-  contadorValor: { fontFamily: FUENTE.semi, fontSize: 16, color: COLOR.texto },
+  contadorValor: { ...FUENTE.semi, fontSize: TAMANO.cuerpo, color: COLOR.texto },
   botonesContador: { flexDirection: 'row', gap: ESPACIO.s },
   paso: { width: 44, height: 44, borderRadius: RADIO.control, backgroundColor: COLOR.campo, alignItems: 'center', justifyContent: 'center' },
 
   resumen: { gap: ESPACIO.m, padding: ESPACIO.l, borderRadius: RADIO.tarjeta, backgroundColor: COLOR.campo },
   filaResumen: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   estado: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.s },
-  estadoTexto: { flex: 1, fontFamily: FUENTE.medio, fontSize: 14 },
-  error: { fontFamily: FUENTE.medio, fontSize: 14, color: COLOR.error },
+  estadoTexto: { flex: 1, ...FUENTE.medio, fontSize: TAMANO.secundario },
+  error: { ...FUENTE.medio, fontSize: TAMANO.secundario, color: COLOR.errorOscuro },
   cola: { gap: ESPACIO.m, alignItems: 'center', padding: ESPACIO.l, borderRadius: RADIO.tarjeta, backgroundColor: COLOR.avisoFondo, borderWidth: 1, borderColor: COLOR.avisoBorde },
-  colaTexto: { fontFamily: FUENTE.normal, fontSize: 14, lineHeight: 20, color: COLOR.texto, textAlign: 'center' },
+  colaTexto: { ...FUENTE.normal, fontSize: TAMANO.secundario, lineHeight: 19, color: COLOR.texto, textAlign: 'center' },
 });

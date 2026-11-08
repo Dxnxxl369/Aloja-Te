@@ -1,9 +1,9 @@
 // ======================================================================
 // ARCHIVO: catalogo/presentacion/componentes/FiltrosSheet.tsx      IMPORTANCIA: ★★ MEDIA
-// QUÉ ES: La hoja que sube desde abajo para elegir precio máximo por noche y número de huéspedes.
-// PARA QUÉ SIRVE: Afinar la lista con los filtros que MS-01 aplica sobre las unidades.
-// SIN ÉL: Solo se podría buscar por texto, ciudad y tipo.
-// NO VA AQUÍ: Pedir los alojamientos: entrega los filtros con `alAplicar`.
+// QUÉ ES: La hoja que sube desde abajo para elegir ciudad, precio máximo por noche y número de huéspedes.
+// PARA QUÉ SIRVE: Afinar la lista sin llenar la pantalla de botones: la ciudad vive aquí, no en una fila suelta.
+// SIN ÉL: Solo se podría buscar por texto.
+// NO VA AQUÍ: Pedir los alojamientos ni filtrar: entrega lo elegido con `alAplicar`.
 // ======================================================================
 // Los cambios se guardan en un borrador: no se aplican hasta tocar "Aplicar".
 
@@ -12,25 +12,34 @@ import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-nati
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Boton } from '../../../../shared/ui/Boton';
 import { Chip } from '../../../../shared/ui/Chip';
-import { COLOR, ESPACIO, FUENTE } from '../../../../shared/ui/tema';
+import { COLOR, ESPACIO, FUENTE, TAMANO } from '../../../../shared/ui/tema';
 import { HUESPEDES_RAPIDOS, PRECIOS_MAX_RAPIDOS } from '../../constantes';
 import type { FiltrosServidor } from '../../domain/modelos';
 
 interface Props {
   visible: boolean;
+  /** Precio y huéspedes que ya están aplicados. */
   valor: FiltrosServidor;
+  /** Ciudades que se pueden elegir (las que aparecen en la lista). */
+  ciudades: string[];
+  /** Ciudad que ya está aplicada; null si ninguna. */
+  ciudad: string | null;
   alCerrar: () => void;
-  alAplicar: (filtros: FiltrosServidor) => void;
+  alAplicar: (filtros: FiltrosServidor, ciudad: string | null) => void;
 }
 
-export function FiltrosSheet({ visible, valor, alCerrar, alAplicar }: Props) {
+export function FiltrosSheet({ visible, valor, ciudades, ciudad, alCerrar, alAplicar }: Props) {
   const insets = useSafeAreaInsets();
   const [borrador, setBorrador] = useState<FiltrosServidor>(valor);
+  const [ciudadBorrador, setCiudadBorrador] = useState<string | null>(ciudad);
 
   // Cada vez que se abre, parte de lo que está aplicado.
   useEffect(() => {
-    if (visible) setBorrador(valor);
-  }, [visible, valor]);
+    if (visible) {
+      setBorrador(valor);
+      setCiudadBorrador(ciudad);
+    }
+  }, [visible, valor, ciudad]);
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={alCerrar}>
@@ -39,6 +48,23 @@ export function FiltrosSheet({ visible, valor, alCerrar, alAplicar }: Props) {
         <View style={estilos.agarre} />
         <Text style={estilos.titulo}>Filtros</Text>
         <ScrollView contentContainerStyle={{ gap: ESPACIO.xl }} keyboardShouldPersistTaps="handled">
+          {ciudades.length > 0 && (
+            <View style={estilos.grupo}>
+              <Text style={estilos.etiqueta}>Ciudad</Text>
+              <View style={estilos.chips}>
+                <Chip etiqueta="Todas" seleccionado={ciudadBorrador === null} onPress={() => setCiudadBorrador(null)} />
+                {ciudades.map((nombre) => (
+                  <Chip
+                    key={nombre}
+                    etiqueta={nombre}
+                    seleccionado={ciudadBorrador === nombre}
+                    onPress={() => setCiudadBorrador(nombre)}
+                  />
+                ))}
+              </View>
+            </View>
+          )}
+
           <View style={estilos.grupo}>
             <Text style={estilos.etiqueta}>Precio máximo por noche</Text>
             <View style={estilos.chips}>
@@ -80,13 +106,20 @@ export function FiltrosSheet({ visible, valor, alCerrar, alAplicar }: Props) {
 
         <View style={estilos.acciones}>
           <View style={{ flex: 1 }}>
-            <Boton variante="contorno" titulo="Limpiar" onPress={() => setBorrador({})} />
+            <Boton
+              variante="contorno"
+              titulo="Limpiar"
+              onPress={() => {
+                setBorrador({});
+                setCiudadBorrador(null);
+              }}
+            />
           </View>
           <View style={{ flex: 1 }}>
             <Boton
               titulo="Aplicar"
               onPress={() => {
-                alAplicar(borrador);
+                alAplicar(borrador, ciudadBorrador);
                 alCerrar();
               }}
             />
@@ -109,9 +142,9 @@ const estilos = StyleSheet.create({
     maxHeight: '80%',
   },
   agarre: { alignSelf: 'center', width: 40, height: 4, borderRadius: 2, backgroundColor: COLOR.borde },
-  titulo: { fontFamily: FUENTE.tituloFuerte, fontSize: 22, color: COLOR.texto },
+  titulo: { ...FUENTE.tituloFuerte, fontSize: TAMANO.titulo, color: COLOR.texto },
   grupo: { gap: ESPACIO.m },
-  etiqueta: { fontFamily: FUENTE.semi, fontSize: 15, color: COLOR.texto },
+  etiqueta: { ...FUENTE.semi, fontSize: TAMANO.cuerpo, color: COLOR.texto },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: ESPACIO.s },
   acciones: { flexDirection: 'row', gap: ESPACIO.m },
 });

@@ -42,7 +42,7 @@ export interface Cliente {
   nombre: string;
 }
 
-/** Un alojamiento ya elegido en el explorador: el asistente reserva en ese y no ofrece otros. */
+/** Un alojamiento ya elegido en el explorador: el agente reserva en ese y no ofrece otros. */
 export interface ContextoAlojamiento {
   id: string;
   titulo: string;

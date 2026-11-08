@@ -1,55 +1,64 @@
 // ======================================================================
 // ARCHIVO: catalogo/presentacion/pantallas/PantallaExplorar.tsx      IMPORTANCIA: ★★★ MUCHA
-// QUÉ ES: La pantalla de inicio: buscador, ciudades, destacados, tipos de propiedad y la lista de alojamientos.
-// PARA QUÉ SIRVE: Es donde el usuario descubre alojamientos antes de reservar (con el asistente o a mano).
-// SIN ÉL: La app abriría directo en el asistente, sin forma de explorar.
+// QUÉ ES: La pantalla de inicio: buscador, destacados en carrusel y la lista de alojamientos.
+// PARA QUÉ SIRVE: Es donde el usuario descubre alojamientos; para reservar abre la ficha del alojamiento.
+// SIN ÉL: La app abriría directo en el agente, sin forma de explorar.
 // NO VA AQUÍ: Cargar datos ni reglas de filtrado (useCatalogo y domain/casos.ts) ni navegar: solo avisa.
 // ======================================================================
-// Diseño: mockup "Explorar y buscar alojamientos". Solo se dibuja lo que MS-01 entrega: sin reseñas no hay
-// "Destacados", sin tipos no hay "Explora por tipo".
+// La ciudad, el precio y los huéspedes se eligen en la hoja de filtros (botón junto al buscador): no hay
+// fila de ciudades ni "Explora por tipo". Las tarjetas son compactas; el detalle completo está en la ficha.
 
-import { BadgeCheck, SlidersHorizontal } from 'lucide-react-native';
-import { useState } from 'react';
+import { BadgeCheck } from 'lucide-react-native';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
-import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { ActivityIndicator, FlatList, RefreshControl, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { Boton } from '../../../../shared/ui/Boton';
-import { Chip } from '../../../../shared/ui/Chip';
-import { COLOR, ESPACIO, FUENTE, RADIO } from '../../../../shared/ui/tema';
+import { COLOR, ESPACIO, FUENTE, RADIO, TAMANO } from '../../../../shared/ui/tema';
 import { TarjetaAlojamiento } from '../../../../shared/ui/TarjetaAlojamiento';
 import type { DatosTarjetaAlojamiento } from '../../../../shared/ui/TarjetaAlojamiento';
 import type { CasosCatalogo } from '../../domain/interfaces';
 import { BannerReservaProtegida } from '../componentes/BannerReservaProtegida';
-import { BotonAsistente } from '../componentes/BotonAsistente';
 import { BuscadorAlojamientos } from '../componentes/BuscadorAlojamientos';
 import { FiltrosSheet } from '../componentes/FiltrosSheet';
-import { OpcionesReservaSheet } from '../componentes/OpcionesReservaSheet';
-import { TiposAlojamiento } from '../componentes/TiposAlojamiento';
 import { datosTarjeta } from '../datosTarjeta';
 import { useCatalogo } from '../useCatalogo';
 
 interface Props {
   casos: CasosCatalogo;
+  /** El usuario tocó un alojamiento: abre su ficha. */
   alVer: (datos: DatosTarjetaAlojamiento) => void;
-  /** El usuario eligió reservar ese alojamiento llenando los datos él mismo. */
-  alReservarManual: (datos: DatosTarjetaAlojamiento) => void;
-  /** El usuario eligió reservar ese alojamiento con el asistente. */
-  alReservarConAsistente: (datos: DatosTarjetaAlojamiento) => void;
-  /** El botón flotante: abre el asistente sin un alojamiento elegido. */
-  alAbrirAsistente: () => void;
-  /** true si el modelo de IA local está cargado (cambia el texto de la burbuja). */
-  iaLista: boolean;
 }
 
-export function PantallaExplorar({ casos, alVer, alReservarManual, alReservarConAsistente, alAbrirAsistente, iaLista }: Props) {
+/** Separación entre tarjetas del carrusel. */
+const SEPARACION = ESPACIO.m;
+
+export function PantallaExplorar({ casos, alVer }: Props) {
   const c = useCatalogo(casos);
   const { width } = useWindowDimensions();
   const [verFiltros, setVerFiltros] = useState(false);
-  /** El alojamiento cuyo "Reservar" se tocó: mientras haya uno, se muestra la hoja de elegir cómo reservar. */
-  const [reservando, setReservando] = useState<DatosTarjetaAlojamiento | null>(null);
 
-  // La tarjeta destacada deja asomar un pedazo de la siguiente para que se note que hay más.
-  const anchoDestacada = Math.min(width - ESPACIO.l * 2 - 28, 380);
-  const filtrosServidorActivos = c.filtrosServidor.precioMax !== undefined || c.filtrosServidor.huespedes !== undefined;
+  // Tarjetas delgadas: algo más de la mitad de la pantalla, así se asoma la siguiente y se nota que hay más.
+  const anchoDestacada = Math.min(Math.round(width * 0.56), 224);
+  const intervalo = anchoDestacada + SEPARACION;
+
+  // `alVer` llega como función nueva en cada dibujo; esta versión es siempre la misma para que las tarjetas no se redibujen.
+  const verRef = useRef(alVer);
+  verRef.current = alVer;
+  const ver = useCallback((datos: DatosTarjetaAlojamiento) => verRef.current(datos), []);
+
+  const datosDestacados = useMemo(() => c.destacados.map(datosTarjeta), [c.destacados]);
+  // La lista de abajo muestra TODOS los que cumplen la búsqueda; el carrusel solo resalta los mejor calificados.
+  const datosTodos = useMemo(() => c.filtrados.map(datosTarjeta), [c.filtrados]);
+
+  const renderDestacada = useCallback(
+    ({ item }: { item: DatosTarjetaAlojamiento }) => <TarjetaAlojamiento datos={item} variante="destacada" ancho={anchoDestacada} alVer={ver} />,
+    [anchoDestacada, ver],
+  );
+  const claveDe = useCallback((item: DatosTarjetaAlojamiento) => item.id, []);
+  const medida = useCallback((_: ArrayLike<DatosTarjetaAlojamiento> | null | undefined, index: number) => ({ length: intervalo, offset: intervalo * index, index }), [intervalo]);
+
+  const filtrosActivos =
+    c.filtrosServidor.precioMax !== undefined || c.filtrosServidor.huespedes !== undefined || c.ciudad !== null;
 
   const sinNada = c.cargando && !c.hayAlojamientos;
   const falloTotal = !!c.error && !c.hayAlojamientos;
@@ -63,9 +72,8 @@ export function PantallaExplorar({ casos, alVer, alReservarManual, alReservarCon
       >
         <View style={{ gap: ESPACIO.xs }}>
           <Text style={estilos.titulo} accessibilityRole="header">
-            Alojamientos Disponibles en Bolivia
+            Alojamientos en Bolivia
           </Text>
-          <Text style={estilos.subtitulo}>Propiedades verificadas con bloqueo de inventario en tiempo real</Text>
           {c.desdeCache ? <Text style={estilos.avisoCache}>Sin conexión: se muestra lo último guardado.</Text> : null}
         </View>
 
@@ -73,27 +81,8 @@ export function PantallaExplorar({ casos, alVer, alReservarManual, alReservarCon
           texto={c.texto}
           alCambiarTexto={c.setTexto}
           alAbrirFiltros={() => setVerFiltros(true)}
-          filtrosActivos={filtrosServidorActivos}
+          filtrosActivos={filtrosActivos}
         />
-
-        {c.ciudades.length > 0 && (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={estilos.chips}>
-            <View style={estilos.etiquetaFiltro} accessible accessibilityLabel="Filtrar por ciudad">
-              <SlidersHorizontal color={COLOR.textoSuave} size={16} />
-              <Text style={estilos.etiquetaFiltroTexto}>Filtro:</Text>
-            </View>
-            <Chip etiqueta="Todos" seleccionado={c.ciudad === null} estiloSeleccionado="solido" onPress={() => c.setCiudad(null)} />
-            {c.ciudades.map((nombre) => (
-              <Chip
-                key={nombre}
-                etiqueta={nombre}
-                seleccionado={c.ciudad === nombre}
-                estiloSeleccionado="solido"
-                onPress={() => c.setCiudad(c.ciudad === nombre ? null : nombre)}
-              />
-            ))}
-          </ScrollView>
-        )}
 
         {sinNada ? (
           <View style={estilos.centro}>
@@ -125,98 +114,71 @@ export function PantallaExplorar({ casos, alVer, alReservarManual, alReservarCon
               </View>
             )}
 
-            {c.destacados.length > 0 && (
-              <Seccion
-                titulo="Destacados"
-                icono={<BadgeCheck color={COLOR.primario} size={22} />}
-                derecha={`${c.destacados.length} ${c.destacados.length === 1 ? 'DISPONIBLE' : 'DISPONIBLES'}`}
-              >
-                <ScrollView
+            {datosDestacados.length > 0 && (
+              <Seccion titulo="Destacados" icono={<BadgeCheck color={COLOR.primario} size={22} />}>
+                <FlatList
                   horizontal
+                  data={datosDestacados}
+                  renderItem={renderDestacada}
+                  keyExtractor={claveDe}
+                  getItemLayout={medida}
                   showsHorizontalScrollIndicator={false}
-                  snapToInterval={anchoDestacada + ESPACIO.m}
+                  snapToInterval={intervalo}
+                  snapToAlignment="start"
                   decelerationRate="fast"
-                  contentContainerStyle={{ gap: ESPACIO.m }}
+                  ItemSeparatorComponent={Separador}
+                  contentContainerStyle={estilos.carruselContenido}
                   style={estilos.carrusel}
-                >
-                  {c.destacados.map((a) => {
-                    const datos = datosTarjeta(a);
-                    return (
-                      <TarjetaAlojamiento
-                        key={a.id}
-                        datos={datos}
-                        variante="destacada"
-                        ancho={anchoDestacada}
-                        alVer={() => alVer(datos)}
-                        alReservar={() => setReservando(datos)}
-                      />
-                    );
-                  })}
-                </ScrollView>
+                  initialNumToRender={3}
+                  maxToRenderPerBatch={3}
+                  windowSize={5}
+                  removeClippedSubviews
+                />
               </Seccion>
             )}
 
-            {c.tipos.length > 0 && (
-              <Seccion titulo="Explora por tipo">
-                <TiposAlojamiento tipos={c.tipos} seleccionado={c.tipoId} alElegir={c.setTipoId} />
+            {datosTodos.length > 0 && (
+              <Seccion titulo="Todos los alojamientos">
+                <View style={{ gap: ESPACIO.s }}>
+                  {datosTodos.map((d) => (
+                    <TarjetaAlojamiento key={d.id} datos={d} variante="lista" alVer={ver} />
+                  ))}
+                </View>
               </Seccion>
             )}
 
             <BannerReservaProtegida />
-
-            {c.resto.length > 0 && (
-              <Seccion titulo={c.destacados.length > 0 ? 'Más alojamientos en Bolivia' : 'Alojamientos en Bolivia'}>
-                <View style={{ gap: ESPACIO.m }}>
-                  {c.resto.map((a) => {
-                    const datos = datosTarjeta(a);
-                    return <TarjetaAlojamiento key={a.id} datos={datos} variante="lista" alVer={() => alVer(datos)} />;
-                  })}
-                </View>
-              </Seccion>
-            )}
           </>
         )}
       </ScrollView>
 
-      <BotonAsistente alPresionar={alAbrirAsistente} iaLista={iaLista} />
-
       <FiltrosSheet
         visible={verFiltros}
         valor={c.filtrosServidor}
+        ciudades={c.ciudades}
+        ciudad={c.ciudad}
         alCerrar={() => setVerFiltros(false)}
-        alAplicar={c.setFiltrosServidor}
-      />
-
-      <OpcionesReservaSheet
-        visible={reservando !== null}
-        titulo={reservando?.titulo ?? ''}
-        alCerrar={() => setReservando(null)}
-        alManual={() => {
-          const datos = reservando;
-          setReservando(null);
-          if (datos) alReservarManual(datos);
-        }}
-        alAsistente={() => {
-          const datos = reservando;
-          setReservando(null);
-          if (datos) alReservarConAsistente(datos);
+        alAplicar={(filtros, ciudad) => {
+          c.setFiltrosServidor(filtros);
+          c.setCiudad(ciudad);
         }}
       />
     </View>
   );
 }
 
-function Seccion({ titulo, icono, derecha, children }: { titulo: string; icono?: ReactNode; derecha?: string; children: ReactNode }) {
+function Separador() {
+  return <View style={{ width: SEPARACION }} />;
+}
+
+function Seccion({ titulo, icono, children }: { titulo: string; icono?: ReactNode; children: ReactNode }) {
   return (
     <View style={{ gap: ESPACIO.m }}>
-      <View style={estilos.seccionCabecera}>
-        <View style={estilos.seccionTitulo}>
-          {icono}
-          <Text style={estilos.seccionTexto} accessibilityRole="header">
-            {titulo}
-          </Text>
-        </View>
-        {derecha ? <Text style={estilos.seccionDerecha}>{derecha}</Text> : null}
+      <View style={estilos.seccionTitulo}>
+        {icono}
+        <Text style={estilos.seccionTexto} accessibilityRole="header">
+          {titulo}
+        </Text>
       </View>
       {children}
     </View>
@@ -225,34 +187,19 @@ function Seccion({ titulo, icono, derecha, children }: { titulo: string; icono?:
 
 const estilos = StyleSheet.create({
   pantalla: { flex: 1, backgroundColor: COLOR.fondo },
-  // El pie deja sitio al botón flotante del asistente.
-  pagina: { padding: ESPACIO.l, gap: ESPACIO.xl, paddingBottom: 104 },
-  titulo: { fontFamily: FUENTE.tituloFuerte, fontSize: 28, lineHeight: 36, color: COLOR.texto },
-  subtitulo: { fontFamily: FUENTE.normal, fontSize: 14, lineHeight: 20, color: COLOR.textoSuave },
-  avisoCache: { fontFamily: FUENTE.medio, fontSize: 13, color: COLOR.aviso },
-
-  chips: { gap: ESPACIO.s, alignItems: 'center' },
-  etiquetaFiltro: {
-    height: 36,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: ESPACIO.xs,
-    paddingHorizontal: 14,
-    borderRadius: RADIO.pildora,
-    backgroundColor: COLOR.campo,
-  },
-  etiquetaFiltroTexto: { fontFamily: FUENTE.medio, fontSize: 14, color: COLOR.textoSuave },
+  pagina: { padding: ESPACIO.l, gap: ESPACIO.xl, paddingBottom: ESPACIO.xl },
+  titulo: { ...FUENTE.tituloFuerte, fontSize: TAMANO.titular, lineHeight: 30, color: COLOR.texto },
+  avisoCache: { ...FUENTE.medio, fontSize: TAMANO.secundario, color: COLOR.avisoOscuro },
 
   centro: { alignItems: 'center', gap: ESPACIO.m, paddingVertical: ESPACIO.xxl },
-  suave: { fontFamily: FUENTE.normal, fontSize: 14, color: COLOR.textoSuave, textAlign: 'center' },
-  error: { fontFamily: FUENTE.medio, fontSize: 14, color: COLOR.error, textAlign: 'center' },
+  suave: { ...FUENTE.normal, fontSize: TAMANO.secundario, color: COLOR.textoSuave, textAlign: 'center' },
+  error: { ...FUENTE.medio, fontSize: TAMANO.secundario, color: COLOR.errorOscuro, textAlign: 'center' },
   vacio: { alignItems: 'center', gap: ESPACIO.m, padding: ESPACIO.xl, borderRadius: RADIO.tarjeta, backgroundColor: COLOR.tarjeta, borderWidth: 1, borderColor: COLOR.borde },
-  vacioTitulo: { fontFamily: FUENTE.titulo, fontSize: 20, color: COLOR.texto, textAlign: 'center' },
+  vacioTitulo: { ...FUENTE.titulo, fontSize: TAMANO.titulo, color: COLOR.texto, textAlign: 'center' },
 
-  seccionCabecera: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   seccionTitulo: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.s, flexShrink: 1 },
-  seccionTexto: { fontFamily: FUENTE.titulo, fontSize: 24, color: COLOR.texto },
-  seccionDerecha: { fontFamily: FUENTE.semi, fontSize: 12, letterSpacing: 0.6, color: COLOR.primario },
-  // Las tarjetas llegan hasta el borde de la pantalla al deslizar.
-  carrusel: { marginHorizontal: -ESPACIO.l, paddingHorizontal: ESPACIO.l },
+  seccionTexto: { ...FUENTE.titulo, fontSize: TAMANO.titulo, color: COLOR.texto },
+  // Las tarjetas llegan hasta el borde de la pantalla al deslizar; flexGrow 0 evita que el carrusel crezca hacia abajo.
+  carrusel: { marginHorizontal: -ESPACIO.l, flexGrow: 0 },
+  carruselContenido: { paddingHorizontal: ESPACIO.l },
 });

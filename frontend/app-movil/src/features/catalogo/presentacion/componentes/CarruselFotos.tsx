@@ -7,11 +7,12 @@
 // ======================================================================
 // Con una sola foto no hay contador ni puntos; sin fotos se muestra un edificio.
 
+import { Image } from 'expo-image';
 import { Building2, Camera, MapPin } from 'lucide-react-native';
 import { useState } from 'react';
-import { FlatList, Image, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { FlatList, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
-import { COLOR, ESPACIO, FUENTE, RADIO } from '../../../../shared/ui/tema';
+import { COLOR, ESPACIO, FUENTE, RADIO, TAMANO } from '../../../../shared/ui/tema';
 import { Verificado } from '../../../../shared/ui/Verificado';
 
 interface Props {
@@ -47,11 +48,19 @@ export function CarruselFotos({ fotos, titulo, lugar, verificado, alto = 290 }: 
           keyExtractor={(url, i) => `${i}-${url}`}
           getItemLayout={(_, i) => ({ length: width, offset: width * i, index: i })}
           onMomentumScrollEnd={alTerminarDeDeslizar}
+          // Solo se dibujan la foto actual y las vecinas; el resto se carga al acercarse.
+          initialNumToRender={1}
+          maxToRenderPerBatch={2}
+          windowSize={3}
+          removeClippedSubviews
           renderItem={({ item, index }) => (
             <Image
               source={{ uri: item }}
               style={{ width, height: alto }}
-              resizeMode="cover"
+              contentFit="cover"
+              transition={150}
+              cachePolicy="memory-disk"
+              recyclingKey={item}
               accessibilityLabel={`Foto ${index + 1} de ${fotos.length} de ${titulo}`}
             />
           )}
@@ -110,7 +119,7 @@ const estilos = StyleSheet.create({
     borderRadius: RADIO.pildora,
     backgroundColor: COLOR.sobreFoto,
   },
-  lugarTexto: { fontFamily: FUENTE.semi, fontSize: 12, color: '#fff', flexShrink: 1 },
+  lugarTexto: { ...FUENTE.semi, fontSize: TAMANO.pequeno, color: '#fff', flexShrink: 1 },
   contador: {
     position: 'absolute',
     right: ESPACIO.m,
@@ -123,7 +132,7 @@ const estilos = StyleSheet.create({
     borderRadius: RADIO.pildora,
     backgroundColor: COLOR.sobreFoto,
   },
-  contadorTexto: { fontFamily: FUENTE.semi, fontSize: 12, color: '#fff' },
+  contadorTexto: { ...FUENTE.semi, fontSize: TAMANO.pequeno, color: '#fff' },
   puntos: { position: 'absolute', bottom: ESPACIO.s, left: 0, right: 0, flexDirection: 'row', justifyContent: 'center', gap: 6 },
   punto: { width: 6, height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.55)' },
   puntoActivo: { width: 18, backgroundColor: '#fff' },

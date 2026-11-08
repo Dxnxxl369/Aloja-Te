@@ -14,7 +14,7 @@ import { useEffect, useState } from 'react';
 import QRCode from 'react-native-qrcode-svg';
 import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Boton } from '../../../../shared/ui/Boton';
-import { COLOR, ESPACIO, FUENTE, RADIO } from '../../../../shared/ui/tema';
+import { COLOR, ESPACIO, FUENTE, RADIO, TAMANO } from '../../../../shared/ui/tema';
 import { Verificado } from '../../../../shared/ui/Verificado';
 import type { CasosPagos } from '../../domain/interfaces';
 import type { SolicitudPago } from '../../domain/modelos';
@@ -86,8 +86,8 @@ export function PantallaPago({ casos, solicitud, alTerminar }: Props) {
           <Fila
             etiqueta="Descuento"
             valor={`- ${dinero(pago.descuento)}`}
-            color={COLOR.aviso}
-            icono={<Tag color={COLOR.aviso} size={16} />}
+            color={COLOR.avisoOscuro}
+            icono={<Tag color={COLOR.avisoOscuro} size={16} />}
           />
         )}
         <Fila etiqueta="Cargo de servicio" valor={dinero(pago.cargoServicio)} />
@@ -154,11 +154,11 @@ export function PantallaPago({ casos, solicitud, alTerminar }: Props) {
                 <Text style={estilos.glosaTexto}>
                   Glosa: <Text style={estilos.glosaValor}>{pago.qr.glosa}</Text>
                 </Text>
-                {copiado ? <Check color={COLOR.exito} size={16} /> : <Copy color={COLOR.textoSuave} size={16} />}
+                {copiado ? <Check color={COLOR.exitoOscuro} size={16} /> : <Copy color={COLOR.textoSuave} size={16} />}
                 {copiado ? <Text style={estilos.copiado}>¡Copiado!</Text> : null}
               </Pressable>
               <Text style={estilos.suave}>Transacción {idCorto}</Text>
-              {horaLimite && <Text style={estilos.suave}>Paga antes de las {horaLimite}</Text>}
+              {horaLimite ? <Text style={estilos.suave}>Paga antes de las {horaLimite}</Text> : null}
             </>
           ) : (
             <Text style={estilos.aviso}>
@@ -223,7 +223,7 @@ export function PantallaPago({ casos, solicitud, alTerminar }: Props) {
         </View>
       )}
 
-      {error && <Text style={estilos.error}>{error}</Text>}
+      {error ? <Text style={estilos.error}>{error}</Text> : null}
 
       <View style={estilos.seguro}>
         <Lock color={COLOR.primario} size={16} />
@@ -268,48 +268,48 @@ const estilos = StyleSheet.create({
   pagina: { padding: ESPACIO.l, gap: ESPACIO.l, paddingBottom: ESPACIO.xxl },
   centro: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: ESPACIO.l, gap: ESPACIO.m, backgroundColor: COLOR.fondo },
   tarjeta: { backgroundColor: COLOR.tarjeta, borderRadius: RADIO.tarjeta, padding: ESPACIO.l, gap: ESPACIO.m, borderWidth: 1, borderColor: COLOR.borde },
-  titulo: { fontFamily: FUENTE.titulo, fontSize: 20, color: COLOR.texto },
-  tituloCentro: { fontFamily: FUENTE.titulo, fontSize: 22, color: COLOR.texto, textAlign: 'center' },
+  titulo: { ...FUENTE.titulo, fontSize: TAMANO.titulo, color: COLOR.texto },
+  tituloCentro: { ...FUENTE.titulo, fontSize: TAMANO.titulo, color: COLOR.texto, textAlign: 'center' },
   fila: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   filaEtiqueta: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.s },
   filaTotal: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   separador: { height: 1, backgroundColor: COLOR.borde },
-  texto: { fontFamily: FUENTE.normal, fontSize: 15, color: COLOR.texto },
-  valor: { fontFamily: FUENTE.semi, fontSize: 15, color: COLOR.texto },
-  totalEtiqueta: { fontFamily: FUENTE.semi, fontSize: 16, color: COLOR.texto },
-  total: { fontFamily: FUENTE.tituloFuerte, fontSize: 26, color: COLOR.primario },
-  suave: { fontFamily: FUENTE.normal, fontSize: 13, color: COLOR.textoSuave, textAlign: 'center' },
+  texto: { ...FUENTE.normal, fontSize: TAMANO.cuerpo, color: COLOR.texto },
+  valor: { ...FUENTE.semi, fontSize: TAMANO.cuerpo, color: COLOR.texto },
+  totalEtiqueta: { ...FUENTE.semi, fontSize: TAMANO.cuerpo, color: COLOR.texto },
+  total: { ...FUENTE.tituloFuerte, fontSize: TAMANO.titular, color: COLOR.primario },
+  suave: { ...FUENTE.normal, fontSize: TAMANO.secundario, color: COLOR.textoSuave, textAlign: 'center' },
 
   iconoQr: { width: 48, height: 48, borderRadius: 24, backgroundColor: COLOR.primarioSuave, alignItems: 'center', justifyContent: 'center' },
   marcoQr: { padding: ESPACIO.m, borderRadius: RADIO.tarjeta, backgroundColor: COLOR.campo, borderWidth: 1, borderColor: '#bfdbfe' },
   fondoQr: { padding: ESPACIO.m, borderRadius: RADIO.control, backgroundColor: '#fff' },
   glosa: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.s, minHeight: 44, backgroundColor: COLOR.campo, borderRadius: RADIO.pildora, paddingHorizontal: ESPACIO.l, paddingVertical: ESPACIO.s },
-  copiado: { fontFamily: FUENTE.semi, fontSize: 13, color: COLOR.exito },
+  copiado: { ...FUENTE.semi, fontSize: TAMANO.secundario, color: COLOR.exitoOscuro },
   esquina: { position: 'absolute', width: 22, height: 22, borderColor: COLOR.primario },
   arribaIzquierda: { top: 4, left: 4, borderTopWidth: 3, borderLeftWidth: 3, borderTopLeftRadius: 8 },
   arribaDerecha: { top: 4, right: 4, borderTopWidth: 3, borderRightWidth: 3, borderTopRightRadius: 8 },
   abajoIzquierda: { bottom: 4, left: 4, borderBottomWidth: 3, borderLeftWidth: 3, borderBottomLeftRadius: 8 },
   abajoDerecha: { bottom: 4, right: 4, borderBottomWidth: 3, borderRightWidth: 3, borderBottomRightRadius: 8 },
-  glosaTexto: { fontFamily: FUENTE.normal, fontSize: 14, color: COLOR.textoSuave },
-  glosaValor: { fontFamily: FUENTE.fuerte, color: COLOR.texto },
+  glosaTexto: { ...FUENTE.normal, fontSize: TAMANO.secundario, color: COLOR.textoSuave },
+  glosaValor: { ...FUENTE.fuerte, color: COLOR.texto },
   espera: { alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', gap: ESPACIO.m, backgroundColor: COLOR.campo, borderRadius: RADIO.control, padding: ESPACIO.m },
-  esperaTexto: { flex: 1, fontFamily: FUENTE.normal, fontSize: 14, color: COLOR.texto },
+  esperaTexto: { flex: 1, ...FUENTE.normal, fontSize: TAMANO.secundario, color: COLOR.texto },
   expira: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.s },
-  expiraTiempo: { fontFamily: FUENTE.fuerte, color: COLOR.texto },
+  expiraTiempo: { ...FUENTE.fuerte, color: COLOR.texto },
 
   ampliar: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.xs, minHeight: 44 },
-  ampliarTexto: { fontFamily: FUENTE.semi, fontSize: 14, color: COLOR.primario },
+  ampliarTexto: { ...FUENTE.semi, fontSize: TAMANO.secundario, color: COLOR.primario },
   vencido: { alignSelf: 'stretch', alignItems: 'center', gap: ESPACIO.s, backgroundColor: COLOR.errorFondo, borderWidth: 1, borderColor: COLOR.errorBorde, borderRadius: RADIO.tarjeta, padding: ESPACIO.l },
-  vencidoTitulo: { fontFamily: FUENTE.titulo, fontSize: 18, color: COLOR.error },
+  vencidoTitulo: { ...FUENTE.titulo, fontSize: TAMANO.subtitulo, color: COLOR.errorOscuro },
   fondoModal: { flex: 1, backgroundColor: COLOR.scrim, alignItems: 'center', justifyContent: 'center', padding: ESPACIO.xl },
   cajaModal: { backgroundColor: '#fff', borderRadius: RADIO.tarjeta, padding: ESPACIO.xl, alignItems: 'center', gap: ESPACIO.m },
 
   exito: { alignItems: 'center', backgroundColor: COLOR.exitoFondo, borderColor: COLOR.exitoBorde },
-  exitoTitulo: { fontFamily: FUENTE.titulo, fontSize: 22, color: COLOR.exito },
+  exitoTitulo: { ...FUENTE.titulo, fontSize: TAMANO.titulo, color: COLOR.exitoOscuro },
   fallo: { alignItems: 'center', backgroundColor: COLOR.errorFondo, borderColor: COLOR.errorBorde },
 
-  aviso: { fontFamily: FUENTE.normal, fontSize: 14, color: COLOR.aviso, textAlign: 'center' },
-  error: { fontFamily: FUENTE.medio, fontSize: 14, color: COLOR.error, textAlign: 'center' },
+  aviso: { ...FUENTE.normal, fontSize: TAMANO.secundario, color: COLOR.avisoOscuro, textAlign: 'center' },
+  error: { ...FUENTE.medio, fontSize: TAMANO.secundario, color: COLOR.errorOscuro, textAlign: 'center' },
   seguro: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: ESPACIO.s },
-  seguroTexto: { fontFamily: FUENTE.medio, fontSize: 12, color: COLOR.textoSuave },
+  seguroTexto: { ...FUENTE.medio, fontSize: TAMANO.pequeno, color: COLOR.textoSuave },
 });

@@ -1,6 +1,6 @@
 // ======================================================================
 // ARCHIVO: catalogo/presentacion/useCatalogo.ts      IMPORTANCIA: ★★ MEDIA
-// QUÉ ES: El hook del explorador: carga los alojamientos, guarda los filtros elegidos y entrega las listas ya separadas.
+// QUÉ ES: El hook del explorador: carga los alojamientos, guarda los filtros elegidos y entrega la lista filtrada y los destacados.
 // PARA QUÉ SIRVE: La pantalla solo pinta; no sabe de cargas, filtros ni de qué es "destacado".
 // SIN ÉL: La pantalla mezclaría llamadas y filtros con el diseño.
 // NO VA AQUÍ: Diseño ni reglas (están en domain/casos.ts).
@@ -8,16 +8,14 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { CasosCatalogo } from '../domain/interfaces';
-import type { AlojamientoCatalogo, FiltrosServidor, TipoPropiedad } from '../domain/modelos';
+import type { AlojamientoCatalogo, FiltrosServidor } from '../domain/modelos';
 
 export function useCatalogo(casos: CasosCatalogo) {
   const [filtrosServidor, setFiltrosServidor] = useState<FiltrosServidor>({});
   const [texto, setTexto] = useState('');
   const [ciudad, setCiudad] = useState<string | null>(null);
-  const [tipoId, setTipoId] = useState<number | null>(null);
 
   const [lista, setLista] = useState<AlojamientoCatalogo[]>([]);
-  const [tipos, setTipos] = useState<TipoPropiedad[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [desdeCache, setDesdeCache] = useState(false);
@@ -46,37 +44,20 @@ export function useCatalogo(casos: CasosCatalogo) {
     };
   }, [casos, filtrosServidor, intento]);
 
-  // Los tipos de propiedad se piden una vez; si fallan, solo falta esa fila.
-  useEffect(() => {
-    let vivo = true;
-    casos.listarTipos().then(
-      (t) => vivo && setTipos(t),
-      () => undefined,
-    );
-    return () => {
-      vivo = false;
-    };
-  }, [casos]);
-
-  const filtrados = useMemo(() => casos.filtrar(lista, { texto, ciudad, tipoId }), [casos, lista, texto, ciudad, tipoId]);
+  // El filtro por tipo de propiedad ya no se ofrece en la pantalla: aquí solo se aplican el texto y la ciudad.
+  const filtrados = useMemo(() => casos.filtrar(lista, { texto, ciudad, tipoId: null }), [casos, lista, texto, ciudad]);
   const destacados = useMemo(() => casos.destacados(filtrados), [casos, filtrados]);
-  const resto = useMemo(() => {
-    const ids = new Set(destacados.map((a) => a.id));
-    return filtrados.filter((a) => !ids.has(a.id));
-  }, [filtrados, destacados]);
   const ciudades = useMemo(() => casos.ciudades(lista), [casos, lista]);
 
   const hayFiltros =
     texto.trim() !== '' ||
     ciudad !== null ||
-    tipoId !== null ||
     filtrosServidor.precioMax !== undefined ||
     filtrosServidor.huespedes !== undefined;
 
   const limpiarFiltros = useCallback(() => {
     setTexto('');
     setCiudad(null);
-    setTipoId(null);
     setFiltrosServidor({});
   }, []);
 
@@ -87,17 +68,13 @@ export function useCatalogo(casos: CasosCatalogo) {
     error,
     desdeCache,
     hayAlojamientos: lista.length > 0,
-    tipos,
     ciudades,
     filtrados,
     destacados,
-    resto,
     texto,
     setTexto,
     ciudad,
     setCiudad,
-    tipoId,
-    setTipoId,
     filtrosServidor,
     setFiltrosServidor,
     hayFiltros,

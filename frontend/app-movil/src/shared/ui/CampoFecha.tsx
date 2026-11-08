@@ -8,14 +8,13 @@
 // Android abre su diálogo de calendario; en iPhone se abre una hoja con el calendario y un botón "Listo".
 
 import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
-import type { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { Calendar } from 'lucide-react-native';
 import { useState } from 'react';
 import { Modal, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Boton } from './Boton';
 import { aFecha, aTexto, formatearFecha } from './fechas';
-import { COLOR, ESPACIO, FUENTE, RADIO } from './tema';
+import { COLOR, ESPACIO, FUENTE, RADIO, TAMANO } from './tema';
 
 interface Props {
   etiqueta: string;
@@ -40,9 +39,8 @@ export function CampoFecha({ etiqueta, valor, minimo, alCambiar, deshabilitado }
         value: inicial,
         mode: 'date',
         minimumDate: fechaMinima,
-        onChange: (e: DateTimePickerEvent, f?: Date) => {
-          if (e.type === 'set' && f) alCambiar(aTexto(f));
-        },
+        // Solo se llama cuando el usuario elige una fecha; cerrar sin elegir no hace nada.
+        onValueChange: (_e, f) => alCambiar(aTexto(f)),
       });
       return;
     }
@@ -62,7 +60,7 @@ export function CampoFecha({ etiqueta, valor, minimo, alCambiar, deshabilitado }
         <Text style={estilos.etiqueta}>{etiqueta}</Text>
         <View style={estilos.fila}>
           <Calendar color={COLOR.primario} size={18} />
-          <Text style={[estilos.valor, !valor && { color: COLOR.textoSuave, fontFamily: FUENTE.normal }]} numberOfLines={1}>
+          <Text style={[estilos.valor, !valor && { color: COLOR.textoSuave, ...FUENTE.normal }]} numberOfLines={1}>
             {valor ? formatearFecha(valor) : 'Elegir fecha'}
           </Text>
         </View>
@@ -80,7 +78,7 @@ export function CampoFecha({ etiqueta, valor, minimo, alCambiar, deshabilitado }
               minimumDate={fechaMinima}
               themeVariant="light"
               locale="es-BO"
-              onChange={(_e: DateTimePickerEvent, f?: Date) => f && setBorrador(f)}
+              onValueChange={(_e, f) => setBorrador(f)}
             />
             <Boton
               titulo="Listo"
@@ -109,10 +107,10 @@ const estilos = StyleSheet.create({
     borderColor: COLOR.borde,
     justifyContent: 'center',
   },
-  etiqueta: { fontFamily: FUENTE.medio, fontSize: 11, letterSpacing: 0.6, color: COLOR.textoSuave, textTransform: 'uppercase' },
+  etiqueta: { ...FUENTE.medio, fontSize: TAMANO.micro, letterSpacing: 0.6, color: COLOR.textoSuave, textTransform: 'uppercase' },
   fila: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.s },
-  valor: { flexShrink: 1, fontFamily: FUENTE.semi, fontSize: 15, color: COLOR.texto },
+  valor: { flexShrink: 1, ...FUENTE.semi, fontSize: TAMANO.cuerpo, color: COLOR.texto },
   fondo: { flex: 1, backgroundColor: COLOR.scrim },
   hoja: { backgroundColor: COLOR.tarjeta, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: ESPACIO.l, gap: ESPACIO.m },
-  titulo: { fontFamily: FUENTE.tituloFuerte, fontSize: 20, color: COLOR.texto },
+  titulo: { ...FUENTE.tituloFuerte, fontSize: TAMANO.titulo, color: COLOR.texto },
 });

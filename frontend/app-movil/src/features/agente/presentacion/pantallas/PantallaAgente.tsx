@@ -1,17 +1,18 @@
 // ======================================================================
 // ARCHIVO: agente/presentacion/pantallas/PantallaAgente.tsx      IMPORTANCIA: ★★★ MUCHA
-// QUÉ ES: La pantalla del agente: chat, avance compacto, tarjetas de alojamientos, respuestas rápidas y botones de confirmar o pagar.
+// QUÉ ES: La pantalla del agente: cabecera fija con el avance en puntos, chat, tarjetas de alojamientos, respuestas rápidas y botones de confirmar o pagar.
 // PARA QUÉ SIRVE: Es donde el usuario genera la reserva hablando; al terminar entrega el `reservaId` para el pago.
 // SIN ÉL: No habría interfaz para el agente.
 // NO VA AQUÍ: Reglas del plan ni llamadas HTTP.
 // ======================================================================
-// La conversación es el centro: el plan va en una barra compacta y las respuestas rápidas
-// evitan escribir. El indicador de modo dice la verdad: "IA local" solo si el modelo está cargado.
+// La conversación es el centro: el plan va en una cabecera fija de cuatro puntos y las respuestas rápidas
+// salen en una franja sobre la barra de escribir. El chat se apoya abajo. El modo (IA local o básico) es un icono junto al título (lo pone app/).
 
 import { Bot, Building2, Send } from 'lucide-react-native';
 import { useEffect, useRef, useState } from 'react';
 import type { ComponentRef } from 'react';
 import {
+  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -25,12 +26,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Boton } from '../../../../shared/ui/Boton';
 import { Chip } from '../../../../shared/ui/Chip';
 import { Insignia } from '../../../../shared/ui/Insignia';
-import { COLOR, ESPACIO, FUENTE, RADIO } from '../../../../shared/ui/tema';
+import { COLOR, ESPACIO, FUENTE, RADIO, TAMANO } from '../../../../shared/ui/tema';
 import { CIUDADES } from '../../constantes';
 import type { CasosAgente } from '../../domain/interfaces';
 import type { ContextoAlojamiento, Mensaje, Opcion, PasoId } from '../../domain/modelos';
 import { faltantes, recomendar } from '../../domain/plan';
-import { BarraProgreso } from '../componentes/BarraProgreso';
+import { PlanPuntos } from '../componentes/PlanPuntos';
 import { PuntosEscribiendo } from '../componentes/PuntosEscribiendo';
 import { TarjetaOpcion } from '../componentes/TarjetaOpcion';
 import { useAgente } from '../useAgente';
@@ -44,10 +45,6 @@ interface Props {
    * Devuelve null mientras siga pendiente. Lo conecta app/ con el feature reservas.
    */
   resolverReservaEnCola?: (claveCola: string) => Promise<string | null>;
-  /** "local" si el modelo de IA del celular está cargado; "basico" si entiende con reglas. */
-  modoIa?: 'local' | 'basico';
-  /** Si se pasa, tocar el indicador de modo abre la pantalla para descargar o activar la IA local. */
-  alAbrirIa?: () => void;
   /** El alojamiento elegido en el explorador. Con él, la reserva se limita a ese alojamiento. */
   contexto?: ContextoAlojamiento | null;
   /**
@@ -120,8 +117,6 @@ export function PantallaAgente({
   casos,
   alPagar,
   resolverReservaEnCola,
-  modoIa = 'basico',
-  alAbrirIa,
   contexto,
   claveContexto,
 }: Props) {
@@ -177,15 +172,11 @@ export function PantallaAgente({
   const actividad = (pasoActivo && ACTIVIDAD[pasoActivo.id]) ?? 'Trabajando en tu pedido';
   const buscando = pasoActivo?.id === 'BUSCAR';
 
-  // Respuestas rápidas: según lo que el agente esté esperando.
+  // Respuestas rápidas a lo que el agente pregunta (ciudad o personas). Salen en la franja sobre la barra de escribir.
+  // Elegir una opción y confirmar ya tienen sus propios botones en el chat (tarjetas y "Sí, reservar"), por eso no se repiten aquí.
   const falta = estado.fase === 'CONVERSANDO' ? faltantes(estado.criterios)[0] : undefined;
   const rapidas: { etiqueta: string; accion: () => void }[] = [];
-  if (estado.fase === 'ELIGIENDO') {
-    estado.opciones.forEach((_, i) => rapidas.push({ etiqueta: `Opción ${i + 1}`, accion: () => void elegir(i) }));
-  } else if (estado.fase === 'CONFIRMANDO') {
-    rapidas.push({ etiqueta: 'Sí, reservar', accion: () => void confirmar() });
-    rapidas.push({ etiqueta: 'No', accion: () => void rechazar() });
-  } else if (falta === 'ciudad') {
+  if (falta === 'ciudad') {
     CIUDADES_RAPIDAS.forEach((c) => rapidas.push({ etiqueta: c, accion: () => mandar(`en ${c}`) }));
   } else if (falta === 'huespedes') {
     PERSONAS_RAPIDAS.forEach((n) =>
@@ -195,19 +186,17 @@ export function PantallaAgente({
 
   return (
     <KeyboardAvoidingView style={estilos.pantalla} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <Pressable
-        accessibilityRole={alAbrirIa ? 'button' : 'text'}
-        accessibilityLabel="Modo del asistente"
-        disabled={!alAbrirIa}
-        onPress={alAbrirIa}
-        style={estilos.estadoFila}
-      >
-        <View style={[estilos.punto, { backgroundColor: modoIa === 'local' ? COLOR.exito : COLOR.aviso }]} />
-        <Text style={estilos.estadoTexto}>
-          {modoIa === 'local' ? 'Asistente · IA local en el dispositivo' : 'Asistente · modo básico (sin IA local)'}
-        </Text>
-        {alAbrirIa && <Text style={estilos.estadoEnlace}>{modoIa === 'local' ? 'Gestionar' : 'Activar IA'}</Text>}
-      </Pressable>
+      {/* Cabecera fija: alojamiento elegido (si hay) y avance del agente. El modo (IA local o básico) es el punto del título. */}
+      <View style={estilos.cabecera}>
+        {estado.alojamiento ? (
+          <View style={estilos.cabeceraFila}>
+            <View style={{ flexShrink: 1 }}>
+              <Insignia texto={`Reservando en ${estado.alojamiento.titulo}`} tono="exito" />
+            </View>
+          </View>
+        ) : null}
+        <PlanPuntos plan={estado.plan} abierto={verPlan} alAlternar={() => setVerPlan((v) => !v)} />
+      </View>
 
       <ScrollView
         ref={scroll}
@@ -215,17 +204,6 @@ export function PantallaAgente({
         keyboardShouldPersistTaps="handled"
         onContentSizeChange={() => scroll.current?.scrollToEnd({ animated: true })}
       >
-        <BarraProgreso plan={estado.plan} abierto={verPlan} alAlternar={() => setVerPlan((v) => !v)} />
-
-        <View style={estilos.fechaFila}>
-          <Insignia texto="Hoy · Asistencia en tiempo real" />
-        </View>
-        {estado.alojamiento ? (
-          <View style={estilos.fechaFila}>
-            <Insignia texto={`Reservando en ${estado.alojamiento.titulo}`} tono="exito" />
-          </View>
-        ) : null}
-
         {estado.mensajes.map((m) => {
           const esUsuario = m.rol === 'usuario';
           const mostrar =
@@ -301,31 +279,45 @@ export function PantallaAgente({
 
       {!terminada && (
         <View style={[estilos.pie, { paddingBottom: insets.bottom }]}>
-          {rapidas.length > 0 && (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={estilos.chips} keyboardShouldPersistTaps="handled">
+          {/* Sugerencias: una sola fila que se desliza, justo sobre la barra de escribir. Solo cuando el agente hace una pregunta. */}
+          {rapidas.length > 0 && !ocupado ? (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={estilos.franja}
+              contentContainerStyle={estilos.chips}
+              keyboardShouldPersistTaps="handled"
+            >
               {rapidas.map((r) => (
-                <Chip key={r.etiqueta} etiqueta={r.etiqueta} onPress={r.accion} deshabilitado={ocupado} />
+                <Chip key={r.etiqueta} etiqueta={r.etiqueta} onPress={r.accion} />
               ))}
             </ScrollView>
-          )}
+          ) : null}
           <View style={estilos.entrada}>
             <TextInput
               style={estilos.input}
               value={texto}
               onChangeText={setTexto}
-              placeholder="Ej: 2 personas en Cochabamba del 12 al 15 de diciembre"
+              placeholder="Escribe tu pedido…"
               placeholderTextColor={COLOR.textoSuave}
               editable={!ocupado}
               onSubmitEditing={() => mandar(texto)}
               returnKeyType="send"
             />
-            <Boton
-              titulo="Enviar"
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Enviar mensaje"
+              accessibilityState={{ disabled: ocupado || !texto.trim() }}
+              disabled={ocupado || !texto.trim()}
               onPress={() => mandar(texto)}
-              cargando={ocupado}
-              deshabilitado={!texto.trim()}
-              iconoDerecha={(c) => <Send color={c} size={18} />}
-            />
+              style={({ pressed }) => [
+                estilos.enviar,
+                (ocupado || !texto.trim()) && estilos.enviarInactivo,
+                pressed && { backgroundColor: COLOR.primarioPresionado },
+              ]}
+            >
+              {ocupado ? <ActivityIndicator color={COLOR.textoSuave} /> : <Send color={texto.trim() ? '#fff' : COLOR.textoSuave} size={20} />}
+            </Pressable>
           </View>
         </View>
       )}
@@ -343,12 +335,11 @@ function Avatar() {
 
 const estilos = StyleSheet.create({
   pantalla: { flex: 1, backgroundColor: COLOR.fondo },
-  contenido: { padding: ESPACIO.l, gap: ESPACIO.m },
+  // flexGrow + flex-end: el chat se apoya abajo (junto a la barra de escribir), como en cualquier app de mensajes.
+  contenido: { flexGrow: 1, justifyContent: 'flex-end', padding: ESPACIO.l, gap: ESPACIO.m },
 
-  estadoFila: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.s, paddingHorizontal: ESPACIO.l, paddingTop: ESPACIO.s },
-  punto: { width: 8, height: 8, borderRadius: 4 },
-  estadoTexto: { fontFamily: FUENTE.medio, fontSize: 13, color: COLOR.textoSuave },
-  estadoEnlace: { fontFamily: FUENTE.semi, fontSize: 13, color: COLOR.primario },
+  cabecera: { backgroundColor: COLOR.tarjeta, borderBottomWidth: 1, borderBottomColor: COLOR.borde },
+  cabeceraFila: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: ESPACIO.l, paddingTop: ESPACIO.m },
 
   filaMensaje: { flexDirection: 'row', alignItems: 'flex-end', gap: ESPACIO.s },
   avatar: { width: 32, height: 32, borderRadius: 16, backgroundColor: COLOR.primarioSuave, alignItems: 'center', justifyContent: 'center' },
@@ -356,12 +347,11 @@ const estilos = StyleSheet.create({
   usuario: { backgroundColor: COLOR.primario, borderBottomRightRadius: 4 },
   agente: { backgroundColor: COLOR.tarjeta, borderWidth: 1, borderColor: COLOR.borde, borderBottomLeftRadius: 4 },
   escribiendo: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.m },
-  textoUsuario: { fontFamily: FUENTE.normal, fontSize: 16, lineHeight: 23, color: '#fff' },
-  textoAgente: { fontFamily: FUENTE.normal, fontSize: 16, lineHeight: 23, color: COLOR.texto },
-  hora: { fontFamily: FUENTE.normal, fontSize: 12, color: COLOR.textoSuave, marginTop: 4 },
+  textoUsuario: { ...FUENTE.normal, fontSize: TAMANO.cuerpo, lineHeight: 20, color: '#fff' },
+  textoAgente: { ...FUENTE.normal, fontSize: TAMANO.cuerpo, lineHeight: 20, color: COLOR.texto },
+  hora: { ...FUENTE.normal, fontSize: TAMANO.pequeno, color: COLOR.textoSuave, marginTop: 4 },
 
   fila: { flexDirection: 'row', gap: ESPACIO.s },
-  fechaFila: { alignItems: 'center' },
 
   // Tarjeta de la búsqueda en curso: queda alineada con el texto de la burbuja (ancho del avatar + separación).
   progresoBusqueda: {
@@ -374,11 +364,13 @@ const estilos = StyleSheet.create({
     backgroundColor: COLOR.campo,
   },
   progresoIcono: { width: 44, height: 44, borderRadius: RADIO.control, backgroundColor: COLOR.primarioSuave, alignItems: 'center', justifyContent: 'center' },
-  progresoTitulo: { fontFamily: FUENTE.semi, fontSize: 14, color: COLOR.texto },
-  progresoTexto: { fontFamily: FUENTE.normal, fontSize: 13, color: COLOR.textoSuave },
+  progresoTitulo: { ...FUENTE.semi, fontSize: TAMANO.secundario, color: COLOR.texto },
+  progresoTexto: { ...FUENTE.normal, fontSize: TAMANO.secundario, color: COLOR.textoSuave },
 
   pie: { backgroundColor: COLOR.fondo, borderTopWidth: 1, borderTopColor: COLOR.borde },
-  chips: { gap: ESPACIO.s, paddingHorizontal: ESPACIO.l, paddingTop: ESPACIO.m },
+  // flexGrow 0: una fila que se desliza de lado no debe crecer hacia abajo.
+  franja: { flexGrow: 0 },
+  chips: { gap: ESPACIO.s, alignItems: 'center', paddingHorizontal: ESPACIO.l, paddingTop: ESPACIO.m },
   entrada: { flexDirection: 'row', gap: ESPACIO.s, padding: ESPACIO.l, alignItems: 'center' },
   input: {
     flex: 1,
@@ -388,8 +380,11 @@ const estilos = StyleSheet.create({
     borderRadius: RADIO.control,
     paddingHorizontal: ESPACIO.l,
     backgroundColor: COLOR.tarjeta,
-    fontFamily: FUENTE.normal,
-    fontSize: 15,
+    ...FUENTE.normal,
+    fontSize: TAMANO.cuerpo,
     color: COLOR.texto,
   },
+  // Botón de enviar redondo, solo con el icono: azul con texto escrito, gris sin texto.
+  enviar: { width: 48, height: 48, borderRadius: 24, backgroundColor: COLOR.primario, alignItems: 'center', justifyContent: 'center' },
+  enviarInactivo: { backgroundColor: COLOR.campo },
 });
