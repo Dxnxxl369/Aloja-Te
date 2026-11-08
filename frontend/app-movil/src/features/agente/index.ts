@@ -39,4 +39,4 @@ export function crearFeatureAgente(deps: {
 
 export { PantallaAgente } from './presentacion/pantallas/PantallaAgente';
 export type { CasosAgente } from './domain/interfaces';
-export type { Cliente, EstadoAgente, Opcion } from './domain/modelos';
+export type { Cliente, ContextoAlojamiento, EstadoAgente, Opcion } from './domain/modelos';

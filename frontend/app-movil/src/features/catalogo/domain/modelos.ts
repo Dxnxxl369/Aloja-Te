@@ -25,9 +25,19 @@ export interface AlojamientoCatalogo {
   capacidadMax: number | null;
 }
 
+/** Una habitación o unidad que se puede reservar de un alojamiento. */
+export interface UnidadCatalogo {
+  id: string;
+  nombre: string;
+  capacidad: number;
+  /** Bolivianos por noche. */
+  precioNoche: number;
+}
+
 /** Todo lo que se muestra en la ficha de un alojamiento. Los campos opcionales son los que MS-01 puede no enviar. */
 export interface DetalleAlojamiento {
   id: string;
+  anfitrionId: string;
   titulo: string;
   tipo?: string;
   ciudad: string;
@@ -44,6 +54,8 @@ export interface DetalleAlojamiento {
   /** URLs de las fotos, en el orden que indica MS-01. */
   fotos: string[];
   servicios: string[];
+  /** Solo las unidades disponibles, de la más barata a la más cara. */
+  unidades: UnidadCatalogo[];
   calificacion: number | null;
   totalResenas: number;
   precioDesde: number | null;

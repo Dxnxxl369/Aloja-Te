@@ -9,6 +9,7 @@
 // cuando llega el detalle. Solo se dibuja lo que MS-01 entrega: sin camas, baños ni anfitrión (esos datos no existen).
 
 import { ArrowRight, Clock, MapPin, ShieldCheck, Users } from 'lucide-react-native';
+import { useState } from 'react';
 import { ActivityIndicator, Alert, Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { BarraReserva } from '../../../../shared/ui/BarraReserva';
 import { Boton } from '../../../../shared/ui/Boton';
@@ -19,6 +20,7 @@ import { COLOR, ESPACIO, FUENTE, RADIO } from '../../../../shared/ui/tema';
 import type { CasosCatalogo } from '../../domain/interfaces';
 import type { DetalleAlojamiento } from '../../domain/modelos';
 import { CarruselFotos } from '../componentes/CarruselFotos';
+import { OpcionesReservaSheet } from '../componentes/OpcionesReservaSheet';
 import { ServiciosGrid } from '../componentes/ServiciosGrid';
 import { TarjetaAsistenteIa } from '../componentes/TarjetaAsistenteIa';
 import { useDetalle } from '../useDetalle';
@@ -29,7 +31,9 @@ interface Props {
   datos: DatosTarjetaAlojamiento;
   /** true si el modelo de IA local está cargado. */
   iaLista: boolean;
-  alReservar: () => void;
+  /** Reservar llenando los datos a mano. */
+  alReservarManual: () => void;
+  /** Hablar con el asistente sobre este alojamiento (la tarjeta de IA, el botón de la barra y la opción de la hoja). */
   alAsistente: () => void;
 }
 
@@ -46,8 +50,9 @@ function destinoDelMapa(d: DetalleAlojamiento): string | null {
   return d.direccion ? direccion : null;
 }
 
-export function PantallaDetalle({ casos, datos, iaLista, alReservar, alAsistente }: Props) {
+export function PantallaDetalle({ casos, datos, iaLista, alReservarManual, alAsistente }: Props) {
   const { detalle, cargando, error, recargar } = useDetalle(casos, datos.id);
+  const [eligiendo, setEligiendo] = useState(false);
 
   // Lo que hay primero (tarjeta) se reemplaza por lo completo (detalle) cuando llega.
   const titulo = detalle?.titulo ?? datos.titulo;
@@ -177,12 +182,26 @@ export function PantallaDetalle({ casos, datos, iaLista, alReservar, alAsistente
 
       <BarraReserva
         titulo="Reservar"
-        alPresionar={alReservar}
+        alPresionar={() => setEligiendo(true)}
         alAsistente={alAsistente}
         precio={typeof precio === 'number' ? formatearPrecio(precio) : undefined}
         unidadPrecio="/ noche"
         nota="Inventario en tiempo real"
         iconoDerecha={(c) => <ArrowRight color={c} size={18} />}
+      />
+
+      <OpcionesReservaSheet
+        visible={eligiendo}
+        titulo={titulo}
+        alCerrar={() => setEligiendo(false)}
+        alManual={() => {
+          setEligiendo(false);
+          alReservarManual();
+        }}
+        alAsistente={() => {
+          setEligiendo(false);
+          alAsistente();
+        }}
       />
     </View>
   );

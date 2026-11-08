@@ -47,6 +47,23 @@ export interface Reserva {
   bloqueadaHasta: number | null;
 }
 
+/** Una habitación o unidad que se puede reservar. */
+export interface UnidadReservable {
+  id: string;
+  nombre: string;
+  capacidad: number;
+  /** Bolivianos por noche. */
+  precioNoche: number;
+}
+
+/** Un alojamiento con sus unidades disponibles: lo que hace falta para reservar a mano. Lo arma quien conecta las pantallas. */
+export interface AlojamientoReservable {
+  alojamientoId: string;
+  anfitrionId: string;
+  titulo: string;
+  unidades: UnidadReservable[];
+}
+
 /**
  * Datos del alojamiento que la reserva no trae (MS-02 solo guarda el título): foto y lugar.
  * Los consigue quien arma la pantalla; todos los campos son opcionales porque MS-01 puede no enviarlos.

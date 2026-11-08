@@ -21,6 +21,7 @@ export function crearFeatureCatalogo(deps: {
 
 export { PantallaExplorar } from './presentacion/pantallas/PantallaExplorar';
 export { PantallaDetalle } from './presentacion/pantallas/PantallaDetalle';
+export { useDetalle } from './presentacion/useDetalle';
 export type { CasosCatalogo, RepositorioCatalogo } from './domain/interfaces';
 export type {
   AlojamientoCatalogo,
@@ -29,4 +30,5 @@ export type {
   FiltrosServidor,
   ResultadoLista,
   TipoPropiedad,
+  UnidadCatalogo,
 } from './domain/modelos';

@@ -26,12 +26,15 @@ export function crearFeatureReservas(deps: {
 
 export { PantallaReserva } from './presentacion/pantallas/PantallaReserva';
 export { PantallaMisReservas } from './presentacion/pantallas/PantallaMisReservas';
+export { PantallaReservaManual } from './presentacion/pantallas/PantallaReservaManual';
 export type { CasosReservas, RepositorioReservas } from './domain/interfaces';
 export type {
+  AlojamientoReservable,
   Disponibilidad,
   EstadoReserva,
   FichaAlojamiento,
   Reserva,
   ResultadoCrear,
   SolicitudReserva,
+  UnidadReservable,
 } from './domain/modelos';

@@ -6,7 +6,7 @@
 // NO VA AQUÍ: Llamadas a la red ni a la base.
 // ======================================================================
 
-import type { AlojamientoCatalogo, DetalleAlojamiento, TipoPropiedad } from '../domain/modelos';
+import type { AlojamientoCatalogo, DetalleAlojamiento, TipoPropiedad, UnidadCatalogo } from '../domain/modelos';
 import type { AlojamientoDto, ResumenValoracionesDto, TipoPropiedadDto, UnidadDto } from './modelos';
 
 /** Texto sin espacios sobrantes; undefined si queda vacío o no es texto. */
@@ -24,6 +24,18 @@ function precioYCapacidad(unidades: UnidadDto[]): { precioDesde: number | null; 
     precioDesde: precios.length > 0 ? Math.min(...precios) : null,
     capacidadMax: capacidades.length > 0 ? Math.max(...capacidades) : null,
   };
+}
+
+/** Las unidades que se pueden reservar (disponibles, con precio y capacidad válidos), de la más barata a la más cara. */
+function unidadesReservables(unidades: UnidadDto[]): UnidadCatalogo[] {
+  const lista: UnidadCatalogo[] = [];
+  for (const u of unidades) {
+    const precioNoche = Number(u.precioNoche);
+    const capacidad = Number(u.capacidadHuespedes);
+    if (u.estado !== 'DISPONIBLE' || !(precioNoche > 0) || !Number.isInteger(capacidad) || capacidad < 1) continue;
+    lista.push({ id: u.idUnidad, nombre: texto(u.nombre) ?? 'Habitación', capacidad, precioNoche });
+  }
+  return lista.sort((a, b) => a.precioNoche - b.precioNoche);
 }
 
 function calificacionDe(resumen: ResumenValoracionesDto | null): { calificacion: number | null; totalResenas: number } {
@@ -85,6 +97,7 @@ export function detalleDesdeDto(
 
   return {
     id: a.idAlojamiento,
+    anfitrionId: a.idAnfitrion,
     titulo: a.titulo,
     tipo: texto(a.tipoPropiedadNombre),
     ciudad: a.ciudad,
@@ -98,6 +111,7 @@ export function detalleDesdeDto(
     longitud: hayMapa ? longitud : undefined,
     fotos,
     servicios,
+    unidades: unidadesReservables(unidades),
     ...calificacionDe(resumen),
     ...precioYCapacidad(unidades),
   };

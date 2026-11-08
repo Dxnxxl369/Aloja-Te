@@ -6,7 +6,7 @@
 // NO VA AQUÍ: Implementaciones (están en data/).
 // ======================================================================
 
-import type { Criterios, Disponible, EstadoAgente, Intencion, Opcion, ResultadoReservar } from './modelos';
+import type { ContextoAlojamiento, Criterios, Disponible, EstadoAgente, Intencion, Opcion, ResultadoReservar } from './modelos';
 
 /** Entiende un mensaje y devuelve los datos que encuentra. NUNCA ejecuta acciones. */
 export interface MotorLenguaje {
@@ -27,7 +27,8 @@ export interface Reservador {
 
 /** Cada operación recibe el estado actual y devuelve el nuevo: no hay estado escondido. */
 export interface CasosAgente {
-  iniciar(): EstadoAgente;
+  /** Conversación nueva. Con `contexto`, el asistente ya sabe en qué alojamiento se va a reservar. */
+  iniciar(contexto?: ContextoAlojamiento): EstadoAgente;
   enviarMensaje(estado: EstadoAgente, texto: string): Promise<EstadoAgente>;
   elegirOpcion(estado: EstadoAgente, indice: number): Promise<EstadoAgente>;
   confirmar(estado: EstadoAgente): Promise<EstadoAgente>;

@@ -22,6 +22,7 @@ import { BannerReservaProtegida } from '../componentes/BannerReservaProtegida';
 import { BotonAsistente } from '../componentes/BotonAsistente';
 import { BuscadorAlojamientos } from '../componentes/BuscadorAlojamientos';
 import { FiltrosSheet } from '../componentes/FiltrosSheet';
+import { OpcionesReservaSheet } from '../componentes/OpcionesReservaSheet';
 import { TiposAlojamiento } from '../componentes/TiposAlojamiento';
 import { datosTarjeta } from '../datosTarjeta';
 import { useCatalogo } from '../useCatalogo';
@@ -29,16 +30,22 @@ import { useCatalogo } from '../useCatalogo';
 interface Props {
   casos: CasosCatalogo;
   alVer: (datos: DatosTarjetaAlojamiento) => void;
-  alReservar: (datos: DatosTarjetaAlojamiento) => void;
+  /** El usuario eligió reservar ese alojamiento llenando los datos él mismo. */
+  alReservarManual: (datos: DatosTarjetaAlojamiento) => void;
+  /** El usuario eligió reservar ese alojamiento con el asistente. */
+  alReservarConAsistente: (datos: DatosTarjetaAlojamiento) => void;
+  /** El botón flotante: abre el asistente sin un alojamiento elegido. */
   alAbrirAsistente: () => void;
   /** true si el modelo de IA local está cargado (cambia el texto de la burbuja). */
   iaLista: boolean;
 }
 
-export function PantallaExplorar({ casos, alVer, alReservar, alAbrirAsistente, iaLista }: Props) {
+export function PantallaExplorar({ casos, alVer, alReservarManual, alReservarConAsistente, alAbrirAsistente, iaLista }: Props) {
   const c = useCatalogo(casos);
   const { width } = useWindowDimensions();
   const [verFiltros, setVerFiltros] = useState(false);
+  /** El alojamiento cuyo "Reservar" se tocó: mientras haya uno, se muestra la hoja de elegir cómo reservar. */
+  const [reservando, setReservando] = useState<DatosTarjetaAlojamiento | null>(null);
 
   // La tarjeta destacada deja asomar un pedazo de la siguiente para que se note que hay más.
   const anchoDestacada = Math.min(width - ESPACIO.l * 2 - 28, 380);
@@ -141,7 +148,7 @@ export function PantallaExplorar({ casos, alVer, alReservar, alAbrirAsistente, i
                         variante="destacada"
                         ancho={anchoDestacada}
                         alVer={() => alVer(datos)}
-                        alReservar={() => alReservar(datos)}
+                        alReservar={() => setReservando(datos)}
                       />
                     );
                   })}
@@ -178,6 +185,22 @@ export function PantallaExplorar({ casos, alVer, alReservar, alAbrirAsistente, i
         valor={c.filtrosServidor}
         alCerrar={() => setVerFiltros(false)}
         alAplicar={c.setFiltrosServidor}
+      />
+
+      <OpcionesReservaSheet
+        visible={reservando !== null}
+        titulo={reservando?.titulo ?? ''}
+        alCerrar={() => setReservando(null)}
+        alManual={() => {
+          const datos = reservando;
+          setReservando(null);
+          if (datos) alReservarManual(datos);
+        }}
+        alAsistente={() => {
+          const datos = reservando;
+          setReservando(null);
+          if (datos) alReservarConAsistente(datos);
+        }}
       />
     </View>
   );

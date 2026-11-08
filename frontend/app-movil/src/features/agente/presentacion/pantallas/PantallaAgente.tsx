@@ -28,7 +28,7 @@ import { Insignia } from '../../../../shared/ui/Insignia';
 import { COLOR, ESPACIO, FUENTE, RADIO } from '../../../../shared/ui/tema';
 import { CIUDADES } from '../../constantes';
 import type { CasosAgente } from '../../domain/interfaces';
-import type { Mensaje, Opcion, PasoId } from '../../domain/modelos';
+import type { ContextoAlojamiento, Mensaje, Opcion, PasoId } from '../../domain/modelos';
 import { faltantes, recomendar } from '../../domain/plan';
 import { BarraProgreso } from '../componentes/BarraProgreso';
 import { PuntosEscribiendo } from '../componentes/PuntosEscribiendo';
@@ -48,6 +48,13 @@ interface Props {
   modoIa?: 'local' | 'basico';
   /** Si se pasa, tocar el indicador de modo abre la pantalla para descargar o activar la IA local. */
   alAbrirIa?: () => void;
+  /** El alojamiento elegido en el explorador. Con él, la reserva se limita a ese alojamiento. */
+  contexto?: ContextoAlojamiento | null;
+  /**
+   * Identifica CADA llegada desde un alojamiento: cuando cambia, la conversación empieza de nuevo con el `contexto`.
+   * Volver a la pestaña con la misma clave no borra lo que ya se habló.
+   */
+  claveContexto?: number;
 }
 
 const POLL_COLA_MS = 3_000;
@@ -109,8 +116,23 @@ function insigniasDe(indice: number, o: Opcion, todas: Opcion[], indiceRecomenda
   return etiquetas;
 }
 
-export function PantallaAgente({ casos, alPagar, resolverReservaEnCola, modoIa = 'basico', alAbrirIa }: Props) {
-  const { estado, ocupado, enviar, elegir, confirmar, rechazar, reiniciar } = useAgente(casos);
+export function PantallaAgente({
+  casos,
+  alPagar,
+  resolverReservaEnCola,
+  modoIa = 'basico',
+  alAbrirIa,
+  contexto,
+  claveContexto,
+}: Props) {
+  const { estado, ocupado, enviar, elegir, confirmar, rechazar, reiniciar } = useAgente(casos, contexto ?? undefined);
+  // La primera conversación ya nació con el contexto; solo una llegada NUEVA (otra clave) la reinicia.
+  const claveAtendida = useRef(claveContexto);
+  useEffect(() => {
+    if (claveContexto === claveAtendida.current) return;
+    claveAtendida.current = claveContexto;
+    reiniciar(contexto ?? undefined);
+  }, [claveContexto, contexto, reiniciar]);
   const [texto, setTexto] = useState('');
   const [verPlan, setVerPlan] = useState(false);
   const [reservaDeCola, setReservaDeCola] = useState<string | null>(null);
@@ -198,6 +220,11 @@ export function PantallaAgente({ casos, alPagar, resolverReservaEnCola, modoIa =
         <View style={estilos.fechaFila}>
           <Insignia texto="Hoy · Asistencia en tiempo real" />
         </View>
+        {estado.alojamiento ? (
+          <View style={estilos.fechaFila}>
+            <Insignia texto={`Reservando en ${estado.alojamiento.titulo}`} tono="exito" />
+          </View>
+        ) : null}
 
         {estado.mensajes.map((m) => {
           const esUsuario = m.rol === 'usuario';
@@ -269,7 +296,7 @@ export function PantallaAgente({ casos, alPagar, resolverReservaEnCola, modoIa =
         {estado.fase === 'EN_COLA' && reservaDeCola && (
           <Boton titulo="Ver reserva y pagar" onPress={() => alPagar(reservaDeCola)} />
         )}
-        {terminada && <Boton variante="contorno" titulo="Nueva reserva" onPress={reiniciar} />}
+        {terminada && <Boton variante="contorno" titulo="Nueva reserva" onPress={() => reiniciar()} />}
       </ScrollView>
 
       {!terminada && (

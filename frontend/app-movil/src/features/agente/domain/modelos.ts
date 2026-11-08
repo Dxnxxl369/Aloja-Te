@@ -42,6 +42,13 @@ export interface Cliente {
   nombre: string;
 }
 
+/** Un alojamiento ya elegido en el explorador: el asistente reserva en ese y no ofrece otros. */
+export interface ContextoAlojamiento {
+  id: string;
+  titulo: string;
+  ciudad: string;
+}
+
 export interface Mensaje {
   id: number;
   rol: 'usuario' | 'agente';
@@ -78,6 +85,8 @@ export interface EstadoAgente {
   reservaId: string | null;
   /** Clave de la reserva guardada en cola (fase EN_COLA). */
   claveCola: string | null;
+  /** Si el usuario llegó desde la ficha de un alojamiento: la búsqueda se limita a ese. */
+  alojamiento: ContextoAlojamiento | null;
 }
 
 export type Disponible = 'SI' | 'NO' | 'DESCONOCIDA';

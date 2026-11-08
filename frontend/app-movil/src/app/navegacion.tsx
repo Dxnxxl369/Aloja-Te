@@ -18,16 +18,18 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
-import { Alert, Share, View } from 'react-native';
+import { ActivityIndicator, Alert, Share, StyleSheet, Text, View } from 'react-native';
 import { MODELO_IA, modeloLocal, useEstadoModelo, useEstadoSync, useSesion } from '../core';
 import { PantallaAgente } from '../features/agente';
-import { PantallaDetalle, PantallaExplorar } from '../features/catalogo';
+import type { ContextoAlojamiento } from '../features/agente';
+import { PantallaDetalle, PantallaExplorar, useDetalle } from '../features/catalogo';
 import { PantallaPerfil } from '../features/cuenta';
 import { PantallaModeloIa } from '../features/ia';
 import { PantallaPago } from '../features/pagos';
 import type { SolicitudPago } from '../features/pagos';
-import { PantallaMisReservas, PantallaReserva } from '../features/reservas';
+import { PantallaMisReservas, PantallaReserva, PantallaReservaManual } from '../features/reservas';
 import { AvisoSinRed } from '../shared/ui/AvisoSinRed';
+import { Boton } from '../shared/ui/Boton';
 import { Encabezado } from '../shared/ui/Encabezado';
 import type { DatosTarjetaAlojamiento } from '../shared/ui/TarjetaAlojamiento';
 import { COLOR } from '../shared/ui/tema';
@@ -37,13 +39,15 @@ import type { Features } from './features';
 type RutasTabs = {
   Explorar: undefined;
   MisReservas: undefined;
-  Agente: undefined;
+  /** `alojamiento`: llegó desde la ficha de un alojamiento; `inicio` distingue cada llegada (reinicia la conversación). */
+  Agente: { alojamiento?: ContextoAlojamiento; inicio?: number } | undefined;
   Perfil: undefined;
 };
 
 type RutasRaiz = {
   Tabs: NavigatorScreenParams<RutasTabs> | undefined;
   Detalle: { datos: DatosTarjetaAlojamiento };
+  ReservaManual: { alojamientoId: string; titulo: string };
   ModeloIa: undefined;
   Reserva: { reservaId: string; pagoRecibido?: boolean };
   Pago: { solicitud: SolicitudPago };
@@ -116,6 +120,11 @@ function useIaLocal() {
   );
 }
 
+/** Lo que el asistente necesita saber del alojamiento elegido. `inicio` hace que cada llegada empiece una conversación nueva. */
+function paramsAsistente(datos: DatosTarjetaAlojamiento): RutasTabs['Agente'] {
+  return { alojamiento: { id: datos.id, titulo: datos.titulo, ciudad: datos.ciudad ?? '' }, inicio: Date.now() };
+}
+
 function RutaExplorar({ navigation }: PropsTab<'Explorar'>) {
   const { catalogo } = useFeatures();
   const estadoModelo = useEstadoModelo();
@@ -124,8 +133,8 @@ function RutaExplorar({ navigation }: PropsTab<'Explorar'>) {
       <PantallaExplorar
         casos={catalogo.casos}
         alVer={(datos) => navigation.navigate('Detalle', { datos })}
-        // Por ahora reservar es hablar con el asistente; la reserva manual llega en la Fase 4.
-        alReservar={() => navigation.navigate('Agente')}
+        alReservarManual={(datos) => navigation.navigate('ReservaManual', { alojamientoId: datos.id, titulo: datos.titulo })}
+        alReservarConAsistente={(datos) => navigation.navigate('Agente', paramsAsistente(datos))}
         alAbrirAsistente={() => navigation.navigate('Agente')}
         iaLista={estadoModelo === 'CARGADO'}
       />
@@ -133,7 +142,7 @@ function RutaExplorar({ navigation }: PropsTab<'Explorar'>) {
   );
 }
 
-function RutaAgente({ navigation }: PropsTab<'Agente'>) {
+function RutaAgente({ navigation, route }: PropsTab<'Agente'>) {
   const { agente, reservas } = useFeatures();
   useIaLocal();
   const resolverReservaEnCola = useCallback(
@@ -149,6 +158,8 @@ function RutaAgente({ navigation }: PropsTab<'Agente'>) {
         resolverReservaEnCola={resolverReservaEnCola}
         modoIa={estadoModelo === 'CARGADO' ? 'local' : 'basico'}
         alAbrirIa={() => navigation.navigate('ModeloIa')}
+        contexto={route.params?.alojamiento}
+        claveContexto={route.params?.inicio}
       />
     </Marco>
   );
@@ -218,8 +229,7 @@ function RutaDetalle({ navigation, route }: PropsRaiz<'Detalle'>) {
   const { catalogo } = useFeatures();
   const estadoModelo = useEstadoModelo();
   const { datos } = route.params;
-  // Por ahora reservar es hablar con el asistente; la reserva manual llega en la Fase 4.
-  const irAlAsistente = () => navigation.navigate('Tabs', { screen: 'Agente' });
+  const irAlAsistente = () => navigation.navigate('Tabs', { screen: 'Agente', params: paramsAsistente(datos) });
   const compartir = () => {
     const lugar = [datos.ciudad, datos.departamento].filter(Boolean).join(', ');
     const precio = typeof datos.precioNoche === 'number' ? ` desde Bs ${datos.precioNoche} por noche` : '';
@@ -231,12 +241,58 @@ function RutaDetalle({ navigation, route }: PropsRaiz<'Detalle'>) {
         casos={catalogo.casos}
         datos={datos}
         iaLista={estadoModelo === 'CARGADO'}
-        alReservar={irAlAsistente}
+        alReservarManual={() => navigation.navigate('ReservaManual', { alojamientoId: datos.id, titulo: datos.titulo })}
         alAsistente={irAlAsistente}
       />
     </Marco>
   );
 }
+
+/** Reservar a mano: carga las habitaciones del alojamiento y entrega la pantalla con sesión y reglas de reservas. */
+function RutaReservaManual({ navigation, route }: PropsRaiz<'ReservaManual'>) {
+  const { catalogo, reservas } = useFeatures();
+  const { sesion } = useSesion();
+  const { alojamientoId, titulo } = route.params;
+  const { detalle, cargando, error, recargar } = useDetalle(catalogo.casos, alojamientoId);
+
+  return (
+    <Marco titulo="Reservar" alVolver={navigation.goBack} alPerfil={irAPerfil(navigation)}>
+      {detalle && sesion ? (
+        <PantallaReservaManual
+          casos={reservas.casos}
+          alojamiento={{
+            alojamientoId: detalle.id,
+            anfitrionId: detalle.anfitrionId,
+            titulo: detalle.titulo,
+            unidades: detalle.unidades,
+          }}
+          cliente={{ id: sesion.usuarioId, nombre: sesion.nombre }}
+          // "replace": al volver atrás no se regresa a un formulario ya usado, sino a la ficha.
+          alCreada={(reservaId) => navigation.replace('Reserva', { reservaId })}
+          alQuedoEnCola={() => navigation.navigate('Tabs', { screen: 'MisReservas' })}
+        />
+      ) : (
+        <View style={estilosRuta.centro}>
+          {error ? (
+            <>
+              <Text accessibilityRole="alert" style={estilosRuta.error}>
+                No se pudieron cargar las habitaciones de {titulo}: {error}
+              </Text>
+              <Boton titulo="Reintentar" onPress={recargar} />
+            </>
+          ) : cargando ? (
+            <ActivityIndicator color={COLOR.primario} size="large" />
+          ) : null}
+        </View>
+      )}
+    </Marco>
+  );
+}
+
+const estilosRuta = StyleSheet.create({
+  centro: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16, padding: 24 },
+  error: { fontSize: 14, color: COLOR.error, textAlign: 'center' },
+});
 
 /** Descargar, activar y borrar el modelo de IA local (core/ia lo hace; la pantalla solo muestra). */
 function RutaModeloIa({ navigation }: PropsRaiz<'ModeloIa'>) {
@@ -348,6 +404,7 @@ export function NavegacionApp({ features }: { features: Features }) {
         <Stack.Navigator initialRouteName="Tabs" screenOptions={{ headerShown: false }}>
           <Stack.Screen name="Tabs" component={Pestanas} />
           <Stack.Screen name="Detalle" component={RutaDetalle} />
+          <Stack.Screen name="ReservaManual" component={RutaReservaManual} />
           <Stack.Screen name="ModeloIa" component={RutaModeloIa} />
           <Stack.Screen name="Reserva" component={RutaReserva} />
           <Stack.Screen name="Pago" component={RutaPago} />

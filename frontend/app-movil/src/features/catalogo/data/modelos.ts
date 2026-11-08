@@ -9,6 +9,7 @@
 
 export interface UnidadDto {
   idUnidad: string;
+  nombre?: string | null;
   capacidadHuespedes: number;
   precioNoche: number;
   estado: string; // DISPONIBLE | MANTENIMIENTO | INACTIVO
