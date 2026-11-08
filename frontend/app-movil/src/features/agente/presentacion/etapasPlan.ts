@@ -47,3 +47,9 @@ export function etapasDelPlan(plan: Paso[]): Etapa[] {
     return { titulo: e.titulo, estado };
   });
 }
+
+/** "Paso N de 8": los pasos hechos más el que está en curso. */
+export function pasoActual(plan: Paso[]): number {
+  const hechos = plan.filter((p) => p.estado === 'HECHO').length;
+  return Math.min(plan.length, hechos + 1);
+}

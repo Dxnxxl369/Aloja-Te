@@ -11,17 +11,21 @@
 import { BadgeCheck } from 'lucide-react-native';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
-import { ActivityIndicator, FlatList, RefreshControl, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { FlatList, RefreshControl, ScrollView, Text, useWindowDimensions, View } from 'react-native';
 import { Boton } from '../../../../shared/ui/Boton';
-import { COLOR, ESPACIO, FUENTE, RADIO, TAMANO } from '../../../../shared/ui/tema';
+import { COLOR, ESPACIO } from '../../../../shared/ui/tema';
+import { COMMON_TEXT } from '../../../../shared/ui/texts';
 import { TarjetaAlojamiento } from '../../../../shared/ui/TarjetaAlojamiento';
 import type { DatosTarjetaAlojamiento } from '../../../../shared/ui/TarjetaAlojamiento';
+import { FEATURED_CAROUSEL } from '../../constantes';
 import type { CasosCatalogo } from '../../domain/interfaces';
 import { BannerReservaProtegida } from '../componentes/BannerReservaProtegida';
 import { BuscadorAlojamientos } from '../componentes/BuscadorAlojamientos';
+import { EsqueletoExplorar } from '../componentes/EsqueletoExplorar';
 import { FiltrosSheet } from '../componentes/FiltrosSheet';
 import { datosTarjeta } from '../datosTarjeta';
 import { useCatalogo } from '../useCatalogo';
+import { estilos } from './PantallaExplorar.styles';
 
 interface Props {
   casos: CasosCatalogo;
@@ -29,17 +33,14 @@ interface Props {
   alVer: (datos: DatosTarjetaAlojamiento) => void;
 }
 
-/** Separación entre tarjetas del carrusel. */
-const SEPARACION = ESPACIO.m;
-
 export function PantallaExplorar({ casos, alVer }: Props) {
   const c = useCatalogo(casos);
   const { width } = useWindowDimensions();
   const [verFiltros, setVerFiltros] = useState(false);
 
   // Tarjetas delgadas: algo más de la mitad de la pantalla, así se asoma la siguiente y se nota que hay más.
-  const anchoDestacada = Math.min(Math.round(width * 0.56), 224);
-  const intervalo = anchoDestacada + SEPARACION;
+  const anchoDestacada = Math.min(Math.round(width * FEATURED_CAROUSEL.WIDTH_RATIO), FEATURED_CAROUSEL.MAX_WIDTH);
+  const intervalo = anchoDestacada + FEATURED_CAROUSEL.GAP;
 
   // `alVer` llega como función nueva en cada dibujo; esta versión es siempre la misma para que las tarjetas no se redibujen.
   const verRef = useRef(alVer);
@@ -85,16 +86,13 @@ export function PantallaExplorar({ casos, alVer }: Props) {
         />
 
         {sinNada ? (
-          <View style={estilos.centro}>
-            <ActivityIndicator color={COLOR.primario} size="large" />
-            <Text style={estilos.suave}>Buscando alojamientos…</Text>
-          </View>
+          <EsqueletoExplorar anchoTarjeta={anchoDestacada} />
         ) : falloTotal ? (
           <View style={estilos.centro}>
             <Text accessibilityRole="alert" style={estilos.error}>
               {c.error}
             </Text>
-            <Boton titulo="Reintentar" onPress={c.recargar} />
+            <Boton titulo={COMMON_TEXT.RETRY} onPress={c.recargar} />
           </View>
         ) : (
           <>
@@ -129,9 +127,9 @@ export function PantallaExplorar({ casos, alVer }: Props) {
                   ItemSeparatorComponent={Separador}
                   contentContainerStyle={estilos.carruselContenido}
                   style={estilos.carrusel}
-                  initialNumToRender={3}
-                  maxToRenderPerBatch={3}
-                  windowSize={5}
+                  initialNumToRender={FEATURED_CAROUSEL.INITIAL_RENDER}
+                  maxToRenderPerBatch={FEATURED_CAROUSEL.BATCH}
+                  windowSize={FEATURED_CAROUSEL.WINDOW}
                   removeClippedSubviews
                 />
               </Seccion>
@@ -168,7 +166,7 @@ export function PantallaExplorar({ casos, alVer }: Props) {
 }
 
 function Separador() {
-  return <View style={{ width: SEPARACION }} />;
+  return <View style={{ width: FEATURED_CAROUSEL.GAP }} />;
 }
 
 function Seccion({ titulo, icono, children }: { titulo: string; icono?: ReactNode; children: ReactNode }) {
@@ -184,22 +182,3 @@ function Seccion({ titulo, icono, children }: { titulo: string; icono?: ReactNod
     </View>
   );
 }
-
-const estilos = StyleSheet.create({
-  pantalla: { flex: 1, backgroundColor: COLOR.fondo },
-  pagina: { padding: ESPACIO.l, gap: ESPACIO.xl, paddingBottom: ESPACIO.xl },
-  titulo: { ...FUENTE.tituloFuerte, fontSize: TAMANO.titular, lineHeight: 30, color: COLOR.texto },
-  avisoCache: { ...FUENTE.medio, fontSize: TAMANO.secundario, color: COLOR.avisoOscuro },
-
-  centro: { alignItems: 'center', gap: ESPACIO.m, paddingVertical: ESPACIO.xxl },
-  suave: { ...FUENTE.normal, fontSize: TAMANO.secundario, color: COLOR.textoSuave, textAlign: 'center' },
-  error: { ...FUENTE.medio, fontSize: TAMANO.secundario, color: COLOR.errorOscuro, textAlign: 'center' },
-  vacio: { alignItems: 'center', gap: ESPACIO.m, padding: ESPACIO.xl, borderRadius: RADIO.tarjeta, backgroundColor: COLOR.tarjeta, borderWidth: 1, borderColor: COLOR.borde },
-  vacioTitulo: { ...FUENTE.titulo, fontSize: TAMANO.titulo, color: COLOR.texto, textAlign: 'center' },
-
-  seccionTitulo: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.s, flexShrink: 1 },
-  seccionTexto: { ...FUENTE.titulo, fontSize: TAMANO.titulo, color: COLOR.texto },
-  // Las tarjetas llegan hasta el borde de la pantalla al deslizar; flexGrow 0 evita que el carrusel crezca hacia abajo.
-  carrusel: { marginHorizontal: -ESPACIO.l, flexGrow: 0 },
-  carruselContenido: { paddingHorizontal: ESPACIO.l },
-});

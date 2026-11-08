@@ -8,8 +8,9 @@
 
 import { ChevronRight } from 'lucide-react-native';
 import type { LucideIcon } from 'lucide-react-native';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { COLOR, ESPACIO, FUENTE, TAMANO } from '../../../../shared/ui/tema';
+import { Pressable, Text, View } from 'react-native';
+import { COLOR } from '../../../../shared/ui/tema';
+import { estilos } from './FilaPerfil.styles';
 
 interface Props {
   Icono: LucideIcon;
@@ -39,11 +40,3 @@ export function FilaPerfil({ Icono, titulo, subtitulo, separador, alPresionar }:
     </Pressable>
   );
 }
-
-const estilos = StyleSheet.create({
-  fila: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.m, padding: ESPACIO.l },
-  separador: { borderBottomWidth: 1, borderBottomColor: COLOR.borde },
-  icono: { width: 44, height: 44, borderRadius: 22, backgroundColor: COLOR.primarioSuave, alignItems: 'center', justifyContent: 'center' },
-  titulo: { ...FUENTE.semi, fontSize: TAMANO.cuerpo, color: COLOR.texto },
-  subtitulo: { ...FUENTE.normal, fontSize: TAMANO.secundario, lineHeight: 18, color: COLOR.textoSuave },
-});

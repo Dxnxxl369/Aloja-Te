@@ -13,7 +13,7 @@ import { COLOR, ESPACIO, FUENTE, RADIO, TAMANO } from './tema';
 export type Tono = 'primario' | 'exito' | 'aviso' | 'error' | 'neutro';
 
 const TONOS: Record<Tono, { texto: string; fondo: string; borde: string }> = {
-  primario: { texto: COLOR.primario, fondo: COLOR.primarioSuave, borde: '#bfdbfe' },
+  primario: { texto: COLOR.primario, fondo: COLOR.primarioSuave, borde: COLOR.primarioBorde },
   exito: { texto: COLOR.exitoOscuro, fondo: COLOR.exitoFondo, borde: COLOR.exitoBorde },
   aviso: { texto: COLOR.avisoOscuro, fondo: COLOR.avisoFondo, borde: COLOR.avisoBorde },
   error: { texto: COLOR.errorOscuro, fondo: COLOR.errorFondo, borde: COLOR.errorBorde },

@@ -10,18 +10,24 @@
 
 import { CalendarDays, ChevronRight, Hourglass, KeyRound } from 'lucide-react-native';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { Boton } from '../../../../shared/ui/Boton';
 import { Chip } from '../../../../shared/ui/Chip';
+import { formatearDinero } from '../../../../shared/ui/dinero';
 import { formatearRango } from '../../../../shared/ui/fechas';
+import { pluralize } from '../../../../shared/ui/plural';
+import { COMMON_TEXT } from '../../../../shared/ui/texts';
+import { formatearSegundos } from '../../../../shared/ui/tiempo';
 import { Insignia } from '../../../../shared/ui/Insignia';
-import type { Tono } from '../../../../shared/ui/Insignia';
-import { COLOR, ESPACIO, FUENTE, RADIO, TAMANO } from '../../../../shared/ui/tema';
+import { COLOR } from '../../../../shared/ui/tema';
 import type { CasosReservas } from '../../domain/interfaces';
 import type { Reserva } from '../../domain/modelos';
+import { EsqueletoReservas } from '../componentes/EsqueletoReservas';
 import type { FiltroReservas } from '../organizarReservas';
 import { contarReservas, organizarReservas } from '../organizarReservas';
-import { formatearSegundos } from '../useReserva';
+import { FILTROS, TEXTO_ESTADO, TONO_ESTADO } from '../texts';
+import { useLatido } from '../useLatido';
+import { estilos } from './PantallaMisReservas.styles';
 
 interface Props {
   casos: CasosReservas;
@@ -29,42 +35,6 @@ interface Props {
   alAbrir: (reservaId: string) => void;
   /** Si se pasa, la pantalla vacía ofrece ir a explorar alojamientos. */
   alExplorar?: () => void;
-}
-
-const TEXTO_ESTADO: Record<Reserva['estado'], string> = {
-  PENDIENTE_PAGO: 'Pendiente de pago',
-  CONFIRMADA: 'Confirmada',
-  CHECKIN_REALIZADO: 'Check-in realizado',
-  COMPLETADA: 'Completada',
-  CANCELADA: 'Cancelada',
-  EXPIRADA: 'Expirada',
-  RECHAZADA_COMPENSADA: 'Rechazada',
-};
-
-const TONO_ESTADO: Record<Reserva['estado'], Tono> = {
-  PENDIENTE_PAGO: 'aviso',
-  CONFIRMADA: 'exito',
-  CHECKIN_REALIZADO: 'exito',
-  COMPLETADA: 'neutro',
-  CANCELADA: 'error',
-  EXPIRADA: 'error',
-  RECHAZADA_COMPENSADA: 'error',
-};
-
-const FILTROS: { clave: FiltroReservas; etiqueta: string }[] = [
-  { clave: 'TODAS', etiqueta: 'Todas' },
-  { clave: 'ACTIVAS', etiqueta: 'Activas' },
-  { clave: 'ANTERIORES', etiqueta: 'Anteriores' },
-];
-
-/** Hace que la pantalla se vuelva a dibujar cada segundo mientras `activo`: así las cuentas regresivas avanzan. */
-function useLatido(activo: boolean): void {
-  const [, setN] = useState(0);
-  useEffect(() => {
-    if (!activo) return;
-    const t = setInterval(() => setN((n) => n + 1), 1000);
-    return () => clearInterval(t);
-  }, [activo]);
 }
 
 export function PantallaMisReservas({ casos, clienteId, alAbrir, alExplorar }: Props) {
@@ -97,19 +67,13 @@ export function PantallaMisReservas({ casos, clienteId, alAbrir, alExplorar }: P
   // Solo hay reloj mientras haya alguna reserva con plazo corriendo en lo que se ve.
   useLatido(visibles.some((r) => casos.segundosRestantes(r) !== null));
 
-  if (reservas === null && !error) {
-    return (
-      <View style={estilos.centro}>
-        <ActivityIndicator color={COLOR.primario} size="large" />
-      </View>
-    );
-  }
+  if (reservas === null && !error) return <EsqueletoReservas />;
 
   if (reservas === null) {
     return (
       <View style={estilos.centro}>
         <Text style={estilos.error}>{error}</Text>
-        <Boton titulo="Reintentar" onPress={() => void cargar()} />
+        <Boton titulo={COMMON_TEXT.RETRY} onPress={() => void cargar()} />
       </View>
     );
   }
@@ -184,14 +148,14 @@ function TarjetaReserva({ reserva: r, segundos, alAbrir }: { reserva: Reserva; s
       <View style={estilos.fechas}>
         <CalendarDays color={COLOR.primario} size={16} />
         <Text style={estilos.fechasTexto}>
-          {formatearRango(r.checkIn, r.checkOut)} · {r.noches} noche{r.noches === 1 ? '' : 's'}
+          {formatearRango(r.checkIn, r.checkOut)} · {r.noches} {pluralize(r.noches, 'noche', 'noches')}
         </Text>
       </View>
 
       <View style={estilos.pie}>
         <Insignia texto={TEXTO_ESTADO[r.estado]} tono={TONO_ESTADO[r.estado]} />
         <Text style={estilos.total}>
-          {r.moneda} {r.total.toFixed(2)}
+          {formatearDinero(r.total, r.moneda)}
         </Text>
       </View>
 
@@ -218,29 +182,3 @@ function TarjetaReserva({ reserva: r, segundos, alAbrir }: { reserva: Reserva; s
     </Pressable>
   );
 }
-
-const estilos = StyleSheet.create({
-  pagina: { padding: ESPACIO.l, gap: ESPACIO.m, paddingBottom: ESPACIO.xxl, flexGrow: 1 },
-  centro: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: ESPACIO.l, gap: ESPACIO.m, backgroundColor: COLOR.fondo },
-  filtrosScroll: { flexGrow: 0 },
-  filtros: { gap: ESPACIO.s, alignItems: 'center' },
-  tarjeta: { backgroundColor: COLOR.tarjeta, borderRadius: RADIO.tarjeta, borderWidth: 1, borderColor: COLOR.borde, padding: ESPACIO.l, gap: ESPACIO.s },
-  cabecera: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: ESPACIO.s },
-  titulo: { flex: 1, ...FUENTE.titulo, fontSize: TAMANO.subtitulo, color: COLOR.texto },
-  suave: { ...FUENTE.normal, fontSize: TAMANO.secundario, color: COLOR.textoSuave },
-  fechas: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.s },
-  fechasTexto: { flexShrink: 1, ...FUENTE.medio, fontSize: TAMANO.secundario, color: COLOR.texto },
-  pie: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: ESPACIO.xs },
-  total: { ...FUENTE.tituloFuerte, fontSize: TAMANO.subtitulo, color: COLOR.primario },
-  plazo: { gap: ESPACIO.s, padding: ESPACIO.m, borderRadius: RADIO.control, backgroundColor: COLOR.avisoFondo, borderWidth: 1, borderColor: COLOR.avisoBorde },
-  plazoTexto: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.s },
-  plazoTitulo: { ...FUENTE.semi, fontSize: TAMANO.secundario, color: '#92400e', fontVariant: ['tabular-nums'] },
-  vencida: { padding: ESPACIO.m, borderRadius: RADIO.control, backgroundColor: COLOR.errorFondo, borderWidth: 1, borderColor: COLOR.errorBorde },
-  vencidaTexto: { ...FUENTE.medio, fontSize: TAMANO.secundario, color: COLOR.errorOscuro },
-  pin: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.s, backgroundColor: COLOR.exitoFondo, borderRadius: RADIO.control, padding: ESPACIO.s },
-  pinTexto: { ...FUENTE.medio, fontSize: TAMANO.secundario, color: COLOR.exitoOscuro },
-  vacio: { alignItems: 'center', gap: ESPACIO.m, paddingVertical: ESPACIO.xxl },
-  vacioIcono: { width: 72, height: 72, borderRadius: 36, backgroundColor: COLOR.primarioSuave, alignItems: 'center', justifyContent: 'center' },
-  vacioTitulo: { ...FUENTE.titulo, fontSize: TAMANO.titulo, color: COLOR.texto, textAlign: 'center' },
-  error: { ...FUENTE.medio, fontSize: TAMANO.secundario, color: COLOR.errorOscuro, textAlign: 'center' },
-});

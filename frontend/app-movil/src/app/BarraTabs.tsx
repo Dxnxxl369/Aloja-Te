@@ -59,7 +59,7 @@ export function BarraTabs({ state, navigation }: BottomTabBarProps) {
           >
             {item.destacado ? (
               <View style={[estilos.circulo, enfocada && { backgroundColor: COLOR.primarioPresionado }]}>
-                <Icono color="#fff" size={32} />
+                <Icono color={COLOR.blanco} size={32} />
               </View>
             ) : (
               <Icono color={enfocada ? COLOR.primario : COLOR.textoSuave} size={30} strokeWidth={enfocada ? 2.4 : 2} />

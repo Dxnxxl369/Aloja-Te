@@ -10,10 +10,12 @@
 import { Image } from 'expo-image';
 import { Building2, Camera, MapPin } from 'lucide-react-native';
 import { useState } from 'react';
-import { FlatList, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { FlatList, Text, useWindowDimensions, View } from 'react-native';
 import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
-import { COLOR, ESPACIO, FUENTE, RADIO, TAMANO } from '../../../../shared/ui/tema';
+import { COLOR } from '../../../../shared/ui/tema';
 import { Verificado } from '../../../../shared/ui/Verificado';
+import { MAX_PHOTO_DOTS } from '../../constantes';
+import { estilos } from './CarruselFotos.styles';
 
 interface Props {
   fotos: string[];
@@ -23,9 +25,6 @@ interface Props {
   verificado?: boolean;
   alto?: number;
 }
-
-/** Cuántos puntos se dibujan como máximo: más de 8 se vuelven ruido. */
-const MAX_PUNTOS = 8;
 
 export function CarruselFotos({ fotos, titulo, lugar, verificado, alto = 290 }: Props) {
   const { width } = useWindowDimensions();
@@ -78,7 +77,7 @@ export function CarruselFotos({ fotos, titulo, lugar, verificado, alto = 290 }: 
       ) : null}
       {lugar ? (
         <View style={estilos.lugar} pointerEvents="none">
-          <MapPin color="#fff" size={14} />
+          <MapPin color={COLOR.blanco} size={14} />
           <Text style={estilos.lugarTexto} numberOfLines={1}>
             {lugar}
           </Text>
@@ -87,14 +86,14 @@ export function CarruselFotos({ fotos, titulo, lugar, verificado, alto = 290 }: 
       {varias ? (
         <>
           <View style={estilos.contador} pointerEvents="none" accessible accessibilityLabel={`Foto ${indice + 1} de ${fotos.length}`}>
-            <Camera color="#fff" size={14} />
+            <Camera color={COLOR.blanco} size={14} />
             <Text style={estilos.contadorTexto}>
               {indice + 1}/{fotos.length}
             </Text>
           </View>
           <View style={estilos.puntos} pointerEvents="none">
-            {fotos.slice(0, MAX_PUNTOS).map((_, i) => (
-              <View key={i} style={[estilos.punto, i === Math.min(indice, MAX_PUNTOS - 1) && estilos.puntoActivo]} />
+            {fotos.slice(0, MAX_PHOTO_DOTS).map((_, i) => (
+              <View key={i} style={[estilos.punto, i === Math.min(indice, MAX_PHOTO_DOTS - 1) && estilos.puntoActivo]} />
             ))}
           </View>
         </>
@@ -102,38 +101,3 @@ export function CarruselFotos({ fotos, titulo, lugar, verificado, alto = 290 }: 
     </View>
   );
 }
-
-const estilos = StyleSheet.create({
-  sinFoto: { alignItems: 'center', justifyContent: 'center', backgroundColor: COLOR.primarioSuave },
-  arribaIzquierda: { position: 'absolute', top: ESPACIO.m, left: ESPACIO.m },
-  lugar: {
-    position: 'absolute',
-    left: ESPACIO.m,
-    bottom: ESPACIO.xl,
-    maxWidth: '60%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: ESPACIO.xs,
-    paddingHorizontal: ESPACIO.m,
-    paddingVertical: 4,
-    borderRadius: RADIO.pildora,
-    backgroundColor: COLOR.sobreFoto,
-  },
-  lugarTexto: { ...FUENTE.semi, fontSize: TAMANO.pequeno, color: '#fff', flexShrink: 1 },
-  contador: {
-    position: 'absolute',
-    right: ESPACIO.m,
-    bottom: ESPACIO.xl,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: ESPACIO.xs,
-    paddingHorizontal: ESPACIO.m,
-    paddingVertical: 4,
-    borderRadius: RADIO.pildora,
-    backgroundColor: COLOR.sobreFoto,
-  },
-  contadorTexto: { ...FUENTE.semi, fontSize: TAMANO.pequeno, color: '#fff' },
-  puntos: { position: 'absolute', bottom: ESPACIO.s, left: 0, right: 0, flexDirection: 'row', justifyContent: 'center', gap: 6 },
-  punto: { width: 6, height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.55)' },
-  puntoActivo: { width: 18, backgroundColor: '#fff' },
-});

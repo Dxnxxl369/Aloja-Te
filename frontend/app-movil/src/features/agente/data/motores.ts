@@ -8,20 +8,28 @@
 // Todos devuelven solo DATOS (Intencion). Ninguno ejecuta acciones.
 
 import type { Api, ModeloLocal } from '../../../core';
-import { CIUDADES, ESQUEMA_INTENCION, MESES, NUMEROS_EN_PALABRAS, PROMPT_INTENCION, RUTA_IA_INTENCION } from '../constantes';
+import {
+  CIUDADES,
+  DIA_MS,
+  ESQUEMA_INTENCION,
+  MESES,
+  NUMEROS_EN_PALABRAS,
+  OFFSET_BOLIVIA_MS,
+  PROMPT_INTENCION,
+  RUTA_IA_INTENCION,
+} from '../constantes';
 import { normalizar } from '../domain/plan';
 import type { MotorLenguaje } from '../domain/interfaces';
 import type { Criterios, Intencion } from '../domain/modelos';
 import { intencionDesdeObjeto, intencionDesdeTexto } from './mapeadores';
 import type { PeticionIntencionDto, RespuestaIntencionDto } from './modelos';
 
-const DIA_MS = 24 * 60 * 60 * 1000;
 const iso = (ms: number) => new Date(ms).toISOString().slice(0, 10);
 const tieneDatos = (i: Intencion) => Object.values(i).some((v) => v !== undefined);
 
 /** `ahora` en horario de Bolivia -> 'YYYY-MM-DD'. */
 function hoyIso(ahora: () => number): string {
-  return iso(ahora() - 4 * 60 * 60 * 1000);
+  return iso(ahora() + OFFSET_BOLIVIA_MS);
 }
 
 // --- 1) Reglas: siempre disponible, sin red ni modelo ------------------------

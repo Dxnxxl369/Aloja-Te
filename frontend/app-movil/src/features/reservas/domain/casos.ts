@@ -6,11 +6,9 @@
 // NO VA AQUÍ: HTTP, SQLite ni React: solo recibe el repositorio por interfaz.
 // ======================================================================
 
-import { MAX_NOCHES, OFFSET_BOLIVIA_MS } from '../constantes';
+import { DIA_MS, MAX_NOCHES, OFFSET_BOLIVIA_MS } from '../constantes';
 import type { CasosReservas, RepositorioReservas } from './interfaces';
 import type { Reserva, SolicitudReserva } from './modelos';
-
-const DIA_MS = 24 * 60 * 60 * 1000;
 
 /** 'YYYY-MM-DD' -> epoch ms (UTC) o null si no es una fecha real (ej. 2026-02-30). */
 function fechaUtc(texto: string): number | null {

@@ -9,13 +9,15 @@
 // Los errores técnicos no se muestran aquí: los traduce app/navegacion.tsx a un mensaje claro.
 
 import { Bot, Download, HardDrive, Smartphone, Trash2 } from 'lucide-react-native';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import { Boton } from '../../../../shared/ui/Boton';
 import { Insignia } from '../../../../shared/ui/Insignia';
-import type { Tono } from '../../../../shared/ui/Insignia';
-import { COLOR, ESPACIO, FUENTE, RADIO, TAMANO } from '../../../../shared/ui/tema';
+import { COLOR } from '../../../../shared/ui/tema';
+import { TEXTO } from '../texts';
+import type { EstadoModeloIa } from '../texts';
+import { estilos } from './PantallaModeloIa.styles';
 
-export type EstadoModeloIa = 'NO_SOPORTADO' | 'NO_DESCARGADO' | 'DESCARGANDO' | 'LISTO' | 'CARGADO' | 'ERROR';
+export type { EstadoModeloIa };
 
 interface Props {
   estado: EstadoModeloIa;
@@ -28,15 +30,6 @@ interface Props {
   alActivar: () => void;
   alEliminar: () => void;
 }
-
-const TEXTO: Record<EstadoModeloIa, { etiqueta: string; tono: Tono }> = {
-  NO_SOPORTADO: { etiqueta: 'No disponible en este celular', tono: 'neutro' },
-  NO_DESCARGADO: { etiqueta: 'Sin descargar', tono: 'aviso' },
-  DESCARGANDO: { etiqueta: 'Descargando…', tono: 'primario' },
-  LISTO: { etiqueta: 'Descargado', tono: 'primario' },
-  CARGADO: { etiqueta: 'Funcionando', tono: 'exito' },
-  ERROR: { etiqueta: 'Hubo un problema', tono: 'error' },
-};
 
 export function PantallaModeloIa({ estado, progreso, tamanoMb, error, alDescargar, alActivar, alEliminar }: Props) {
   const porcentaje = Math.round(progreso * 100);
@@ -140,24 +133,3 @@ export function PantallaModeloIa({ estado, progreso, tamanoMb, error, alDescarga
     </ScrollView>
   );
 }
-
-const estilos = StyleSheet.create({
-  pagina: { padding: ESPACIO.l, gap: ESPACIO.l, paddingBottom: ESPACIO.xxl },
-  tarjeta: { backgroundColor: COLOR.tarjeta, borderRadius: RADIO.tarjeta, borderWidth: 1, borderColor: COLOR.borde, padding: ESPACIO.l, gap: ESPACIO.m },
-  cabecera: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.m },
-  icono: { width: 48, height: 48, borderRadius: 24, backgroundColor: COLOR.primarioSuave, alignItems: 'center', justifyContent: 'center' },
-  titulo: { ...FUENTE.titulo, fontSize: TAMANO.titulo, color: COLOR.texto },
-  texto: { ...FUENTE.normal, fontSize: TAMANO.cuerpo, lineHeight: 20, color: COLOR.texto },
-  suave: { ...FUENTE.normal, fontSize: TAMANO.secundario, lineHeight: 19, color: COLOR.textoSuave },
-  requisitos: { gap: ESPACIO.s, backgroundColor: COLOR.campo, borderRadius: RADIO.control, padding: ESPACIO.m },
-  requisito: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.s },
-  requisitoTexto: { flex: 1, ...FUENTE.normal, fontSize: TAMANO.secundario, lineHeight: 19, color: COLOR.textoSuave },
-  aviso: { backgroundColor: COLOR.avisoFondo, borderColor: COLOR.avisoBorde },
-  avisoTexto: { ...FUENTE.medio, fontSize: TAMANO.secundario, lineHeight: 19, color: '#92400e' },
-  filaProgreso: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.m },
-  progresoTexto: { ...FUENTE.semi, fontSize: TAMANO.cuerpo, color: COLOR.texto },
-  barra: { height: 8, borderRadius: 4, backgroundColor: COLOR.borde, overflow: 'hidden' },
-  barraRelleno: { height: 8, borderRadius: 4, backgroundColor: COLOR.primario },
-  fallo: { backgroundColor: COLOR.errorFondo, borderColor: COLOR.errorBorde },
-  falloTexto: { ...FUENTE.medio, fontSize: TAMANO.secundario, lineHeight: 19, color: COLOR.errorOscuro },
-});

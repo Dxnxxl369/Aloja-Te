@@ -8,13 +8,16 @@
 // Los cambios se guardan en un borrador: no se aplican hasta tocar "Aplicar".
 
 import { useEffect, useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Boton } from '../../../../shared/ui/Boton';
 import { Chip } from '../../../../shared/ui/Chip';
-import { COLOR, ESPACIO, FUENTE, TAMANO } from '../../../../shared/ui/tema';
+import { pluralize } from '../../../../shared/ui/plural';
+import { COMMON_TEXT } from '../../../../shared/ui/texts';
+import { ESPACIO } from '../../../../shared/ui/tema';
 import { HUESPEDES_RAPIDOS, PRECIOS_MAX_RAPIDOS } from '../../constantes';
 import type { FiltrosServidor } from '../../domain/modelos';
+import { estilos } from './FiltrosSheet.styles';
 
 interface Props {
   visible: boolean;
@@ -95,7 +98,7 @@ export function FiltrosSheet({ visible, valor, ciudades, ciudad, alCerrar, alApl
               {HUESPEDES_RAPIDOS.map((n) => (
                 <Chip
                   key={n}
-                  etiqueta={`${n} ${n === 1 ? 'persona' : 'personas'}`}
+                  etiqueta={`${n} ${pluralize(n, 'persona', 'personas')}`}
                   seleccionado={borrador.huespedes === n}
                   onPress={() => setBorrador((b) => ({ ...b, huespedes: n }))}
                 />
@@ -117,7 +120,7 @@ export function FiltrosSheet({ visible, valor, ciudades, ciudad, alCerrar, alApl
           </View>
           <View style={{ flex: 1 }}>
             <Boton
-              titulo="Aplicar"
+              titulo={COMMON_TEXT.APPLY}
               onPress={() => {
                 alAplicar(borrador, ciudadBorrador);
                 alCerrar();
@@ -129,22 +132,3 @@ export function FiltrosSheet({ visible, valor, ciudades, ciudad, alCerrar, alApl
     </Modal>
   );
 }
-
-const estilos = StyleSheet.create({
-  fondo: { flex: 1, backgroundColor: COLOR.scrim },
-  hoja: {
-    backgroundColor: COLOR.tarjeta,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingHorizontal: ESPACIO.l,
-    paddingTop: ESPACIO.m,
-    gap: ESPACIO.l,
-    maxHeight: '80%',
-  },
-  agarre: { alignSelf: 'center', width: 40, height: 4, borderRadius: 2, backgroundColor: COLOR.borde },
-  titulo: { ...FUENTE.tituloFuerte, fontSize: TAMANO.titulo, color: COLOR.texto },
-  grupo: { gap: ESPACIO.m },
-  etiqueta: { ...FUENTE.semi, fontSize: TAMANO.cuerpo, color: COLOR.texto },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: ESPACIO.s },
-  acciones: { flexDirection: 'row', gap: ESPACIO.m },
-});

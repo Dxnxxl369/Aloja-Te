@@ -9,13 +9,15 @@
 // Cada opción es una FilaPerfil dentro de una SeccionPerfil; para agregar una nueva basta con poner otra fila.
 
 import { Bot, CalendarDays, LogOut } from 'lucide-react-native';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import type { EstadoModelo } from '../../../../core';
 import { Boton } from '../../../../shared/ui/Boton';
-import { COLOR, ESPACIO } from '../../../../shared/ui/tema';
+import { COLOR } from '../../../../shared/ui/tema';
 import { FilaPerfil } from '../componentes/FilaPerfil';
 import { SeccionPerfil } from '../componentes/SeccionPerfil';
 import { TarjetaCuenta } from '../componentes/TarjetaCuenta';
+import { TEXTO_IA, TEXTO_ROL } from '../texts';
+import { estilos } from './PantallaPerfil.styles';
 
 interface Props {
   nombre: string;
@@ -27,18 +29,6 @@ interface Props {
   alAbrirIa: () => void;
   alCerrarSesion: () => void;
 }
-
-/** Lo que dice la fila del agente inteligente según su estado (en palabras del usuario, sin términos técnicos). */
-const TEXTO_IA: Record<EstadoModelo, string> = {
-  CARGADO: 'Funcionando en tu celular',
-  LISTO: 'Descargado: se activa al abrir el agente',
-  DESCARGANDO: 'Descargando…',
-  NO_DESCARGADO: 'Sin descargar: el agente entiende frases simples',
-  NO_SOPORTADO: 'No disponible en este celular',
-  ERROR: 'Hubo un problema: toca para revisar',
-};
-
-const TEXTO_ROL: Record<string, string> = { CLIENTE: 'Huésped', ANFITRION: 'Anfitrión', ADMINISTRADOR: 'Administrador' };
 
 export function PantallaPerfil({ nombre, email, rol, estadoIa, alMisReservas, alAbrirIa, alCerrarSesion }: Props) {
   return (
@@ -64,8 +54,3 @@ export function PantallaPerfil({ nombre, email, rol, estadoIa, alMisReservas, al
     </ScrollView>
   );
 }
-
-const estilos = StyleSheet.create({
-  pagina: { padding: ESPACIO.l, gap: ESPACIO.xl },
-  salir: { marginTop: ESPACIO.s },
-});

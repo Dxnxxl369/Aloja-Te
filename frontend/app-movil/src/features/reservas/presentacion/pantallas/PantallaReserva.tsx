@@ -11,18 +11,22 @@
 import { Image } from 'expo-image';
 import { Building2, Calendar, CalendarCheck, CheckCircle2, CreditCard, Hourglass, Lock, MapPin, Moon, Users, X } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
-import type { ReactNode } from 'react';
 import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Boton } from '../../../../shared/ui/Boton';
+import { FilaDato } from '../../../../shared/ui/FilaDato';
+import { formatearDinero } from '../../../../shared/ui/dinero';
 import { Insignia } from '../../../../shared/ui/Insignia';
-import type { Tono } from '../../../../shared/ui/Insignia';
-import { COLOR, ESPACIO, FUENTE, RADIO, SOMBRA_FLOTANTE, TAMANO } from '../../../../shared/ui/tema';
+import { pluralize } from '../../../../shared/ui/plural';
+import { formatearSegundos } from '../../../../shared/ui/tiempo';
+import { COLOR, ESPACIO } from '../../../../shared/ui/tema';
 import { Verificado } from '../../../../shared/ui/Verificado';
-import { MINUTOS_BLOQUEO } from '../../constantes';
+import { ESPERA_LARGA_S, MINUTOS_BLOQUEO } from '../../constantes';
 import type { CasosReservas } from '../../domain/interfaces';
 import type { FichaAlojamiento, Reserva } from '../../domain/modelos';
-import { formatearSegundos, useReserva } from '../useReserva';
+import { TEXTO_ESTADO, TONO_ESTADO } from '../texts';
+import { useReserva } from '../useReserva';
+import { estilos } from './PantallaReserva.styles';
 
 interface Props {
   casos: CasosReservas;
@@ -36,29 +40,6 @@ interface Props {
   /** true cuando el usuario viene de pagar: la reserva se confirma sola cuando el servidor la actualice. */
   pagoRecibido?: boolean;
 }
-
-/** Segundos de espera antes de avisar que la confirmación tarda más de lo normal. */
-const ESPERA_LARGA_S = 45;
-
-const TEXTO_ESTADO: Record<Reserva['estado'], string> = {
-  PENDIENTE_PAGO: 'Pendiente de pago',
-  CONFIRMADA: 'Confirmada',
-  CHECKIN_REALIZADO: 'Check-in realizado',
-  COMPLETADA: 'Completada',
-  CANCELADA: 'Cancelada',
-  EXPIRADA: 'Expirada (no se pagó a tiempo)',
-  RECHAZADA_COMPENSADA: 'Rechazada',
-};
-
-const TONO_ESTADO: Record<Reserva['estado'], Tono> = {
-  PENDIENTE_PAGO: 'aviso',
-  CONFIRMADA: 'exito',
-  CHECKIN_REALIZADO: 'exito',
-  COMPLETADA: 'exito',
-  CANCELADA: 'error',
-  EXPIRADA: 'error',
-  RECHAZADA_COMPENSADA: 'error',
-};
 
 export function PantallaReserva({ casos, reservaId, alPagar, cargarFicha, pagoRecibido = false }: Props) {
   const { reserva, error, segundos, sePuedePagar, cancelar, cancelando, errorCancelar } = useReserva(casos, reservaId);
@@ -104,7 +85,7 @@ export function PantallaReserva({ casos, reservaId, alPagar, cargarFicha, pagoRe
   }
 
   const pendiente = reserva.estado === 'PENDIENTE_PAGO';
-  const total = `${reserva.moneda} ${reserva.total.toFixed(2)}`;
+  const total = formatearDinero(reserva.total, reserva.moneda);
   const plazoTotal = MINUTOS_BLOQUEO * 60;
   const progreso = segundos === null ? 0 : Math.min(1, Math.max(0, segundos / plazoTotal));
   const vencido = segundos === 0;
@@ -197,15 +178,15 @@ export function PantallaReserva({ casos, reservaId, alPagar, cargarFicha, pagoRe
               <Insignia texto={TEXTO_ESTADO[reserva.estado]} tono={TONO_ESTADO[reserva.estado]} />
             </View>
 
-            <Fila icono={<Calendar color={COLOR.textoSuave} size={20} />} etiqueta="Entrada (check-in)" valor={reserva.checkIn} />
-            <Fila icono={<CalendarCheck color={COLOR.textoSuave} size={20} />} etiqueta="Salida (check-out)" valor={reserva.checkOut} />
-            <Fila icono={<Moon color={COLOR.textoSuave} size={20} />} etiqueta="Duración" valor={`${reserva.noches} noche${reserva.noches === 1 ? '' : 's'}`} />
-            <Fila icono={<Users color={COLOR.textoSuave} size={20} />} etiqueta="Huéspedes" valor={String(reserva.huespedes)} />
+            <FilaDato icono={<Calendar color={COLOR.textoSuave} size={20} />} etiqueta="Entrada (check-in)" valor={reserva.checkIn} />
+            <FilaDato icono={<CalendarCheck color={COLOR.textoSuave} size={20} />} etiqueta="Salida (check-out)" valor={reserva.checkOut} />
+            <FilaDato icono={<Moon color={COLOR.textoSuave} size={20} />} etiqueta="Duración" valor={`${reserva.noches} ${pluralize(reserva.noches, 'noche', 'noches')}`} />
+            <FilaDato icono={<Users color={COLOR.textoSuave} size={20} />} etiqueta="Huéspedes" valor={String(reserva.huespedes)} />
 
             <View style={estilos.resumen}>
               <View style={estilos.filaPrecio}>
                 <Text style={estilos.suave}>
-                  {reserva.moneda} {reserva.precioNoche.toFixed(2)} × {reserva.noches} noche{reserva.noches === 1 ? '' : 's'}
+                  {formatearDinero(reserva.precioNoche, reserva.moneda)} × {reserva.noches} {pluralize(reserva.noches, 'noche', 'noches')}
                 </Text>
                 <Text style={estilos.suave}>{total}</Text>
               </View>
@@ -274,85 +255,3 @@ export function PantallaReserva({ casos, reservaId, alPagar, cargarFicha, pagoRe
     </View>
   );
 }
-
-function Fila({ icono, etiqueta, valor }: { icono: ReactNode; etiqueta: string; valor: string }) {
-  return (
-    <View style={estilos.fila}>
-      <View style={estilos.filaEtiqueta}>
-        {icono}
-        <Text style={estilos.texto}>{etiqueta}</Text>
-      </View>
-      <Text style={estilos.valor}>{valor}</Text>
-    </View>
-  );
-}
-
-const estilos = StyleSheet.create({
-  pantalla: { flex: 1, backgroundColor: COLOR.fondo },
-  pagina: { padding: ESPACIO.l, gap: ESPACIO.l, paddingBottom: ESPACIO.xxl },
-  centro: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: ESPACIO.l, backgroundColor: COLOR.fondo },
-
-  tarjeta: { backgroundColor: COLOR.tarjeta, borderRadius: RADIO.tarjeta, borderWidth: 1, borderColor: COLOR.borde, overflow: 'hidden' },
-  portada: { height: 160, backgroundColor: COLOR.primarioSuave, alignItems: 'center', justifyContent: 'center' },
-  verificado: { position: 'absolute', left: ESPACIO.m, bottom: ESPACIO.m },
-  lugar: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.s, marginTop: ESPACIO.xs },
-  codigo: { position: 'absolute', right: ESPACIO.m, bottom: ESPACIO.m, backgroundColor: '#fff', borderRadius: RADIO.control, paddingHorizontal: ESPACIO.s, paddingVertical: 2 },
-  codigoTexto: { ...FUENTE.semi, fontSize: TAMANO.micro, color: COLOR.textoSuave, letterSpacing: 0.5 },
-  cuerpo: { padding: ESPACIO.l, gap: ESPACIO.xs },
-  titulo: { ...FUENTE.tituloFuerte, fontSize: TAMANO.titulo, color: COLOR.texto },
-  suave: { ...FUENTE.normal, fontSize: TAMANO.secundario, color: COLOR.textoSuave },
-  texto: { ...FUENTE.normal, fontSize: TAMANO.cuerpo, color: COLOR.texto },
-  valor: { ...FUENTE.semi, fontSize: TAMANO.cuerpo, color: COLOR.texto },
-
-  cuenta: { backgroundColor: COLOR.avisoFondo, borderRadius: RADIO.tarjeta, borderWidth: 1, borderColor: COLOR.avisoBorde, padding: ESPACIO.l, gap: ESPACIO.m },
-  cuentaCabecera: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.m },
-  cuentaIcono: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#fef3c7', alignItems: 'center', justifyContent: 'center' },
-  cuentaTitulo: { flex: 1, ...FUENTE.titulo, fontSize: TAMANO.cuerpo, lineHeight: 20, color: '#92400e' },
-  // Texto blanco: sobre el ámbar vivo daba 3.2:1; con el ámbar oscuro da 5:1.
-  reloj: { backgroundColor: COLOR.avisoOscuro, borderRadius: RADIO.pildora, paddingHorizontal: ESPACIO.m, paddingVertical: 4 },
-  relojTexto: { ...FUENTE.fuerte, fontSize: TAMANO.secundario, color: '#fff', fontVariant: ['tabular-nums'] },
-  cuentaDescripcion: { ...FUENTE.normal, fontSize: TAMANO.secundario, lineHeight: 19, color: '#92400e' },
-  barra: { height: 6, borderRadius: 3, backgroundColor: '#fde68a', overflow: 'hidden' },
-  barraRelleno: { height: 6, borderRadius: 3 },
-
-  estado: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: COLOR.campo, borderRadius: RADIO.control, padding: ESPACIO.m },
-  etiquetaMayus: { ...FUENTE.medio, fontSize: TAMANO.pequeno, letterSpacing: 0.8, color: COLOR.textoSuave },
-  fila: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  filaEtiqueta: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.m },
-  resumen: { backgroundColor: COLOR.campo, borderRadius: RADIO.control, padding: ESPACIO.l, gap: ESPACIO.s },
-  filaPrecio: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  nota: { ...FUENTE.normal, fontSize: TAMANO.pequeno, color: COLOR.textoSuave },
-  separador: { height: 1, backgroundColor: COLOR.borde, marginVertical: ESPACIO.xs },
-  total: { ...FUENTE.tituloFuerte, fontSize: TAMANO.titulo, color: COLOR.primario },
-
-  confirmada: { alignItems: 'center', gap: ESPACIO.s, backgroundColor: COLOR.exitoFondo, borderWidth: 1, borderColor: COLOR.exitoBorde, borderRadius: RADIO.tarjeta, padding: ESPACIO.xl },
-  confirmadaTitulo: { ...FUENTE.titulo, fontSize: TAMANO.titulo, color: COLOR.exitoOscuro, textAlign: 'center' },
-  confirmadaTexto: { ...FUENTE.normal, fontSize: TAMANO.cuerpo, color: COLOR.texto, textAlign: 'center' },
-  pinCaja: { flexDirection: 'row', gap: ESPACIO.s, marginTop: ESPACIO.s },
-  pinDigito: {
-    width: 44,
-    height: 56,
-    textAlign: 'center',
-    textAlignVertical: 'center',
-    lineHeight: 56,
-    ...FUENTE.fuerte,
-    fontSize: TAMANO.titular,
-    color: COLOR.texto,
-    backgroundColor: '#fff',
-    borderRadius: RADIO.control,
-    borderWidth: 1,
-    borderColor: COLOR.exitoBorde,
-    overflow: 'hidden',
-  },
-  confirmando: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.m, backgroundColor: COLOR.primarioSuave, borderWidth: 1, borderColor: '#bfdbfe', borderRadius: RADIO.tarjeta, padding: ESPACIO.l },
-  confirmandoTitulo: { ...FUENTE.semi, fontSize: TAMANO.cuerpo, color: COLOR.primario },
-  confirmandoTexto: { ...FUENTE.normal, fontSize: TAMANO.secundario, lineHeight: 19, color: COLOR.texto, marginTop: 2 },
-
-  seguro: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: ESPACIO.s },
-  seguroTexto: { ...FUENTE.medio, fontSize: TAMANO.pequeno, color: COLOR.textoSuave },
-  error: { ...FUENTE.normal, fontSize: TAMANO.secundario, color: COLOR.errorOscuro, textAlign: 'center' },
-
-  barraInferior: { padding: ESPACIO.l, gap: ESPACIO.s, backgroundColor: COLOR.tarjeta, borderTopWidth: 1, borderTopColor: COLOR.borde, ...SOMBRA_FLOTANTE },
-  cancelar: { minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: ESPACIO.s },
-  cancelarTexto: { ...FUENTE.medio, fontSize: TAMANO.secundario, color: COLOR.textoSuave },
-});

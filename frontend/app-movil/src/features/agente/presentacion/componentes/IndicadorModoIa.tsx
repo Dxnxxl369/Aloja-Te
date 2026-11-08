@@ -7,8 +7,9 @@
 // ======================================================================
 
 import { Cpu, Download } from 'lucide-react-native';
-import { Pressable, StyleSheet } from 'react-native';
+import { Pressable } from 'react-native';
 import { COLOR } from '../../../../shared/ui/tema';
+import { estilos } from './IndicadorModoIa.styles';
 
 interface Props {
   modo: 'local' | 'basico';
@@ -33,9 +34,3 @@ export function IndicadorModoIa({ modo, alPresionar }: Props) {
     </Pressable>
   );
 }
-
-const estilos = StyleSheet.create({
-  // Mismo tamaño y estilo que el botón de compartir de las otras cabeceras.
-  boton: { width: 36, height: 36, borderRadius: 18, backgroundColor: COLOR.primarioSuave, alignItems: 'center', justifyContent: 'center' },
-  botonLocal: { backgroundColor: '#dcfce7' },
-});

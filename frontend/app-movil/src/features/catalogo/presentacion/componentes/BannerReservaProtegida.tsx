@@ -8,37 +8,23 @@
 // El texto describe lo que la app hace de verdad: bloquea las fechas mientras se paga (MINUTOS_BLOQUEO) y cobra con QR Simple.
 
 import { QrCode, ShieldCheck } from 'lucide-react-native';
-import { StyleSheet, Text, View } from 'react-native';
-import { COLOR, ESPACIO, FUENTE, RADIO, TAMANO } from '../../../../shared/ui/tema';
+import { Text, View } from 'react-native';
+import { COLOR, ESPACIO } from '../../../../shared/ui/tema';
+import { estilos } from './BannerReservaProtegida.styles';
 
 export function BannerReservaProtegida() {
   return (
     <View style={estilos.caja} accessible accessibilityLabel="Reserva protegida. Bloqueo de inventario inmediato con QR y pago bancario nacional boliviano.">
       <View style={{ flex: 1, gap: ESPACIO.xs }}>
         <View style={estilos.titulo}>
-          <ShieldCheck color="#fff" size={18} />
+          <ShieldCheck color={COLOR.blanco} size={18} />
           <Text style={estilos.tituloTexto}>RESERVA PROTEGIDA</Text>
         </View>
         <Text style={estilos.texto}>Bloqueo de inventario inmediato con QR y pago bancario nacional boliviano.</Text>
       </View>
       <View style={estilos.qr}>
-        <QrCode color="#fff" size={28} />
+        <QrCode color={COLOR.blanco} size={28} />
       </View>
     </View>
   );
 }
-
-const estilos = StyleSheet.create({
-  caja: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: ESPACIO.m,
-    padding: ESPACIO.l,
-    borderRadius: RADIO.tarjeta,
-    backgroundColor: COLOR.primario,
-  },
-  titulo: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.s },
-  tituloTexto: { ...FUENTE.fuerte, fontSize: TAMANO.secundario, letterSpacing: 0.8, color: '#fff' },
-  texto: { ...FUENTE.normal, fontSize: TAMANO.secundario, lineHeight: 19, color: '#eff6ff' },
-  qr: { width: 48, height: 48, borderRadius: RADIO.control, backgroundColor: 'rgba(255,255,255,0.18)', alignItems: 'center', justifyContent: 'center' },
-});

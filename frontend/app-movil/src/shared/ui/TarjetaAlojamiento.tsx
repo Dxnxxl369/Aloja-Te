@@ -13,6 +13,8 @@ import { Building2, MapPin } from 'lucide-react-native';
 import { memo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Calificacion } from './Calificacion';
+import { FEATURED_PHOTO_HEIGHT, LIST_PHOTO_SIZE } from './cardSizes';
+import { formatearPrecio } from './dinero';
 import { COLOR, ESPACIO, FUENTE, RADIO, TAMANO } from './tema';
 
 export interface DatosTarjetaAlojamiento {
@@ -40,11 +42,6 @@ interface Props {
   alVer: (datos: DatosTarjetaAlojamiento) => void;
   /** Ancho fijo (para un carrusel horizontal); sin él la tarjeta ocupa todo el ancho. */
   ancho?: number;
-}
-
-/** "480" si es entero, "480.50" si tiene centavos. */
-export function formatearPrecio(n: number): string {
-  return Number.isInteger(n) ? String(n) : n.toFixed(2);
 }
 
 /** Foto con caché en disco y memoria (expo-image); sin foto, un edificio. */
@@ -151,7 +148,7 @@ export const TarjetaAlojamiento = memo(TarjetaAlojamientoBase);
 
 const estilos = StyleSheet.create({
   tarjeta: { backgroundColor: COLOR.tarjeta, borderRadius: RADIO.tarjeta, borderWidth: 1, borderColor: COLOR.borde, overflow: 'hidden' },
-  fotoCompacta: { width: '100%', height: 128, backgroundColor: COLOR.campo },
+  fotoCompacta: { width: '100%', height: FEATURED_PHOTO_HEIGHT, backgroundColor: COLOR.campo },
   sinFoto: { alignItems: 'center', justifyContent: 'center', backgroundColor: COLOR.primarioSuave },
   notaSobreFoto: { position: 'absolute', top: ESPACIO.s, right: ESPACIO.s },
   cuerpo: { padding: ESPACIO.m, gap: ESPACIO.xs },
@@ -171,7 +168,7 @@ const estilos = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLOR.borde,
   },
-  fotoLista: { width: 80, height: 80, borderRadius: RADIO.control, backgroundColor: COLOR.campo },
+  fotoLista: { width: LIST_PHOTO_SIZE, height: LIST_PHOTO_SIZE, borderRadius: RADIO.control, backgroundColor: COLOR.campo },
   cuerpoLista: { flex: 1, gap: 2, justifyContent: 'center' },
   pieLista: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: ESPACIO.s, marginTop: 2 },
 });

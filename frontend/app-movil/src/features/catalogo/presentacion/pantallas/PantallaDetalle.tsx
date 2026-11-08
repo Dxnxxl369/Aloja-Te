@@ -10,14 +10,15 @@
 
 import { ArrowRight } from 'lucide-react-native';
 import { useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import { BarraReserva } from '../../../../shared/ui/BarraReserva';
 import { Boton } from '../../../../shared/ui/Boton';
-import { formatearPrecio } from '../../../../shared/ui/TarjetaAlojamiento';
+import { formatearPrecio } from '../../../../shared/ui/dinero';
+import { COMMON_TEXT } from '../../../../shared/ui/texts';
 import type { DatosTarjetaAlojamiento } from '../../../../shared/ui/TarjetaAlojamiento';
-import { COLOR, ESPACIO, FUENTE, TAMANO } from '../../../../shared/ui/tema';
 import type { CasosCatalogo } from '../../domain/interfaces';
 import { CarruselFotos } from '../componentes/CarruselFotos';
+import { EsqueletoDatosRapidos, EsqueletoServicios } from '../componentes/ficha/EsqueletoFicha';
 import { FichaDatosRapidos } from '../componentes/ficha/FichaDatosRapidos';
 import { FichaEncabezado } from '../componentes/ficha/FichaEncabezado';
 import { FichaPoliticas } from '../componentes/ficha/FichaPoliticas';
@@ -26,6 +27,7 @@ import { FichaUbicacion } from '../componentes/ficha/FichaUbicacion';
 import { unir } from '../componentes/ficha/texto';
 import { OpcionesReservaSheet } from '../componentes/OpcionesReservaSheet';
 import { useDetalle } from '../useDetalle';
+import { estilos } from './PantallaDetalle.styles';
 
 interface Props {
   casos: CasosCatalogo;
@@ -67,22 +69,22 @@ export function PantallaDetalle({ casos, datos, alReservarManual, alAsistente }:
             longitud={detalle?.longitud}
           />
 
-          <FichaDatosRapidos capacidadMax={detalle?.capacidadMax} horarioEntrada={detalle?.horarioEntrada} horarioSalida={detalle?.horarioSalida} />
+          {/* Mientras llega el detalle, cada bloque que falta se reserva con su esqueleto (así la ficha no salta). */}
+          {cargando && !detalle ? (
+            <EsqueletoDatosRapidos />
+          ) : (
+            <FichaDatosRapidos capacidadMax={detalle?.capacidadMax} horarioEntrada={detalle?.horarioEntrada} horarioSalida={detalle?.horarioSalida} />
+          )}
 
           <FichaSobreYServicios descripcion={detalle?.descripcion ?? datos.descripcion} servicios={detalle?.servicios ?? []} />
 
-          {cargando && !detalle ? (
-            <View style={estilos.cargando}>
-              <ActivityIndicator color={COLOR.primario} />
-              <Text style={estilos.suave}>Cargando detalles…</Text>
-            </View>
-          ) : null}
+          {cargando && !detalle ? <EsqueletoServicios /> : null}
           {error && !detalle ? (
             <View style={estilos.fallo}>
               <Text accessibilityRole="alert" style={estilos.error}>
                 No se pudieron cargar los detalles: {error}
               </Text>
-              <Boton variante="contorno" titulo="Reintentar" onPress={recargar} />
+              <Boton variante="contorno" titulo={COMMON_TEXT.RETRY} onPress={recargar} />
             </View>
           ) : null}
 
@@ -91,7 +93,7 @@ export function PantallaDetalle({ casos, datos, alReservarManual, alAsistente }:
       </ScrollView>
 
       <BarraReserva
-        titulo="Reservar"
+        titulo={COMMON_TEXT.RESERVE}
         alPresionar={() => setEligiendo(true)}
         precio={typeof precio === 'number' ? formatearPrecio(precio) : undefined}
         unidadPrecio="/ noche"
@@ -114,14 +116,3 @@ export function PantallaDetalle({ casos, datos, alReservarManual, alAsistente }:
     </View>
   );
 }
-
-const estilos = StyleSheet.create({
-  pantalla: { flex: 1, backgroundColor: COLOR.fondo },
-  pagina: { paddingBottom: ESPACIO.xl },
-  cuerpo: { padding: ESPACIO.l, gap: ESPACIO.l },
-  suave: { ...FUENTE.normal, fontSize: TAMANO.secundario, color: COLOR.textoSuave, flexShrink: 1 },
-
-  cargando: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: ESPACIO.m, paddingVertical: ESPACIO.m },
-  fallo: { gap: ESPACIO.m },
-  error: { ...FUENTE.medio, fontSize: TAMANO.secundario, color: COLOR.errorOscuro, textAlign: 'center' },
-});

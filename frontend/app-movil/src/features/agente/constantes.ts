@@ -6,8 +6,11 @@
 // NO VA AQUÍ: Lógica ni variables de entorno.
 // ======================================================================
 
-/** MS-01 vía Gateway (AlojamientoController: GET /api/v1/alojamientos?ciudad&precioMax&minHuespedes). */
-export const RUTA_ALOJAMIENTOS = '/api/v1/alojamientos';
+import { RUTA_ALOJAMIENTOS } from '../../shared/rutas';
+import { DIA_MS, OFFSET_BOLIVIA_MS } from '../../shared/ui/tiempo';
+
+/** La ruta de alojamientos (MS-01) y los tiempos se definen una sola vez en shared y se reexportan aquí. */
+export { DIA_MS, OFFSET_BOLIVIA_MS, RUTA_ALOJAMIENTOS };
 
 /**
  * PROPUESTA, NO EXISTE AÚN: MS-04 hoy solo tiene /health. Contrato pedido:
@@ -62,3 +65,16 @@ export const ESQUEMA_INTENCION = {
   },
   additionalProperties: false,
 } as const;
+
+/** Cada cuánto se vuelve a preguntar si una reserva en la cola offline ya se envió. */
+export const POLL_COLA_MS = 3_000;
+
+/** Respuestas rápidas que se ofrecen bajo la pregunta del agente. */
+export const CIUDADES_RAPIDAS = CIUDADES.slice(0, 4);
+export const PERSONAS_RAPIDAS = [1, 2, 3, 4];
+
+/** Los tres puntos que laten mientras el agente trabaja ("escribiendo"): cuántos son, cada cuánto sube uno, cuánto tarda en subir y las dos opacidades. */
+export const TYPING_DOTS = { COUNT: 3, STEP_MS: 160, RISE_MS: 320, OPACITY_LOW: 0.3, OPACITY_STILL: 0.6 } as const;
+
+/** Cuántos servicios se ven en la tarjeta de una opción antes del "+N". */
+export const MAX_OPTION_SERVICES = 3;

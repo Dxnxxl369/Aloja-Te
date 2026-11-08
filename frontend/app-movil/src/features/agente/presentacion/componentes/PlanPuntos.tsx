@@ -9,12 +9,13 @@
 // cuando la etapa de la izquierda ya está hecha. Solo muestra actividades operativas, nunca el razonamiento del modelo.
 
 import { Check, X } from 'lucide-react-native';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { COLOR, ESPACIO, FUENTE, TAMANO } from '../../../../shared/ui/tema';
+import { Pressable, ScrollView, Text, View } from 'react-native';
+import { COLOR } from '../../../../shared/ui/tema';
 import type { Paso } from '../../domain/modelos';
 import type { Etapa } from '../etapasPlan';
 import { etapasDelPlan, pasoVisible } from '../etapasPlan';
 import { PanelPlan } from './PanelPlan';
+import { DIAMETRO, estilos } from './PlanPuntos.styles';
 
 interface Props {
   plan: Paso[];
@@ -22,20 +23,18 @@ interface Props {
   alAlternar: () => void;
 }
 
-const DIAMETRO = 28;
-
 function Punto({ estado }: { estado: Etapa['estado'] }) {
   if (estado === 'HECHA') {
     return (
       <View style={[estilos.punto, { backgroundColor: COLOR.primario, borderColor: COLOR.primario }]}>
-        <Check color="#fff" size={16} strokeWidth={3} />
+        <Check color={COLOR.blanco} size={16} strokeWidth={3} />
       </View>
     );
   }
   if (estado === 'FALLIDA') {
     return (
       <View style={[estilos.punto, { backgroundColor: COLOR.error, borderColor: COLOR.error }]}>
-        <X color="#fff" size={16} strokeWidth={3} />
+        <X color={COLOR.blanco} size={16} strokeWidth={3} />
       </View>
     );
   }
@@ -95,28 +94,3 @@ export function PlanPuntos({ plan, abierto, alAlternar }: Props) {
     </View>
   );
 }
-
-const estilos = StyleSheet.create({
-  caja: { paddingHorizontal: ESPACIO.l, paddingVertical: ESPACIO.m },
-  fila: { flexDirection: 'row' },
-  etapa: { flex: 1, alignItems: 'center', gap: ESPACIO.xs },
-  puntoFila: { flexDirection: 'row', alignItems: 'center', alignSelf: 'stretch' },
-  linea: { flex: 1, height: 3, borderRadius: 2, backgroundColor: COLOR.borde },
-  lineaHecha: { backgroundColor: COLOR.primario },
-  sinLinea: { backgroundColor: 'transparent' },
-  punto: {
-    width: DIAMETRO,
-    height: DIAMETRO,
-    borderRadius: DIAMETRO / 2,
-    borderWidth: 2,
-    borderColor: COLOR.borde,
-    backgroundColor: COLOR.tarjeta,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  centroActual: { width: 10, height: 10, borderRadius: 5, backgroundColor: COLOR.primario },
-  titulo: { ...FUENTE.medio, fontSize: TAMANO.pequeno, color: COLOR.textoSuave },
-  tituloActual: { ...FUENTE.semi, color: COLOR.primario },
-  tituloHecha: { color: COLOR.texto },
-  panel: { maxHeight: 340, paddingHorizontal: ESPACIO.l, paddingBottom: ESPACIO.m },
-});

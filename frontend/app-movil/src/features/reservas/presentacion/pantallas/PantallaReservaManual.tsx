@@ -10,15 +10,18 @@
 
 import { CircleCheck, CircleX, Minus, Plus, Users, WifiOff } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import { BarraReserva } from '../../../../shared/ui/BarraReserva';
 import { Boton } from '../../../../shared/ui/Boton';
 import { CampoFecha } from '../../../../shared/ui/CampoFecha';
 import { hoyTexto, sumarDias } from '../../../../shared/ui/fechas';
-import { formatearPrecio } from '../../../../shared/ui/TarjetaAlojamiento';
-import { COLOR, ESPACIO, FUENTE, RADIO, TAMANO } from '../../../../shared/ui/tema';
+import { formatearDinero, formatearPrecio } from '../../../../shared/ui/dinero';
+import { pluralize } from '../../../../shared/ui/plural';
+import { COMMON_TEXT } from '../../../../shared/ui/texts';
+import { COLOR } from '../../../../shared/ui/tema';
 import type { CasosReservas } from '../../domain/interfaces';
 import type { AlojamientoReservable, UnidadReservable } from '../../domain/modelos';
+import { estilos } from './PantallaReservaManual.styles';
 
 interface Props {
   casos: CasosReservas;
@@ -148,7 +151,7 @@ export function PantallaReservaManual({ casos, alojamiento, cliente, alCreada, a
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={estilos.unidadNombre}>{u.nombre}</Text>
-                  <Text style={estilos.suave}>Hasta {u.capacidad} {u.capacidad === 1 ? 'persona' : 'personas'}</Text>
+                  <Text style={estilos.suave}>Hasta {u.capacidad} {pluralize(u.capacidad, 'persona', 'personas')}</Text>
                 </View>
                 <Text style={estilos.unidadPrecio}>
                   Bs {formatearPrecio(u.precioNoche)} <Text style={estilos.suave}>/ noche</Text>
@@ -183,7 +186,7 @@ export function PantallaReservaManual({ casos, alojamiento, cliente, alCreada, a
             <View style={estilos.contadorTexto}>
               <Users color={COLOR.primario} size={20} />
               <Text style={estilos.contadorValor}>
-                {huespedes} {huespedes === 1 ? 'persona' : 'personas'}
+                {huespedes} {pluralize(huespedes, 'persona', 'personas')}
               </Text>
             </View>
             <View style={estilos.botonesContador}>
@@ -214,9 +217,9 @@ export function PantallaReservaManual({ casos, alojamiento, cliente, alCreada, a
           <View style={estilos.resumen}>
             <View style={estilos.filaResumen}>
               <Text style={estilos.suave}>
-                Bs {formatearPrecio(unidad.precioNoche)} × {noches} {noches === 1 ? 'noche' : 'noches'}
+                Bs {formatearPrecio(unidad.precioNoche)} × {noches} {pluralize(noches, 'noche', 'noches')}
               </Text>
-              <Text style={estilos.valor}>Bs {total.toFixed(2)}</Text>
+              <Text style={estilos.valor}>{formatearDinero(total, 'Bs')}</Text>
             </View>
             <Estado disponibilidad={disponibilidad} />
           </View>
@@ -241,12 +244,12 @@ export function PantallaReservaManual({ casos, alojamiento, cliente, alCreada, a
 
       {!enCola && (
         <BarraReserva
-          titulo="Reservar"
+          titulo={COMMON_TEXT.RESERVE}
           alPresionar={() => void reservar()}
           deshabilitado={!puedeReservar}
           cargando={enviando}
           precio={total !== null && fechasListas ? total.toFixed(2) : undefined}
-          unidadPrecio={noches !== null && fechasListas ? `por ${noches} ${noches === 1 ? 'noche' : 'noches'}` : undefined}
+          unidadPrecio={noches !== null && fechasListas ? `por ${noches} ${pluralize(noches, 'noche', 'noches')}` : undefined}
           nota="Pagas en el siguiente paso"
         />
       )}
@@ -290,37 +293,3 @@ function Estado({ disponibilidad }: { disponibilidad: Disponibilidad }) {
       return null;
   }
 }
-
-const estilos = StyleSheet.create({
-  pantalla: { flex: 1, backgroundColor: COLOR.fondo },
-  pagina: { padding: ESPACIO.l, gap: ESPACIO.xl, paddingBottom: ESPACIO.xxl },
-  centro: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: ESPACIO.m, padding: ESPACIO.xl, backgroundColor: COLOR.fondo },
-  titulo: { ...FUENTE.tituloFuerte, fontSize: TAMANO.titular, lineHeight: 30, color: COLOR.texto },
-  tituloSeccion: { ...FUENTE.titulo, fontSize: TAMANO.titulo, color: COLOR.texto },
-  suave: { ...FUENTE.normal, fontSize: TAMANO.secundario, color: COLOR.textoSuave, textAlign: 'left' },
-  valor: { ...FUENTE.semi, fontSize: TAMANO.cuerpo, color: COLOR.texto },
-  grupo: { gap: ESPACIO.m },
-
-  unidad: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.m, padding: ESPACIO.l, borderRadius: RADIO.tarjeta, backgroundColor: COLOR.tarjeta, borderWidth: 1, borderColor: COLOR.borde },
-  unidadElegida: { borderColor: COLOR.primario, backgroundColor: COLOR.primarioSuave },
-  unidadNombre: { ...FUENTE.semi, fontSize: TAMANO.cuerpo, color: COLOR.texto },
-  unidadPrecio: { ...FUENTE.fuerte, fontSize: TAMANO.cuerpo, color: COLOR.texto },
-  radio: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: COLOR.borde, alignItems: 'center', justifyContent: 'center' },
-  radioElegido: { borderColor: COLOR.primario },
-  radioPunto: { width: 10, height: 10, borderRadius: 5, backgroundColor: COLOR.primario },
-
-  filaFechas: { flexDirection: 'row', gap: ESPACIO.m },
-  contador: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: ESPACIO.m, borderRadius: RADIO.tarjeta, backgroundColor: COLOR.tarjeta, borderWidth: 1, borderColor: COLOR.borde },
-  contadorTexto: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.m },
-  contadorValor: { ...FUENTE.semi, fontSize: TAMANO.cuerpo, color: COLOR.texto },
-  botonesContador: { flexDirection: 'row', gap: ESPACIO.s },
-  paso: { width: 44, height: 44, borderRadius: RADIO.control, backgroundColor: COLOR.campo, alignItems: 'center', justifyContent: 'center' },
-
-  resumen: { gap: ESPACIO.m, padding: ESPACIO.l, borderRadius: RADIO.tarjeta, backgroundColor: COLOR.campo },
-  filaResumen: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  estado: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.s },
-  estadoTexto: { flex: 1, ...FUENTE.medio, fontSize: TAMANO.secundario },
-  error: { ...FUENTE.medio, fontSize: TAMANO.secundario, color: COLOR.errorOscuro },
-  cola: { gap: ESPACIO.m, alignItems: 'center', padding: ESPACIO.l, borderRadius: RADIO.tarjeta, backgroundColor: COLOR.avisoFondo, borderWidth: 1, borderColor: COLOR.avisoBorde },
-  colaTexto: { ...FUENTE.normal, fontSize: TAMANO.secundario, lineHeight: 19, color: COLOR.texto, textAlign: 'center' },
-});

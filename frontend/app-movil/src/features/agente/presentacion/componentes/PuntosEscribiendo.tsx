@@ -8,50 +8,28 @@
 // Si la persona activó "reducir movimiento" en su celular, los puntos se quedan quietos (el texto de al lado
 // ya dice que el agente está trabajando).
 
-import { useEffect, useRef, useState } from 'react';
-import { AccessibilityInfo, Animated, StyleSheet, View } from 'react-native';
-import { COLOR } from '../../../../shared/ui/tema';
-
-const PUNTOS = 3;
-const PASO_MS = 160;
-const SUBIDA_MS = 320;
-const OPACIDAD_BAJA = 0.3;
-const OPACIDAD_QUIETA = 0.6;
-
-/** true si el sistema pide menos movimiento. Se actualiza si la persona lo cambia con la app abierta. */
-function useMovimientoReducido(): boolean {
-  const [reducido, setReducido] = useState(false);
-  useEffect(() => {
-    let vivo = true;
-    AccessibilityInfo.isReduceMotionEnabled().then(
-      (v) => vivo && setReducido(v),
-      () => undefined,
-    );
-    const suscripcion = AccessibilityInfo.addEventListener('reduceMotionChanged', setReducido);
-    return () => {
-      vivo = false;
-      suscripcion.remove();
-    };
-  }, []);
-  return reducido;
-}
+import { useEffect, useRef } from 'react';
+import { Animated, View } from 'react-native';
+import { useMovimientoReducido } from '../../../../shared/ui/useMovimientoReducido';
+import { TYPING_DOTS } from '../../constantes';
+import { estilos } from './PuntosEscribiendo.styles';
 
 export function PuntosEscribiendo() {
-  const opacidades = useRef(Array.from({ length: PUNTOS }, () => new Animated.Value(OPACIDAD_BAJA))).current;
+  const opacidades = useRef(Array.from({ length: TYPING_DOTS.COUNT }, () => new Animated.Value(TYPING_DOTS.OPACITY_LOW))).current;
   const reducido = useMovimientoReducido();
 
   useEffect(() => {
     if (reducido) {
-      opacidades.forEach((valor) => valor.setValue(OPACIDAD_QUIETA));
+      opacidades.forEach((valor) => valor.setValue(TYPING_DOTS.OPACITY_STILL));
       return;
     }
     const animaciones = opacidades.map((valor, i) =>
       Animated.loop(
         Animated.sequence([
-          Animated.delay(i * PASO_MS),
-          Animated.timing(valor, { toValue: 1, duration: SUBIDA_MS, useNativeDriver: true }),
-          Animated.timing(valor, { toValue: OPACIDAD_BAJA, duration: SUBIDA_MS, useNativeDriver: true }),
-          Animated.delay((PUNTOS - 1 - i) * PASO_MS),
+          Animated.delay(i * TYPING_DOTS.STEP_MS),
+          Animated.timing(valor, { toValue: 1, duration: TYPING_DOTS.RISE_MS, useNativeDriver: true }),
+          Animated.timing(valor, { toValue: TYPING_DOTS.OPACITY_LOW, duration: TYPING_DOTS.RISE_MS, useNativeDriver: true }),
+          Animated.delay((TYPING_DOTS.COUNT - 1 - i) * TYPING_DOTS.STEP_MS),
         ]),
       ),
     );
@@ -68,8 +46,3 @@ export function PuntosEscribiendo() {
     </View>
   );
 }
-
-const estilos = StyleSheet.create({
-  fila: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  punto: { width: 7, height: 7, borderRadius: 4, backgroundColor: COLOR.primario },
-});

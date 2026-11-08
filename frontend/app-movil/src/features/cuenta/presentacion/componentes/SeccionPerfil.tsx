@@ -7,8 +7,9 @@
 // ======================================================================
 
 import type { ReactNode } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import { COLOR, ESPACIO, FUENTE, RADIO, TAMANO } from '../../../../shared/ui/tema';
+import { Text, View } from 'react-native';
+import { ESPACIO } from '../../../../shared/ui/tema';
+import { estilos } from './SeccionPerfil.styles';
 
 export function SeccionPerfil({ titulo, children }: { titulo: string; children: ReactNode }) {
   return (
@@ -20,9 +21,3 @@ export function SeccionPerfil({ titulo, children }: { titulo: string; children: 
     </View>
   );
 }
-
-const estilos = StyleSheet.create({
-  titulo: { ...FUENTE.semi, fontSize: TAMANO.pequeno, letterSpacing: 0.6, textTransform: 'uppercase', color: COLOR.textoSuave, paddingHorizontal: ESPACIO.xs },
-  // overflow hidden: el toque de cada fila respeta las esquinas redondeadas del recuadro.
-  caja: { backgroundColor: COLOR.tarjeta, borderRadius: RADIO.tarjeta, borderWidth: 1, borderColor: COLOR.borde, overflow: 'hidden' },
-});

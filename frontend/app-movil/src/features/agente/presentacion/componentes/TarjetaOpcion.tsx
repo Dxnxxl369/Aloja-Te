@@ -9,11 +9,15 @@
 
 import { Image } from 'expo-image';
 import { Building2, Star, Users } from 'lucide-react-native';
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { Boton } from '../../../../shared/ui/Boton';
+import { formatearDinero } from '../../../../shared/ui/dinero';
+import { pluralize } from '../../../../shared/ui/plural';
 import { Insignia } from '../../../../shared/ui/Insignia';
-import { COLOR, ESPACIO, FUENTE, RADIO, TAMANO } from '../../../../shared/ui/tema';
+import { COLOR, ESPACIO } from '../../../../shared/ui/tema';
+import { MAX_OPTION_SERVICES } from '../../constantes';
 import type { Opcion } from '../../domain/modelos';
+import { estilos } from './TarjetaOpcion.styles';
 
 interface Props {
   opcion: Opcion;
@@ -25,8 +29,6 @@ interface Props {
   deshabilitado?: boolean;
   alElegir: () => void;
 }
-
-const MAX_SERVICIOS = 3;
 
 export function TarjetaOpcion({ opcion, numero, noches, insignias, deshabilitado, alElegir }: Props) {
   const servicios = opcion.servicios ?? [];
@@ -71,7 +73,7 @@ export function TarjetaOpcion({ opcion, numero, noches, insignias, deshabilitado
           <Star color={tieneNota ? COLOR.aviso : COLOR.textoSuave} fill={tieneNota ? COLOR.aviso : 'none'} size={16} />
           <Text style={estilos.nota}>
             {tieneNota
-              ? `${(opcion.calificacion as number).toFixed(1)} · ${opcion.totalResenas ?? 0} reseña${opcion.totalResenas === 1 ? '' : 's'}`
+              ? `${(opcion.calificacion as number).toFixed(1)} · ${opcion.totalResenas ?? 0} ${pluralize(opcion.totalResenas ?? 0, 'reseña', 'reseñas')}`
               : 'Sin reseñas aún'}
           </Text>
           <Users color={COLOR.textoSuave} size={16} style={{ marginLeft: ESPACIO.m }} />
@@ -80,16 +82,16 @@ export function TarjetaOpcion({ opcion, numero, noches, insignias, deshabilitado
 
         {servicios.length > 0 && (
           <View style={estilos.servicios}>
-            {servicios.slice(0, MAX_SERVICIOS).map((s) => (
+            {servicios.slice(0, MAX_OPTION_SERVICES).map((s) => (
               <View key={s} style={estilos.servicio}>
                 <Text style={estilos.servicioTexto} numberOfLines={1}>
                   {s}
                 </Text>
               </View>
             ))}
-            {servicios.length > MAX_SERVICIOS && (
+            {servicios.length > MAX_OPTION_SERVICES && (
               <View style={estilos.servicio}>
-                <Text style={estilos.servicioTexto}>+{servicios.length - MAX_SERVICIOS}</Text>
+                <Text style={estilos.servicioTexto}>+{servicios.length - MAX_OPTION_SERVICES}</Text>
               </View>
             )}
           </View>
@@ -97,11 +99,11 @@ export function TarjetaOpcion({ opcion, numero, noches, insignias, deshabilitado
 
         <View>
           <Text style={estilos.precio}>
-            Bs {opcion.precioNoche.toFixed(2)} <Text style={estilos.porNoche}>por noche</Text>
+            {formatearDinero(opcion.precioNoche, 'Bs')} <Text style={estilos.porNoche}>por noche</Text>
           </Text>
           {total !== null && noches !== null && (
             <Text style={estilos.total}>
-              Total Bs {total.toFixed(2)} por {noches} noche{noches === 1 ? '' : 's'}
+              Total {formatearDinero(total, 'Bs')} por {noches} {pluralize(noches, 'noche', 'noches')}
             </Text>
           )}
         </View>
@@ -116,24 +118,3 @@ export function TarjetaOpcion({ opcion, numero, noches, insignias, deshabilitado
     </View>
   );
 }
-
-const estilos = StyleSheet.create({
-  tarjeta: { backgroundColor: COLOR.tarjeta, borderRadius: RADIO.tarjeta, borderWidth: 1, borderColor: COLOR.borde, overflow: 'hidden' },
-  foto: { width: '100%', height: 150, backgroundColor: COLOR.campo },
-  sinFoto: { alignItems: 'center', justifyContent: 'center', backgroundColor: COLOR.primarioSuave },
-  cuerpo: { padding: ESPACIO.l, gap: ESPACIO.s },
-  // Título a la izquierda y las etiquetas a la derecha, como en el mockup "3. Elegir alojamiento".
-  filaTitulo: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: ESPACIO.s },
-  insignias: { flexDirection: 'column', alignItems: 'flex-end', gap: ESPACIO.xs },
-  titulo: { flex: 1, ...FUENTE.titulo, fontSize: TAMANO.subtitulo, color: COLOR.texto },
-  detalle: { ...FUENTE.normal, fontSize: TAMANO.secundario, color: COLOR.textoSuave },
-  fila: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.xs },
-  nota: { ...FUENTE.medio, fontSize: TAMANO.secundario, color: COLOR.texto },
-  servicios: { flexDirection: 'row', flexWrap: 'wrap', gap: ESPACIO.xs },
-  servicio: { backgroundColor: COLOR.campo, borderRadius: RADIO.pildora, paddingHorizontal: ESPACIO.m, paddingVertical: 4, maxWidth: '70%' },
-  servicioTexto: { ...FUENTE.medio, fontSize: TAMANO.pequeno, color: COLOR.textoSuave },
-  precio: { ...FUENTE.fuerte, fontSize: TAMANO.titulo, color: COLOR.texto },
-  porNoche: { ...FUENTE.normal, fontSize: TAMANO.secundario, color: COLOR.textoSuave },
-  total: { ...FUENTE.normal, fontSize: TAMANO.secundario, color: COLOR.textoSuave },
-  flecha: { color: '#fff', fontSize: TAMANO.subtitulo },
-});

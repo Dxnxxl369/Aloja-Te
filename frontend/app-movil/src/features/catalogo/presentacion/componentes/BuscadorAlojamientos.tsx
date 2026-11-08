@@ -7,8 +7,9 @@
 // ======================================================================
 
 import { Search, SlidersHorizontal } from 'lucide-react-native';
-import { Pressable, StyleSheet, TextInput, View } from 'react-native';
-import { COLOR, ESPACIO, FUENTE, RADIO, SOMBRA_FLOTANTE, TAMANO } from '../../../../shared/ui/tema';
+import { Pressable, TextInput, View } from 'react-native';
+import { COLOR } from '../../../../shared/ui/tema';
+import { estilos } from './BuscadorAlojamientos.styles';
 
 interface Props {
   texto: string;
@@ -45,22 +46,3 @@ export function BuscadorAlojamientos({ texto, alCambiarTexto, alAbrirFiltros, fi
     </View>
   );
 }
-
-const estilos = StyleSheet.create({
-  barra: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: ESPACIO.m,
-    minHeight: 52,
-    paddingLeft: ESPACIO.l,
-    paddingRight: ESPACIO.s,
-    borderRadius: RADIO.control,
-    backgroundColor: COLOR.tarjeta,
-    borderWidth: 1,
-    borderColor: COLOR.borde,
-    ...SOMBRA_FLOTANTE,
-  },
-  input: { flex: 1, ...FUENTE.normal, fontSize: TAMANO.cuerpo, color: COLOR.texto, paddingVertical: ESPACIO.m },
-  filtros: { width: 40, height: 40, borderRadius: RADIO.control, backgroundColor: COLOR.campo, alignItems: 'center', justifyContent: 'center' },
-  punto: { position: 'absolute', top: 6, right: 6, width: 10, height: 10, borderRadius: 5, backgroundColor: COLOR.primario, borderWidth: 2, borderColor: COLOR.campo },
-});

@@ -9,11 +9,10 @@
 
 import type { Api } from '../core';
 import type { FichaAlojamiento } from '../features/reservas';
+import { RUTA_ALOJAMIENTOS } from '../shared/rutas';
+import { DIA_MS } from '../shared/ui/tiempo';
 
-/** MS-01 vía Gateway (AlojamientoController: @RequestMapping("/api/v1/alojamientos")). */
-const RUTA_ALOJAMIENTOS = '/api/v1/alojamientos';
 const PREFIJO_CACHE = 'ficha-alojamiento:';
-const TTL_MS = 24 * 60 * 60 * 1000;
 
 /** Solo los campos que se usan de AlojamientoDto.java. */
 interface AlojamientoFichaDto {
@@ -43,7 +42,7 @@ export function crearFichaAlojamiento(deps: {
     const clave = PREFIJO_CACHE + alojamientoId;
     try {
       const dto = await api.get<AlojamientoFichaDto>(`${RUTA_ALOJAMIENTOS}/${alojamientoId}`);
-      await guardarCache(clave, dto, TTL_MS);
+      await guardarCache(clave, dto, DIA_MS);
       return fichaDesdeDto(dto);
     } catch {
       const guardado = await leerCache<AlojamientoFichaDto>(clave).catch(() => null);

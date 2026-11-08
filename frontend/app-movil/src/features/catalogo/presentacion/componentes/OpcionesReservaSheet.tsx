@@ -8,9 +8,10 @@
 
 import { Bot, CalendarDays, ChevronRight } from 'lucide-react-native';
 import type { LucideIcon } from 'lucide-react-native';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { COLOR, ESPACIO, FUENTE, RADIO, TAMANO } from '../../../../shared/ui/tema';
+import { COLOR, ESPACIO } from '../../../../shared/ui/tema';
+import { estilos } from './OpcionesReservaSheet.styles';
 
 interface Props {
   visible: boolean;
@@ -70,21 +71,3 @@ function Opcion({ Icono, titulo, detalle, alTocar }: { Icono: LucideIcon; titulo
     </Pressable>
   );
 }
-
-const estilos = StyleSheet.create({
-  fondo: { flex: 1, backgroundColor: COLOR.scrim },
-  hoja: {
-    backgroundColor: COLOR.tarjeta,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingHorizontal: ESPACIO.l,
-    paddingTop: ESPACIO.m,
-    gap: ESPACIO.m,
-  },
-  agarre: { alignSelf: 'center', width: 40, height: 4, borderRadius: 2, backgroundColor: COLOR.borde },
-  titulo: { ...FUENTE.tituloFuerte, fontSize: TAMANO.titulo, color: COLOR.texto },
-  suave: { ...FUENTE.normal, fontSize: TAMANO.secundario, lineHeight: 19, color: COLOR.textoSuave },
-  opcion: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.m, padding: ESPACIO.l, borderRadius: RADIO.tarjeta, borderWidth: 1, borderColor: COLOR.borde },
-  icono: { width: 44, height: 44, borderRadius: 22, backgroundColor: COLOR.primarioSuave, alignItems: 'center', justifyContent: 'center' },
-  opcionTitulo: { ...FUENTE.semi, fontSize: TAMANO.cuerpo, color: COLOR.texto },
-});

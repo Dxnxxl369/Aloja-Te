@@ -6,9 +6,10 @@
 // NO VA AQUÍ: Cerrar sesión ni nada que cambie la cuenta: solo muestra datos.
 // ======================================================================
 
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { Insignia } from '../../../../shared/ui/Insignia';
-import { COLOR, ESPACIO, FUENTE, RADIO, TAMANO } from '../../../../shared/ui/tema';
+import { ESPACIO } from '../../../../shared/ui/tema';
+import { estilos } from './TarjetaCuenta.styles';
 
 interface Props {
   nombre: string;
@@ -39,12 +40,3 @@ export function TarjetaCuenta({ nombre, email, rol }: Props) {
     </View>
   );
 }
-
-const estilos = StyleSheet.create({
-  tarjeta: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.l, padding: ESPACIO.l, borderRadius: RADIO.tarjeta, backgroundColor: COLOR.tarjeta, borderWidth: 1, borderColor: COLOR.borde },
-  avatar: { width: 64, height: 64, borderRadius: 32, backgroundColor: COLOR.primario, alignItems: 'center', justifyContent: 'center' },
-  inicial: { ...FUENTE.tituloFuerte, fontSize: TAMANO.titular, color: '#fff' },
-  datos: { flex: 1, gap: 2 },
-  nombre: { ...FUENTE.tituloFuerte, fontSize: TAMANO.subtitulo, color: COLOR.texto },
-  email: { ...FUENTE.normal, fontSize: TAMANO.secundario, color: COLOR.textoSuave },
-});

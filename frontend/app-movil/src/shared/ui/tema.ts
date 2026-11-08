@@ -9,9 +9,13 @@
 // Excepción a propósito: DESIGN.md pide Playfair Display (títulos) + Inter; la app usa solo Inter (ver FUENTE).
 
 export const COLOR = {
+  /** Blanco para texto o iconos sobre un color fuerte (botón azul, foto, burbuja del usuario). Para fondos de tarjeta se usa `tarjeta`. */
+  blanco: '#ffffff',
   primario: '#2563eb',
   primarioPresionado: '#1d4ed8',
   primarioSuave: '#eff6ff',
+  /** Fondo de un botón suave mientras se presiona. */
+  primarioSuavePresionado: '#dbeafe',
   primarioBorde: '#bfdbfe',
   fondo: '#f8fafc',
   tarjeta: '#ffffff',
@@ -22,10 +26,16 @@ export const COLOR = {
   borde: '#e2e8f0',
   exito: '#16a34a',
   exitoFondo: '#f0fdf4',
+  /** Fondo verde un poco más intenso (por ejemplo, un botón o chip que indica que algo está activo). */
+  exitoFondoFuerte: '#dcfce7',
   exitoBorde: '#bbf7d0',
   aviso: '#d97706',
   avisoFondo: '#fffbeb',
+  /** Fondo ámbar un poco más intenso (círculos de icono dentro de un aviso). */
+  avisoFondoFuerte: '#fef3c7',
   avisoBorde: '#fde68a',
+  /** Marrón muy oscuro para texto sobre los fondos ámbar de los avisos (contraste alto). */
+  avisoMuyOscuro: '#92400e',
   error: '#dc2626',
   errorFondo: '#fef2f2',
   errorBorde: '#fecaca',

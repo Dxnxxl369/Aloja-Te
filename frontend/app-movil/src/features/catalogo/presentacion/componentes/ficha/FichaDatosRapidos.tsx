@@ -10,8 +10,10 @@
 
 import { LogIn, LogOut, Users } from 'lucide-react-native';
 import type { LucideIcon } from 'lucide-react-native';
-import { StyleSheet, Text, View } from 'react-native';
-import { COLOR, ESPACIO, FUENTE, RADIO, TAMANO } from '../../../../../shared/ui/tema';
+import { Text, View } from 'react-native';
+import { pluralize } from '../../../../../shared/ui/plural';
+import { COLOR } from '../../../../../shared/ui/tema';
+import { estilos } from './FichaDatosRapidos.styles';
 
 interface Props {
   capacidadMax?: number | null;
@@ -28,7 +30,7 @@ interface Dato {
 export function FichaDatosRapidos({ capacidadMax, horarioEntrada, horarioSalida }: Props) {
   const datos: Dato[] = [];
   if (capacidadMax) {
-    datos.push({ Icono: Users, etiqueta: 'Capacidad', valor: `${capacidadMax} ${capacidadMax === 1 ? 'huésped' : 'huéspedes'}` });
+    datos.push({ Icono: Users, etiqueta: 'Capacidad', valor: `${capacidadMax} ${pluralize(capacidadMax, 'huésped', 'huéspedes')}` });
   }
   if (horarioEntrada) datos.push({ Icono: LogIn, etiqueta: 'Check-in', valor: horarioEntrada });
   if (horarioSalida) datos.push({ Icono: LogOut, etiqueta: 'Check-out', valor: horarioSalida });
@@ -48,20 +50,3 @@ export function FichaDatosRapidos({ capacidadMax, horarioEntrada, horarioSalida 
     </View>
   );
 }
-
-const estilos = StyleSheet.create({
-  fila: { flexDirection: 'row', gap: ESPACIO.s },
-  dato: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 2,
-    paddingVertical: ESPACIO.m,
-    paddingHorizontal: ESPACIO.s,
-    borderRadius: RADIO.tarjeta,
-    backgroundColor: COLOR.tarjeta,
-    borderWidth: 1,
-    borderColor: COLOR.borde,
-  },
-  etiqueta: { ...FUENTE.normal, fontSize: TAMANO.pequeno, color: COLOR.textoSuave, marginTop: ESPACIO.xs },
-  valor: { ...FUENTE.semi, fontSize: TAMANO.cuerpo, color: COLOR.texto },
-});

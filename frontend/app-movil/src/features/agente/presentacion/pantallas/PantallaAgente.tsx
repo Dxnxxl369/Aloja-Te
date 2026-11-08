@@ -11,30 +11,25 @@
 import { Bot, Building2, Send } from 'lucide-react-native';
 import { useEffect, useRef, useState } from 'react';
 import type { ComponentRef } from 'react';
-import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Boton } from '../../../../shared/ui/Boton';
 import { Chip } from '../../../../shared/ui/Chip';
 import { Insignia } from '../../../../shared/ui/Insignia';
-import { COLOR, ESPACIO, FUENTE, RADIO, TAMANO } from '../../../../shared/ui/tema';
-import { CIUDADES } from '../../constantes';
+import { pluralize } from '../../../../shared/ui/plural';
+import { COLOR } from '../../../../shared/ui/tema';
+import { CIUDADES_RAPIDAS, PERSONAS_RAPIDAS, POLL_COLA_MS } from '../../constantes';
 import type { CasosAgente } from '../../domain/interfaces';
-import type { ContextoAlojamiento, Mensaje, Opcion, PasoId } from '../../domain/modelos';
+import type { ContextoAlojamiento } from '../../domain/modelos';
 import { faltantes, recomendar } from '../../domain/plan';
 import { PlanPuntos } from '../componentes/PlanPuntos';
 import { PuntosEscribiendo } from '../componentes/PuntosEscribiendo';
 import { TarjetaOpcion } from '../componentes/TarjetaOpcion';
+import { formatearHora, insigniasDe, nochesEntre, quitarListaDeOpciones } from '../conversacion';
+import { ACTIVIDAD, ACTIVIDAD_GENERICA } from '../texts';
 import { useAgente } from '../useAgente';
+import { useHoras } from '../useHoras';
+import { estilos } from './PantallaAgente.styles';
 
 interface Props {
   casos: CasosAgente;
@@ -52,65 +47,6 @@ interface Props {
    * Volver a la pestaña con la misma clave no borra lo que ya se habló.
    */
   claveContexto?: number;
-}
-
-const POLL_COLA_MS = 3_000;
-const DIA_MS = 24 * 60 * 60 * 1000;
-const CIUDADES_RAPIDAS = CIUDADES.slice(0, 4);
-const PERSONAS_RAPIDAS = [1, 2, 3, 4];
-
-/** Qué dice el chat mientras el agente trabaja en cada paso. */
-const ACTIVIDAD: Partial<Record<PasoId, string>> = {
-  ENTENDER: 'Entendiendo tu pedido',
-  BUSCAR: 'Buscando alojamientos',
-  VERIFICAR: 'Verificando disponibilidad',
-  RESERVAR: 'Creando la reserva',
-};
-
-/** Misma forma que `descripcionOpcion` (domain/plan.ts): sirve para no repetir la lista que ya se dibuja como tarjetas. */
-const LINEA_OPCION = /^\d+\. .+ · hasta \d+ personas · Bs \d+(\.\d+)? por noche$/;
-
-function quitarListaDeOpciones(texto: string): string {
-  return texto
-    .split('\n')
-    .filter((l) => !LINEA_OPCION.test(l))
-    .join('\n')
-    .replace(/\n{3,}/g, '\n\n')
-    .trim();
-}
-
-function nochesEntre(entrada?: string, salida?: string): number | null {
-  if (!entrada || !salida) return null;
-  const n = (Date.parse(`${salida}T00:00:00Z`) - Date.parse(`${entrada}T00:00:00Z`)) / DIA_MS;
-  return Number.isFinite(n) && n >= 1 ? Math.round(n) : null;
-}
-
-function formatearHora(ms: number): string {
-  const d = new Date(ms);
-  const h = d.getHours();
-  const m = String(d.getMinutes()).padStart(2, '0');
-  return `${h % 12 === 0 ? 12 : h % 12}:${m} ${h < 12 ? 'AM' : 'PM'}`;
-}
-
-/** Recuerda a qué hora apareció cada mensaje (el modelo del agente no guarda la hora). */
-function useHoras(mensajes: Mensaje[]): Map<number, number> {
-  const horas = useRef(new Map<number, number>());
-  if (mensajes.length <= 1) horas.current.clear(); // conversación nueva
-  for (const m of mensajes) if (!horas.current.has(m.id)) horas.current.set(m.id, Date.now());
-  return horas.current;
-}
-
-function insigniasDe(indice: number, o: Opcion, todas: Opcion[], indiceRecomendada: number | null): string[] {
-  const etiquetas: string[] = [];
-  if (indice === indiceRecomendada) etiquetas.push('Recomendada');
-  if (todas.length >= 2) {
-    const masBarata = Math.min(...todas.map((x) => x.precioNoche));
-    const mayorCapacidad = Math.max(...todas.map((x) => x.capacidad));
-    const menorCapacidad = Math.min(...todas.map((x) => x.capacidad));
-    if (o.precioNoche === masBarata) etiquetas.push('Económico');
-    else if (o.capacidad === mayorCapacidad && mayorCapacidad > menorCapacidad) etiquetas.push('Espacioso');
-  }
-  return etiquetas;
 }
 
 export function PantallaAgente({
@@ -169,7 +105,7 @@ export function PantallaAgente({
   const recomendada = estado.fase === 'ELIGIENDO' ? recomendar(estado.opciones, estado.criterios) : null;
   const noches = nochesEntre(estado.criterios.checkIn, estado.criterios.checkOut);
   const pasoActivo = estado.plan.find((p) => p.estado === 'EN_CURSO');
-  const actividad = (pasoActivo && ACTIVIDAD[pasoActivo.id]) ?? 'Trabajando en tu pedido';
+  const actividad = (pasoActivo && ACTIVIDAD[pasoActivo.id]) ?? ACTIVIDAD_GENERICA;
   const buscando = pasoActivo?.id === 'BUSCAR';
 
   // Respuestas rápidas a lo que el agente pregunta (ciudad o personas). Salen en la franja sobre la barra de escribir.
@@ -180,7 +116,7 @@ export function PantallaAgente({
     CIUDADES_RAPIDAS.forEach((c) => rapidas.push({ etiqueta: c, accion: () => mandar(`en ${c}`) }));
   } else if (falta === 'huespedes') {
     PERSONAS_RAPIDAS.forEach((n) =>
-      rapidas.push({ etiqueta: `${n} persona${n === 1 ? '' : 's'}`, accion: () => mandar(`${n} personas`) }),
+      rapidas.push({ etiqueta: `${n} ${pluralize(n, 'persona', 'personas')}`, accion: () => mandar(`${n} personas`) }),
     );
   }
 
@@ -316,7 +252,7 @@ export function PantallaAgente({
                 pressed && { backgroundColor: COLOR.primarioPresionado },
               ]}
             >
-              {ocupado ? <ActivityIndicator color={COLOR.textoSuave} /> : <Send color={texto.trim() ? '#fff' : COLOR.textoSuave} size={20} />}
+              {ocupado ? <ActivityIndicator color={COLOR.textoSuave} /> : <Send color={texto.trim() ? COLOR.blanco : COLOR.textoSuave} size={20} />}
             </Pressable>
           </View>
         </View>
@@ -332,59 +268,3 @@ function Avatar() {
     </View>
   );
 }
-
-const estilos = StyleSheet.create({
-  pantalla: { flex: 1, backgroundColor: COLOR.fondo },
-  // flexGrow + flex-end: el chat se apoya abajo (junto a la barra de escribir), como en cualquier app de mensajes.
-  contenido: { flexGrow: 1, justifyContent: 'flex-end', padding: ESPACIO.l, gap: ESPACIO.m },
-
-  cabecera: { backgroundColor: COLOR.tarjeta, borderBottomWidth: 1, borderBottomColor: COLOR.borde },
-  cabeceraFila: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: ESPACIO.l, paddingTop: ESPACIO.m },
-
-  filaMensaje: { flexDirection: 'row', alignItems: 'flex-end', gap: ESPACIO.s },
-  avatar: { width: 32, height: 32, borderRadius: 16, backgroundColor: COLOR.primarioSuave, alignItems: 'center', justifyContent: 'center' },
-  burbuja: { paddingHorizontal: ESPACIO.l, paddingVertical: ESPACIO.m, borderRadius: RADIO.tarjeta },
-  usuario: { backgroundColor: COLOR.primario, borderBottomRightRadius: 4 },
-  agente: { backgroundColor: COLOR.tarjeta, borderWidth: 1, borderColor: COLOR.borde, borderBottomLeftRadius: 4 },
-  escribiendo: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.m },
-  textoUsuario: { ...FUENTE.normal, fontSize: TAMANO.cuerpo, lineHeight: 20, color: '#fff' },
-  textoAgente: { ...FUENTE.normal, fontSize: TAMANO.cuerpo, lineHeight: 20, color: COLOR.texto },
-  hora: { ...FUENTE.normal, fontSize: TAMANO.pequeno, color: COLOR.textoSuave, marginTop: 4 },
-
-  fila: { flexDirection: 'row', gap: ESPACIO.s },
-
-  // Tarjeta de la búsqueda en curso: queda alineada con el texto de la burbuja (ancho del avatar + separación).
-  progresoBusqueda: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: ESPACIO.m,
-    marginLeft: 40,
-    padding: ESPACIO.m,
-    borderRadius: RADIO.tarjeta,
-    backgroundColor: COLOR.campo,
-  },
-  progresoIcono: { width: 44, height: 44, borderRadius: RADIO.control, backgroundColor: COLOR.primarioSuave, alignItems: 'center', justifyContent: 'center' },
-  progresoTitulo: { ...FUENTE.semi, fontSize: TAMANO.secundario, color: COLOR.texto },
-  progresoTexto: { ...FUENTE.normal, fontSize: TAMANO.secundario, color: COLOR.textoSuave },
-
-  pie: { backgroundColor: COLOR.fondo, borderTopWidth: 1, borderTopColor: COLOR.borde },
-  // flexGrow 0: una fila que se desliza de lado no debe crecer hacia abajo.
-  franja: { flexGrow: 0 },
-  chips: { gap: ESPACIO.s, alignItems: 'center', paddingHorizontal: ESPACIO.l, paddingTop: ESPACIO.m },
-  entrada: { flexDirection: 'row', gap: ESPACIO.s, padding: ESPACIO.l, alignItems: 'center' },
-  input: {
-    flex: 1,
-    minHeight: 48,
-    borderWidth: 1,
-    borderColor: COLOR.borde,
-    borderRadius: RADIO.control,
-    paddingHorizontal: ESPACIO.l,
-    backgroundColor: COLOR.tarjeta,
-    ...FUENTE.normal,
-    fontSize: TAMANO.cuerpo,
-    color: COLOR.texto,
-  },
-  // Botón de enviar redondo, solo con el icono: azul con texto escrito, gris sin texto.
-  enviar: { width: 48, height: 48, borderRadius: 24, backgroundColor: COLOR.primario, alignItems: 'center', justifyContent: 'center' },
-  enviarInactivo: { backgroundColor: COLOR.campo },
-});

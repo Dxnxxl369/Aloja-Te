@@ -25,7 +25,7 @@ interface Props {
 
 export function Chip({ etiqueta, onPress, seleccionado = false, estiloSeleccionado = 'suave', deshabilitado, icono }: Props) {
   const solido = seleccionado && estiloSeleccionado === 'solido';
-  const colorTexto = solido ? '#ffffff' : seleccionado ? COLOR.primario : COLOR.textoSuave;
+  const colorTexto = solido ? COLOR.blanco : seleccionado ? COLOR.primario : COLOR.textoSuave;
   return (
     <Pressable
       accessibilityRole="button"

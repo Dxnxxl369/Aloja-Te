@@ -8,35 +8,27 @@
 // Datos: politicas ← alojamientos.politicas. Sin texto, el bloque no aparece.
 
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text } from 'react-native';
-import { COLOR, FUENTE, TAMANO } from '../../../../../shared/ui/tema';
+import { Pressable, Text } from 'react-native';
+import { COMMON_TEXT } from '../../../../../shared/ui/texts';
+import { POLICIES_COLLAPSE_LENGTH, POLICIES_COLLAPSED_LINES } from '../../../constantes';
 import { BloqueFicha } from './BloqueFicha';
-
-/** A partir de cuántas letras se recorta el texto. */
-const LARGO_CORTO = 180;
-const LINEAS_CORTAS = 4;
+import { estilos } from './FichaPoliticas.styles';
 
 export function FichaPoliticas({ politicas }: { politicas?: string }) {
   const [abierto, setAbierto] = useState(false);
   if (!politicas) return null;
-  const largo = politicas.length > LARGO_CORTO;
+  const largo = politicas.length > POLICIES_COLLAPSE_LENGTH;
 
   return (
     <BloqueFicha titulo="Políticas">
-      <Text style={estilos.texto} numberOfLines={largo && !abierto ? LINEAS_CORTAS : undefined}>
+      <Text style={estilos.texto} numberOfLines={largo && !abierto ? POLICIES_COLLAPSED_LINES : undefined}>
         {politicas}
       </Text>
       {largo ? (
         <Pressable accessibilityRole="button" onPress={() => setAbierto((a) => !a)} style={estilos.enlace}>
-          <Text style={estilos.enlaceTexto}>{abierto ? 'Ver menos' : 'Ver más'}</Text>
+          <Text style={estilos.enlaceTexto}>{abierto ? COMMON_TEXT.SEE_LESS : 'Ver más'}</Text>
         </Pressable>
       ) : null}
     </BloqueFicha>
   );
 }
-
-const estilos = StyleSheet.create({
-  texto: { ...FUENTE.normal, fontSize: TAMANO.cuerpo, lineHeight: 22, color: COLOR.texto },
-  enlace: { minHeight: 44, justifyContent: 'center' },
-  enlaceTexto: { ...FUENTE.semi, fontSize: TAMANO.secundario, color: COLOR.primario },
-});

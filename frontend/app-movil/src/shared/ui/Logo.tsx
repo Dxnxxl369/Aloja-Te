@@ -21,7 +21,7 @@ export function Logo({ tamano = 36 }: { tamano?: number }) {
         tamano >= 48 && SOMBRA_FLOTANTE,
       ]}
     >
-      <Sun color="#ffffff" size={Math.round(tamano * 0.6)} />
+      <Sun color={COLOR.blanco} size={Math.round(tamano * 0.6)} />
     </View>
   );
 }

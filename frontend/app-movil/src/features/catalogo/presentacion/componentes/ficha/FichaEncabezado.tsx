@@ -7,9 +7,10 @@
 // ======================================================================
 // Datos: tipo ← tipos_propiedad; título ← alojamientos.titulo; nota y reseñas ← tabla valoraciones.
 
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { Calificacion } from '../../../../../shared/ui/Calificacion';
-import { COLOR, ESPACIO, FUENTE, TAMANO } from '../../../../../shared/ui/tema';
+import { ESPACIO } from '../../../../../shared/ui/tema';
+import { estilos } from './FichaEncabezado.styles';
 
 interface Props {
   tipo?: string;
@@ -31,9 +32,3 @@ export function FichaEncabezado({ tipo, titulo, calificacion, totalResenas }: Pr
     </View>
   );
 }
-
-const estilos = StyleSheet.create({
-  filaTipo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: ESPACIO.m },
-  tipo: { ...FUENTE.semi, fontSize: TAMANO.micro, letterSpacing: 0.6, color: COLOR.primario, flexShrink: 1 },
-  titulo: { ...FUENTE.tituloFuerte, fontSize: TAMANO.titular, lineHeight: 30, color: COLOR.texto },
-});

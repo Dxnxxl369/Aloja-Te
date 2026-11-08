@@ -7,10 +7,12 @@
 // ======================================================================
 // Datos: descripcion ← alojamientos.descripcion; servicios ← tabla alojamiento_servicio. Cada parte se dibuja solo si existe.
 
-import { StyleSheet, Text, View } from 'react-native';
-import { COLOR, ESPACIO, FUENTE, TAMANO } from '../../../../../shared/ui/tema';
+import { Text, View } from 'react-native';
+import { pluralize } from '../../../../../shared/ui/plural';
+import { ESPACIO } from '../../../../../shared/ui/tema';
 import { ServiciosGrid } from '../ServiciosGrid';
 import { BloqueFicha } from './BloqueFicha';
+import { estilos } from './FichaSobreYServicios.styles';
 
 interface Props {
   descripcion?: string;
@@ -27,7 +29,7 @@ export function FichaSobreYServicios({ descripcion, servicios }: Props) {
           <View style={estilos.filaServicios}>
             <Text style={estilos.subtitulo}>Lo que ofrece este lugar</Text>
             <Text style={estilos.cuenta}>
-              {servicios.length} {servicios.length === 1 ? 'servicio' : 'servicios'}
+              {servicios.length} {pluralize(servicios.length, 'servicio', 'servicios')}
             </Text>
           </View>
           <ServiciosGrid servicios={servicios} />
@@ -36,10 +38,3 @@ export function FichaSobreYServicios({ descripcion, servicios }: Props) {
     </BloqueFicha>
   );
 }
-
-const estilos = StyleSheet.create({
-  descripcion: { ...FUENTE.normal, fontSize: TAMANO.cuerpo, lineHeight: 22, color: COLOR.texto },
-  filaServicios: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: ESPACIO.m },
-  subtitulo: { ...FUENTE.semi, fontSize: TAMANO.cuerpo, color: COLOR.texto, flexShrink: 1 },
-  cuenta: { ...FUENTE.normal, fontSize: TAMANO.secundario, color: COLOR.textoSuave },
-});

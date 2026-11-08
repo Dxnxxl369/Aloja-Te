@@ -27,7 +27,7 @@ interface Props {
 }
 
 const COLOR_TEXTO: Record<Variante, string> = {
-  primario: '#ffffff',
+  primario: COLOR.blanco,
   secundario: COLOR.primario,
   contorno: COLOR.texto,
 };
@@ -46,7 +46,7 @@ export function Boton({ titulo, onPress, deshabilitado, cargando, secundario, va
       style={({ pressed }) => [
         estilos.base,
         v === 'primario' && { backgroundColor: pressed ? COLOR.primarioPresionado : COLOR.primario },
-        v === 'secundario' && { backgroundColor: pressed ? '#dbeafe' : COLOR.primarioSuave },
+        v === 'secundario' && { backgroundColor: pressed ? COLOR.primarioSuavePresionado : COLOR.primarioSuave },
         v === 'contorno' && { backgroundColor: pressed ? COLOR.fondo : 'transparent', borderWidth: 1, borderColor: COLOR.borde },
         inactivo && estilos.inactivo,
       ]}

@@ -8,10 +8,12 @@
 // Diseño: mockup "2. Agente: conversación y plan" (paso hecho = check azul, en curso = fila resaltada).
 
 import { Bot, Circle, CircleCheck, CircleX, Lock } from 'lucide-react-native';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Text, View } from 'react-native';
 import { Insignia } from '../../../../shared/ui/Insignia';
-import { COLOR, ESPACIO, FUENTE, RADIO, TAMANO } from '../../../../shared/ui/tema';
-import type { EstadoPaso, Paso } from '../../domain/modelos';
+import { COLOR, ESPACIO, FUENTE } from '../../../../shared/ui/tema';
+import type { Paso } from '../../domain/modelos';
+import { pasoActual } from '../etapasPlan';
+import { COLOR_TITULO, estilos } from './PanelPlan.styles';
 
 function IconoPaso({ paso }: { paso: Paso }) {
   switch (paso.estado) {
@@ -27,20 +29,6 @@ function IconoPaso({ paso }: { paso: Paso }) {
     case 'PENDIENTE':
       return paso.id === 'PAGAR' ? <Lock color={COLOR.textoSuave} size={20} /> : <Circle color={COLOR.borde} size={22} strokeWidth={2} />;
   }
-}
-
-const COLOR_TITULO: Record<EstadoPaso, string> = {
-  PENDIENTE: COLOR.textoSuave,
-  EN_CURSO: COLOR.texto,
-  HECHO: COLOR.texto,
-  BLOQUEADO: COLOR.textoSuave,
-  FALLIDO: COLOR.errorOscuro,
-};
-
-/** "Paso N de 8": los pasos hechos más el que está en curso. */
-export function pasoActual(plan: Paso[]): number {
-  const hechos = plan.filter((p) => p.estado === 'HECHO').length;
-  return Math.min(plan.length, hechos + 1);
 }
 
 export function PanelPlan({ plan }: { plan: Paso[] }) {
@@ -77,25 +65,3 @@ export function PanelPlan({ plan }: { plan: Paso[] }) {
     </View>
   );
 }
-
-const estilos = StyleSheet.create({
-  caja: {
-    backgroundColor: COLOR.tarjeta,
-    borderRadius: RADIO.tarjeta,
-    padding: ESPACIO.m,
-    gap: ESPACIO.xs,
-    borderWidth: 1,
-    borderColor: COLOR.borde,
-  },
-  cabecera: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: ESPACIO.s, paddingHorizontal: ESPACIO.xs },
-  cabeceraTitulo: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.s },
-  titulo: { ...FUENTE.semi, fontSize: TAMANO.cuerpo, color: COLOR.texto },
-  fila: { flexDirection: 'row', gap: ESPACIO.m, paddingHorizontal: ESPACIO.xs },
-  riel: { width: 26, alignItems: 'center' },
-  icono: { width: 26, height: 26, alignItems: 'center', justifyContent: 'center' },
-  conector: { flex: 1, width: 3, minHeight: 10, borderRadius: 2, backgroundColor: COLOR.borde },
-  conectorHecho: { backgroundColor: COLOR.primario },
-  contenido: { flex: 1, paddingTop: 2 },
-  paso: { ...FUENTE.normal, fontSize: TAMANO.cuerpo },
-  nota: { ...FUENTE.normal, fontSize: TAMANO.secundario, color: COLOR.textoSuave, marginTop: 2 },
-});

@@ -7,8 +7,8 @@
 // ======================================================================
 
 import type { ReactNode } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import { COLOR, ESPACIO, FUENTE, RADIO, TAMANO } from '../../../../../shared/ui/tema';
+import { Text, View } from 'react-native';
+import { estilos } from './BloqueFicha.styles';
 
 interface Props {
   titulo: string;
@@ -30,10 +30,3 @@ export function BloqueFicha({ titulo, derecha, children }: Props) {
     </View>
   );
 }
-
-const estilos = StyleSheet.create({
-  caja: { gap: ESPACIO.m, padding: ESPACIO.l, borderRadius: RADIO.tarjeta, backgroundColor: COLOR.tarjeta, borderWidth: 1, borderColor: COLOR.borde },
-  cabecera: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: ESPACIO.m },
-  titulo: { ...FUENTE.titulo, fontSize: TAMANO.subtitulo, color: COLOR.texto, flexShrink: 1 },
-  derecha: { ...FUENTE.normal, fontSize: TAMANO.secundario, color: COLOR.textoSuave },
-});
