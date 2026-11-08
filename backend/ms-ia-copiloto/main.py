@@ -545,6 +545,72 @@ async def generar_reporte_query(req: ReportQueryRequest):
         "query_original": req.query
     }
 
+
+# ============================================================================
+# ENDPOINT DE EXTRACCIÓN DE INTENCIONES PARA EL AGENTE MÓVIL
+# ============================================================================
+
+class PeticionIntencionDto(BaseModel):
+    texto: str
+    criterios: Optional[Dict[str, Any]] = None
+    hoy: Optional[str] = None
+
+@app.post("/api/v1/ia/agente/intencion")
+async def extraer_intencion_agente(req: PeticionIntencionDto):
+    """
+    Extrae la intención de reserva del huésped móvil para el Agente Autónomo.
+    Analiza ciudad, fechas check-in/out, número de huéspedes y presupuesto por noche.
+    """
+    hoy_str = req.hoy or "2026-11-08"
+    prompt_sistema = (
+        f"Eres un asistente de IA para reservas de alojamiento en Bolivia. Hoy es {hoy_str}.\n"
+        "Del mensaje del usuario debes extraer un objeto JSON plano con estas claves opcionales:\n"
+        "- ciudad (string con la ciudad de Bolivia: Santa Cruz, La Paz, Cochabamba, Sucre, Tarija, Uyuni, Copacabana, Samaipata, etc.)\n"
+        "- checkIn (fecha en formato YYYY-MM-DD)\n"
+        "- checkOut (fecha en formato YYYY-MM-DD)\n"
+        "- huespedes (entero con la cantidad de personas)\n"
+        "- presupuestoMaxNoche (número con el precio máximo por noche en bolivianos BOB)\n"
+        "Omite claves que el usuario no mencione. Responde ÚNICAMENTE con el objeto JSON, sin formato markdown ni texto adicional."
+    )
+    user_msg = f"Criterios ya conocidos: {json.dumps(req.criterios or {})}\nMensaje del usuario: \"{req.texto}\""
+
+    try:
+        raw_json = await call_groq_llm(user_msg, prompt_sistema)
+        raw_json = raw_json.replace("```json", "").replace("```", "").strip()
+        data = json.loads(raw_json)
+        return {"intencion": data}
+    except Exception as e:
+        logger.warning(f"Extracción de intención con LLM falló ({e}), aplicando analizador por reglas.")
+
+    # Analizador de contingencia por reglas
+    intencion: Dict[str, Any] = {}
+    texto_l = req.texto.lower()
+
+    # Ciudades
+    ciudades_map = {
+        "santa cruz": "Santa Cruz", "la paz": "La Paz", "cochabamba": "Cochabamba",
+        "sucre": "Sucre", "tarija": "Tarija", "oruro": "Oruro", "potosi": "Potosí",
+        "potosí": "Potosí", "trinidad": "Trinidad", "copacabana": "Copacabana",
+        "uyuni": "Uyuni", "samaipata": "Samaipata", "coroico": "Coroico"
+    }
+    for k, v in ciudades_map.items():
+        if k in texto_l:
+            intencion["ciudad"] = v
+            break
+
+    # Huéspedes
+    import re
+    h_match = re.search(r"(\d+)\s*(personas?|huespedes?|huéspedes?|viajeros?)", texto_l)
+    if h_match:
+        intencion["huespedes"] = int(h_match.group(1))
+
+    # Presupuesto
+    p_match = re.search(r"(?:hasta|maximo|máximo|presupuesto de)?\s*(\d+)\s*(?:bs|bob|bolivianos)", texto_l)
+    if p_match:
+        intencion["presupuestoMaxNoche"] = float(p_match.group(1))
+
+    return {"intencion": intencion}
+
 if __name__ == "__main__":
     import uvicorn
     port = int(os.getenv("PORT", 3004))

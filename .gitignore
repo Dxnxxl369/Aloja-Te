@@ -43,3 +43,12 @@ temp/
 Thumbs.db
 .idea/
 .vscode/
+
+# Variables de entorno y credenciales sensibles (API Keys)
+.env
+.env.*
+!.env.example
+*.env
+.expo/
+.expo-home/
+
