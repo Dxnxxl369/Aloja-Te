@@ -135,6 +135,7 @@ public class DataInitializer implements CommandLineRunner {
                     .estado(EstadoUsuario.ACTIVO)
                     .bancoNombre("Banco Nacional de Bolivia (BNB)")
                     .numeroCuentaBancaria("2000123456789")
+                    .qr("https://alojate-bolivia.s3.sa-east-1.amazonaws.com/anfitriones/qr-carlos-mendoza.png")
                     .fechaRegistro(LocalDateTime.now())
                     .fechaActualizacion(LocalDateTime.now())
                     .build());
@@ -157,6 +158,7 @@ public class DataInitializer implements CommandLineRunner {
                     .estado(EstadoUsuario.ACTIVO)
                     .bancoNombre("Banco Mercantil Santa Cruz (BMSC)")
                     .numeroCuentaBancaria("4010987654321")
+                    .qr("https://alojate-bolivia.s3.sa-east-1.amazonaws.com/anfitriones/qr-carlos-mendoza.png")
                     .fechaRegistro(LocalDateTime.now())
                     .fechaActualizacion(LocalDateTime.now())
                     .build());
@@ -177,6 +179,7 @@ public class DataInitializer implements CommandLineRunner {
                     .estado(EstadoUsuario.ACTIVO)
                     .bancoNombre("Banco Mercantil Santa Cruz (BMSC)")
                     .numeroCuentaBancaria("4010987654321")
+                    .qr("https://alojate-bolivia.s3.sa-east-1.amazonaws.com/anfitriones/qr-carlos-mendoza.png")
                     .fechaRegistro(LocalDateTime.now())
                     .fechaActualizacion(LocalDateTime.now())
                     .build());

@@ -23,10 +23,10 @@ import { Alojamiento, UnidadReservable } from './features/catalogo/types/catalog
 import { ReservaResponse } from './features/reservas/types/reserva.types';
 import { httpClient } from './core/api/httpClient';
 import { ENDPOINTS } from './core/api/apiEndpoints';
-import { Plus, Building2, Home, Hotel, Eye, ShieldCheck, AlertCircle, ArrowLeft, Loader2, Edit3, RefreshCw } from 'lucide-react';
+import { Plus, Building2, Home, Hotel, Eye, ShieldCheck, AlertCircle, ArrowLeft, Loader2, Edit3, RefreshCw, ExternalLink } from 'lucide-react';
 
 export const AppContent: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user, token, logout } = useAuth();
   const { currentView, params, navigate } = useAppRouter();
   const [cerrandoSesion, setCerrandoSesion] = useState(false);
 
@@ -466,318 +466,36 @@ export const AppContent: React.FC = () => {
         )}
 
         {currentView === 'anfitrion' && user?.rol === 'ANFITRION' && (
-          <div className="max-w-4xl mx-auto py-8 px-4 space-y-6">
-            <div className="border-b border-slate-200 dark:border-slate-800 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400 block mb-1">
-                  GESTIÓN DE ALOJAMIENTOS &amp; RECEPCIÓN
-                </span>
-                <h2 className="font-serif text-3xl font-bold text-slate-900 dark:text-white">
-                  Panel de Control del Anfitrión
-                </h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                  Publica casas u hoteles con gestión de habitaciones y valida el ingreso de huéspedes.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setWizardAbierto(true)}
-                className="px-5 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-lg shadow-blue-500/25 transition flex items-center gap-2 self-start sm:self-auto"
-              >
-                <Plus className="w-4 h-4" />
-                <span>+ Publicar Nuevo Alojamiento</span>
-              </button>
+          <div className="max-w-3xl mx-auto py-16 px-4 text-center space-y-6 animate-fade-in">
+            <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-blue-700 text-white flex items-center justify-center mx-auto shadow-xl shadow-blue-500/25">
+              <Building2 className="w-10 h-10" />
             </div>
 
-            {/* Estado Oficial de Verificación del Anfitrión */}
-            <div className="p-4 rounded-3xl bg-gradient-to-r from-blue-50/90 to-indigo-50/90 dark:from-blue-950/40 dark:to-indigo-950/40 border border-blue-200/80 dark:border-blue-900/60 flex items-center justify-between gap-4 flex-wrap">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-md shadow-blue-500/25 shrink-0">
-                  <svg className="w-5 h-5 text-white fill-current" viewBox="0 0 24 24">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1.2 14.2l-4-4 1.41-1.41L10.8 13.38l6.79-6.79 1.41 1.41-8.2 8.2z" />
-                  </svg>
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h4 className="font-bold text-xs text-slate-900 dark:text-white">
-                      Anfitrión Oficialmente Verificado
-                    </h4>
-                    <span className="px-2 py-0.5 rounded-full bg-blue-600 text-white text-[9px] font-bold shadow-sm">
-                      ✓ Acreditado
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-0.5">
-                    Tu Cédula de Identidad y acreditación de operador turístico están validadas al 100%. Cuentas con autorización total para publicar y recibir pagos con QR Simple BNB.
-                  </p>
-                </div>
-              </div>
-              <span className="text-[10px] font-semibold text-blue-700 dark:text-blue-300 bg-white dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-blue-200 dark:border-blue-800 shadow-sm shrink-0">
-                Auditoría Documental: Aprobada
+            <div className="space-y-2">
+              <span className="text-[10px] uppercase font-bold tracking-widest text-blue-600 dark:text-blue-400">
+                PORTAL DEDICADO DE GESTIÓN HOTELERA
               </span>
+              <h2 className="font-serif text-3xl font-bold text-slate-900 dark:text-white">
+                Panel Oficial del Anfitrión
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-lg mx-auto leading-relaxed">
+                El entorno integral para gestionar tus alojamientos, suites de hotel, estados de auditoría en tiempo real (Publicados, Pendientes, Observados, Suspendidos), finanzas y control de llaves por PIN se encuentra en el Portal del Anfitrión.
+              </p>
             </div>
 
-            {/* Alojamientos del Anfitrión con Filtro de Estados y Sincronización */}
-            {(() => {
-              const conteoHostTodos = misAlojamientosAnfitrion.length;
-              const conteoHostPublicados = misAlojamientosAnfitrion.filter(
-                (a) => (a.estadoPublicacion || a.estado || 'PUBLICADO') === 'PUBLICADO'
-              ).length;
-              const conteoHostPendientes = misAlojamientosAnfitrion.filter(
-                (a) => (a.estadoPublicacion || a.estado) === 'PENDIENTE'
-              ).length;
-              const conteoHostEnRevision = misAlojamientosAnfitrion.filter(
-                (a) => (a.estadoPublicacion || a.estado) === 'EN_REVISION'
-              ).length;
-              const conteoHostObservados = misAlojamientosAnfitrion.filter(
-                (a) => (a.estadoPublicacion || a.estado) === 'OBSERVADO'
-              ).length;
-              const conteoHostSuspendidos = misAlojamientosAnfitrion.filter(
-                (a) => (a.estadoPublicacion || a.estado) === 'SUSPENDIDO'
-              ).length;
-              const conteoHostRechazados = misAlojamientosAnfitrion.filter(
-                (a) => (a.estadoPublicacion || a.estado) === 'RECHAZADO'
-              ).length;
-
-              const alojamientosAnfitrionFiltrados = misAlojamientosAnfitrion.filter((a) => {
-                const est = a.estadoPublicacion || a.estado || 'PUBLICADO';
-                if (filtroEstadoAnfitrion === 'TODOS') return true;
-                return est === filtroEstadoAnfitrion;
-              });
-
-              return (
-                <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-5">
-                  {/* Cabecera con Contadores y Botón de Refresco en Tiempo Real */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div>
-                      <h3 className="font-serif text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                        <span>Tus Propiedades Registradas</span>
-                        <span className="text-xs px-2.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 font-sans font-bold">
-                          {conteoHostTodos}
-                        </span>
-                      </h3>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">
-                        Supervisa el estado de auditoría y moderación administrativa de tus propiedades en tiempo real
-                      </p>
-                    </div>
-
-                    <div className="flex items-center gap-2 self-start sm:self-auto">
-                      <button
-                        type="button"
-                        onClick={recargarAlojamientosAnfitrion}
-                        disabled={recargandoMisAlojamientos}
-                        className={`px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center gap-1.5 shadow-xs ${
-                          recargandoMisAlojamientos ? 'opacity-60 cursor-not-allowed' : ''
-                        }`}
-                        title="Sincronizar cambios de moderación con el servidor central"
-                      >
-                        <RefreshCw className={`w-3.5 h-3.5 ${recargandoMisAlojamientos ? 'animate-spin text-blue-600' : 'text-slate-500'}`} />
-                        <span>{recargandoMisAlojamientos ? 'Sincronizando...' : 'Refrescar'}</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setWizardAbierto(true)}
-                        className="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                        <span>Añadir Propiedad</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Barra de Filtros por Estado */}
-                  <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-1 no-scrollbar text-xs font-medium border-b border-slate-100 dark:border-slate-800">
-                    {[
-                      { id: 'TODOS', label: 'Todos', conteo: conteoHostTodos, icon: '📋' },
-                      { id: 'PUBLICADO', label: 'Publicados', conteo: conteoHostPublicados, icon: '✅' },
-                      { id: 'PENDIENTE', label: 'Pendientes', conteo: conteoHostPendientes, icon: '🕒' },
-                      { id: 'EN_REVISION', label: 'En Revisión', conteo: conteoHostEnRevision, icon: '🔍' },
-                      { id: 'OBSERVADO', label: 'Observados', conteo: conteoHostObservados, icon: '⚠️' },
-                      { id: 'SUSPENDIDO', label: 'Suspendidos', conteo: conteoHostSuspendidos, icon: '⛔' },
-                      { id: 'RECHAZADO', label: 'Rechazados', conteo: conteoHostRechazados, icon: '❌' },
-                    ].map((tab) => {
-                      const activo = filtroEstadoAnfitrion === tab.id;
-                      return (
-                        <button
-                          key={tab.id}
-                          type="button"
-                          onClick={() => setFiltroEstadoAnfitrion(tab.id)}
-                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 ${
-                            activo
-                              ? 'bg-blue-600 text-white shadow-sm'
-                              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white'
-                          }`}
-                        >
-                          <span>{tab.icon}</span>
-                          <span>{tab.label}</span>
-                          <span
-                            className={`px-1.5 py-0.5 rounded-md text-[10px] ${
-                              activo
-                                ? 'bg-white/20 text-white'
-                                : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
-                            }`}
-                          >
-                            {tab.conteo}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  {/* Listado de Alojamientos Filtrados */}
-                  {alojamientosAnfitrionFiltrados.length === 0 ? (
-                    <div className="p-8 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 text-center space-y-3 bg-slate-50/50 dark:bg-slate-950/20">
-                      <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 mx-auto flex items-center justify-center">
-                        <AlertCircle className="w-6 h-6 text-slate-400" />
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-sm text-slate-800 dark:text-slate-200">
-                          No se encontraron propiedades en esta categoría
-                        </h4>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto mt-1">
-                          {filtroEstadoAnfitrion === 'TODOS'
-                            ? 'Aún no tienes alojamientos registrados. Comienza publicando tu primera propiedad con el wizard paso a paso.'
-                            : `Actualmente no tienes ninguna propiedad con estado "${filtroEstadoAnfitrion}".`}
-                        </p>
-                      </div>
-                      {filtroEstadoAnfitrion !== 'TODOS' ? (
-                        <button
-                          type="button"
-                          onClick={() => setFiltroEstadoAnfitrion('TODOS')}
-                          className="px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-xs font-bold text-slate-800 dark:text-slate-200 transition"
-                        >
-                          Ver todas las propiedades ({conteoHostTodos})
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => setWizardAbierto(true)}
-                          className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition shadow-sm"
-                        >
-                          + Registrar Primer Alojamiento
-                        </button>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {alojamientosAnfitrionFiltrados.map((a) => (
-                        <div
-                          key={a.idAlojamiento}
-                          className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/40 hover:border-blue-400 transition flex items-center justify-between gap-3"
-                        >
-                          <div className="flex items-center gap-3">
-                            <img
-                              src={
-                                (a.fotografias || []).find((f) => f.esPrincipal)?.url ||
-                                a.fotografias?.[0]?.url ||
-                                'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=400&q=80'
-                              }
-                              alt={a.titulo}
-                              className="w-16 h-14 object-cover rounded-xl shrink-0"
-                            />
-                            <div>
-                              <h4 className="font-bold text-xs text-slate-900 dark:text-white line-clamp-1">
-                                {a.titulo}
-                              </h4>
-                              <div className="flex items-center gap-2 text-[10px] text-slate-500 mt-0.5">
-                                <span>{a.ciudad}, {a.departamento}</span>
-                                <span>•</span>
-                                <span className="font-semibold">
-                                  {a.modalidad === 'HOTEL_HOSTAL'
-                                    ? `🏨 Hotel (${a.unidades?.length || 0} hab.)`
-                                    : '🏡 Casa Entera'}
-                                </span>
-                              </div>
-                              {(() => {
-                                const est = a.estadoPublicacion || a.estado || 'PUBLICADO';
-                                const motivo = a.motivoObservacionRechazo || a.motivoRechazo;
-                                let estilo = 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300';
-                                let label: string = est;
-
-                                if (est === 'PUBLICADO') {
-                                  estilo =
-                                    'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 font-semibold';
-                                  label = '✅ Publicado en Catálogo';
-                                } else if (est === 'PENDIENTE') {
-                                  estilo =
-                                    'bg-blue-600 !text-white dark:bg-blue-600 dark:!text-white border border-blue-700 font-bold shadow-xs';
-                                  label = '🕒 Pendiente de Revisión';
-                                } else if (est === 'EN_REVISION') {
-                                  estilo =
-                                    'bg-sky-100 text-sky-800 dark:bg-sky-950/70 dark:text-sky-300 border border-sky-300 dark:border-sky-800 font-medium';
-                                  label = '🔍 En Revisión Automática';
-                                } else if (est === 'OBSERVADO') {
-                                  estilo =
-                                    'bg-amber-100 !text-amber-900 dark:bg-amber-950/80 dark:!text-amber-200 border border-amber-400 dark:border-amber-700 font-semibold';
-                                  label = '⚠️ Observado por Auditoría';
-                                } else if (est === 'SUSPENDIDO') {
-                                  estilo =
-                                    'bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-300 border border-slate-300 dark:border-slate-700 font-medium';
-                                  label = '⛔ Suspendido Temporalmente';
-                                } else if (est === 'RECHAZADO') {
-                                  estilo =
-                                    'bg-rose-100 text-rose-800 dark:bg-rose-950/70 dark:text-rose-300 border border-rose-300 dark:border-rose-800 font-semibold';
-                                  label = '❌ Rechazado';
-                                }
-
-                                return (
-                                  <div className="mt-1 space-y-0.5">
-                                    <span className={`inline-block px-2 py-0.5 rounded-full text-[9px] font-bold ${estilo}`}>
-                                      {label}
-                                    </span>
-                                    {motivo &&
-                                      (est === 'OBSERVADO' || est === 'RECHAZADO' || est === 'SUSPENDIDO') && (
-                                        <p className="text-[10px] text-amber-600 dark:text-amber-400 font-medium italic line-clamp-1">
-                                          Motivo: {motivo}
-                                        </p>
-                                      )}
-                                  </div>
-                                );
-                              })()}
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-1.5 shrink-0">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setAlojamientoEnEdicion(a);
-                                setEditorHotelAbierto(true);
-                              }}
-                              className="px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
-                              title="Administrar Información, Fotos y Habitaciones"
-                            >
-                              <Edit3 className="w-3.5 h-3.5" />
-                              <span>{a.modalidad === 'HOTEL_HOSTAL' ? 'Administrar Hotel' : 'Editar'}</span>
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setDetalleAlojamiento(a);
-                                navigate.detalle(a.idAlojamiento);
-                                window.scrollTo({ top: 0, behavior: 'smooth' });
-                              }}
-                              className="p-2 rounded-xl text-slate-400 hover:text-blue-600 hover:bg-white dark:hover:bg-slate-800 transition"
-                              title="Ver como Viajero"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            })()}
-
-            <div className="grid grid-cols-1 gap-6">
-              <ValidadorPinCheckin reservaIdDefecto={misReservas[0]?.idReserva} />
-              <GestorRolesPermisos />
-              <LiquidacionesResumen />
+            <div className="pt-2">
+              <a
+                href={`http://localhost:3005?sso_token=${encodeURIComponent(token || '')}&sso_email=${encodeURIComponent(user.email || '')}&sso_nombre=${encodeURIComponent(user.nombre || '')}&sso_rol=ANFITRION`}
+                className="inline-flex items-center gap-2.5 px-8 py-4 rounded-2xl bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-600 hover:opacity-95 text-white font-bold text-sm shadow-xl shadow-blue-500/30 transition transform hover:-translate-y-0.5 cursor-pointer"
+              >
+                <span>Ingresar al Panel del Anfitrión</span>
+                <ExternalLink className="w-4 h-4" />
+              </a>
             </div>
+
+            <p className="text-[11px] text-slate-400">
+              Sesión activa validada mediante Single Sign-On (SSO) como <strong>{user.nombre} {user.apellido}</strong> ({user.email}).
+            </p>
           </div>
         )}
       </main>

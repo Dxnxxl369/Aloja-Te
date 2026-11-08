@@ -278,6 +278,164 @@ export const ALOJAMIENTOS_INICIALES: Record<string, Alojamiento[]> = {
         }
       ],
       reservas: []
+    },
+    {
+      idAlojamiento: 'aloj-carlos-4',
+      idAnfitrion: 'carlos-mendoza-scz',
+      nombreAnfitrion: 'Carlos Mendoza Cuéllar',
+      titulo: 'Residencia Colonial Chiquitana',
+      descripcion: 'Casona histórica restaurada en San José de Chiquitos con amplias galerías techadas, patios coloniales y tallados en madera mara.',
+      departamento: 'Santa Cruz',
+      ciudad: 'San José de Chiquitos',
+      direccion: 'Calle Monseñor Santistevan #102',
+      tipoPropiedad: 'CASONA',
+      modalidad: 'CASA_DEPARTAMENTO',
+      horarioEntrada: '14:00 hrs',
+      horarioSalida: '11:00 hrs',
+      politicas: 'Cuidado estricto del patrimonio chiquitano.',
+      precioBaseNoche: 480,
+      moneda: 'BOB',
+      calificacionPromedio: 4.85,
+      totalResenas: 14,
+      estado: 'OBSERVADO',
+      estadoPublicacion: 'OBSERVADO',
+      motivoObservacionRechazo: 'La fotografía principal de la fachada exterior no cuenta con suficiente resolución e iluminación. Favor actualizar la foto de portada y verificar número de baños.',
+      fotografias: [
+        {
+          idFotografia: 'f-chiq-1',
+          url: 'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?auto=format&fit=crop&w=1200&q=80',
+          esPrincipal: true,
+          orden: 0,
+          descripcion: 'Patio central y columnas de madera chiquitana'
+        }
+      ],
+      unidades: [
+        {
+          idUnidad: 'hab-chiq-101',
+          nombre: 'Casona Entera Chiquitana',
+          descripcion: 'Residencia completa de 2 dormitorios con capacidad para 4 personas.',
+          capacidadPersonas: 4,
+          cantidadDormitorios: 2,
+          cantidadCamas: 3,
+          cantidadBanios: 2,
+          cantidadBanos: 2,
+          precioNoche: 480,
+          moneda: 'BOB',
+          inventarioTotal: 1,
+          activo: true,
+          estado: 'OBSERVADO',
+          estadoOperativo: 'LIBRE',
+          fotos: [
+            'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?auto=format&fit=crop&w=1000&q=80'
+          ]
+        }
+      ],
+      reservas: []
+    },
+    {
+      idAlojamiento: 'aloj-carlos-5',
+      idAnfitrion: 'carlos-mendoza-scz',
+      nombreAnfitrion: 'Carlos Mendoza Cuéllar',
+      titulo: 'Eco-Lodge Cabañas del Palmar',
+      descripcion: 'Complejo ecológico de 3 cabañas independientes en el Parque Nacional El Palmar. Vista a palmeras milenarias y senderismo ecológico.',
+      departamento: 'Chuquisaca',
+      ciudad: 'Presto',
+      direccion: 'Camino al Palmar Km 14',
+      tipoPropiedad: 'HOTEL',
+      modalidad: 'HOTEL_HOSTAL',
+      horarioEntrada: '13:00 hrs',
+      horarioSalida: '10:00 hrs',
+      politicas: 'Energía solar y gestión sustentable de residuos.',
+      precioBaseNoche: 390,
+      moneda: 'BOB',
+      calificacionPromedio: 4.90,
+      totalResenas: 9,
+      estado: 'PENDIENTE',
+      estadoPublicacion: 'PENDIENTE',
+      fotografias: [
+        {
+          idFotografia: 'f-palm-1',
+          url: 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&fit=crop&w=1200&q=80',
+          esPrincipal: true,
+          orden: 0,
+          descripcion: 'Cabañas rústicas rodeadas de naturaleza'
+        }
+      ],
+      unidades: [
+        {
+          idUnidad: 'u-palm-1',
+          nombre: 'Cabaña Mirador del Palmar',
+          descripcion: 'Cabaña privada para parejas con balcón hacia el valle.',
+          capacidadPersonas: 2,
+          cantidadDormitorios: 1,
+          cantidadCamas: 1,
+          cantidadBanios: 1,
+          cantidadBanos: 1,
+          precioNoche: 390,
+          moneda: 'BOB',
+          inventarioTotal: 2,
+          activo: true,
+          estado: 'PENDIENTE',
+          estadoOperativo: 'LIBRE',
+          fotos: [
+            'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&fit=crop&w=1000&q=80'
+          ]
+        }
+      ],
+      reservas: []
+    },
+    {
+      idAlojamiento: 'aloj-carlos-6',
+      idAnfitrion: 'carlos-mendoza-scz',
+      nombreAnfitrion: 'Carlos Mendoza Cuéllar',
+      titulo: 'Casa Quinta Las Palmas Urubó',
+      descripcion: 'Moderna casa de campo con piscina sinfín y áreas recreativas familiares.',
+      departamento: 'Santa Cruz',
+      ciudad: 'Porongo / Urubó',
+      direccion: 'Condominio Las Palmas del Urubó Lote 45',
+      tipoPropiedad: 'QUINTA',
+      modalidad: 'CASA_DEPARTAMENTO',
+      horarioEntrada: '15:00 hrs',
+      horarioSalida: '12:00 hrs',
+      politicas: 'Prohibido fiestas ruidosas fuera de horario.',
+      precioBaseNoche: 890,
+      moneda: 'BOB',
+      calificacionPromedio: 4.92,
+      totalResenas: 18,
+      estado: 'SUSPENDIDO',
+      estadoPublicacion: 'SUSPENDIDO',
+      motivoObservacionRechazo: 'Pausado temporalmente a solicitud del anfitrión por mantenimiento de piscina y recambio de filtros.',
+      fotografias: [
+        {
+          idFotografia: 'f-uru-1',
+          url: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80',
+          esPrincipal: true,
+          orden: 0,
+          descripcion: 'Piscina y deck exterior'
+        }
+      ],
+      unidades: [
+        {
+          idUnidad: 'u-uru-1',
+          nombre: 'Quinta Completa Urubó',
+          descripcion: 'Casa de 4 habitaciones con cocina gourmet.',
+          capacidadPersonas: 10,
+          cantidadDormitorios: 4,
+          cantidadCamas: 6,
+          cantidadBanios: 4,
+          cantidadBanos: 4,
+          precioNoche: 890,
+          moneda: 'BOB',
+          inventarioTotal: 1,
+          activo: false,
+          estado: 'SUSPENDIDO',
+          estadoOperativo: 'LIBRE',
+          fotos: [
+            'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1000&q=80'
+          ]
+        }
+      ],
+      reservas: []
     }
   ],
 
@@ -417,36 +575,283 @@ export const ALOJAMIENTOS_INICIALES: Record<string, Alojamiento[]> = {
           estado: 'PENDIENTE'
         }
       ]
+    },
+    {
+      idAlojamiento: 'aloj-elena-3',
+      idAnfitrion: 'elena-morales-trj',
+      nombreAnfitrion: 'Elena Morales Calbimontes',
+      titulo: 'Hostal Boutique El Marqués Tarija',
+      descripcion: 'Hostal colonial en el centro histórico de Tarija con 5 habitaciones, patio andaluz y salón de té.',
+      departamento: 'Tarija',
+      ciudad: 'Tarija',
+      direccion: 'Calle 15 de Abril #324',
+      tipoPropiedad: 'HOTEL',
+      modalidad: 'HOTEL_HOSTAL',
+      horarioEntrada: '14:00 hrs',
+      horarioSalida: '11:00 hrs',
+      politicas: 'Desayuno tarijeño incluido de 07:30 a 10:00.',
+      precioBaseNoche: 320,
+      moneda: 'BOB',
+      calificacionPromedio: 4.88,
+      totalResenas: 16,
+      estado: 'OBSERVADO',
+      estadoPublicacion: 'OBSERVADO',
+      motivoObservacionRechazo: 'Se requiere adjuntar copia legible de la Licencia Departamental de Turismo y verificar capacidad de la habitación triple.',
+      fotografias: [
+        {
+          idFotografia: 'f-marq-1',
+          url: 'https://images.unsplash.com/photo-1549294413-26f195200c16?auto=format&fit=crop&w=1200&q=80',
+          esPrincipal: true,
+          orden: 0,
+          descripcion: 'Patio colonial y galería de flores'
+        }
+      ],
+      unidades: [
+        {
+          idUnidad: 'u-marq-1',
+          nombre: 'Habitación Colonial Doble',
+          descripcion: 'Habitación con vista al patio central y baño privado.',
+          capacidadPersonas: 2,
+          cantidadDormitorios: 1,
+          cantidadCamas: 2,
+          cantidadBanios: 1,
+          cantidadBanos: 1,
+          precioNoche: 320,
+          moneda: 'BOB',
+          inventarioTotal: 3,
+          activo: true,
+          estado: 'OBSERVADO',
+          estadoOperativo: 'LIBRE',
+          fotos: [
+            'https://images.unsplash.com/photo-1549294413-26f195200c16?auto=format&fit=crop&w=1000&q=80'
+          ]
+        }
+      ],
+      reservas: []
+    },
+    {
+      idAlojamiento: 'aloj-elena-4',
+      idAnfitrion: 'elena-morales-trj',
+      nombreAnfitrion: 'Elena Morales Calbimontes',
+      titulo: 'Cabaña Las Quebradas de Tomatitas',
+      descripcion: 'Acogedora cabaña rústica a orillas del río en Tomatitas con parrillero y huerto frutal.',
+      departamento: 'Tarija',
+      ciudad: 'Tomatitas / San Lorenzo',
+      direccion: 'Ruta a Tomatitas Km 5',
+      tipoPropiedad: 'CABAÑA',
+      modalidad: 'CASA_DEPARTAMENTO',
+      horarioEntrada: '14:00 hrs',
+      horarioSalida: '12:00 hrs',
+      politicas: 'Espacio eco-turístico para descanso familiar.',
+      precioBaseNoche: 450,
+      moneda: 'BOB',
+      calificacionPromedio: 4.90,
+      totalResenas: 7,
+      estado: 'PENDIENTE',
+      estadoPublicacion: 'PENDIENTE',
+      fotografias: [
+        {
+          idFotografia: 'f-tom-1',
+          url: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=1200&q=80',
+          esPrincipal: true,
+          orden: 0,
+          descripcion: 'Cabaña y naturaleza en Tomatitas'
+        }
+      ],
+      unidades: [
+        {
+          idUnidad: 'u-tom-1',
+          nombre: 'Cabaña Completa Tomatitas',
+          descripcion: 'Cabaña de 2 dormitorios con capacidad para 5 personas.',
+          capacidadPersonas: 5,
+          cantidadDormitorios: 2,
+          cantidadCamas: 3,
+          cantidadBanios: 1,
+          cantidadBanos: 1,
+          precioNoche: 450,
+          moneda: 'BOB',
+          inventarioTotal: 1,
+          activo: true,
+          estado: 'PENDIENTE',
+          estadoOperativo: 'LIBRE',
+          fotos: [
+            'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=1000&q=80'
+          ]
+        }
+      ],
+      reservas: []
     }
   ]
 };
 
+// Sincronizar estado de moderación con las decisiones tomadas por el Administrador en Portal Admin
+function sincronizarConDecisionesAdmin(lista: Alojamiento[]): Alojamiento[] {
+  try {
+    const adminRaw = localStorage.getItem('alojate_admin_alojamientos');
+    if (adminRaw) {
+      const adminItems: any[] = JSON.parse(adminRaw);
+      const adminMap = new Map<string, any>();
+      adminItems.forEach(item => {
+        if (item.id) adminMap.set(item.id, item);
+        if (item.idAlojamiento) adminMap.set(item.idAlojamiento, item);
+      });
+
+      return lista.map(a => {
+        const adminItem = adminMap.get(a.idAlojamiento);
+        if (adminItem) {
+          const nuevoEst = adminItem.estado || a.estado;
+          const nuevoMotivo = adminItem.motivoObservacionRechazo || adminItem.motivoRechazo || a.motivoObservacionRechazo;
+          return {
+            ...a,
+            estado: nuevoEst,
+            estadoPublicacion: nuevoEst,
+            motivoObservacionRechazo: nuevoMotivo,
+            motivoRechazo: nuevoMotivo,
+            origenUltimoCambio: adminItem.origenUltimoCambio || a.origenUltimoCambio
+          };
+        }
+        return a;
+      });
+    }
+  } catch (e) {
+    console.warn('[AlojamientoService] Error al sincronizar con auditoría de admin:', e);
+  }
+  return lista;
+}
+
 export const alojamientoService = {
   obtenerPorAnfitrion(clave: 'carlos' | 'elena'): Alojamiento[] {
+    let listaBase: Alojamiento[] = ALOJAMIENTOS_INICIALES[clave] || [];
+
     try {
       const custom = localStorage.getItem(`alojate_anfitrion_${clave}`);
       if (custom) {
-        return JSON.parse(custom);
+        listaBase = JSON.parse(custom);
       }
-    } catch {
-      // fallback
+    } catch {}
+
+    // Incorporar cualquier alojamiento creado o modificado globalmente
+    try {
+      const customGlobal = localStorage.getItem('alojate_alojamientos_custom');
+      if (customGlobal) {
+        const itemsGlobal: Alojamiento[] = JSON.parse(customGlobal);
+        const map = new Map<string, Alojamiento>();
+        listaBase.forEach(item => map.set(item.idAlojamiento, item));
+        
+        itemsGlobal.forEach(item => {
+          const matchAnfitrion = 
+            (clave === 'carlos' && (item.idAnfitrion?.includes('carlos') || item.nombreAnfitrion?.toLowerCase().includes('carlos') || !item.idAnfitrion)) ||
+            (clave === 'elena' && (item.idAnfitrion?.includes('elena') || item.nombreAnfitrion?.toLowerCase().includes('elena')));
+          
+          if (matchAnfitrion) {
+            map.set(item.idAlojamiento, { ...map.get(item.idAlojamiento), ...item });
+          }
+        });
+        listaBase = Array.from(map.values());
+      }
+    } catch {}
+
+    // Sincronizar reactivamente con las resoluciones del Administrador
+    return sincronizarConDecisionesAdmin(listaBase);
+  },
+
+  async sincronizarConServidor(clave: 'carlos' | 'elena'): Promise<Alojamiento[]> {
+    let listaActual = this.obtenerPorAnfitrion(clave);
+
+    try {
+      const resp = await fetch('http://localhost:8080/api/v1/alojamientos/todos', {
+        headers: { 'Accept': 'application/json' }
+      });
+      if (resp.ok) {
+        const remotos: any[] = await resp.json();
+        if (Array.isArray(remotos) && remotos.length > 0) {
+          const map = new Map<string, Alojamiento>();
+          listaActual.forEach(a => map.set(a.idAlojamiento, a));
+
+          remotos.forEach(r => {
+            const id = r.idAlojamiento || r.id;
+            const matchAnf = 
+              (clave === 'carlos' && (r.idAnfitrion?.includes('carlos') || r.nombreAnfitrion?.toLowerCase().includes('carlos') || !r.idAnfitrion)) ||
+              (clave === 'elena' && (r.idAnfitrion?.includes('elena') || r.nombreAnfitrion?.toLowerCase().includes('elena')));
+            
+            if (id && matchAnf) {
+              const previo = map.get(id);
+              map.set(id, {
+                ...(previo || {}),
+                idAlojamiento: id,
+                idAnfitrion: r.idAnfitrion || previo?.idAnfitrion || 'a0000000-0000-4000-8000-000000000002',
+                nombreAnfitrion: r.nombreAnfitrion || previo?.nombreAnfitrion || 'Carlos Mendoza Cuéllar',
+                titulo: r.titulo || previo?.titulo || 'Alojamiento Registrado',
+                descripcion: r.descripcion || previo?.descripcion || '',
+                departamento: r.departamento || previo?.departamento || 'Santa Cruz',
+                ciudad: r.ciudad || previo?.ciudad || 'Santa Cruz de la Sierra',
+                direccion: r.direccion || previo?.direccion || '',
+                tipoPropiedad: r.tipoPropiedad || previo?.tipoPropiedad || 'HOTEL',
+                modalidad: r.modalidad || previo?.modalidad || 'HOTEL_HOSTAL',
+                precioBaseNoche: Number(r.precioBaseNoche ?? r.precioNoche ?? previo?.precioBaseNoche ?? 450),
+                moneda: r.moneda || 'BOB',
+                calificacionPromedio: Number(r.calificacionPromedio ?? previo?.calificacionPromedio ?? 4.9),
+                totalResenas: Number(r.totalResenas ?? previo?.totalResenas ?? 10),
+                estado: r.estadoPublicacion || r.estado || previo?.estado || 'PENDIENTE',
+                estadoPublicacion: r.estadoPublicacion || r.estado || previo?.estadoPublicacion || 'PENDIENTE',
+                motivoObservacionRechazo: r.motivoObservacionRechazo || r.motivoRechazo || previo?.motivoObservacionRechazo,
+                fotografias: (r.fotografias && r.fotografias.length > 0) ? r.fotografias : (previo?.fotografias || []),
+                unidades: (r.unidades && r.unidades.length > 0) ? r.unidades : (previo?.unidades || []),
+                estadoOperativo: previo?.estadoOperativo || 'LIBRE',
+                reservas: previo?.reservas || []
+              });
+            }
+          });
+
+          listaActual = Array.from(map.values());
+          this.guardar(clave, listaActual);
+        }
+      }
+    } catch (e) {
+      // Si el backend no responde, la sincronización local funciona de forma transparente
     }
-    return ALOJAMIENTOS_INICIALES[clave] || [];
+
+    return sincronizarConDecisionesAdmin(listaActual);
   },
 
   guardar(clave: 'carlos' | 'elena', lista: Alojamiento[]): void {
     try {
       localStorage.setItem(`alojate_anfitrion_${clave}`, JSON.stringify(lista));
-      // También sincronizamos con el catálogo compartido
+      
+      // Sincronizar también con el catálogo global y draft de alojamientos custom
       const customCatalogo = localStorage.getItem('alojate_alojamientos_custom');
       const catalogoActual: Alojamiento[] = customCatalogo ? JSON.parse(customCatalogo) : [];
-      const combinados = [
-        ...lista,
-        ...catalogoActual.filter(c => !lista.some(l => l.idAlojamiento === c.idAlojamiento))
-      ];
-      localStorage.setItem('alojate_alojamientos_custom', JSON.stringify(combinados));
-    } catch {
-      // ignore
-    }
+      const map = new Map<string, Alojamiento>();
+      catalogoActual.forEach(c => map.set(c.idAlojamiento, c));
+      lista.forEach(l => map.set(l.idAlojamiento, l));
+      localStorage.setItem('alojate_alojamientos_custom', JSON.stringify(Array.from(map.values())));
+    } catch {}
+  },
+
+  async crear(clave: 'carlos' | 'elena', nuevo: Alojamiento): Promise<Alojamiento> {
+    const listaActual = this.obtenerPorAnfitrion(clave);
+    const id = nuevo.idAlojamiento || `aloj-${Date.now()}`;
+    const preparado: Alojamiento = {
+      ...nuevo,
+      idAlojamiento: id,
+      estado: 'PENDIENTE',
+      estadoPublicacion: 'PENDIENTE',
+      estadoOperativo: 'LIBRE',
+      reservas: []
+    };
+
+    const actualizada = [preparado, ...listaActual.filter(a => a.idAlojamiento !== id)];
+    this.guardar(clave, actualizada);
+
+    // Intentar publicar en el Gateway API central
+    try {
+      await fetch('http://localhost:8080/api/v1/alojamientos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(preparado)
+      });
+    } catch {}
+
+    return preparado;
   }
 };

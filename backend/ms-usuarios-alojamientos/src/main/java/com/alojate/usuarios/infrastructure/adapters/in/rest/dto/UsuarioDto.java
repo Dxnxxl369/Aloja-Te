@@ -24,6 +24,9 @@ public class UsuarioDto {
     private String telefono;
     private String ci;
     private String ciExpedido;
+    private String bancoNombre;
+    private String numeroCuentaBancaria;
+    private String qr;
     private EstadoUsuario estado;
     private LocalDateTime fechaRegistro;
 }

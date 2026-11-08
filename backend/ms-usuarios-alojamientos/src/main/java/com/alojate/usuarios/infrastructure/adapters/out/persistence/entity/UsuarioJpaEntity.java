@@ -70,6 +70,9 @@ public class UsuarioJpaEntity {
     @Column(name = "numero_cuenta_bancaria", length = 50)
     private String numeroCuentaBancaria;
 
+    @Column(name = "qr", columnDefinition = "TEXT")
+    private String qr;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
     private EstadoUsuario estado;

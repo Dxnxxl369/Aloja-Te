@@ -2,6 +2,7 @@ package com.alojate.usuarios.infrastructure.adapters.in.rest;
 
 import com.alojate.usuarios.domain.model.Usuario;
 import com.alojate.usuarios.domain.ports.in.UsuarioUseCase;
+import com.alojate.usuarios.infrastructure.adapters.in.rest.dto.ActualizarCuentaBancariaRequest;
 import com.alojate.usuarios.infrastructure.adapters.in.rest.dto.ActualizarPerfilRequest;
 import com.alojate.usuarios.infrastructure.adapters.in.rest.dto.CambiarEstadoRequest;
 import com.alojate.usuarios.infrastructure.adapters.in.rest.dto.UsuarioDto;
@@ -44,6 +45,32 @@ public class UsuarioController {
         return ResponseEntity.ok(toDto(usuario));
     }
 
+    @PutMapping("/{id}/cuenta-bancaria")
+    public ResponseEntity<UsuarioDto> actualizarCuentaBancaria(
+            @PathVariable UUID id,
+            @RequestBody ActualizarCuentaBancariaRequest request) {
+        Usuario usuario = usuarioUseCase.actualizarCuentaBancaria(
+                id,
+                request.getBancoNombre(),
+                request.getNumeroCuentaBancaria(),
+                request.getQr()
+        );
+        return ResponseEntity.ok(toDto(usuario));
+    }
+
+    @PutMapping("/por-email/cuenta-bancaria")
+    public ResponseEntity<UsuarioDto> actualizarCuentaBancariaPorEmail(
+            @RequestParam String email,
+            @RequestBody ActualizarCuentaBancariaRequest request) {
+        Usuario usuario = usuarioUseCase.actualizarCuentaBancariaPorEmail(
+                email,
+                request.getBancoNombre(),
+                request.getNumeroCuentaBancaria(),
+                request.getQr()
+        );
+        return ResponseEntity.ok(toDto(usuario));
+    }
+
     @PatchMapping("/{id}/estado")
     public ResponseEntity<UsuarioDto> cambiarEstado(@PathVariable UUID id, @RequestBody CambiarEstadoRequest request) {
         Usuario usuario = usuarioUseCase.cambiarEstado(id, request.getNuevoEstado());
@@ -64,6 +91,9 @@ public class UsuarioController {
                 .telefono(domain.getTelefono())
                 .ci(domain.getCi())
                 .ciExpedido(domain.getCiExpedido())
+                .bancoNombre(domain.getBancoNombre())
+                .numeroCuentaBancaria(domain.getNumeroCuentaBancaria())
+                .qr(domain.getQr())
                 .estado(domain.getEstado())
                 .fechaRegistro(domain.getFechaRegistro())
                 .build();

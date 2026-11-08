@@ -6,17 +6,52 @@ import { ListaAlojamientos } from './features/alojamientos/components/ListaAloja
 import { RecepcionPinControl } from './features/recepcion/components/RecepcionPinControl';
 import { LiquidacionesBNB } from './features/finanzas/components/LiquidacionesBNB';
 import { ReportesGenerativosIA } from './features/reportes/components/ReportesGenerativosIA';
+import { MiPerfilScreen } from './features/perfil/components/MiPerfilScreen';
+import { ListingWizardModal } from './features/alojamientos/modals/ListingWizardModal';
 import { useAnfitrionAuth } from './core/auth/AuthContext';
 import { alojamientoService } from './features/alojamientos/services/alojamientoService';
 import { Alojamiento } from './core/types/anfitrion.types';
 import { CheckCircle2, Lock, ExternalLink } from 'lucide-react';
 
+// Parser bidireccional de ruta para persistencia absoluta en F5 / recargas
+const parseRouteFromLocation = (): {
+  seccion: string;
+  alojamientoId: string | null;
+  habitacionId: string | null;
+} => {
+  const hash = window.location.hash.replace(/^#\/?/, '').trim();
+  const saved = localStorage.getItem('alojate_anfitrion_route') || '';
+  const target = hash || saved || 'dashboard';
+  const parts = target.split('/').filter(Boolean);
+
+  const seccionCandidata = parts[0] || 'dashboard';
+  const validas = ['dashboard', 'alojamientos', 'recepcion', 'finanzas', 'reportes', 'perfil'];
+  const seccion = validas.includes(seccionCandidata) ? seccionCandidata : 'dashboard';
+
+  let alojamientoId: string | null = null;
+  let habitacionId: string | null = null;
+
+  if (seccion === 'alojamientos' && parts[1]) {
+    alojamientoId = parts[1];
+    if (parts[2] === 'habitaciones' && parts[3]) {
+      habitacionId = parts[3];
+    }
+  }
+
+  return { seccion, alojamientoId, habitacionId };
+};
+
 export const AppContent: React.FC = () => {
-  const { anfitrionClave, isAuthenticated, cargandoSSO } = useAnfitrionAuth();
+  const { anfitrionClave, isAuthenticated, cargandoSSO, loginDemo } = useAnfitrionAuth();
   
-  // Estado de sección activa
-  const [seccionActiva, setSeccionActiva] = useState<string>('dashboard');
+  // Estado de ruta sincronizado con Hash URL y LocalStorage
+  const rutaInicial = parseRouteFromLocation();
+  const [seccionActiva, setSeccionActiva] = useState<string>(rutaInicial.seccion);
+  const [alojamientoIdActivo, setAlojamientoIdActivo] = useState<string | null>(rutaInicial.alojamientoId);
+  const [habitacionIdActiva, setHabitacionIdActiva] = useState<string | null>(rutaInicial.habitacionId);
+
   const [menuMovilAbierto, setMenuMovilAbierto] = useState(false);
+  const [wizardGlobalAbierto, setWizardGlobalAbierto] = useState(false);
   
   // Lista reactiva de alojamientos según el anfitrión activo
   const [alojamientos, setAlojamientos] = useState<Alojamiento[]>(() =>
@@ -25,6 +60,59 @@ export const AppContent: React.FC = () => {
 
   // Toast flotante
   const [toastMensaje, setToastMensaje] = useState<string | null>(null);
+
+  // Navegación con persistencia en Hash y LocalStorage
+  const navegarA = (
+    seccion: string,
+    idAlojamiento: string | null = null,
+    idHabitacion: string | null = null
+  ) => {
+    setSeccionActiva(seccion);
+    setAlojamientoIdActivo(idAlojamiento);
+    setHabitacionIdActiva(idHabitacion);
+
+    let newHash = `#/${seccion}`;
+    if (seccion === 'alojamientos' && idAlojamiento) {
+      newHash += `/${idAlojamiento}`;
+      if (idHabitacion) {
+        newHash += `/habitaciones/${idHabitacion}`;
+      }
+    }
+
+    if (window.location.hash !== newHash) {
+      window.location.hash = newHash;
+    }
+    localStorage.setItem('alojate_anfitrion_route', newHash.replace(/^#\/?/, ''));
+  };
+
+  // Sincronizar eventos de retroceso/avance del navegador y recargas
+  useEffect(() => {
+    const handleHashChange = () => {
+      const parsed = parseRouteFromLocation();
+      setSeccionActiva(parsed.seccion);
+      setAlojamientoIdActivo(parsed.alojamientoId);
+      setHabitacionIdActiva(parsed.habitacionId);
+      localStorage.setItem('alojate_anfitrion_route', window.location.hash.replace(/^#\/?/, ''));
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+
+    // Asegurar que el hash inicial esté en la barra de direcciones
+    const parsed = parseRouteFromLocation();
+    let initialHash = `#/${parsed.seccion}`;
+    if (parsed.alojamientoId) {
+      initialHash += `/${parsed.alojamientoId}`;
+      if (parsed.habitacionId) {
+        initialHash += `/habitaciones/${parsed.habitacionId}`;
+      }
+    }
+    if (window.location.hash !== initialHash) {
+      window.location.hash = initialHash;
+    }
+    localStorage.setItem('alojate_anfitrion_route', initialHash.replace(/^#\/?/, ''));
+
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
 
   // Recargar alojamientos cuando el anfitrión cambia (Carlos vs Elena)
   useEffect(() => {
@@ -45,39 +133,32 @@ export const AppContent: React.FC = () => {
 
   const conteoPendientes = alojamientos.filter(a => a.estadoOperativo === 'PENDIENTE').length;
 
-  // Título y subtítulo dinámico
+  // Título dinámico para el breadcrumb de TopHeader
   const getHeaderInfo = () => {
+    if (seccionActiva === 'alojamientos' && alojamientoIdActivo) {
+      const aloj = alojamientos.find(a => a.idAlojamiento === alojamientoIdActivo);
+      if (habitacionIdActiva && aloj?.unidades) {
+        const hab = aloj.unidades.find(u => u.idUnidad === habitacionIdActiva);
+        return { titulo: `${aloj.titulo} / ${hab?.nombre || 'Habitación'}` };
+      }
+      return { titulo: aloj?.titulo || 'Editor de Alojamiento' };
+    }
+
     switch (seccionActiva) {
       case 'dashboard':
-        return {
-          titulo: 'Tablero de Control del Anfitrión',
-          subtitulo: 'Supervisión en tiempo real de reservas, disponibilidad y check-in de huéspedes'
-        };
+        return { titulo: 'Dashboard' };
       case 'alojamientos':
-        return {
-          titulo: 'Mis Alojamientos & Habitaciones',
-          subtitulo: 'Gestión hotelera, inventario de suites y galería fotográfica independiente'
-        };
+        return { titulo: 'Mis Alojamientos' };
       case 'recepcion':
-        return {
-          titulo: 'Recepción & Control de Llaves por PIN',
-          subtitulo: 'Operación hotelera y estados en tiempo real (Libre, Pendiente de PIN, En Uso)'
-        };
+        return { titulo: 'Recepción & PIN' };
       case 'finanzas':
-        return {
-          titulo: 'Liquidaciones & Cobros Bancarios BNB',
-          subtitulo: 'Abonos directos a cuenta bancaria y trazabilidad de pagos QR Simple BNB'
-        };
+        return { titulo: 'Finanzas' };
       case 'reportes':
-        return {
-          titulo: 'Reportes Generativos con Inteligencia Artificial',
-          subtitulo: 'Consultas en lenguaje natural, reordenamiento interactivo y exportación optimizada para Excel'
-        };
+        return { titulo: 'Reportes IA' };
+      case 'perfil':
+        return { titulo: 'Mi Perfil' };
       default:
-        return {
-          titulo: 'Panel del Anfitrión',
-          subtitulo: 'Aloja-Te Gestión Hotelera'
-        };
+        return { titulo: 'Panel del Anfitrión' };
     }
   };
 
@@ -110,13 +191,32 @@ export const AppContent: React.FC = () => {
               Para ingresar al Panel de Control del Anfitrión debes iniciar sesión con tu cuenta desde la plataforma principal de Aloja-Te Bolivia.
             </p>
           </div>
-          <a
-            href="http://localhost:3000/#/catalogo"
-            className="flex items-center justify-center gap-2 w-full py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:opacity-95 text-white font-bold text-xs shadow-lg shadow-blue-500/25 transition cursor-pointer"
-          >
-            <span>Ir al Portal Principal</span>
-            <ExternalLink className="w-3.5 h-3.5" />
-          </a>
+          <div className="space-y-2 pt-2">
+            <a
+              href="http://localhost:3000/#/catalogo"
+              className="flex items-center justify-center gap-2 w-full py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:opacity-95 text-white font-bold text-xs shadow-lg shadow-blue-500/25 transition cursor-pointer"
+            >
+              <span>Ir al Portal Principal</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+
+            <div className="flex items-center gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => loginDemo('carlos')}
+                className="flex-1 py-2.5 px-3 rounded-xl border border-slate-700 hover:border-slate-600 hover:bg-slate-700/50 text-slate-300 font-semibold text-xs transition cursor-pointer"
+              >
+                Acceso Carlos (SCZ)
+              </button>
+              <button
+                type="button"
+                onClick={() => loginDemo('elena')}
+                className="flex-1 py-2.5 px-3 rounded-xl border border-slate-700 hover:border-slate-600 hover:bg-slate-700/50 text-slate-300 font-semibold text-xs transition cursor-pointer"
+              >
+                Acceso Elena (TJA)
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -129,7 +229,7 @@ export const AppContent: React.FC = () => {
       <SidebarLateral
         seccionActiva={seccionActiva}
         onCambiarSeccion={(s) => {
-          setSeccionActiva(s);
+          navegarA(s, null, null);
           setMenuMovilAbierto(false);
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }}
@@ -140,18 +240,12 @@ export const AppContent: React.FC = () => {
       />
 
       {/* Área Principal de Contenido (a la derecha del Sidebar) */}
-      <div className="flex-1 lg:ml-72 flex flex-col min-w-0">
+      <div className="flex-1 lg:ml-64 flex flex-col min-w-0">
         
         {/* Cabecera Superior Fija */}
         <TopHeader
           titulo={headerInfo.titulo}
-          subtitulo={headerInfo.subtitulo}
           onAbrirMenuMovil={() => setMenuMovilAbierto(true)}
-          onAbrirValidarPin={() => setSeccionActiva('recepcion')}
-          onPublicarPropiedad={() => {
-            setSeccionActiva('alojamientos');
-            mostrarToast('Asistente de registro disponible en Mis Alojamientos.');
-          }}
         />
 
         {/* Cuerpo de la Sección Activa */}
@@ -159,10 +253,10 @@ export const AppContent: React.FC = () => {
           {seccionActiva === 'dashboard' && (
             <TableroEjecutivo
               alojamientos={alojamientos}
-              onIrARecepcion={() => setSeccionActiva('recepcion')}
-              onIrAAlojamientos={() => setSeccionActiva('alojamientos')}
-              onValidarPinUnidad={() => setSeccionActiva('recepcion')}
-              onCheckoutUnidad={() => setSeccionActiva('recepcion')}
+              onIrARecepcion={() => navegarA('recepcion', null, null)}
+              onIrAAlojamientos={() => navegarA('alojamientos', null, null)}
+              onValidarPinUnidad={() => navegarA('recepcion', null, null)}
+              onCheckoutUnidad={() => navegarA('recepcion', null, null)}
             />
           )}
 
@@ -171,10 +265,16 @@ export const AppContent: React.FC = () => {
               alojamientos={alojamientos}
               onGuardarLista={(nuevaLista) => {
                 handleGuardarAlojamientos(nuevaLista);
-                mostrarToast('Alojamiento y habitaciones guardados exitosamente.');
+                mostrarToast('Alojamiento y unidades guardados exitosamente.');
               }}
-              onPublicarNuevo={() => {
-                mostrarToast('Para publicar una nueva propiedad pulsa en Añadir Habitación.');
+              onPublicarNuevo={() => setWizardGlobalAbierto(true)}
+              alojamientoEnEdicionId={alojamientoIdActivo}
+              habitacionEnEdicionId={habitacionIdActiva}
+              onSeleccionarAlojamiento={(id) => {
+                navegarA('alojamientos', id, null);
+              }}
+              onSeleccionarHabitacion={(idHab) => {
+                navegarA('alojamientos', alojamientoIdActivo, idHab);
               }}
             />
           )}
@@ -197,8 +297,23 @@ export const AppContent: React.FC = () => {
               onMostrarToast={mostrarToast}
             />
           )}
+
+          {seccionActiva === 'perfil' && (
+            <MiPerfilScreen onMostrarToast={mostrarToast} />
+          )}
         </main>
       </div>
+
+      {/* Modal Asistente de Publicación Global */}
+      <ListingWizardModal
+        isOpen={wizardGlobalAbierto}
+        onClose={() => setWizardGlobalAbierto(false)}
+        onAlojamientoCreado={(nuevo) => {
+          handleGuardarAlojamientos([nuevo, ...alojamientos.filter(a => a.idAlojamiento !== nuevo.idAlojamiento)]);
+          mostrarToast('¡Alojamiento enviado a auditoría con éxito!');
+          navegarA('alojamientos', null, null);
+        }}
+      />
 
       {/* Toast Flotante */}
       {toastMensaje && (

@@ -11,5 +11,7 @@ public interface UsuarioUseCase {
     Usuario obtenerPorEmail(String email);
     List<Usuario> listarTodos();
     Usuario actualizarPerfil(UUID id, String nombre, String apellido, String telefono);
+    Usuario actualizarCuentaBancaria(UUID id, String bancoNombre, String numeroCuentaBancaria, String qr);
+    Usuario actualizarCuentaBancariaPorEmail(String email, String bancoNombre, String numeroCuentaBancaria, String qr);
     Usuario cambiarEstado(UUID id, EstadoUsuario nuevoEstado);
 }

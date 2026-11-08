@@ -52,6 +52,28 @@ public class UsuarioServiceImpl implements UsuarioUseCase {
 
     @Override
     @Transactional
+    public Usuario actualizarCuentaBancaria(UUID id, String bancoNombre, String numeroCuentaBancaria, String qr) {
+        Usuario usuario = obtenerPorId(id);
+        if (bancoNombre != null) usuario.setBancoNombre(bancoNombre);
+        if (numeroCuentaBancaria != null) usuario.setNumeroCuentaBancaria(numeroCuentaBancaria);
+        if (qr != null) usuario.setQr(qr);
+        usuario.setFechaActualizacion(LocalDateTime.now());
+        return usuarioRepositoryPort.guardar(usuario);
+    }
+
+    @Override
+    @Transactional
+    public Usuario actualizarCuentaBancariaPorEmail(String email, String bancoNombre, String numeroCuentaBancaria, String qr) {
+        Usuario usuario = obtenerPorEmail(email);
+        if (bancoNombre != null) usuario.setBancoNombre(bancoNombre);
+        if (numeroCuentaBancaria != null) usuario.setNumeroCuentaBancaria(numeroCuentaBancaria);
+        if (qr != null) usuario.setQr(qr);
+        usuario.setFechaActualizacion(LocalDateTime.now());
+        return usuarioRepositoryPort.guardar(usuario);
+    }
+
+    @Override
+    @Transactional
     public Usuario cambiarEstado(UUID id, EstadoUsuario nuevoEstado) {
         Usuario usuario = obtenerPorId(id);
         usuario.setEstado(nuevoEstado);

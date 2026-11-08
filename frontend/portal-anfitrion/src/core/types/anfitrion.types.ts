@@ -51,6 +51,7 @@ export interface Alojamiento {
   ciudad: string;
   direccion: string;
   tipoPropiedad: string;
+  tipoEspacio?: string;
   modalidad?: 'CASA_DEPARTAMENTO' | 'HOTEL_HOSTAL' | string;
   politicas?: string;
   horarioEntrada?: string;
@@ -60,6 +61,11 @@ export interface Alojamiento {
   calificacionPromedio: number;
   totalResenas: number;
   estado: EstadoPublicacion;
+  estadoPublicacion?: EstadoPublicacion;
+  motivoObservacionRechazo?: string;
+  motivoRechazo?: string;
+  origenUltimoCambio?: string;
+  servicios?: string[];
   fotografias: Fotografia[];
   unidades: UnidadReservable[];
   // Propiedades operativas para el panel de recepción
@@ -71,11 +77,26 @@ export interface PerfilAnfitrion {
   id: string;
   nombre: string;
   email: string;
+  telefono?: string;
   ciudad: string;
+  departamento?: string;
   descripcion: string;
+  avatarUrl?: string;
   cuentaBNB: string;
+  bancoNombre?: string;
+  numeroCuentaBancaria?: string;
+  qr?: string;
   saldoDisponible: string;
   verificado: boolean;
+  // Campos de verificación oficial
+  ciNumero?: string;
+  ciExpedido?: string;
+  ciAnversoUrl?: string;
+  ciReversoUrl?: string;
+  nit?: string;
+  licenciaTuristica?: string;
+  comprobanteDomicilioUrl?: string;
+  estadoVerificacion?: 'VERIFICADO' | 'PENDIENTE_REVISION' | 'NO_VERIFICADO';
   kpis: {
     ingresosNetos: string;
     tasaOcupacion: string;

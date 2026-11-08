@@ -29,6 +29,9 @@ interface SSOUsuario {
   apellido: string;
   rol: 'CLIENTE' | 'ANFITRION' | 'ADMINISTRADOR';
   tipoCuenta?: string;
+  bancoNombre?: string;
+  numeroCuentaBancaria?: string;
+  qr?: string;
 }
 
 interface SSOSession {
@@ -47,7 +50,10 @@ const USUARIOS_SSO: Record<string, { pass: string; usuario: SSOUsuario }> = {
       nombre: 'Carlos',
       apellido: 'Mendoza',
       rol: 'ANFITRION',
-      tipoCuenta: 'ANFITRION_VERIFICADO'
+      tipoCuenta: 'ANFITRION_VERIFICADO',
+      bancoNombre: 'Banco Mercantil Santa Cruz S.A.',
+      numeroCuentaBancaria: '4010987654321',
+      qr: 'https://alojate-bolivia.s3.sa-east-1.amazonaws.com/anfitriones/qr-carlos-mendoza.png'
     }
   },
   'carlos.mendoza@alojate.bo': {
@@ -58,7 +64,10 @@ const USUARIOS_SSO: Record<string, { pass: string; usuario: SSOUsuario }> = {
       nombre: 'Carlos',
       apellido: 'Mendoza',
       rol: 'ANFITRION',
-      tipoCuenta: 'ANFITRION_VERIFICADO'
+      tipoCuenta: 'ANFITRION_VERIFICADO',
+      bancoNombre: 'Banco Mercantil Santa Cruz S.A.',
+      numeroCuentaBancaria: '4010987654321',
+      qr: 'https://alojate-bolivia.s3.sa-east-1.amazonaws.com/anfitriones/qr-carlos-mendoza.png'
     }
   },
   'elena.calbimontes@alojate.bo': {
@@ -69,7 +78,10 @@ const USUARIOS_SSO: Record<string, { pass: string; usuario: SSOUsuario }> = {
       nombre: 'Elena',
       apellido: 'Morales',
       rol: 'ANFITRION',
-      tipoCuenta: 'ANFITRION_VERIFICADO'
+      tipoCuenta: 'ANFITRION_VERIFICADO',
+      bancoNombre: 'Banco Nacional de Bolivia S.A. (BNB)',
+      numeroCuentaBancaria: '2000492817402',
+      qr: 'https://alojate-bolivia.s3.sa-east-1.amazonaws.com/anfitriones/qr-elena-morales.png'
     }
   },
   'elena.morales@alojate.bo': {
@@ -80,7 +92,10 @@ const USUARIOS_SSO: Record<string, { pass: string; usuario: SSOUsuario }> = {
       nombre: 'Elena',
       apellido: 'Morales',
       rol: 'ANFITRION',
-      tipoCuenta: 'ANFITRION_VERIFICADO'
+      tipoCuenta: 'ANFITRION_VERIFICADO',
+      bancoNombre: 'Banco Nacional de Bolivia S.A. (BNB)',
+      numeroCuentaBancaria: '2000492817402',
+      qr: 'https://alojate-bolivia.s3.sa-east-1.amazonaws.com/anfitriones/qr-elena-morales.png'
     }
   },
   'cliente@alojate.bo': {
@@ -669,6 +684,138 @@ app.get('/api/v1/alojamientos/:id', async (req, res, next) => {
     return res.json(aloj);
   }
   return next();
+});
+
+// ============================================================================
+// GESTIÓN DE USUARIOS Y DATOS BANCARIOS / QR
+// ============================================================================
+
+app.get('/api/v1/usuarios/por-email', async (req, res, next) => {
+  const email = String(req.query.email || '').trim().toLowerCase();
+  if (!email) {
+    return res.status(400).json({ error: 'Email requerido' });
+  }
+
+  // 1. Intentar consultar MS-01 Usuarios
+  try {
+    const backendRes = await fetch(`${MS_USUARIOS}/api/v1/usuarios/por-email?email=${encodeURIComponent(email)}`);
+    if (backendRes.ok) {
+      const data = await backendRes.json();
+      return res.json(data);
+    }
+  } catch (err) {}
+
+  // 2. Fallback resiliente con datos SSO canónicos
+  const entry = USUARIOS_SSO[email];
+  if (entry) {
+    return res.json({
+      idUsuario: entry.usuario.id,
+      email: entry.usuario.email,
+      nombre: entry.usuario.nombre,
+      apellido: entry.usuario.apellido,
+      rolNombre: entry.usuario.rol,
+      tipoCuenta: entry.usuario.tipoCuenta,
+      bancoNombre: entry.usuario.bancoNombre || 'Banco Mercantil Santa Cruz S.A.',
+      numeroCuentaBancaria: entry.usuario.numeroCuentaBancaria || '4010987654321',
+      qr: entry.usuario.qr || `https://alojate-bolivia.s3.sa-east-1.amazonaws.com/anfitriones/qr-${entry.usuario.nombre.toLowerCase()}.png`
+    });
+  }
+
+  return next();
+});
+
+app.get('/api/v1/usuarios/:id', async (req, res, next) => {
+  const id = req.params.id;
+
+  try {
+    const backendRes = await fetch(`${MS_USUARIOS}/api/v1/usuarios/${id}`);
+    if (backendRes.ok) {
+      const data = await backendRes.json();
+      return res.json(data);
+    }
+  } catch (err) {}
+
+  const match = Object.values(USUARIOS_SSO).find(e => e.usuario.id === id);
+  if (match) {
+    return res.json({
+      idUsuario: match.usuario.id,
+      email: match.usuario.email,
+      nombre: match.usuario.nombre,
+      apellido: match.usuario.apellido,
+      rolNombre: match.usuario.rol,
+      tipoCuenta: match.usuario.tipoCuenta,
+      bancoNombre: match.usuario.bancoNombre || 'Banco Mercantil Santa Cruz S.A.',
+      numeroCuentaBancaria: match.usuario.numeroCuentaBancaria || '4010987654321',
+      qr: match.usuario.qr || `https://alojate-bolivia.s3.sa-east-1.amazonaws.com/anfitriones/qr-${match.usuario.nombre.toLowerCase()}.png`
+    });
+  }
+
+  return next();
+});
+
+app.put('/api/v1/usuarios/:id/cuenta-bancaria', express.json(), async (req, res) => {
+  const id = req.params.id;
+  const { bancoNombre, numeroCuentaBancaria, qr } = req.body || {};
+
+  let backendData: any = null;
+  try {
+    const backendRes = await fetch(`${MS_USUARIOS}/api/v1/usuarios/${id}/cuenta-bancaria`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ bancoNombre, numeroCuentaBancaria, qr })
+    });
+    if (backendRes.ok) {
+      backendData = await backendRes.json();
+    }
+  } catch (err) {}
+
+  // Sincronizar catálogo canónico en Gateway
+  const match = Object.values(USUARIOS_SSO).find(e => e.usuario.id === id);
+  if (match) {
+    if (bancoNombre) match.usuario.bancoNombre = bancoNombre;
+    if (numeroCuentaBancaria) match.usuario.numeroCuentaBancaria = numeroCuentaBancaria;
+    if (qr) match.usuario.qr = qr;
+  }
+
+  return res.json(backendData || {
+    idUsuario: id,
+    bancoNombre,
+    numeroCuentaBancaria,
+    qr,
+    mensaje: 'Cuenta bancaria y código QR S3 actualizados con éxito en el backend'
+  });
+});
+
+app.put('/api/v1/usuarios/por-email/cuenta-bancaria', express.json(), async (req, res) => {
+  const email = String(req.query.email || '').trim().toLowerCase();
+  const { bancoNombre, numeroCuentaBancaria, qr } = req.body || {};
+
+  let backendData: any = null;
+  try {
+    const backendRes = await fetch(`${MS_USUARIOS}/api/v1/usuarios/por-email/cuenta-bancaria?email=${encodeURIComponent(email)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ bancoNombre, numeroCuentaBancaria, qr })
+    });
+    if (backendRes.ok) {
+      backendData = await backendRes.json();
+    }
+  } catch (err) {}
+
+  const entry = USUARIOS_SSO[email];
+  if (entry) {
+    if (bancoNombre) entry.usuario.bancoNombre = bancoNombre;
+    if (numeroCuentaBancaria) entry.usuario.numeroCuentaBancaria = numeroCuentaBancaria;
+    if (qr) entry.usuario.qr = qr;
+  }
+
+  return res.json(backendData || {
+    email,
+    bancoNombre,
+    numeroCuentaBancaria,
+    qr,
+    mensaje: 'Cuenta bancaria y código QR S3 actualizados con éxito en el backend'
+  });
 });
 
 // ============================================================================

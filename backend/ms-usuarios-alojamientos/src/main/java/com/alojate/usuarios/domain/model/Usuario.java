@@ -32,6 +32,7 @@ public class Usuario {
     private String departamentoRadicatoria;
     private String bancoNombre;
     private String numeroCuentaBancaria;
+    private String qr;
     private EstadoUsuario estado;
     private LocalDateTime fechaRegistro;
     private LocalDateTime fechaActualizacion;

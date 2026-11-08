@@ -19,18 +19,35 @@ interface EditorHotelPantallaProps {
   alojamiento: Alojamiento;
   onVolver: () => void;
   onGuardarHotel: (actualizado: Alojamiento) => void;
+  habitacionEnPantallaIdInicial?: string | null;
+  onCambiarHabitacion?: (idHabitacion: string | null) => void;
 }
 
 export const EditorHotelPantalla: React.FC<EditorHotelPantallaProps> = ({
   alojamiento,
   onVolver,
-  onGuardarHotel
+  onGuardarHotel,
+  habitacionEnPantallaIdInicial,
+  onCambiarHabitacion
 }) => {
   const [draft, setDraft] = useState<Alojamiento>(() => JSON.parse(JSON.stringify(alojamiento)));
   const [tabActual, setTabActual] = useState<'DATOS' | 'FOTOS' | 'HABITACIONES'>('DATOS');
   
   // Si se entra a la pantalla individual de una habitación específica:
-  const [habitacionEnPantallaId, setHabitacionEnPantallaId] = useState<string | null>(null);
+  const [habitacionEnPantallaId, setHabitacionEnPantallaIdState] = useState<string | null>(
+    () => habitacionEnPantallaIdInicial || null
+  );
+
+  const cambiarHabitacion = (id: string | null) => {
+    setHabitacionEnPantallaIdState(id);
+    onCambiarHabitacion?.(id);
+  };
+
+  React.useEffect(() => {
+    if (habitacionEnPantallaIdInicial !== undefined) {
+      setHabitacionEnPantallaIdState(habitacionEnPantallaIdInicial);
+    }
+  }, [habitacionEnPantallaIdInicial]);
   const [nuevaFotoHotelUrl, setNuevaFotoHotelUrl] = useState('');
 
   const esHotel = draft.modalidad === 'HOTEL_HOSTAL' || draft.tipoPropiedad?.toUpperCase() === 'HOTEL' || (draft.unidades && draft.unidades.length > 1);
@@ -121,7 +138,7 @@ export const EditorHotelPantalla: React.FC<EditorHotelPantallaProps> = ({
     }));
 
     // Abre directamente la pantalla individual de la nueva habitación
-    setHabitacionEnPantallaId(nuevoId);
+    cambiarHabitacion(nuevoId);
   };
 
   const eliminarHabitacion = (idUnidad: string) => {
@@ -142,7 +159,7 @@ export const EditorHotelPantalla: React.FC<EditorHotelPantallaProps> = ({
       ...prev,
       unidades: prev.unidades.map(u => u.idUnidad === actualizada.idUnidad ? actualizada : u)
     }));
-    setHabitacionEnPantallaId(null);
+    cambiarHabitacion(null);
   };
 
   const habitacionActiva = draft.unidades?.find(u => u.idUnidad === habitacionEnPantallaId) || null;
@@ -153,7 +170,7 @@ export const EditorHotelPantalla: React.FC<EditorHotelPantallaProps> = ({
       <PantallaHabitacionIndividual
         habitacion={habitacionActiva}
         hotelTitulo={draft.titulo}
-        onVolver={() => setHabitacionEnPantallaId(null)}
+        onVolver={() => cambiarHabitacion(null)}
         onGuardarHabitacion={guardarHabitacionModificada}
       />
     );
@@ -168,7 +185,7 @@ export const EditorHotelPantalla: React.FC<EditorHotelPantallaProps> = ({
           <button
             type="button"
             onClick={onVolver}
-            className="p-2.5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:text-blue-600 transition flex items-center gap-2 text-xs font-bold shadow-sm"
+            className="p-2.5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:text-blue-600 transition flex items-center gap-2 text-xs font-bold shadow-sm cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4 text-blue-600" />
             <span>Volver a Mis Alojamientos</span>
@@ -189,15 +206,132 @@ export const EditorHotelPantalla: React.FC<EditorHotelPantallaProps> = ({
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={() => onGuardarHotel(draft)}
-          className="px-6 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-lg shadow-emerald-600/25 transition flex items-center gap-2 self-start sm:self-auto cursor-pointer"
-        >
-          <Check className="w-4 h-4" />
-          <span>Guardar Cambios del Hotel</span>
-        </button>
+        <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+          <button
+            type="button"
+            onClick={() => onGuardarHotel(draft)}
+            className="px-6 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-lg shadow-emerald-600/25 transition flex items-center gap-2 cursor-pointer"
+          >
+            <Check className="w-4 h-4" />
+            <span>Guardar Cambios</span>
+          </button>
+        </div>
       </div>
+
+      {/* Banner de Estado de Moderación Administrativa */}
+      {(() => {
+        const est = draft.estadoPublicacion || draft.estado || 'PUBLICADO';
+        const motivo = draft.motivoObservacionRechazo || draft.motivoRechazo;
+
+        if (est === 'OBSERVADO') {
+          return (
+            <div className="p-4 sm:p-5 rounded-3xl bg-amber-50 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-800 text-xs text-amber-900 dark:text-amber-200 space-y-2">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div className="flex items-center gap-2 font-bold">
+                  <span className="px-2.5 py-0.5 rounded-full bg-amber-500 text-white text-[10px]">
+                    ⚠️ Estado: Observado por Auditoría
+                  </span>
+                  <span>Requiere Correcciones</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const actualizado: Alojamiento = {
+                      ...draft,
+                      estado: 'PENDIENTE',
+                      estadoPublicacion: 'PENDIENTE',
+                      motivoObservacionRechazo: undefined
+                    };
+                    setDraft(actualizado);
+                    onGuardarHotel(actualizado);
+                  }}
+                  className="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs transition shadow-sm cursor-pointer"
+                >
+                  ✓ Subsanar y Solicitar Re-auditoría
+                </button>
+              </div>
+              {motivo && (
+                <p className="italic bg-white/70 dark:bg-slate-900/60 p-3 rounded-2xl border border-amber-200 dark:border-amber-900">
+                  <strong>Detalle de la Observación:</strong> "{motivo}"
+                </p>
+              )}
+            </div>
+          );
+        }
+
+        if (est === 'PENDIENTE') {
+          return (
+            <div className="p-4 rounded-3xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 flex items-center justify-between gap-3 text-xs text-blue-900 dark:text-blue-200">
+              <div className="flex items-center gap-2 font-bold">
+                <span className="px-2.5 py-0.5 rounded-full bg-blue-600 text-white text-[10px]">
+                  🕒 Estado: En Cola de Auditoría
+                </span>
+                <span>Tu propiedad está siendo revisada por el equipo de moderación institucional.</span>
+              </div>
+            </div>
+          );
+        }
+
+        if (est === 'PUBLICADO') {
+          return (
+            <div className="p-4 rounded-3xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex items-center justify-between gap-3 text-xs text-emerald-900 dark:text-emerald-200">
+              <div className="flex items-center gap-2 font-bold">
+                <span className="px-2.5 py-0.5 rounded-full bg-emerald-600 text-white text-[10px]">
+                  ✅ Estado: Publicado en Catálogo
+                </span>
+                <span>Visible para millones de viajeros con reservas y cobros QR BNB habilitados.</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  const actualizado: Alojamiento = {
+                    ...draft,
+                    estado: 'SUSPENDIDO',
+                    estadoPublicacion: 'SUSPENDIDO',
+                    motivoObservacionRechazo: 'Pausado temporalmente a solicitud del anfitrión.'
+                  };
+                  setDraft(actualizado);
+                  onGuardarHotel(actualizado);
+                }}
+                className="px-3 py-1 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 font-bold text-[11px] transition cursor-pointer"
+              >
+                ⛔ Pausar Publicación
+              </button>
+            </div>
+          );
+        }
+
+        if (est === 'SUSPENDIDO') {
+          return (
+            <div className="p-4 rounded-3xl bg-slate-100 dark:bg-slate-800/60 border border-slate-300 dark:border-slate-700 flex items-center justify-between gap-3 text-xs text-slate-800 dark:text-slate-200">
+              <div className="flex items-center gap-2 font-bold">
+                <span className="px-2.5 py-0.5 rounded-full bg-slate-600 text-white text-[10px]">
+                  ⛔ Estado: Suspendido Temporalmente
+                </span>
+                <span>La propiedad se encuentra oculta en el catálogo para los viajeros.</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  const actualizado: Alojamiento = {
+                    ...draft,
+                    estado: 'PUBLICADO',
+                    estadoPublicacion: 'PUBLICADO',
+                    motivoObservacionRechazo: undefined
+                  };
+                  setDraft(actualizado);
+                  onGuardarHotel(actualizado);
+                }}
+                className="px-3 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] transition cursor-pointer"
+              >
+                ▶️ Reanudar Publicación
+              </button>
+            </div>
+          );
+        }
+
+        return null;
+      })()}
 
       {/* Pestañas de Navegación del Hotel */}
       <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3 text-xs font-bold">
@@ -536,7 +670,7 @@ export const EditorHotelPantalla: React.FC<EditorHotelPantallaProps> = ({
                   <div className="pt-3 border-t border-slate-200/60 dark:border-slate-800/80 flex items-center justify-between gap-2">
                     <button
                       type="button"
-                      onClick={() => setHabitacionEnPantallaId(u.idUnidad)}
+                      onClick={() => cambiarHabitacion(u.idUnidad)}
                       className="flex-1 py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition flex items-center justify-center gap-2 shadow-sm shadow-blue-500/20 cursor-pointer"
                     >
                       <DoorOpen className="w-4 h-4" />

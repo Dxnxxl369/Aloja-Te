@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAuth } from '../../core/auth/AuthContext';
-import { Sun, Moon, Sparkles, User, LogOut, Compass, KeyRound, DollarSign, ExternalLink } from 'lucide-react';
+import { Sun, Moon, Sparkles, User, LogOut, Compass, KeyRound, DollarSign, ExternalLink, Building2 } from 'lucide-react';
 
 interface NavbarProps {
   currentView: 'catalogo' | 'mis-viajes' | 'anfitrion' | 'detalle';
@@ -17,7 +17,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onToggleDarkMode,
   onLogout,
 }) => {
-  const { user, openAuthModal, logout, activeRole, setRole } = useAuth();
+  const { user, token, openAuthModal, logout, activeRole, setRole } = useAuth();
 
   return (
     <header className="sticky top-0 z-40 bg-[#f8fafc]/90 dark:bg-[#0b0f17]/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 transition-colors">
@@ -72,32 +72,17 @@ export const Navbar: React.FC<NavbarProps> = ({
             <span>Mis Reservas &amp; PIN</span>
           </button>
 
-          {/* Panel Anfitrión: Exclusivo para usuarios con rol ANFITRION */}
+          {/* Panel Anfitrión Oficial: Exclusivo para usuarios con rol ANFITRION */}
           {user?.rol === 'ANFITRION' && (
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => onChangeView('anfitrion')}
-                className={`px-3 py-2 rounded-xl transition flex items-center gap-1.5 ${
-                  currentView === 'anfitrion'
-                    ? 'bg-white dark:bg-slate-800 text-blue-700 dark:text-blue-400 shadow-sm'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                <DollarSign className="w-4 h-4" />
-                <span>Panel Local</span>
-              </button>
-
-              <a
-                href="http://localhost:3005"
-                target="_blank"
-                rel="noreferrer"
-                className="px-3 py-2 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/60 border border-blue-200 dark:border-blue-800 transition flex items-center gap-1.5 font-bold text-xs shadow-sm"
-                title="Abrir Microfrontend Dedicado del Anfitrión en Puerto 3005"
-              >
-                <span>Portal Anfitrión</span>
-                <ExternalLink className="w-3 h-3" />
-              </a>
-            </div>
+            <a
+              href={`http://localhost:3005?sso_token=${encodeURIComponent(token || '')}&sso_email=${encodeURIComponent(user.email || '')}&sso_nombre=${encodeURIComponent(user.nombre || '')}&sso_rol=ANFITRION`}
+              className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:opacity-95 text-white transition flex items-center gap-1.5 font-bold text-xs shadow-md shadow-blue-500/25"
+              title="Abrir Panel Oficial de Gestión del Anfitrión"
+            >
+              <Building2 className="w-3.5 h-3.5" />
+              <span>Panel Anfitrión</span>
+              <ExternalLink className="w-3 h-3 opacity-80" />
+            </a>
           )}
 
           {/* Panel de Control de Auditoría: Exclusivo para ADMINISTRADOR */}
