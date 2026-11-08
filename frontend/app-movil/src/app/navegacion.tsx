@@ -175,6 +175,7 @@ function RutaMisReservas({ navigation }: PropsTab<'MisReservas'>) {
           casos={reservas.casos}
           clienteId={sesion.usuarioId}
           alAbrir={(reservaId) => navigation.navigate('Reserva', { reservaId })}
+          alExplorar={() => navigation.navigate('Explorar')}
         />
       ) : null}
     </Marco>
