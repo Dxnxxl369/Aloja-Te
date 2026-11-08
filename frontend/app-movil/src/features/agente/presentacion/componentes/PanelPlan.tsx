@@ -49,7 +49,7 @@ export function PanelPlan({ plan }: { plan: Paso[] }) {
       <View style={estilos.cabecera}>
         <View style={estilos.cabeceraTitulo}>
           <Bot color={COLOR.primario} size={22} />
-          <Text style={estilos.titulo}>Pasos del plan</Text>
+          <Text style={estilos.titulo}>Plan del agente</Text>
         </View>
         <Insignia texto={`Paso ${pasoActual(plan)} de ${plan.length}`} />
       </View>

@@ -81,6 +81,14 @@ export function crearCasosReservas(deps: {
       if (noches(checkIn, checkOut) === null) throw new Error('Las fechas no son válidas.');
       return repo.disponibilidad(unidadId, checkIn, checkOut);
     },
+    async cancelarReserva(id) {
+      // Se pregunta al servidor el estado actual: la copia guardada puede ser vieja y MS-02 cancela sin mirar.
+      const actual = await repo.obtener(id);
+      if (actual.estado !== 'PENDIENTE_PAGO') {
+        throw new Error('Esta reserva ya no está pendiente de pago, por eso no se puede cancelar desde aquí.');
+      }
+      return repo.cancelar(id, 'Cancelada por el usuario');
+    },
     validarFechas,
     noches,
     segundosRestantes,

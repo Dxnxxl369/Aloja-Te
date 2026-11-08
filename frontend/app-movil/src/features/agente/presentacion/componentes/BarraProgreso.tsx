@@ -8,7 +8,7 @@
 // Solo muestra actividades operativas ("Buscar alojamientos", "Verificar disponibilidad"):
 // nunca el razonamiento del modelo.
 
-import { ChevronDown, ChevronUp } from 'lucide-react-native';
+import { ChevronDown, ChevronUp, ClipboardList } from 'lucide-react-native';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { COLOR, ESPACIO, FUENTE, RADIO } from '../../../../shared/ui/tema';
 import type { Paso } from '../../domain/modelos';
@@ -42,7 +42,10 @@ export function BarraProgreso({ plan, abierto, alAlternar }: Props) {
         style={estilos.tarjeta}
       >
         <View style={estilos.fila}>
-          <Text style={estilos.titulo}>Actividad del asistente</Text>
+          <View style={estilos.izquierda}>
+            <ClipboardList color={COLOR.primario} size={20} />
+            <Text style={estilos.titulo}>{abierto ? 'Ocultar plan' : 'Ver plan del agente'}</Text>
+          </View>
           <View style={estilos.derecha}>
             <Text style={estilos.paso}>
               Paso {pasoActual(plan)} de {plan.length}
@@ -82,8 +85,9 @@ const estilos = StyleSheet.create({
     gap: ESPACIO.s,
   },
   fila: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  izquierda: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.s },
   derecha: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.xs },
-  titulo: { fontFamily: FUENTE.semi, fontSize: 15, color: COLOR.texto },
+  titulo: { fontFamily: FUENTE.semi, fontSize: 15, color: COLOR.primario },
   paso: { fontFamily: FUENTE.semi, fontSize: 13, color: COLOR.primario },
   segmentos: { flexDirection: 'row', gap: 4 },
   segmento: { flex: 1, height: 6, borderRadius: 3, backgroundColor: COLOR.borde },

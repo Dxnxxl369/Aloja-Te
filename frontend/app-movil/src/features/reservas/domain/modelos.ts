@@ -48,6 +48,18 @@ export interface Reserva {
 }
 
 /**
+ * Datos del alojamiento que la reserva no trae (MS-02 solo guarda el título): foto y lugar.
+ * Los consigue quien arma la pantalla; todos los campos son opcionales porque MS-01 puede no enviarlos.
+ */
+export interface FichaAlojamiento {
+  fotoUrl?: string;
+  /** "Dirección, Ciudad". */
+  ubicacion?: string;
+  /** El alojamiento está publicado, es decir, ya pasó la moderación. */
+  verificado?: boolean;
+}
+
+/**
  * Resultado de pedir una reserva:
  *  - CREADA: el servidor respondió.
  *  - EN_COLA: no había red; quedó guardada y se enviará sola. `idempotencyKey` identifica la solicitud.

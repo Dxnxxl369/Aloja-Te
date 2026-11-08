@@ -48,17 +48,18 @@ export function TarjetaOpcion({ opcion, numero, noches, insignias, deshabilitado
       )}
 
       <View style={estilos.cuerpo}>
-        {insignias.length > 0 && (
-          <View style={estilos.insignias}>
-            {insignias.map((t) => (
-              <Insignia key={t} texto={t} tono={t === 'Recomendada' ? 'exito' : 'primario'} />
-            ))}
-          </View>
-        )}
-
-        <Text style={estilos.titulo} numberOfLines={2}>
-          {numero}. {opcion.titulo}
-        </Text>
+        <View style={estilos.filaTitulo}>
+          <Text style={estilos.titulo} numberOfLines={2}>
+            {numero}. {opcion.titulo}
+          </Text>
+          {insignias.length > 0 && (
+            <View style={estilos.insignias}>
+              {insignias.map((t) => (
+                <Insignia key={t} texto={t} tono={t === 'Recomendada' ? 'exito' : 'primario'} />
+              ))}
+            </View>
+          )}
+        </View>
         <Text style={estilos.detalle}>
           {[opcion.tipoPropiedad, opcion.unidadNombre].filter(Boolean).join(' · ')} ({opcion.ciudad})
         </Text>
@@ -118,8 +119,10 @@ const estilos = StyleSheet.create({
   foto: { width: '100%', height: 150, backgroundColor: COLOR.campo },
   sinFoto: { alignItems: 'center', justifyContent: 'center', backgroundColor: COLOR.primarioSuave },
   cuerpo: { padding: ESPACIO.l, gap: ESPACIO.s },
-  insignias: { flexDirection: 'row', flexWrap: 'wrap', gap: ESPACIO.xs },
-  titulo: { fontFamily: FUENTE.titulo, fontSize: 19, color: COLOR.texto },
+  // Título a la izquierda y las etiquetas a la derecha, como en el mockup "3. Elegir alojamiento".
+  filaTitulo: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: ESPACIO.s },
+  insignias: { flexDirection: 'column', alignItems: 'flex-end', gap: ESPACIO.xs },
+  titulo: { flex: 1, fontFamily: FUENTE.titulo, fontSize: 19, color: COLOR.texto },
   detalle: { fontFamily: FUENTE.normal, fontSize: 14, color: COLOR.textoSuave },
   fila: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.xs },
   nota: { fontFamily: FUENTE.medio, fontSize: 13, color: COLOR.texto },

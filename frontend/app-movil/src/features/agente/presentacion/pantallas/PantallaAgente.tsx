@@ -8,11 +8,10 @@
 // La conversación es el centro: el plan va en una barra compacta y las respuestas rápidas
 // evitan escribir. El indicador de modo dice la verdad: "IA local" solo si el modelo está cargado.
 
-import { Bot, Send } from 'lucide-react-native';
+import { Bot, Building2, Send } from 'lucide-react-native';
 import { useEffect, useRef, useState } from 'react';
 import type { ComponentRef } from 'react';
 import {
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -24,12 +23,15 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Boton } from '../../../../shared/ui/Boton';
+import { Chip } from '../../../../shared/ui/Chip';
+import { Insignia } from '../../../../shared/ui/Insignia';
 import { COLOR, ESPACIO, FUENTE, RADIO } from '../../../../shared/ui/tema';
 import { CIUDADES } from '../../constantes';
 import type { CasosAgente } from '../../domain/interfaces';
-import type { Mensaje, Opcion } from '../../domain/modelos';
+import type { Mensaje, Opcion, PasoId } from '../../domain/modelos';
 import { faltantes, recomendar } from '../../domain/plan';
 import { BarraProgreso } from '../componentes/BarraProgreso';
+import { PuntosEscribiendo } from '../componentes/PuntosEscribiendo';
 import { TarjetaOpcion } from '../componentes/TarjetaOpcion';
 import { useAgente } from '../useAgente';
 
@@ -52,6 +54,14 @@ const POLL_COLA_MS = 3_000;
 const DIA_MS = 24 * 60 * 60 * 1000;
 const CIUDADES_RAPIDAS = CIUDADES.slice(0, 4);
 const PERSONAS_RAPIDAS = [1, 2, 3, 4];
+
+/** Qué dice el chat mientras el agente trabaja en cada paso. */
+const ACTIVIDAD: Partial<Record<PasoId, string>> = {
+  ENTENDER: 'Entendiendo tu pedido',
+  BUSCAR: 'Buscando alojamientos',
+  VERIFICAR: 'Verificando disponibilidad',
+  RESERVAR: 'Creando la reserva',
+};
 
 /** Misma forma que `descripcionOpcion` (domain/plan.ts): sirve para no repetir la lista que ya se dibuja como tarjetas. */
 const LINEA_OPCION = /^\d+\. .+ · hasta \d+ personas · Bs \d+(\.\d+)? por noche$/;
@@ -141,6 +151,9 @@ export function PantallaAgente({ casos, alPagar, resolverReservaEnCola, modoIa =
   const ultimoDelAgente = [...estado.mensajes].reverse().find((m) => m.rol === 'agente')?.id;
   const recomendada = estado.fase === 'ELIGIENDO' ? recomendar(estado.opciones, estado.criterios) : null;
   const noches = nochesEntre(estado.criterios.checkIn, estado.criterios.checkOut);
+  const pasoActivo = estado.plan.find((p) => p.estado === 'EN_CURSO');
+  const actividad = (pasoActivo && ACTIVIDAD[pasoActivo.id]) ?? 'Trabajando en tu pedido';
+  const buscando = pasoActivo?.id === 'BUSCAR';
 
   // Respuestas rápidas: según lo que el agente esté esperando.
   const falta = estado.fase === 'CONVERSANDO' ? faltantes(estado.criterios)[0] : undefined;
@@ -182,6 +195,10 @@ export function PantallaAgente({ casos, alPagar, resolverReservaEnCola, modoIa =
       >
         <BarraProgreso plan={estado.plan} abierto={verPlan} alAlternar={() => setVerPlan((v) => !v)} />
 
+        <View style={estilos.fechaFila}>
+          <Insignia texto="Hoy · Asistencia en tiempo real" />
+        </View>
+
         {estado.mensajes.map((m) => {
           const esUsuario = m.rol === 'usuario';
           const mostrar =
@@ -200,13 +217,26 @@ export function PantallaAgente({ casos, alPagar, resolverReservaEnCola, modoIa =
         })}
 
         {ocupado && (
-          <View style={estilos.filaMensaje}>
-            <Avatar />
-            <View style={[estilos.burbuja, estilos.agente, estilos.escribiendo]}>
-              <Text style={estilos.textoAgente}>Trabajando en tu pedido</Text>
-              <ActivityIndicator size="small" color={COLOR.primario} />
+          <>
+            <View style={estilos.filaMensaje}>
+              <Avatar />
+              <View style={[estilos.burbuja, estilos.agente, estilos.escribiendo]}>
+                <Text style={estilos.textoAgente}>{actividad}</Text>
+                <PuntosEscribiendo />
+              </View>
             </View>
-          </View>
+            {buscando && estado.criterios.ciudad ? (
+              <View style={estilos.progresoBusqueda}>
+                <View style={estilos.progresoIcono}>
+                  <Building2 color={COLOR.primario} size={22} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={estilos.progresoTitulo}>{estado.criterios.ciudad}</Text>
+                  <Text style={estilos.progresoTexto}>Filtrando opciones disponibles…</Text>
+                </View>
+              </View>
+            ) : null}
+          </>
         )}
 
         {estado.fase === 'ELIGIENDO' &&
@@ -247,16 +277,7 @@ export function PantallaAgente({ casos, alPagar, resolverReservaEnCola, modoIa =
           {rapidas.length > 0 && (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={estilos.chips} keyboardShouldPersistTaps="handled">
               {rapidas.map((r) => (
-                <Pressable
-                  key={r.etiqueta}
-                  accessibilityRole="button"
-                  accessibilityLabel={r.etiqueta}
-                  disabled={ocupado}
-                  onPress={r.accion}
-                  style={[estilos.chip, ocupado && { opacity: 0.5 }]}
-                >
-                  <Text style={estilos.chipTexto}>{r.etiqueta}</Text>
-                </Pressable>
+                <Chip key={r.etiqueta} etiqueta={r.etiqueta} onPress={r.accion} deshabilitado={ocupado} />
               ))}
             </ScrollView>
           )}
@@ -313,11 +334,24 @@ const estilos = StyleSheet.create({
   hora: { fontFamily: FUENTE.normal, fontSize: 12, color: COLOR.textoSuave, marginTop: 4 },
 
   fila: { flexDirection: 'row', gap: ESPACIO.s },
+  fechaFila: { alignItems: 'center' },
+
+  // Tarjeta de la búsqueda en curso: queda alineada con el texto de la burbuja (ancho del avatar + separación).
+  progresoBusqueda: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: ESPACIO.m,
+    marginLeft: 40,
+    padding: ESPACIO.m,
+    borderRadius: RADIO.tarjeta,
+    backgroundColor: COLOR.campo,
+  },
+  progresoIcono: { width: 44, height: 44, borderRadius: RADIO.control, backgroundColor: COLOR.primarioSuave, alignItems: 'center', justifyContent: 'center' },
+  progresoTitulo: { fontFamily: FUENTE.semi, fontSize: 14, color: COLOR.texto },
+  progresoTexto: { fontFamily: FUENTE.normal, fontSize: 13, color: COLOR.textoSuave },
 
   pie: { backgroundColor: COLOR.fondo, borderTopWidth: 1, borderTopColor: COLOR.borde },
   chips: { gap: ESPACIO.s, paddingHorizontal: ESPACIO.l, paddingTop: ESPACIO.m },
-  chip: { minHeight: 44, paddingHorizontal: 16, borderRadius: RADIO.pildora, borderWidth: 1, borderColor: COLOR.primario, backgroundColor: COLOR.primarioSuave, justifyContent: 'center' },
-  chipTexto: { fontFamily: FUENTE.semi, fontSize: 14, color: COLOR.primario },
   entrada: { flexDirection: 'row', gap: ESPACIO.s, padding: ESPACIO.l, alignItems: 'center' },
   input: {
     flex: 1,

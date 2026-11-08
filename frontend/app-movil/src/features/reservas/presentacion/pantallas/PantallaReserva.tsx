@@ -8,24 +8,30 @@
 // Diseño: mockup "4. Reserva y cuenta regresiva". Solo se muestran datos reales de la reserva:
 // no hay foto ni ubicación en el modelo, por eso la cabecera usa un ícono en lugar de una imagen.
 
-import { Building2, Calendar, CalendarCheck, CheckCircle2, Hourglass, Lock, Moon, Users } from 'lucide-react-native';
+import { Building2, Calendar, CalendarCheck, CheckCircle2, CreditCard, Hourglass, Lock, MapPin, Moon, Users, X } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Boton } from '../../../../shared/ui/Boton';
 import { Insignia } from '../../../../shared/ui/Insignia';
 import type { Tono } from '../../../../shared/ui/Insignia';
 import { COLOR, ESPACIO, FUENTE, RADIO, SOMBRA_FLOTANTE } from '../../../../shared/ui/tema';
+import { Verificado } from '../../../../shared/ui/Verificado';
 import { MINUTOS_BLOQUEO } from '../../constantes';
 import type { CasosReservas } from '../../domain/interfaces';
-import type { Reserva } from '../../domain/modelos';
+import type { FichaAlojamiento, Reserva } from '../../domain/modelos';
 import { formatearSegundos, useReserva } from '../useReserva';
 
 interface Props {
   casos: CasosReservas;
   reservaId: string;
   alPagar: (reserva: Reserva) => void;
+  /**
+   * Trae la foto y el lugar del alojamiento (la reserva solo guarda el título). Lo conecta app/.
+   * Si falla o no se pasa, la portada usa un ícono: nunca bloquea la pantalla.
+   */
+  cargarFicha?: (alojamientoId: string) => Promise<FichaAlojamiento | null>;
   /** true cuando el usuario viene de pagar: la reserva se confirma sola cuando el servidor la actualice. */
   pagoRecibido?: boolean;
 }
@@ -53,10 +59,35 @@ const TONO_ESTADO: Record<Reserva['estado'], Tono> = {
   RECHAZADA_COMPENSADA: 'error',
 };
 
-export function PantallaReserva({ casos, reservaId, alPagar, pagoRecibido = false }: Props) {
-  const { reserva, error, segundos, sePuedePagar } = useReserva(casos, reservaId);
+export function PantallaReserva({ casos, reservaId, alPagar, cargarFicha, pagoRecibido = false }: Props) {
+  const { reserva, error, segundos, sePuedePagar, cancelar, cancelando, errorCancelar } = useReserva(casos, reservaId);
   const insets = useSafeAreaInsets();
   const [esperaLarga, setEsperaLarga] = useState(false);
+  const [ficha, setFicha] = useState<FichaAlojamiento | null>(null);
+  const alojamientoId = reserva?.alojamientoId;
+
+  // La foto y el lugar llegan aparte y sin apuro: mientras tanto se ve el ícono.
+  useEffect(() => {
+    if (!alojamientoId || !cargarFicha) return;
+    let vivo = true;
+    cargarFicha(alojamientoId).then(
+      (f) => vivo && setFicha(f),
+      () => undefined,
+    );
+    return () => {
+      vivo = false;
+    };
+  }, [alojamientoId, cargarFicha]);
+
+  const confirmarCancelacion = () =>
+    Alert.alert(
+      '¿Cancelar la reserva?',
+      'Se liberan las fechas para otros huéspedes. Si ya pagaste, no canceles: espera la confirmación del banco.',
+      [
+        { text: 'Volver', style: 'cancel' },
+        { text: 'Cancelar reserva', style: 'destructive', onPress: () => void cancelar() },
+      ],
+    );
   useEffect(() => {
     if (!pagoRecibido) return;
     const t = setTimeout(() => setEsperaLarga(true), ESPERA_LARGA_S * 1000);
@@ -83,7 +114,21 @@ export function PantallaReserva({ casos, reservaId, alPagar, pagoRecibido = fals
         {/* Cabecera del alojamiento */}
         <View style={estilos.tarjeta}>
           <View style={estilos.portada}>
-            <Building2 color={COLOR.primario} size={44} strokeWidth={1.5} />
+            {ficha?.fotoUrl ? (
+              <Image
+                source={{ uri: ficha.fotoUrl }}
+                style={StyleSheet.absoluteFill}
+                resizeMode="cover"
+                accessibilityLabel={`Foto de ${reserva.alojamientoTitulo}`}
+              />
+            ) : (
+              <Building2 color={COLOR.primario} size={44} strokeWidth={1.5} />
+            )}
+            {ficha?.verificado ? (
+              <View style={estilos.verificado}>
+                <Verificado texto="Alojamiento verificado" variante="sobreFoto" />
+              </View>
+            ) : null}
             <View style={estilos.codigo}>
               <Text style={estilos.codigoTexto}>#{reserva.id.slice(0, 8).toUpperCase()}</Text>
             </View>
@@ -91,6 +136,14 @@ export function PantallaReserva({ casos, reservaId, alPagar, pagoRecibido = fals
           <View style={estilos.cuerpo}>
             <Text style={estilos.titulo}>{reserva.alojamientoTitulo}</Text>
             <Text style={estilos.suave}>{reserva.unidadNombre}</Text>
+            {ficha?.ubicacion ? (
+              <View style={estilos.lugar}>
+                <MapPin color={COLOR.primario} size={16} />
+                <Text style={estilos.suave} numberOfLines={2}>
+                  {ficha.ubicacion}
+                </Text>
+              </View>
+            ) : null}
           </View>
         </View>
 
@@ -193,8 +246,26 @@ export function PantallaReserva({ casos, reservaId, alPagar, pagoRecibido = fals
           <Boton
             titulo={`Pagar ahora • ${total}`}
             onPress={() => alPagar(reserva)}
-            deshabilitado={!sePuedePagar}
+            deshabilitado={!sePuedePagar || cancelando}
+            iconoIzquierda={(c) => <CreditCard color={c} size={20} />}
           />
+          {errorCancelar ? (
+            <Text accessibilityRole="alert" style={estilos.error}>
+              {errorCancelar}
+            </Text>
+          ) : null}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Cancelar esta solicitud de reserva"
+            accessibilityState={{ disabled: cancelando, busy: cancelando }}
+            disabled={cancelando}
+            onPress={confirmarCancelacion}
+            hitSlop={8}
+            style={[estilos.cancelar, cancelando && { opacity: 0.5 }]}
+          >
+            {cancelando ? <ActivityIndicator size="small" color={COLOR.textoSuave} /> : <X color={COLOR.textoSuave} size={18} />}
+            <Text style={estilos.cancelarTexto}>{cancelando ? 'Cancelando…' : 'Cancelar esta solicitud de reserva'}</Text>
+          </Pressable>
         </View>
       )}
     </View>
@@ -219,7 +290,9 @@ const estilos = StyleSheet.create({
   centro: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: ESPACIO.l, backgroundColor: COLOR.fondo },
 
   tarjeta: { backgroundColor: COLOR.tarjeta, borderRadius: RADIO.tarjeta, borderWidth: 1, borderColor: COLOR.borde, overflow: 'hidden' },
-  portada: { height: 120, backgroundColor: COLOR.primarioSuave, alignItems: 'center', justifyContent: 'center' },
+  portada: { height: 160, backgroundColor: COLOR.primarioSuave, alignItems: 'center', justifyContent: 'center' },
+  verificado: { position: 'absolute', left: ESPACIO.m, bottom: ESPACIO.m },
+  lugar: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.s, marginTop: ESPACIO.xs },
   codigo: { position: 'absolute', right: ESPACIO.m, bottom: ESPACIO.m, backgroundColor: '#fff', borderRadius: RADIO.control, paddingHorizontal: ESPACIO.s, paddingVertical: 2 },
   codigoTexto: { fontFamily: FUENTE.semi, fontSize: 11, color: COLOR.textoSuave, letterSpacing: 0.5 },
   cuerpo: { padding: ESPACIO.l, gap: ESPACIO.xs },
@@ -275,5 +348,7 @@ const estilos = StyleSheet.create({
   seguroTexto: { fontFamily: FUENTE.medio, fontSize: 12, color: COLOR.textoSuave },
   error: { fontFamily: FUENTE.normal, fontSize: 13, color: COLOR.error, textAlign: 'center' },
 
-  barraInferior: { padding: ESPACIO.l, backgroundColor: COLOR.tarjeta, borderTopWidth: 1, borderTopColor: COLOR.borde, ...SOMBRA_FLOTANTE },
+  barraInferior: { padding: ESPACIO.l, gap: ESPACIO.s, backgroundColor: COLOR.tarjeta, borderTopWidth: 1, borderTopColor: COLOR.borde, ...SOMBRA_FLOTANTE },
+  cancelar: { minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: ESPACIO.s },
+  cancelarTexto: { fontFamily: FUENTE.medio, fontSize: 14, color: COLOR.textoSuave },
 });

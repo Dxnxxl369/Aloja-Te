@@ -8,12 +8,14 @@
 // Diseño: mockup "5. Pago con QR Simple". El QR se dibuja con react-native-qrcode-svg.
 // Solo se muestran datos reales del pago (descuento y cargo de servicio vienen de MS-03).
 
-import { CheckCircle2, Clock, Lock, Maximize2, QrCode, Tag, XCircle } from 'lucide-react-native';
-import { useState } from 'react';
+import * as Clipboard from 'expo-clipboard';
+import { Check, CheckCircle2, Clock, Copy, Lock, Maximize2, QrCode, Tag, XCircle } from 'lucide-react-native';
+import { useEffect, useState } from 'react';
 import QRCode from 'react-native-qrcode-svg';
 import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Boton } from '../../../../shared/ui/Boton';
 import { COLOR, ESPACIO, FUENTE, RADIO } from '../../../../shared/ui/tema';
+import { Verificado } from '../../../../shared/ui/Verificado';
 import type { CasosPagos } from '../../domain/interfaces';
 import type { SolicitudPago } from '../../domain/modelos';
 import { formatearSegundos, usePago } from '../usePago';
@@ -27,6 +29,14 @@ interface Props {
 export function PantallaPago({ casos, solicitud, alTerminar }: Props) {
   const { pago, error, cargando, segundosQr, reintentar, simular } = usePago(casos, solicitud);
   const [qrGrande, setQrGrande] = useState(false);
+  const [copiado, setCopiado] = useState(false);
+
+  // El "¡Copiado!" se apaga solo a los 2 segundos.
+  useEffect(() => {
+    if (!copiado) return;
+    const t = setTimeout(() => setCopiado(false), 2000);
+    return () => clearTimeout(t);
+  }, [copiado]);
 
   if (cargando && !pago) {
     return (
@@ -48,6 +58,16 @@ export function PantallaPago({ casos, solicitud, alTerminar }: Props) {
   const dinero = (n: number) => `${pago.moneda} ${n.toFixed(2)}`;
   const vencido = segundosQr === 0;
   const idCorto = pago.id.slice(0, 8).toUpperCase();
+  const glosa = pago.qr?.glosa ?? null;
+  const copiarGlosa = async () => {
+    if (!glosa) return;
+    try {
+      await Clipboard.setStringAsync(glosa);
+      setCopiado(true);
+    } catch {
+      /* si el portapapeles falla, la glosa sigue visible para copiarla a mano */
+    }
+  };
   const horaLimite =
     segundosQr !== null && segundosQr > 0
       ? new Date(Date.now() + segundosQr * 1000).toLocaleTimeString('es-BO', { hour: '2-digit', minute: '2-digit' })
@@ -57,7 +77,10 @@ export function PantallaPago({ casos, solicitud, alTerminar }: Props) {
     <ScrollView contentContainerStyle={estilos.pagina} style={{ backgroundColor: COLOR.fondo }}>
       {/* Resumen */}
       <View style={estilos.tarjeta}>
-        <Text style={estilos.titulo}>Resumen de pago</Text>
+        <View style={estilos.filaTotal}>
+          <Text style={estilos.titulo}>Resumen de pago</Text>
+          <Verificado variante="insignia" />
+        </View>
         <Fila etiqueta="Alojamiento" valor={dinero(pago.subtotal)} />
         {pago.descuento > 0 && (
           <Fila
@@ -110,6 +133,11 @@ export function PantallaPago({ casos, solicitud, alTerminar }: Props) {
                     <View style={estilos.fondoQr}>
                       <QRCode value={pago.qr.cadena} size={200} color={COLOR.texto} backgroundColor="#ffffff" />
                     </View>
+                    {/* Esquinas de enfoque, solo decorativas: no tapan el código. */}
+                    <View pointerEvents="none" style={[estilos.esquina, estilos.arribaIzquierda]} />
+                    <View pointerEvents="none" style={[estilos.esquina, estilos.arribaDerecha]} />
+                    <View pointerEvents="none" style={[estilos.esquina, estilos.abajoIzquierda]} />
+                    <View pointerEvents="none" style={[estilos.esquina, estilos.abajoDerecha]} />
                   </Pressable>
                   <Pressable accessibilityRole="button" onPress={() => setQrGrande(true)} style={estilos.ampliar}>
                     <Maximize2 color={COLOR.primario} size={16} />
@@ -117,11 +145,18 @@ export function PantallaPago({ casos, solicitud, alTerminar }: Props) {
                   </Pressable>
                 </>
               )}
-              <View style={estilos.glosa}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={copiado ? 'Glosa copiada' : `Copiar glosa ${pago.qr.glosa}`}
+                onPress={() => void copiarGlosa()}
+                style={estilos.glosa}
+              >
                 <Text style={estilos.glosaTexto}>
-                  Glosa: <Text selectable style={estilos.glosaValor}>{pago.qr.glosa}</Text>
+                  Glosa: <Text style={estilos.glosaValor}>{pago.qr.glosa}</Text>
                 </Text>
-              </View>
+                {copiado ? <Check color={COLOR.exito} size={16} /> : <Copy color={COLOR.textoSuave} size={16} />}
+                {copiado ? <Text style={estilos.copiado}>¡Copiado!</Text> : null}
+              </Pressable>
               <Text style={estilos.suave}>Transacción {idCorto}</Text>
               {horaLimite && <Text style={estilos.suave}>Paga antes de las {horaLimite}</Text>}
             </>
@@ -248,7 +283,13 @@ const estilos = StyleSheet.create({
   iconoQr: { width: 48, height: 48, borderRadius: 24, backgroundColor: COLOR.primarioSuave, alignItems: 'center', justifyContent: 'center' },
   marcoQr: { padding: ESPACIO.m, borderRadius: RADIO.tarjeta, backgroundColor: COLOR.campo, borderWidth: 1, borderColor: '#bfdbfe' },
   fondoQr: { padding: ESPACIO.m, borderRadius: RADIO.control, backgroundColor: '#fff' },
-  glosa: { backgroundColor: COLOR.campo, borderRadius: RADIO.pildora, paddingHorizontal: ESPACIO.l, paddingVertical: ESPACIO.s },
+  glosa: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.s, minHeight: 44, backgroundColor: COLOR.campo, borderRadius: RADIO.pildora, paddingHorizontal: ESPACIO.l, paddingVertical: ESPACIO.s },
+  copiado: { fontFamily: FUENTE.semi, fontSize: 13, color: COLOR.exito },
+  esquina: { position: 'absolute', width: 22, height: 22, borderColor: COLOR.primario },
+  arribaIzquierda: { top: 4, left: 4, borderTopWidth: 3, borderLeftWidth: 3, borderTopLeftRadius: 8 },
+  arribaDerecha: { top: 4, right: 4, borderTopWidth: 3, borderRightWidth: 3, borderTopRightRadius: 8 },
+  abajoIzquierda: { bottom: 4, left: 4, borderBottomWidth: 3, borderLeftWidth: 3, borderBottomLeftRadius: 8 },
+  abajoDerecha: { bottom: 4, right: 4, borderBottomWidth: 3, borderRightWidth: 3, borderBottomRightRadius: 8 },
   glosaTexto: { fontFamily: FUENTE.normal, fontSize: 14, color: COLOR.textoSuave },
   glosaValor: { fontFamily: FUENTE.fuerte, color: COLOR.texto },
   espera: { alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', gap: ESPACIO.m, backgroundColor: COLOR.campo, borderRadius: RADIO.control, padding: ESPACIO.m },
