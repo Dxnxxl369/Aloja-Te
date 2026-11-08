@@ -373,7 +373,8 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
     setLoading(true);
     setError(null);
 
-    const anfitrionId = user?.id || '8fff278f-8dfd-47da-94bb-6e658b6f7178';
+    const isUuid = (val?: string) => !!val && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
+    const anfitrionId = isUuid(user?.id) ? user!.id : 'a0000000-0000-4000-8000-000000000002';
     const fotoPrincipalObj = fotos.find(f => f.esPrincipal) || fotos[0];
 
     // Construcción de Unidades con fotos independientes por habitación
@@ -444,7 +445,7 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
 
     const payloadBackend = {
       idAnfitrion: anfitrionId,
-      idTipoPropiedad: modalidad === 'HOTEL_HOSTAL' ? 2 : 1,
+      idTipoPropiedad: modalidad === 'HOTEL_HOSTAL' ? 5 : 3,
       titulo,
       descripcion: descripcion || `Hermoso alojamiento ubicado en ${ciudad}, ${departamento}.`,
       direccion: direccion || `${ciudad}, Bolivia`,
@@ -456,7 +457,13 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
       politicas,
       horarioEntrada,
       horarioSalida,
-      serviciosIds: [1, 2, 3]
+      serviciosIds: [1, 2, 3],
+      fotografias: fotos.map((f, i) => ({
+        url: f.url,
+        esPrincipal: f.esPrincipal,
+        orden: i + 1
+      })),
+      unidades: unidadesFinales
     };
 
     try {
@@ -465,8 +472,51 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
       try {
         const res = await httpClient.post<any>('/api/v1/alojamientos', payloadBackend);
         const data = res.data;
+        const createdId = data?.idAlojamiento || data?.id;
+
+        // Subir fotografías individuales y habitaciones complementarias a MS-01
+        if (createdId && fotos.length > 0) {
+          for (let i = 0; i < fotos.length; i++) {
+            try {
+              await httpClient.post(`/api/v1/alojamientos/${createdId}/fotografias`, {
+                url: fotos[i].url,
+                orden: i + 1
+              });
+            } catch {}
+          }
+        }
+
+        if (createdId) {
+          if (modalidad === 'HOTEL_HOSTAL' && habitacionesHotel.length > 0) {
+            for (const hab of habitacionesHotel) {
+              try {
+                await httpClient.post(`/api/v1/alojamientos/${createdId}/habitaciones`, {
+                  nombre: hab.nombre,
+                  precioNoche: hab.precioNoche,
+                  inventarioTotal: hab.inventarioTotal,
+                  capacidadHuespedes: hab.capacidad,
+                  cantidadDormitorios: 1,
+                  cantidadCamas: hab.camas,
+                  cantidadBanos: hab.banos,
+                  idTipoEspacio: 1
+                });
+              } catch {}
+            }
+          } else if (modalidad === 'CASA_DEPARTAMENTO') {
+            try {
+              await httpClient.put(`/api/v1/alojamientos/${createdId}/oferta-unica`, {
+                precioNoche: precioCasa,
+                capacidadHuespedes: capacidadCasa,
+                cantidadDormitorios: dormitoriosCasa,
+                cantidadCamas: camasCasa,
+                cantidadBanos: banosCasa
+              });
+            } catch {}
+          }
+        }
+
         nuevoAlojamiento = {
-          idAlojamiento: data.idAlojamiento || `aloj-${Date.now()}`,
+          idAlojamiento: createdId || `aloj-${Date.now()}`,
           idAnfitrion: anfitrionId,
           nombreAnfitrion: user ? `${user.nombre} ${user.apellido || ''}`.trim() : 'Carlos Mendoza',
           titulo,
@@ -476,10 +526,10 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
           departamento,
           ciudad,
           direccion: payloadBackend.direccion,
-          precioBaseNoche: modalidad === 'CASA_DEPARTAMENTO' ? precioCasa : habitacionesHotel[0]?.precioNoche || 300,
+          precioBaseNoche: modalidad === 'CASA_DEPARTAMENTO' ? precioCasa : (habitacionesHotel[0]?.precioNoche || 300),
           moneda: 'BOB',
           calificacionPromedio: 5.0,
-          totalResenas: 1,
+          totalResenas: 0,
           fotografias: fotos.map((f, i) => ({
             idFotografia: f.id,
             url: f.url,
@@ -507,7 +557,7 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
           departamento,
           ciudad,
           direccion: payloadBackend.direccion,
-          precioBaseNoche: modalidad === 'CASA_DEPARTAMENTO' ? precioCasa : habitacionesHotel[0]?.precioNoche || 300,
+          precioBaseNoche: modalidad === 'CASA_DEPARTAMENTO' ? precioCasa : (habitacionesHotel[0]?.precioNoche || 300),
           moneda: 'BOB',
           calificacionPromedio: 5.0,
           totalResenas: 0,

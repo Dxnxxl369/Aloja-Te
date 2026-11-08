@@ -533,22 +533,22 @@ export const AppContent: React.FC = () => {
                           let label: string = est;
 
                           if (est === 'PUBLICADO') {
-                            estilo = 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400';
+                            estilo = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 font-semibold';
                             label = '✅ Publicado en Catálogo';
                           } else if (est === 'PENDIENTE') {
-                            estilo = 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300';
+                            estilo = 'bg-blue-600 !text-white dark:bg-blue-600 dark:!text-white border border-blue-700 font-bold shadow-xs';
                             label = '🕒 Pendiente de Revisión';
                           } else if (est === 'EN_REVISION') {
-                            estilo = 'bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300';
+                            estilo = 'bg-sky-100 text-sky-800 dark:bg-sky-950/70 dark:text-sky-300 border border-sky-300 dark:border-sky-800 font-medium';
                             label = '🔍 En Revisión Automática';
                           } else if (est === 'OBSERVADO') {
-                            estilo = 'bg-amber-100 text-amber-900 dark:bg-amber-950/80 dark:text-amber-200 border border-amber-300 dark:border-amber-700';
+                            estilo = 'bg-amber-100 !text-amber-900 dark:bg-amber-950/80 dark:!text-amber-200 border border-amber-400 dark:border-amber-700 font-semibold';
                             label = '⚠️ Observado por Auditoría';
                           } else if (est === 'SUSPENDIDO') {
-                            estilo = 'bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-300';
+                            estilo = 'bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-300 border border-slate-300 dark:border-slate-700 font-medium';
                             label = '⛔ Suspendido Temporalmente';
                           } else if (est === 'RECHAZADO') {
-                            estilo = 'bg-red-100 text-red-700 dark:bg-red-950/60 dark:text-red-400';
+                            estilo = 'bg-rose-100 text-rose-800 dark:bg-rose-950/70 dark:text-rose-300 border border-rose-300 dark:border-rose-800 font-semibold';
                             label = '❌ Rechazado';
                           }
 

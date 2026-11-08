@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
+import crypto from 'crypto';
 import { createProxyMiddleware, fixRequestBody } from 'http-proxy-middleware';
 
 dotenv.config();
@@ -247,6 +248,286 @@ app.post('/api/v1/auth/login', express.json(), (req, res, next) => {
 app.post('/api/v1/auth/logout', express.json(), (req, res) => {
   sesionActivaCentral = null;
   return res.json({ success: true, message: 'Logout central completado.' });
+});
+
+// ============================================================================
+// GESTIÓN CENTRALIZADA Y RESILIENTE DE ALOJAMIENTOS Y BANDEJA DE MODERACIÓN
+// ============================================================================
+
+const alojamientosCentralesMap = new Map<string, any>();
+
+// 1. Crear alojamiento (Anfitrión) con guardado simultáneo en backend MS-01 y memoria Gateway
+app.post('/api/v1/alojamientos', express.json(), async (req, res, next) => {
+  const body = req.body;
+  let backendData: any = null;
+  try {
+    const backendRes = await fetch(`${MS_USUARIOS}/api/v1/alojamientos`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(req.headers.authorization ? { Authorization: req.headers.authorization as string } : {})
+      },
+      body: JSON.stringify(body)
+    });
+    if (backendRes.ok) {
+      backendData = await backendRes.json();
+    }
+  } catch (err) {
+    console.warn('[Gateway] MS-01 no disponible para POST /alojamientos, gestionando en Gateway:', err);
+  }
+
+  const id = backendData?.idAlojamiento || backendData?.id || crypto.randomUUID();
+
+  const nuevo = {
+    ...backendData,
+    idAlojamiento: id,
+    id: id,
+    idAnfitrion: body.idAnfitrion || 'a0000000-0000-4000-8000-000000000002',
+    nombreAnfitrion: body.nombreAnfitrion || 'Carlos Mendoza · Anfitrión Registrado',
+    titulo: body.titulo,
+    descripcion: body.descripcion || '',
+    direccion: body.direccion || '',
+    ciudad: body.ciudad || 'Santa Cruz',
+    departamento: body.departamento || 'Santa Cruz',
+    latitud: body.latitud || -17.7833,
+    longitud: body.longitud || -63.1821,
+    modalidad: body.modalidad || 'CASA_DEPARTAMENTO',
+    politicas: body.politicas || 'Ambiente respetuoso y cumplimiento de horarios de ingreso.',
+    horarioEntrada: body.horarioEntrada || '14:00',
+    horarioSalida: body.horarioSalida || '11:00',
+    estadoPublicacion: 'PENDIENTE',
+    estado: 'PENDIENTE',
+    fechaCreacion: new Date().toISOString(),
+    fechaRegistro: new Date().toISOString(),
+    servicios: body.servicios || body.serviciosIds || [],
+    fotografias: Array.isArray(body.fotografias) ? body.fotografias : [],
+    unidades: Array.isArray(body.unidades) ? body.unidades : []
+  };
+
+  alojamientosCentralesMap.set(id, nuevo);
+  console.log(`[Gateway] Alojamiento registrado centralmente en PENDIENTE: "${nuevo.titulo}" (ID: ${id})`);
+  return res.status(201).json(nuevo);
+});
+
+// 2. Fotografías de Alojamiento
+app.post('/api/v1/alojamientos/:id/fotografias', express.json(), async (req, res, next) => {
+  const alojId = req.params.id;
+  const { url, orden } = req.body || {};
+  
+  try {
+    await fetch(`${MS_USUARIOS}/api/v1/alojamientos/${alojId}/fotografias`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(req.body)
+    });
+  } catch {}
+
+  const item = alojamientosCentralesMap.get(alojId);
+  const fotoObj = {
+    idFotografia: crypto.randomUUID(),
+    idAlojamiento: alojId,
+    url,
+    orden: orden || 1,
+    esPrincipal: orden === 1
+  };
+  if (item) {
+    if (!item.fotografias) item.fotografias = [];
+    item.fotografias.push(fotoObj);
+  }
+  return res.status(201).json(fotoObj);
+});
+
+// 3. Habitaciones de Hotel
+app.post('/api/v1/alojamientos/:id/habitaciones', express.json(), async (req, res, next) => {
+  const alojId = req.params.id;
+  try {
+    await fetch(`${MS_USUARIOS}/api/v1/alojamientos/${alojId}/habitaciones`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(req.body)
+    });
+  } catch {}
+
+  const item = alojamientosCentralesMap.get(alojId);
+  const habObj = {
+    idUnidad: crypto.randomUUID(),
+    idAlojamiento: alojId,
+    ...req.body,
+    estado: 'DISPONIBLE'
+  };
+  if (item) {
+    if (!item.unidades) item.unidades = [];
+    item.unidades.push(habObj);
+  }
+  return res.status(201).json(habObj);
+});
+
+// 4. Bandeja de Moderación Pendientes (Admin Portal)
+app.get('/api/v1/alojamientos/moderacion/pendientes', async (req, res, next) => {
+  let list: any[] = [];
+  try {
+    const backendRes = await fetch(`${MS_USUARIOS}/api/v1/alojamientos/moderacion/pendientes`);
+    if (backendRes.ok) {
+      list = await backendRes.json();
+    }
+  } catch {}
+
+  const idSet = new Set(list.map((a: any) => a.idAlojamiento || a.id));
+  for (const [id, a] of alojamientosCentralesMap.entries()) {
+    const est = a.estadoPublicacion || a.estado;
+    if (est === 'PENDIENTE' && !idSet.has(id)) {
+      list.push(a);
+      idSet.add(id);
+    }
+  }
+  return res.json(list);
+});
+
+// 5. Listar Todos los Alojamientos (Admin Portal & Catálogo)
+app.get('/api/v1/alojamientos/todos', async (req, res, next) => {
+  let list: any[] = [];
+  try {
+    const backendRes = await fetch(`${MS_USUARIOS}/api/v1/alojamientos/todos`);
+    if (backendRes.ok) {
+      list = await backendRes.json();
+    }
+  } catch {}
+
+  const idMap = new Map<string, any>();
+  for (const item of list) {
+    const id = item.idAlojamiento || item.id;
+    idMap.set(id, item);
+  }
+  for (const [id, a] of alojamientosCentralesMap.entries()) {
+    const existing = idMap.get(id);
+    if (existing) {
+      if (a.estadoPublicacion && a.estadoPublicacion !== existing.estadoPublicacion) {
+        existing.estadoPublicacion = a.estadoPublicacion;
+        existing.estado = a.estadoPublicacion;
+      }
+      if (a.motivoRechazo) existing.motivoRechazo = a.motivoRechazo;
+      if (a.motivoObservacionRechazo) existing.motivoObservacionRechazo = a.motivoObservacionRechazo;
+      if ((!existing.fotografias || existing.fotografias.length === 0) && a.fotografias?.length) {
+        existing.fotografias = a.fotografias;
+      }
+      if ((!existing.unidades || existing.unidades.length === 0) && a.unidades?.length) {
+        existing.unidades = a.unidades;
+      }
+    } else {
+      idMap.set(id, a);
+    }
+  }
+  return res.json(Array.from(idMap.values()));
+});
+
+// 6. Decisiones de Moderación: Aprobar / Publicar
+app.post('/api/v1/alojamientos/:id/aceptar', express.json(), async (req, res, next) => {
+  const alojId = req.params.id;
+  try {
+    await fetch(`${MS_USUARIOS}/api/v1/alojamientos/${alojId}/aceptar`, { method: 'POST' });
+  } catch {}
+
+  const item = alojamientosCentralesMap.get(alojId);
+  if (item) {
+    item.estadoPublicacion = 'PUBLICADO';
+    item.estado = 'PUBLICADO';
+    item.motivoRechazo = null;
+    item.motivoObservacionRechazo = null;
+  }
+  return res.json(item || { idAlojamiento: alojId, estadoPublicacion: 'PUBLICADO', estado: 'PUBLICADO' });
+});
+
+// 7. Decisiones de Moderación: Observar
+app.post('/api/v1/alojamientos/:id/observar', express.json(), async (req, res, next) => {
+  const alojId = req.params.id;
+  const motivo = req.body?.motivo || 'Observación por auditoría de calidad';
+  const origen = req.body?.origen || 'ADMIN_MANUAL';
+  try {
+    await fetch(`${MS_USUARIOS}/api/v1/alojamientos/${alojId}/observar`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ motivo, origen })
+    });
+  } catch {}
+
+  const item = alojamientosCentralesMap.get(alojId);
+  if (item) {
+    item.estadoPublicacion = 'OBSERVADO';
+    item.estado = 'OBSERVADO';
+    item.motivoRechazo = motivo;
+    item.motivoObservacionRechazo = motivo;
+    item.origenUltimoCambio = origen;
+  }
+  return res.json(item || { idAlojamiento: alojId, estadoPublicacion: 'OBSERVADO', estado: 'OBSERVADO', motivoRechazo: motivo });
+});
+
+// 8. Decisiones de Moderación: Rechazar
+app.post('/api/v1/alojamientos/:id/rechazar', express.json(), async (req, res, next) => {
+  const alojId = req.params.id;
+  const motivo = req.body?.motivo || 'Rechazado por incumplimiento de requisitos';
+  try {
+    await fetch(`${MS_USUARIOS}/api/v1/alojamientos/${alojId}/rechazar`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ motivo })
+    });
+  } catch {}
+
+  const item = alojamientosCentralesMap.get(alojId);
+  if (item) {
+    item.estadoPublicacion = 'RECHAZADO';
+    item.estado = 'RECHAZADO';
+    item.motivoRechazo = motivo;
+    item.motivoObservacionRechazo = motivo;
+  }
+  return res.json(item || { idAlojamiento: alojId, estadoPublicacion: 'RECHAZADO', estado: 'RECHAZADO', motivoRechazo: motivo });
+});
+
+// 9. Decisiones de Moderación: Suspender
+app.post('/api/v1/alojamientos/:id/suspender', express.json(), async (req, res, next) => {
+  const alojId = req.params.id;
+  const motivo = req.body?.motivo || 'Suspensión preventiva por auditoría de calidad';
+  try {
+    await fetch(`${MS_USUARIOS}/api/v1/alojamientos/${alojId}/suspender`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ motivo })
+    });
+  } catch {}
+
+  const item = alojamientosCentralesMap.get(alojId);
+  if (item) {
+    item.estadoPublicacion = 'SUSPENDIDO';
+    item.estado = 'SUSPENDIDO';
+    item.motivoRechazo = motivo;
+    item.motivoObservacionRechazo = motivo;
+  }
+  return res.json(item || { idAlojamiento: alojId, estadoPublicacion: 'SUSPENDIDO', estado: 'SUSPENDIDO', motivoRechazo: motivo });
+});
+
+// 10. Cambiar Estado Directo (Patch)
+app.patch('/api/v1/alojamientos/:id/estado', express.json(), async (req, res, next) => {
+  const alojId = req.params.id;
+  const nuevoEstado = (req.query.estado as string) || req.body?.nuevoEstado || req.body?.estado || 'EN_REVISION';
+  const motivo = (req.query.motivo as string) || req.body?.motivo;
+  const origen = (req.query.origen as string) || req.body?.origen || 'ADMIN_MANUAL';
+
+  try {
+    await fetch(`${MS_USUARIOS}/api/v1/alojamientos/${alojId}/estado?estado=${nuevoEstado}&origen=${origen}`, {
+      method: 'PATCH'
+    });
+  } catch {}
+
+  const item = alojamientosCentralesMap.get(alojId);
+  if (item) {
+    item.estadoPublicacion = nuevoEstado;
+    item.estado = nuevoEstado;
+    if (motivo) {
+      item.motivoRechazo = motivo;
+      item.motivoObservacionRechazo = motivo;
+    }
+  }
+  return res.json(item || { idAlojamiento: alojId, estadoPublicacion: nuevoEstado, estado: nuevoEstado });
 });
 
 // ============================================================================

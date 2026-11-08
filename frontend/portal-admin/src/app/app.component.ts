@@ -2860,41 +2860,52 @@ export class AppComponent implements OnInit {
         console.warn('MS-01 todos no disponible, intentando rutas específicas', e);
       }
 
-      if (rawData.length === 0) {
-        let pendientesData: any[] = [];
-        try {
-          const resPendientes = await fetch('http://localhost:8080/api/v1/alojamientos/moderacion/pendientes');
-          if (resPendientes.ok) pendientesData = await resPendientes.json();
-        } catch {}
+      // Consultar siempre también la bandeja de pendientes de moderación para mergear
+      try {
+        const resPendientes = await fetch('http://localhost:8080/api/v1/alojamientos/moderacion/pendientes');
+        if (resPendientes.ok) {
+          const pendientesData: any[] = await resPendientes.json();
+          const idSet = new Set(rawData.map((r: any) => r.idAlojamiento || r.id));
+          for (const p of pendientesData) {
+            const pId = p.idAlojamiento || p.id;
+            if (!idSet.has(pId)) {
+              rawData.push(p);
+              idSet.add(pId);
+            }
+          }
+        }
+      } catch (e) {}
 
-        let publicadosData: any[] = [];
+      if (rawData.length === 0) {
         try {
           const resPublicados = await fetch('http://localhost:8080/api/v1/alojamientos');
-          if (resPublicados.ok) publicadosData = await resPublicados.json();
+          if (resPublicados.ok) rawData = await resPublicados.json();
         } catch {}
-
-        rawData = [...pendientesData, ...publicadosData];
       }
 
       const mapAlojamiento = (raw: any): SolicitudAlojamiento => {
         const u = raw.unidades?.[0];
-        const fotosList: string[] = (raw.fotografias || []).map((f: any) => f.url || f).filter(Boolean);
-        const foto = fotosList[0] || raw.imagen || 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1200&q=80';
+        const fotosList: string[] = (raw.fotografias && raw.fotografias.length > 0)
+          ? raw.fotografias.map((f: any) => (typeof f === 'string' ? f : (f.url || f))).filter(Boolean)
+          : ((raw.fotos || []).filter(Boolean));
+        const principalObj = Array.isArray(raw.fotografias) ? raw.fotografias.find((f: any) => f.esPrincipal) : null;
+        const foto = principalObj?.url || fotosList[0] || raw.imagen || 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1200&q=80';
         if (fotosList.length === 0) fotosList.push(foto);
+
         return {
-          id: raw.idAlojamiento || String(Math.random()),
+          id: raw.idAlojamiento || raw.id || String(Math.random()),
           titulo: raw.titulo || 'Alojamiento Tradicional',
-          anfitrion: raw.nombreAnfitrion || 'Carlos Mendoza · Anfitrión Registrado',
+          anfitrion: raw.nombreAnfitrion || raw.anfitrion || 'Carlos Mendoza · Anfitrión Registrado',
           departamento: raw.departamento || 'Santa Cruz',
           ciudad: raw.ciudad || 'Bolivia',
           direccion: raw.direccion || '',
-          tipoPropiedad: raw.tipoPropiedadNombre || 'Hospedaje Tradicional',
+          tipoPropiedad: raw.tipoPropiedadNombre || raw.tipoPropiedad || 'Hospedaje Tradicional',
           modalidad: raw.modalidad || 'CASA_DEPARTAMENTO',
-          precioNoche: Number(u?.precioNoche ?? 500),
-          capacidad: Number(u?.capacidadHuespedes ?? 4),
-          habitaciones: Number(u?.cantidadDormitorios ?? 2),
-          estado: (raw.estadoPublicacion as any) || 'PENDIENTE',
-          fechaRegistro: raw.fechaCreacion || new Date().toISOString(),
+          precioNoche: Number(u?.precioNoche ?? raw.precioNoche ?? raw.precioBaseNoche ?? 500),
+          capacidad: Number(u?.capacidadHuespedes ?? raw.capacidad ?? 4),
+          habitaciones: Number(u?.cantidadDormitorios ?? raw.habitaciones ?? 2),
+          estado: (raw.estadoPublicacion as any) || (raw.estado as any) || 'PENDIENTE',
+          fechaRegistro: raw.fechaCreacion || raw.fechaRegistro || new Date().toISOString(),
           imagen: foto,
           fotos: fotosList,
           descripcion: raw.descripcion || '',
@@ -2905,12 +2916,14 @@ export class AppComponent implements OnInit {
           motivoObservacionRechazo: raw.motivoObservacionRechazo || raw.motivoRechazo || '',
           origenUltimoCambio: raw.origenUltimoCambio || '',
           unidades: (raw.unidades || []).map((un: any) => {
-            const rawFotos: any[] = un.fotos || un.fotografias || (un.fotoUrl ? [un.fotoUrl] : []);
+            const rawFotos: any[] = (un.fotos && un.fotos.length > 0)
+              ? un.fotos
+              : (un.fotografias || (un.fotoUrl ? [un.fotoUrl] : []));
             const fotosArray: string[] = rawFotos
               .map((f: any) => (typeof f === 'string' ? f : f?.url))
               .filter(Boolean);
             return {
-              idUnidad: un.idUnidad,
+              idUnidad: un.idUnidad || `u-${Math.random()}`,
               nombre: un.nombre,
               capacidadHuespedes: un.capacidadHuespedes ?? un.capacidadPersonas ?? 2,
               cantidadCamas: un.cantidadCamas ?? 1,
@@ -2929,7 +2942,7 @@ export class AppComponent implements OnInit {
       };
 
       if (rawData.length > 0) {
-        // Cargar primero los canónicos para asegurar que no falten propiedades
+        // Cargar primero los canónicos y guardados en localStorage
         this.cargarAlojamientosFallback();
         const uniqueMap = new Map<string, SolicitudAlojamiento>();
         for (const can of this.alojamientos) {
