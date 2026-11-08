@@ -234,10 +234,7 @@ export const DetalleAlojamientoView: React.FC<DetalleAlojamientoViewProps> = ({
         calificacionServicio: servicio ?? puntuacionGeneral,
         calificacionComodidad: comodidad ?? puntuacionGeneral,
         esAnonimo,
-        comentario: comentario.trim(),
-        sentimientoNlp: puntuacionGeneral >= 4 ? 'POSITIVO' : (puntuacionGeneral === 3 ? 'NEUTRO' : 'NEGATIVO'),
-        confianzaNlp: 0.95,
-        topicoPredicho: 'Experiencia General'
+        comentario: comentario.trim()
       });
 
       setMensajeExito(esAnonimo 

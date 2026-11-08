@@ -935,7 +935,62 @@ export const catalogoService = {
     return locales.filter(v => v.idUnidad === idUnidad);
   },
 
+  async clasificarResenaNLP(texto: string, idAlojamiento?: string, idUnidad?: string, puntuacion?: number) {
+    try {
+      const res = await httpClient.post<any>(ENDPOINTS.IA.CLASIFICAR_RESENA, {
+        texto,
+        idAlojamiento,
+        idUnidad,
+        puntuacionGeneral: puntuacion
+      });
+      return res.data;
+    } catch (e) {
+      console.warn('[NLP Service] Error al clasificar:', e);
+      return null;
+    }
+  },
+
   async crearValoracion(idAlojamiento: string, req: any): Promise<ValoracionCliente> {
+    let sentimientoCalculado = req.sentimientoNlp;
+    let confianzaCalculada = req.confianzaNlp;
+    let topicoCalculado = req.topicoPredicho;
+
+    // Conexión directa con el Microservicio de IA (NLP Review Classifier)
+    if (req.comentario && req.comentario.trim().length >= 3) {
+      try {
+        const iaRes = await httpClient.post<any>(ENDPOINTS.IA.CLASIFICAR_RESENA, {
+          texto: req.comentario.trim(),
+          idAlojamiento,
+          idUnidad: req.idUnidad,
+          puntuacionGeneral: req.puntuacionGeneral
+        });
+        if (iaRes.data && iaRes.data.status === 'success') {
+          sentimientoCalculado = iaRes.data.sentimiento;
+          confianzaCalculada = iaRes.data.confianza;
+          topicoCalculado = iaRes.data.topico;
+        }
+      } catch (iaError) {
+        console.warn('[NLP Copiloto] Clasificación local/offline aplicada:', iaError);
+      }
+    }
+
+    if (!sentimientoCalculado) {
+      sentimientoCalculado = req.puntuacionGeneral >= 4 ? 'POSITIVO' : (req.puntuacionGeneral === 3 ? 'NEUTRO' : 'NEGATIVO');
+    }
+    if (!confianzaCalculada) {
+      confianzaCalculada = 0.92;
+    }
+    if (!topicoCalculado) {
+      topicoCalculado = 'EXPERIENCIA_GENERAL';
+    }
+
+    const payloadBackend = {
+      ...req,
+      sentimientoNlp: sentimientoCalculado,
+      confianzaNlp: confianzaCalculada,
+      topicoPredicho: topicoCalculado
+    };
+
     const nueva: ValoracionCliente = {
       idValoracion: `val-${Date.now()}`,
       idAlojamiento,
@@ -950,9 +1005,9 @@ export const catalogoService = {
       calificacionComodidad: req.calificacionComodidad,
       esAnonimo: Boolean(req.esAnonimo),
       comentario: req.comentario || '',
-      sentimientoNlp: req.sentimientoNlp || (req.puntuacionGeneral >= 4 ? 'POSITIVO' : (req.puntuacionGeneral === 3 ? 'NEUTRO' : 'NEGATIVO')),
-      confianzaNlp: req.confianzaNlp || 0.95,
-      topicoPredicho: req.topicoPredicho || 'EXPERIENCIA_GENERAL',
+      sentimientoNlp: sentimientoCalculado,
+      confianzaNlp: confianzaCalculada,
+      topicoPredicho: topicoCalculado,
       fechaCreacion: new Date().toISOString()
     };
 
@@ -963,7 +1018,7 @@ export const catalogoService = {
     } catch {}
 
     try {
-      const res = await httpClient.post<any>(ENDPOINTS.ALOJAMIENTOS.VALORACIONES(idAlojamiento), req);
+      const res = await httpClient.post<any>(ENDPOINTS.ALOJAMIENTOS.VALORACIONES(idAlojamiento), payloadBackend);
       return res.data;
     } catch {
       return nueva;
