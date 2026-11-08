@@ -8,8 +8,10 @@ export const ENDPOINTS = {
   },
   ALOJAMIENTOS: {
     LISTAR: `${API_BASE_URL}/api/v1/alojamientos`,
+    TODOS: `${API_BASE_URL}/api/v1/alojamientos/todos`,
+    ANFITRION: (idAnfitrion: string) => `${API_BASE_URL}/api/v1/alojamientos/anfitrion/${idAnfitrion}`,
+    PENDIENTES: `${API_BASE_URL}/api/v1/alojamientos/moderacion/pendientes`,
     DETALLE: (id: string) => `${API_BASE_URL}/api/v1/alojamientos/${id}`,
-    POR_ANFITRION: (anfitrionId: string) => `${API_BASE_URL}/api/v1/alojamientos/anfitrion/${anfitrionId}`,
     UNIDADES: (id: string) => `${API_BASE_URL}/api/v1/alojamientos/${id}/unidades`,
     CATALOGOS: `${API_BASE_URL}/api/v1/catalogos`,
     VALORACIONES: (idAlojamiento: string) => `${API_BASE_URL}/api/v1/alojamientos/${idAlojamiento}/valoraciones`,
@@ -53,5 +55,14 @@ export const ENDPOINTS = {
     ROL_PERMISOS: (id: number | string) => `${API_BASE_URL}/api/v1/seguridad/roles/${id}/permisos`,
     PERMISOS: `${API_BASE_URL}/api/v1/seguridad/permisos`,
     MODULOS: `${API_BASE_URL}/api/v1/seguridad/modulos`,
+  },
+
+  // MS-04: IA & Copiloto (Clasificador de Reseñas NLP & Reportes)
+  IA: {
+    CLASIFICAR_RESENA: `${API_BASE_URL}/api/v1/ia/clasificar-resena`,
+    PREDICT: `${API_BASE_URL}/api/v1/ia/predict`,
+    BATCH: `${API_BASE_URL}/api/v1/ia/batch`,
+    METRICAS: `${API_BASE_URL}/api/v1/ia/metricas-modelo`,
+    HEALTH: `${API_BASE_URL}/api/v1/ia/health`,
   }
 };

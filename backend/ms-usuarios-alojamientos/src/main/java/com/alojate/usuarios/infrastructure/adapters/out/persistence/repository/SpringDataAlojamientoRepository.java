@@ -18,6 +18,8 @@ public interface SpringDataAlojamientoRepository extends JpaRepository<Alojamien
 
     List<AlojamientoJpaEntity> findByEstadoPublicacion(EstadoPublicacion estadoPublicacion);
 
+    long countByEstadoPublicacion(EstadoPublicacion estadoPublicacion);
+
     @Query("SELECT DISTINCT a FROM AlojamientoJpaEntity a " +
            "LEFT JOIN a.unidades u " +
            "WHERE (a.estadoPublicacion = com.alojate.usuarios.domain.model.EstadoPublicacion.PUBLICADO " +

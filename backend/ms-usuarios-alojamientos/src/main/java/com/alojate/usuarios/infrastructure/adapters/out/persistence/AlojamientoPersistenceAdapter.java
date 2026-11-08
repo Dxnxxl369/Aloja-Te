@@ -45,6 +45,10 @@ public class AlojamientoPersistenceAdapter implements AlojamientoRepositoryPort 
                 existing.setMotivoObservacionRechazo(alojamiento.getMotivoObservacionRechazo() != null ? alojamiento.getMotivoObservacionRechazo() : alojamiento.getMotivoRechazo());
                 existing.setOrigenUltimoCambio(alojamiento.getOrigenUltimoCambio());
                 existing.setEstadoPublicacion(alojamiento.getEstadoPublicacion());
+                existing.setIntentosRevision(alojamiento.getIntentosRevision());
+                existing.setFechaUltimoCambioEstado(alojamiento.getFechaUltimoCambioEstado());
+                existing.setHuellaFotos(alojamiento.getHuellaFotos());
+                existing.setIdRevision(alojamiento.getIdRevision());
                 AlojamientoJpaEntity guardado = repository.save(existing);
                 return toDomain(guardado);
             }
@@ -76,6 +80,12 @@ public class AlojamientoPersistenceAdapter implements AlojamientoRepositoryPort 
     @Transactional(readOnly = true)
     public List<Alojamiento> listarPorEstado(EstadoPublicacion estado) {
         return repository.findByEstadoPublicacion(estado).stream().map(this::toDomain).collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long contarPorEstado(EstadoPublicacion estado) {
+        return repository.countByEstadoPublicacion(estado);
     }
 
     @Override
@@ -128,6 +138,10 @@ public class AlojamientoPersistenceAdapter implements AlojamientoRepositoryPort 
                 .origenUltimoCambio(domain.getOrigenUltimoCambio())
                 .estadoPublicacion(domain.getEstadoPublicacion() != null ? domain.getEstadoPublicacion() : EstadoPublicacion.PENDIENTE)
                 .fechaCreacion(domain.getFechaCreacion() != null ? domain.getFechaCreacion() : java.time.LocalDateTime.now())
+                .intentosRevision(domain.getIntentosRevision())
+                .fechaUltimoCambioEstado(domain.getFechaUltimoCambioEstado())
+                .huellaFotos(domain.getHuellaFotos())
+                .idRevision(domain.getIdRevision())
                 .build();
     }
 
@@ -150,14 +164,25 @@ public class AlojamientoPersistenceAdapter implements AlojamientoRepositoryPort 
                         .build()).collect(Collectors.toSet())
                 : new HashSet<>();
 
-        List<Fotografia> fotografias = entity.getFotografias() != null
-                ? entity.getFotografias().stream().map(f -> Fotografia.builder()
+        // La tabla fotografias guarda juntas las fotos de la galería (id_unidad vacío) y las de cada habitación.
+        // Aquí se separan: Alojamiento.fotografias = solo galería; cada unidad lleva las suyas.
+        List<FotografiaJpaEntity> todasLasFotos = entity.getFotografias() != null ? entity.getFotografias() : List.of();
+        Comparator<FotografiaJpaEntity> porOrden = Comparator.comparing(f -> f.getOrden() != null ? f.getOrden() : 0);
+
+        List<Fotografia> fotografias = todasLasFotos.stream()
+                .filter(f -> f.getIdUnidad() == null)
+                .sorted(porOrden)
+                .map(f -> Fotografia.builder()
                         .idFotografia(f.getIdFotografia())
                         .idAlojamiento(f.getIdAlojamiento())
                         .url(f.getUrl())
                         .orden(f.getOrden())
-                        .build()).collect(Collectors.toList())
-                : new ArrayList<>();
+                        .build())
+                .collect(Collectors.toList());
+
+        Map<UUID, List<FotografiaJpaEntity>> fotosPorUnidad = todasLasFotos.stream()
+                .filter(f -> f.getIdUnidad() != null)
+                .collect(Collectors.groupingBy(FotografiaJpaEntity::getIdUnidad));
 
         List<UnidadReservable> unidades = entity.getUnidades() != null
                 ? entity.getUnidades().stream().map(u -> UnidadReservable.builder()
@@ -172,6 +197,17 @@ public class AlojamientoPersistenceAdapter implements AlojamientoRepositoryPort 
                         .inventarioTotal(u.getInventarioTotal())
                         .precioNoche(u.getPrecioNoche())
                         .estado(u.getEstado())
+                        .fotografias(fotosPorUnidad.getOrDefault(u.getIdUnidad(), List.of()).stream()
+                                .sorted(porOrden)
+                                .map(f -> Fotografia.builder()
+                                        .idFotografia(f.getIdFotografia())
+                                        .idAlojamiento(f.getIdAlojamiento())
+                                        .idUnidad(f.getIdUnidad())
+                                        .nombreUnidad(u.getNombre())
+                                        .url(f.getUrl())
+                                        .orden(f.getOrden())
+                                        .build())
+                                .collect(Collectors.toList()))
                         .build()).collect(Collectors.toList())
                 : new ArrayList<>();
 
@@ -196,6 +232,10 @@ public class AlojamientoPersistenceAdapter implements AlojamientoRepositoryPort 
                 .origenUltimoCambio(entity.getOrigenUltimoCambio())
                 .estadoPublicacion(entity.getEstadoPublicacion())
                 .fechaCreacion(entity.getFechaCreacion())
+                .intentosRevision(entity.getIntentosRevision())
+                .fechaUltimoCambioEstado(entity.getFechaUltimoCambioEstado())
+                .huellaFotos(entity.getHuellaFotos())
+                .idRevision(entity.getIdRevision())
                 .servicios(servicios)
                 .fotografias(fotografias)
                 .unidades(unidades)

@@ -35,15 +35,17 @@ public class N8nModeracionAdapter implements ModeracionNotificadorPort {
     }
 
     @Override
-    public void solicitarModeracion(UUID idAlojamiento) {
+    public void solicitarModeracion(UUID idAlojamiento, UUID idRevision) {
         try {
             restClient.post()
                     .uri(webhookUrl)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(Map.of("idAlojamiento", idAlojamiento.toString()))
+                    .body(Map.of(
+                            "idAlojamiento", idAlojamiento.toString(),
+                            "idRevision", idRevision.toString()))
                     .retrieve()
                     .toBodilessEntity();
-            log.info("Moderación solicitada a n8n para el alojamiento {}", idAlojamiento);
+            log.info("Moderación solicitada a n8n para el alojamiento {} (revisión {})", idAlojamiento, idRevision);
         } catch (RestClientException ex) {
             log.warn("No se pudo avisar a n8n ({}): {}", webhookUrl, ex.getMessage());
             throw new ModeracionNoDisponibleException(

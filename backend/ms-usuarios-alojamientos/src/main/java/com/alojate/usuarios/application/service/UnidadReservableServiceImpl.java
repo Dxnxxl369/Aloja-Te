@@ -1,6 +1,7 @@
 package com.alojate.usuarios.application.service;
 
 import com.alojate.usuarios.domain.model.EstadoUnidad;
+import com.alojate.usuarios.domain.model.Fotografia;
 import com.alojate.usuarios.domain.model.UnidadReservable;
 import com.alojate.usuarios.domain.ports.in.UnidadReservableUseCase;
 import com.alojate.usuarios.domain.ports.out.AlojamientoRepositoryPort;
@@ -18,6 +19,7 @@ public class UnidadReservableServiceImpl implements UnidadReservableUseCase {
 
     private final UnidadReservableRepositoryPort unidadRepo;
     private final AlojamientoRepositoryPort alojamientoRepo;
+    private final FotosHabitacionService fotosHabitacion;
 
     @Override
     @Transactional
@@ -29,7 +31,12 @@ public class UnidadReservableServiceImpl implements UnidadReservableUseCase {
         if (unidad.getEstado() == null) {
             unidad.setEstado(EstadoUnidad.DISPONIBLE);
         }
-        return unidadRepo.guardar(unidad);
+        List<Fotografia> fotos = unidad.getFotografias();
+        UnidadReservable guardada = unidadRepo.guardar(unidad);
+        if (fotos != null) {
+            guardada.setFotografias(fotosHabitacion.reemplazar(guardada, fotos));
+        }
+        return guardada;
     }
 
     @Override
@@ -47,7 +54,12 @@ public class UnidadReservableServiceImpl implements UnidadReservableUseCase {
         if (datos.getPrecioNoche() != null) existente.setPrecioNoche(datos.getPrecioNoche());
         if (datos.getEstado() != null) existente.setEstado(datos.getEstado());
 
-        return unidadRepo.guardar(existente);
+        UnidadReservable guardada = unidadRepo.guardar(existente);
+        // null = no tocar las fotos; una lista (aunque vacía) reemplaza las existentes.
+        if (datos.getFotografias() != null) {
+            guardada.setFotografias(fotosHabitacion.reemplazar(guardada, datos.getFotografias()));
+        }
+        return guardada;
     }
 
     @Override
@@ -61,6 +73,7 @@ public class UnidadReservableServiceImpl implements UnidadReservableUseCase {
     @Override
     @Transactional
     public void eliminarUnidad(UUID idUnidad) {
+        fotosHabitacion.eliminarDeHabitacion(idUnidad);
         unidadRepo.eliminarPorId(idUnidad);
     }
 

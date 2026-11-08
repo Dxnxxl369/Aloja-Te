@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { API_BASE_URL } from './apiEndpoints';
+import { TokenStorage } from '../auth/TokenStorage';
 
 export const httpClient = axios.create({
   baseURL: API_BASE_URL,
@@ -11,7 +12,7 @@ export const httpClient = axios.create({
 
 httpClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('alojate_jwt_token');
+    const token = TokenStorage.getToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }

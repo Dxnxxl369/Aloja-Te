@@ -49,12 +49,16 @@ start "Aloja-Te [6/7] Portal Clientes (:3000)" powershell -NoExit -Command "cd '
 echo [7/7] Frontend Administracion y Gestion (Angular :4200)...
 start "Aloja-Te [7/7] Portal Admin (:4200)" powershell -NoExit -Command "cd '%~dp0frontend\portal-admin'; Write-Host '===================================================' -ForegroundColor DarkCyan; Write-Host '  Portal Admin (:4200)' -ForegroundColor DarkCyan; Write-Host '===================================================' -ForegroundColor DarkCyan; pnpm run start"
 
+echo [8/8] Frontend Portal Anfitrion (React Vite :3005)...
+start "Aloja-Te [8/8] Portal Anfitrion (:3005)" powershell -NoExit -Command "cd '%~dp0frontend\portal-anfitrion'; Write-Host '  Portal Anfitrion (:3005)' -ForegroundColor Blue; pnpm run dev"
+
 echo.
 echo ===============================================================================
 echo                    ECOSISTEMA ALOJA-TE EN EJECUCION
 echo ===============================================================================
 echo   - Portal Clientes:      http://localhost:3000
 echo   - Portal Admin:         http://localhost:4200
+echo   - Portal Anfitrion:     http://localhost:3005
 echo   - API Gateway:          http://localhost:8080
 echo   - MS-01 (Usuarios/Aloj):http://localhost:3001
 echo   - MS-02 (Reservas):     http://localhost:3002

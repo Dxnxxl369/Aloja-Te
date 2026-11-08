@@ -4,26 +4,56 @@ server:
 spring:
   application:
     name: ms-usuarios-alojamientos
+  # Carga el archivo .env (carpeta desde la que se ejecuta el servicio) si existe.
+  config:
+    import: optional:file:.env[.properties]
   autoconfigure:
     exclude:
       - org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:ms1-usuarios}
     username: ${DB_USER:postgres}
-    password: ${DB_PASSWORD:admin369}
+    password: ${DB_PASSWORD:123456}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: false
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 12MB
   rabbitmq:
     host: ${RABBITMQ_HOST:localhost}
     port: ${RABBITMQ_PORT:5672}
     username: ${RABBITMQ_USER:guest}
     password: ${RABBITMQ_PASSWORD:guest}
+# Almacenamiento de imágenes en AWS S3 (bucket con lectura pública por política del bucket).
+# Credenciales: variables AWS_ACCESS_KEY_ID y AWS_SECRET_ACCESS_KEY (o perfil/rol de IAM).
+almacenamiento:
+  s3:
+    bucket: ${S3_BUCKET:}
+    region: ${S3_REGION:us-east-1}
+    # Opcionales: si se definen (p. ej. en .env) se usan en lugar de la cadena por defecto del SDK.
+    access-key: ${AWS_ACCESS_KEY_ID:}
+    secret-key: ${AWS_SECRET_ACCESS_KEY:}
+    # Opcional: dominio propio o CloudFront (ej. https://cdn.midominio.com). Vacío = URL estándar de S3.
+    public-base-url: ${S3_PUBLIC_BASE_URL:}
 
 # Moderación automática de fotos (workflow de n8n + LlavaGuard)
 moderacion:
+  # Token compartido con el workflow de n8n (cabecera X-Moderacion-Token). Cambiarlo fuera de desarrollo.
+  token: ${MODERACION_TOKEN:alojate-moderacion-dev}
   n8n:
     webhook-url: ${N8N_WEBHOOK_URL:http://localhost:5678/webhook/moderar-alojamiento}
     timeout-ms: 10000
+  revision:
+    max-intentos: 3                  # fallos técnicos seguidos antes de pedir atención del admin
+    esperas-minutos: 1,5,15          # espera antes de cada reintento
+    gracia-registro-minutos: 10      # el job no toca un registro recién creado (el portal lo dispara al terminar)
+    limite-base-minutos: 3           # límite de EN_REVISION = base + por-foto × nº de fotos
+    limite-por-foto-minutos: 2
+    cupo-concurrente: 1              # LlavaGuard evalúa una foto a la vez
+  job:
+    habilitado: true
+    intervalo-ms: 60000

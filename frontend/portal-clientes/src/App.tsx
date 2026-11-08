@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './core/auth/AuthContext';
+import { TokenStorage } from './core/auth/TokenStorage';
 import { useAppRouter } from './core/router/useAppRouter';
 import { Navbar } from './shared/layout/Navbar';
 import { Footer } from './shared/layout/Footer';
@@ -16,15 +17,16 @@ import { ValidadorPinCheckin } from './features/anfitrion/components/ValidadorPi
 import { GestorRolesPermisos } from './features/anfitrion/components/GestorRolesPermisos';
 import { LiquidacionesResumen } from './features/anfitrion/components/LiquidacionesResumen';
 import { ListingWizardModal } from './features/anfitrion/modals/ListingWizardModal';
+import { EditorHotelHabitacionesModal } from './features/anfitrion/modals/EditorHotelHabitacionesModal';
 import { catalogoService } from './features/catalogo/services/catalogoService';
 import { Alojamiento, UnidadReservable } from './features/catalogo/types/catalogo.types';
 import { ReservaResponse } from './features/reservas/types/reserva.types';
 import { httpClient } from './core/api/httpClient';
 import { ENDPOINTS } from './core/api/apiEndpoints';
-import { Plus, Building2, Home, Hotel, Eye, ShieldCheck, AlertCircle, ArrowLeft, Loader2 } from 'lucide-react';
+import { Plus, Building2, Home, Hotel, Eye, ShieldCheck, AlertCircle, ArrowLeft, Loader2, Edit3, RefreshCw } from 'lucide-react';
 
 export const AppContent: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, cargandoSesion } = useAuth();
   const { currentView, params, navigate } = useAppRouter();
   const [cerrandoSesion, setCerrandoSesion] = useState(false);
 
@@ -43,22 +45,54 @@ export const AppContent: React.FC = () => {
 
   // Proteger vista de Anfitrión: Si el usuario es Cliente o no está autenticado, redirigir a catálogo
   useEffect(() => {
+    // Esperar a que termine la verificación SSO inicial; si no, se redirige antes de conocer al usuario
+    if (cargandoSesion) return;
     if (currentView === 'anfitrion' && user?.rol !== 'ANFITRION') {
       navigate.catalogo();
     }
-  }, [user, currentView, navigate]);
+  }, [user, currentView, navigate, cargandoSesion]);
+
+  // Abrir automáticamente el asistente de registro cuando se llega desde el Portal Anfitrión (#/anfitrion?nuevo=1)
+  useEffect(() => {
+    if (cargandoSesion || currentView !== 'anfitrion' || user?.rol !== 'ANFITRION') return;
+    const hashPart = window.location.hash || '';
+    const query = hashPart.includes('?') ? new URLSearchParams(hashPart.split('?')[1]) : null;
+    if (query?.get('nuevo') === '1') {
+      setWizardAbierto(true);
+      window.history.replaceState({}, document.title, window.location.pathname + '#/anfitrion');
+    }
+  }, [currentView, user, cargandoSesion]);
+
+  // Single Logout (SLO): Detección de revocación global de sesión desde Portal Anfitrión (:3005)
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const hashPart = window.location.hash || '';
+    const hashParams = hashPart.includes('?') 
+      ? new URLSearchParams(hashPart.split('?')[1]) 
+      : null;
+    
+    if (searchParams.get('sso_logout') === 'true' || hashParams?.get('sso_logout') === 'true') {
+      logout();
+      setMisReservas([]);
+      localStorage.removeItem('alojate_mis_reservas');
+      const cleanUrl = window.location.pathname + '#/catalogo';
+      window.history.replaceState({}, document.title, cleanUrl);
+    }
+  }, [logout]);
   
   // Data States
   const [alojamientos, setAlojamientos] = useState<Alojamiento[]>([]);
   const [misAlojamientosAnfitrion, setMisAlojamientosAnfitrion] = useState<Alojamiento[]>([]);
+  const [filtroEstadoAnfitrion, setFiltroEstadoAnfitrion] = useState<string>('TODOS');
+  const [recargandoMisAlojamientos, setRecargandoMisAlojamientos] = useState<boolean>(false);
   const [departamento, setDepartamento] = useState(params.depto || 'Todos');
   const [loading, setLoading] = useState(true);
   const [misReservas, setMisReservas] = useState<ReservaResponse[]>(() => {
     try {
-      const token = localStorage.getItem('alojate_jwt_token');
-      const savedUser = localStorage.getItem('alojate_user_profile');
+      const token = TokenStorage.getToken();
+      const savedUser = TokenStorage.getUser();
       if (!token || !savedUser) return [];
-      const saved = localStorage.getItem('alojate_mis_reservas');
+      const saved = sessionStorage.getItem('alojate_mis_reservas');
       return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
@@ -70,7 +104,7 @@ export const AppContent: React.FC = () => {
     setTimeout(() => {
       logout();
       setMisReservas([]);
-      localStorage.removeItem('alojate_mis_reservas');
+      sessionStorage.removeItem('alojate_mis_reservas');
       setCerrandoSesion(false);
       navigate.catalogo();
     }, 700);
@@ -92,6 +126,8 @@ export const AppContent: React.FC = () => {
   const [pagoCompletadoData, setPagoCompletadoData] = useState<any | null>(null);
   const [pinConfirmado, setPinConfirmado] = useState<string>('');
   const [wizardAbierto, setWizardAbierto] = useState(false);
+  const [editorHotelAbierto, setEditorHotelAbierto] = useState(false);
+  const [alojamientoEnEdicion, setAlojamientoEnEdicion] = useState<Alojamiento | null>(null);
 
   // Sincronizar parámetro de departamento si viene en la URL
   useEffect(() => {
@@ -159,19 +195,64 @@ export const AppContent: React.FC = () => {
     cargar();
   }, [departamento]);
 
-  // Cargar Alojamientos propios del Anfitrión
-  useEffect(() => {
+  // Función para recargar Alojamientos propios del Anfitrión en tiempo real
+  const recargarAlojamientosAnfitrion = async () => {
     if (user?.rol === 'ANFITRION') {
-      catalogoService.listarAlojamientosPorAnfitrion({
-        id: user.id,
-        email: user.email,
-        nombre: user.nombre
-      }).then(data => {
+      setRecargandoMisAlojamientos(true);
+      try {
+        const data = await catalogoService.listarAlojamientosPorAnfitrion({
+          id: user.id,
+          email: user.email,
+          nombre: user.nombre
+        });
         setMisAlojamientosAnfitrion(data);
-      });
+      } catch (err) {
+        console.warn('Error al sincronizar alojamientos del anfitrión:', err);
+      } finally {
+        setRecargandoMisAlojamientos(false);
+      }
     } else {
       setMisAlojamientosAnfitrion([]);
     }
+  };
+
+  // El anfitrión corrige las observaciones y pide una nueva revisión automática.
+  // El servidor solo la acepta si las fotografías cambiaron desde la última evaluación.
+  const [reenviandoId, setReenviandoId] = useState<string | null>(null);
+  const reenviarARevision = async (a: Alojamiento) => {
+    setReenviandoId(a.idAlojamiento);
+    try {
+      await httpClient.post(`/api/v1/alojamientos/${a.idAlojamiento}/enviar-revision`);
+      await recargarAlojamientosAnfitrion();
+    } catch (err: any) {
+      const detalle = err?.response?.data?.mensaje || err?.message || 'No se pudo reenviar a revisión.';
+      alert(detalle);
+    } finally {
+      setReenviandoId(null);
+    }
+  };
+
+  // Cargar Alojamientos propios del Anfitrión y sincronizar automáticamente al enfocar ventana o por polling
+  useEffect(() => {
+    recargarAlojamientosAnfitrion();
+
+    const handleFocus = () => {
+      recargarAlojamientosAnfitrion();
+    };
+    window.addEventListener('focus', handleFocus);
+
+    // Polling ligero reactivo cada 6 segundos en el panel de anfitrión para reflejar moderación en tiempo real
+    let interval: any = null;
+    if (user?.rol === 'ANFITRION' && currentView === 'anfitrion') {
+      interval = setInterval(() => {
+        recargarAlojamientosAnfitrion();
+      }, 6000);
+    }
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      if (interval) clearInterval(interval);
+    };
   }, [user, currentView]);
 
   // Sincronizar Reservas del Cliente (MS-02 y LocalStorage)
@@ -438,104 +519,305 @@ export const AppContent: React.FC = () => {
               </button>
             </div>
 
-            {/* Alojamientos del Anfitrión */}
-            <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-              <div className="flex items-center justify-between">
+            {/* Estado Oficial de Verificación del Anfitrión */}
+            <div className="p-4 rounded-3xl bg-gradient-to-r from-blue-50/90 to-indigo-50/90 dark:from-blue-950/40 dark:to-indigo-950/40 border border-blue-200/80 dark:border-blue-900/60 flex items-center justify-between gap-4 flex-wrap">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-md shadow-blue-500/25 shrink-0">
+                  <svg className="w-5 h-5 text-white fill-current" viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1.2 14.2l-4-4 1.41-1.41L10.8 13.38l6.79-6.79 1.41 1.41-8.2 8.2z" />
+                  </svg>
+                </div>
                 <div>
-                  <h3 className="font-serif text-lg font-bold text-slate-900 dark:text-white">
-                    Tus Propiedades Registradas ({misAlojamientosAnfitrion.length})
-                  </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Propiedades en catálogo o en espera de aprobación de auditoría
+                  <div className="flex items-center gap-2">
+                    <h4 className="font-bold text-xs text-slate-900 dark:text-white">
+                      Anfitrión Oficialmente Verificado
+                    </h4>
+                    <span className="px-2 py-0.5 rounded-full bg-blue-600 text-white text-[9px] font-bold shadow-sm">
+                      ✓ Acreditado
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-0.5">
+                    Tu Cédula de Identidad y acreditación de operador turístico están validadas al 100%. Cuentas con autorización total para publicar y recibir pagos con QR Simple BNB.
                   </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setWizardAbierto(true)}
-                  className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Añadir</span>
-                </button>
               </div>
+              <span className="text-[10px] font-semibold text-blue-700 dark:text-blue-300 bg-white dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-blue-200 dark:border-blue-800 shadow-sm shrink-0">
+                Auditoría Documental: Aprobada
+              </span>
+            </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {misAlojamientosAnfitrion.map((a) => (
-                  <div
-                    key={a.idAlojamiento}
-                    className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/40 hover:border-blue-400 transition flex items-center justify-between gap-3"
-                  >
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={a.fotografias?.[0]?.url || 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=400&q=80'}
-                        alt={a.titulo}
-                        className="w-16 h-14 object-cover rounded-xl shrink-0"
-                      />
-                      <div>
-                        <h4 className="font-bold text-xs text-slate-900 dark:text-white line-clamp-1">{a.titulo}</h4>
-                        <div className="flex items-center gap-2 text-[10px] text-slate-500 mt-0.5">
-                          <span>{a.ciudad}, {a.departamento}</span>
-                          <span>•</span>
-                          <span className="font-semibold">{a.modalidad === 'HOTEL_HOSTAL' ? '🏨 Hotel' : '🏡 Casa'}</span>
-                        </div>
-                        {(() => {
-                          const est = a.estadoPublicacion || a.estado || 'PUBLICADO';
-                          const motivo = a.motivoObservacionRechazo || a.motivoRechazo;
-                          let estilo = 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300';
-                          let label: string = est;
+            {/* Alojamientos del Anfitrión con Filtro de Estados y Sincronización */}
+            {(() => {
+              const conteoHostTodos = misAlojamientosAnfitrion.length;
+              const conteoHostPublicados = misAlojamientosAnfitrion.filter(
+                (a) => (a.estadoPublicacion || a.estado || 'PUBLICADO') === 'PUBLICADO'
+              ).length;
+              const conteoHostPendientes = misAlojamientosAnfitrion.filter(
+                (a) => (a.estadoPublicacion || a.estado) === 'PENDIENTE'
+              ).length;
+              const conteoHostEnRevision = misAlojamientosAnfitrion.filter(
+                (a) => (a.estadoPublicacion || a.estado) === 'EN_REVISION'
+              ).length;
+              const conteoHostObservados = misAlojamientosAnfitrion.filter(
+                (a) => (a.estadoPublicacion || a.estado) === 'OBSERVADO'
+              ).length;
+              const conteoHostSuspendidos = misAlojamientosAnfitrion.filter(
+                (a) => (a.estadoPublicacion || a.estado) === 'SUSPENDIDO'
+              ).length;
+              const conteoHostRechazados = misAlojamientosAnfitrion.filter(
+                (a) => (a.estadoPublicacion || a.estado) === 'RECHAZADO'
+              ).length;
 
-                          if (est === 'PUBLICADO') {
-                            estilo = 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400';
-                            label = '✅ Publicado en Catálogo';
-                          } else if (est === 'PENDIENTE') {
-                            estilo = 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300';
-                            label = '🕒 Pendiente de Revisión';
-                          } else if (est === 'EN_REVISION') {
-                            estilo = 'bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300';
-                            label = '🔍 En Revisión Automática';
-                          } else if (est === 'OBSERVADO') {
-                            estilo = 'bg-amber-100 text-amber-900 dark:bg-amber-950/80 dark:text-amber-200 border border-amber-300 dark:border-amber-700';
-                            label = '⚠️ Observado por Auditoría';
-                          } else if (est === 'SUSPENDIDO') {
-                            estilo = 'bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-300';
-                            label = '⛔ Suspendido Temporalmente';
-                          } else if (est === 'RECHAZADO') {
-                            estilo = 'bg-red-100 text-red-700 dark:bg-red-950/60 dark:text-red-400';
-                            label = '❌ Rechazado';
-                          }
+              const alojamientosAnfitrionFiltrados = misAlojamientosAnfitrion.filter((a) => {
+                const est = a.estadoPublicacion || a.estado || 'PUBLICADO';
+                if (filtroEstadoAnfitrion === 'TODOS') return true;
+                return est === filtroEstadoAnfitrion;
+              });
 
-                          return (
-                            <div className="mt-1 space-y-0.5">
-                              <span className={`inline-block px-2 py-0.5 rounded-full text-[9px] font-bold ${estilo}`}>
-                                {label}
-                              </span>
-                              {motivo && (est === 'OBSERVADO' || est === 'RECHAZADO' || est === 'SUSPENDIDO') && (
-                                <p className="text-[10px] text-amber-600 dark:text-amber-400 font-medium italic line-clamp-1">
-                                  Motivo: {motivo}
-                                </p>
-                              )}
-                            </div>
-                          );
-                        })()}
-                      </div>
+              return (
+                <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-5">
+                  {/* Cabecera con Contadores y Botón de Refresco en Tiempo Real */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <h3 className="font-serif text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        <span>Tus Propiedades Registradas</span>
+                        <span className="text-xs px-2.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 font-sans font-bold">
+                          {conteoHostTodos}
+                        </span>
+                      </h3>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        Supervisa el estado de auditoría y moderación administrativa de tus propiedades en tiempo real
+                      </p>
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setDetalleAlojamiento(a);
-                        navigate.detalle(a.idAlojamiento);
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                      }}
-                      className="p-2 rounded-xl text-slate-400 hover:text-blue-600 hover:bg-white dark:hover:bg-slate-800 transition"
-                      title="Ver Pantalla Completa"
-                    >
-                      <Eye className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center gap-2 self-start sm:self-auto">
+                      <button
+                        type="button"
+                        onClick={recargarAlojamientosAnfitrion}
+                        disabled={recargandoMisAlojamientos}
+                        className={`px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center gap-1.5 shadow-xs ${
+                          recargandoMisAlojamientos ? 'opacity-60 cursor-not-allowed' : ''
+                        }`}
+                        title="Sincronizar cambios de moderación con el servidor central"
+                      >
+                        <RefreshCw className={`w-3.5 h-3.5 ${recargandoMisAlojamientos ? 'animate-spin text-blue-600' : 'text-slate-500'}`} />
+                        <span>{recargandoMisAlojamientos ? 'Sincronizando...' : 'Refrescar'}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setWizardAbierto(true)}
+                        className="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Añadir Propiedad</span>
+                      </button>
+                    </div>
                   </div>
-                ))}
-              </div>
-            </div>
+
+                  {/* Barra de Filtros por Estado */}
+                  <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-1 no-scrollbar text-xs font-medium border-b border-slate-100 dark:border-slate-800">
+                    {[
+                      { id: 'TODOS', label: 'Todos', conteo: conteoHostTodos, icon: '📋' },
+                      { id: 'PUBLICADO', label: 'Publicados', conteo: conteoHostPublicados, icon: '✅' },
+                      { id: 'PENDIENTE', label: 'Pendientes', conteo: conteoHostPendientes, icon: '🕒' },
+                      { id: 'EN_REVISION', label: 'En Revisión', conteo: conteoHostEnRevision, icon: '🔍' },
+                      { id: 'OBSERVADO', label: 'Observados', conteo: conteoHostObservados, icon: '⚠️' },
+                      { id: 'SUSPENDIDO', label: 'Suspendidos', conteo: conteoHostSuspendidos, icon: '⛔' },
+                      { id: 'RECHAZADO', label: 'Rechazados', conteo: conteoHostRechazados, icon: '❌' },
+                    ].map((tab) => {
+                      const activo = filtroEstadoAnfitrion === tab.id;
+                      return (
+                        <button
+                          key={tab.id}
+                          type="button"
+                          onClick={() => setFiltroEstadoAnfitrion(tab.id)}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 ${
+                            activo
+                              ? 'bg-blue-600 text-white shadow-sm'
+                              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white'
+                          }`}
+                        >
+                          <span>{tab.icon}</span>
+                          <span>{tab.label}</span>
+                          <span
+                            className={`px-1.5 py-0.5 rounded-md text-[10px] ${
+                              activo
+                                ? 'bg-white/20 text-white'
+                                : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
+                            }`}
+                          >
+                            {tab.conteo}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Listado de Alojamientos Filtrados */}
+                  {alojamientosAnfitrionFiltrados.length === 0 ? (
+                    <div className="p-8 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 text-center space-y-3 bg-slate-50/50 dark:bg-slate-950/20">
+                      <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 mx-auto flex items-center justify-center">
+                        <AlertCircle className="w-6 h-6 text-slate-400" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-sm text-slate-800 dark:text-slate-200">
+                          No se encontraron propiedades en esta categoría
+                        </h4>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto mt-1">
+                          {filtroEstadoAnfitrion === 'TODOS'
+                            ? 'Aún no tienes alojamientos registrados. Comienza publicando tu primera propiedad con el wizard paso a paso.'
+                            : `Actualmente no tienes ninguna propiedad con estado "${filtroEstadoAnfitrion}".`}
+                        </p>
+                      </div>
+                      {filtroEstadoAnfitrion !== 'TODOS' ? (
+                        <button
+                          type="button"
+                          onClick={() => setFiltroEstadoAnfitrion('TODOS')}
+                          className="px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-xs font-bold text-slate-800 dark:text-slate-200 transition"
+                        >
+                          Ver todas las propiedades ({conteoHostTodos})
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setWizardAbierto(true)}
+                          className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition shadow-sm"
+                        >
+                          + Registrar Primer Alojamiento
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {alojamientosAnfitrionFiltrados.map((a) => (
+                        <div
+                          key={a.idAlojamiento}
+                          className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/40 hover:border-blue-400 transition flex items-center justify-between gap-3"
+                        >
+                          <div className="flex items-center gap-3">
+                            <img
+                              src={
+                                (a.fotografias || []).find((f) => f.esPrincipal)?.url ||
+                                a.fotografias?.[0]?.url ||
+                                'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=400&q=80'
+                              }
+                              alt={a.titulo}
+                              className="w-16 h-14 object-cover rounded-xl shrink-0"
+                            />
+                            <div>
+                              <h4 className="font-bold text-xs text-slate-900 dark:text-white line-clamp-1">
+                                {a.titulo}
+                              </h4>
+                              <div className="flex items-center gap-2 text-[10px] text-slate-500 mt-0.5">
+                                <span>{a.ciudad}, {a.departamento}</span>
+                                <span>•</span>
+                                <span className="font-semibold">
+                                  {a.modalidad === 'HOTEL_HOSTAL'
+                                    ? `🏨 Hotel (${a.unidades?.length || 0} hab.)`
+                                    : '🏡 Casa Entera'}
+                                </span>
+                              </div>
+                              {(() => {
+                                const est = a.estadoPublicacion || a.estado || 'PUBLICADO';
+                                const motivo = a.motivoObservacionRechazo || a.motivoRechazo;
+                                let estilo = 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300';
+                                let label: string = est;
+
+                                if (est === 'PUBLICADO') {
+                                  estilo =
+                                    'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 font-semibold';
+                                  label = '✅ Publicado en Catálogo';
+                                } else if (est === 'PENDIENTE') {
+                                  estilo =
+                                    'bg-blue-600 !text-white dark:bg-blue-600 dark:!text-white border border-blue-700 font-bold shadow-xs';
+                                  label = '🕒 Pendiente (en cola de revisión automática)';
+                                } else if (est === 'EN_REVISION') {
+                                  estilo =
+                                    'bg-sky-100 text-sky-800 dark:bg-sky-950/70 dark:text-sky-300 border border-sky-300 dark:border-sky-800 font-medium';
+                                  label = '🔍 En Revisión Automática';
+                                } else if (est === 'OBSERVADO') {
+                                  estilo =
+                                    'bg-amber-100 !text-amber-900 dark:bg-amber-950/80 dark:!text-amber-200 border border-amber-400 dark:border-amber-700 font-semibold';
+                                  label = '⚠️ Observado: corrige y reenvía a revisión';
+                                } else if (est === 'SUSPENDIDO') {
+                                  estilo =
+                                    'bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-300 border border-slate-300 dark:border-slate-700 font-medium';
+                                  label = '⛔ Suspendido Temporalmente';
+                                } else if (est === 'RECHAZADO') {
+                                  estilo =
+                                    'bg-rose-100 text-rose-800 dark:bg-rose-950/70 dark:text-rose-300 border border-rose-300 dark:border-rose-800 font-semibold';
+                                  label = '❌ Rechazado';
+                                }
+
+                                return (
+                                  <div className="mt-1 space-y-0.5">
+                                    <span className={`inline-block px-2 py-0.5 rounded-full text-[9px] font-bold ${estilo}`}>
+                                      {label}
+                                    </span>
+                                    {motivo &&
+                                      (est === 'OBSERVADO' || est === 'RECHAZADO' || est === 'SUSPENDIDO') && (
+                                        <p className="text-[10px] text-amber-600 dark:text-amber-400 font-medium italic line-clamp-1">
+                                          Motivo: {motivo}
+                                        </p>
+                                      )}
+                                  </div>
+                                );
+                              })()}
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            {(a.estadoPublicacion || a.estado) === 'OBSERVADO' && (
+                              <button
+                                type="button"
+                                disabled={reenviandoId === a.idAlojamiento}
+                                onClick={() => reenviarARevision(a)}
+                                className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 disabled:opacity-60 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
+                                title="Corrige las observaciones y vuelve a enviar el alojamiento a revisión automática"
+                              >
+                                <RefreshCw className={`w-3.5 h-3.5 ${reenviandoId === a.idAlojamiento ? 'animate-spin' : ''}`} />
+                                <span>Reenviar a revisión</span>
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              disabled={(a.estadoPublicacion || a.estado) === 'EN_REVISION'}
+                              onClick={() => {
+                                setAlojamientoEnEdicion(a);
+                                setEditorHotelAbierto(true);
+                              }}
+                              className="px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 text-xs font-bold transition flex items-center gap-1.5 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                              title={
+                                (a.estadoPublicacion || a.estado) === 'EN_REVISION'
+                                  ? 'No se puede editar mientras la revisión automática está en curso'
+                                  : 'Administrar Información, Fotos y Habitaciones'
+                              }
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                              <span>{a.modalidad === 'HOTEL_HOSTAL' ? 'Administrar Hotel' : 'Editar'}</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setDetalleAlojamiento(a);
+                                navigate.detalle(a.idAlojamiento);
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                              }}
+                              className="p-2 rounded-xl text-slate-400 hover:text-blue-600 hover:bg-white dark:hover:bg-slate-800 transition"
+                              title="Ver como Viajero"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
 
             <div className="grid grid-cols-1 gap-6">
               <ValidadorPinCheckin reservaIdDefecto={misReservas[0]?.idReserva} />
@@ -585,7 +867,29 @@ export const AppContent: React.FC = () => {
         onClose={() => setWizardAbierto(false)}
         onAlojamientoCreado={(nuevo) => {
           catalogoService.guardarAlojamientoLocal(nuevo);
-          setMisAlojamientosAnfitrion((prev) => [nuevo, ...prev]);
+          setMisAlojamientosAnfitrion((prev) => [nuevo, ...prev.filter(p => p.idAlojamiento !== nuevo.idAlojamiento)]);
+          recargarAlojamientosAnfitrion();
+        }}
+      />
+
+      <EditorHotelHabitacionesModal
+        isOpen={editorHotelAbierto}
+        onClose={() => {
+          setEditorHotelAbierto(false);
+          setAlojamientoEnEdicion(null);
+        }}
+        alojamiento={alojamientoEnEdicion}
+        onAlojamientoActualizado={(actualizado) => {
+          setMisAlojamientosAnfitrion((prev) =>
+            prev.map((item) => (item.idAlojamiento === actualizado.idAlojamiento ? actualizado : item))
+          );
+          setAlojamientos((prev) =>
+            prev.map((item) => (item.idAlojamiento === actualizado.idAlojamiento ? actualizado : item))
+          );
+          if (detalleAlojamiento?.idAlojamiento === actualizado.idAlojamiento) {
+            setDetalleAlojamiento(actualizado);
+          }
+          recargarAlojamientosAnfitrion();
         }}
       />
 

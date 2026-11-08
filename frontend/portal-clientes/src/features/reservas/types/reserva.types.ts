@@ -34,8 +34,18 @@ export interface ReservaResponse {
   precioNoche: number;
   importeTotal: number;
   moneda: string;
-  estado: 'PENDIENTE_PAGO' | 'CONFIRMADA' | 'CHECKIN_REALIZADO' | 'COMPLETADA' | 'CANCELADA' | 'EXPIRADA';
-  codigoCheckin: string; // 6 digits PIN
+  estado: 'PENDIENTE_PAGO' | 'CONFIRMADA' | 'CHECKIN_REALIZADO' | 'CHECK_IN' | 'COMPLETADA' | 'CANCELADA' | 'EXPIRADA';
+  codigoCheckin: string; // PIN de 6 dígitos
   sagaId: string;
   fechaCreacion: string;
+}
+
+export interface RangoOcupado {
+  idReserva: string;
+  checkIn: string;
+  checkOut: string;
+  horaEntrada: string;
+  horaSalida: string;
+  nombreCliente?: string;
+  estado: string;
 }

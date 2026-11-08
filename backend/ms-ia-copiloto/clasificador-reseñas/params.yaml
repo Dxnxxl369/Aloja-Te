@@ -1,0 +1,79 @@
+# ==============================================================================
+# Parámetros del Proyecto: Clasificador de Reseñas de Alojamientos Turísticos
+# ==============================================================================
+
+seed: 42
+
+data:
+  raw_path: "data/raw/resenas_alojamientos.csv"
+  n_reviews: 3200
+  test_size: 0.20
+
+nlp:
+  # Palabras clave que NUNCA deben eliminarse porque cambian el sentido de la opinión
+  keep_words:
+    - "no"
+    - "ni"
+    - "nunca"
+    - "jamas"
+    - "tampoco"
+    - "nada"
+    - "pero"
+    - "sin"
+    - "poco"
+    - "muy"
+    - "mas"
+    - "menos"
+    - "bien"
+    - "mal"
+    - "excelente"
+    - "pesimo"
+    - "bueno"
+    - "malo"
+    - "limpio"
+    - "sucio"
+    - "comodo"
+    - "incomodo"
+
+  # Palabras del dominio de hotelería que aparecen por igual en opiniones positivas y negativas
+  extra_stopwords:
+    - hotel
+    - alojamiento
+    - hospedaje
+    - habitacion
+    - cuarto
+    - lugar
+    - noche
+    - noches
+    - dia
+    - dias
+    - estadia
+    - reserva
+
+tfidf:
+  max_features: 4000
+  min_df: 2
+  max_df: 0.90
+  sublinear_tf: true
+
+experiments:
+  # Se prueban las 2 normalizaciones exigidas por la rúbrica
+  normalizers:
+    - stem
+    - lemma
+  # Se prueban unigramas vs unigramas + bigramas
+  ngram_ranges:
+    - [1, 1]
+    - [1, 2]
+  # Se compara la lista general de stopwords contra la adaptada para sentimiento
+  stopword_lists:
+    - default
+    - adjusted
+  # Modelos evaluados con validación cruzada
+  models:
+    naive_bayes:
+      alpha: [0.1, 0.5, 1.0]
+      fit_prior: [true, false]
+    logistic_regression:
+      C: [0.5, 1.0, 2.0]
+      class_weight: ["balanced", null]

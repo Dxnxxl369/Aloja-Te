@@ -23,6 +23,7 @@ public class FotografiaPersistenceAdapter implements FotografiaRepositoryPort {
         FotografiaJpaEntity entity = FotografiaJpaEntity.builder()
                 .idFotografia(fotografia.getIdFotografia())
                 .idAlojamiento(fotografia.getIdAlojamiento())
+                .idUnidad(fotografia.getIdUnidad())
                 .url(fotografia.getUrl())
                 .orden(fotografia.getOrden())
                 .build();
@@ -40,8 +41,18 @@ public class FotografiaPersistenceAdapter implements FotografiaRepositoryPort {
     }
 
     @Override
+    public List<Fotografia> listarPorUnidad(UUID idUnidad) {
+        return repository.findByIdUnidadOrderByOrdenAsc(idUnidad).stream().map(this::toDomain).collect(Collectors.toList());
+    }
+
+    @Override
     public void eliminarPorId(UUID idFotografia) {
         repository.deleteById(idFotografia);
+    }
+
+    @Override
+    public void eliminarPorUnidad(UUID idUnidad) {
+        repository.deleteByIdUnidad(idUnidad);
     }
 
     private Fotografia toDomain(FotografiaJpaEntity entity) {
@@ -49,6 +60,7 @@ public class FotografiaPersistenceAdapter implements FotografiaRepositoryPort {
         return Fotografia.builder()
                 .idFotografia(entity.getIdFotografia())
                 .idAlojamiento(entity.getIdAlojamiento())
+                .idUnidad(entity.getIdUnidad())
                 .url(entity.getUrl())
                 .orden(entity.getOrden())
                 .build();

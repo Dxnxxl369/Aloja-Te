@@ -53,17 +53,17 @@
 }
 
 /* ======================================================== */
-/* SOBREESCRITURAS DEFENSIVAS: GARANTÍA CERO TONOS NARANJAS */
+/* SOBREESCRITURAS DEFENSIVAS: GARANTÍA CERO TONOS NARANJAS EN BRAND */
 /* ======================================================== */
-.bg-brand-600, .bg-brand-500, [class*="bg-amber"], [class*="bg-orange"] {
+.bg-brand-600, .bg-brand-500 {
   background-color: #2563eb !important;
 }
 
-.text-brand-600, .text-brand-500, [class*="text-amber"], [class*="text-orange"] {
+.text-brand-600, .text-brand-500 {
   color: #2563eb !important;
 }
 
-.border-brand-600, .border-brand-500, [class*="border-amber"], [class*="border-orange"] {
+.border-brand-600, .border-brand-500 {
   border-color: #3b82f6 !important;
 }
 

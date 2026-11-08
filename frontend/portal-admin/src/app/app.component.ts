@@ -1,6 +1,13 @@
 import { Component, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import {
+  ReportAdminService,
+  ReportQueryResultAdmin,
+  ReportColumnAdmin,
+  ReportKPIAdmin,
+  SVGChartAdmin
+} from './report-admin.service';
 
 export interface MovimientoContable {
   movimientoId: number;
@@ -40,6 +47,9 @@ export interface SolicitudAlojamiento {
   estado: 'PENDIENTE' | 'EN_REVISION' | 'PUBLICADO' | 'OBSERVADO' | 'SUSPENDIDO' | 'RECHAZADO';
   motivoObservacionRechazo?: string;
   origenUltimoCambio?: string;
+  /** PENDIENTE que agotó los reintentos automáticos: el admin puede usar "Reintentar revisión". */
+  requiereAtencion?: boolean;
+  intentosRevision?: number;
   fechaRegistro: string;
   imagen: string;
   fotos?: string[];
@@ -97,6 +107,228 @@ export interface ValoracionAdmin {
   topicoPredicho?: string;
   fechaCreacion: string;
 }
+
+export const VALORACIONES_ADMIN_DEMO: ValoracionAdmin[] = [
+  // --- Hotel Boutique Los Tajibos Colonial (General) ---
+  {
+    idValoracion: 'val-taj-gen-1',
+    idAlojamiento: '49768530-76ae-459e-9bbe-faf2f3d488ba',
+    idUsuario: '075eabd5-7aca-4ec2-a00d-67064b8eccdf',
+    nombreUsuario: 'Mateo Zalles',
+    puntuacionGeneral: 5,
+    calificacionLimpieza: 5,
+    calificacionUbicacion: 5,
+    calificacionCalidadPrecio: 4.8,
+    calificacionServicio: 5,
+    calificacionComodidad: 5,
+    esAnonimo: false,
+    comentario: 'Excelente atención en la recepción y los jardines con la piscina son hermosos. El desayuno buffet típico cruceño espectacular, volveremos siempre.',
+    sentimientoNlp: 'POSITIVO',
+    confianzaNlp: 0.96,
+    topicoPredicho: 'AREAS_COMUNES_Y_DESAYUNO',
+    fechaCreacion: '2026-10-24T10:15:00Z'
+  },
+  {
+    idValoracion: 'val-taj-gen-2',
+    idAlojamiento: '49768530-76ae-459e-9bbe-faf2f3d488ba',
+    idUsuario: '3b892a01-51f2-4bc9-8800-47bf1b14a220',
+    nombreUsuario: 'Camila Vaca',
+    puntuacionGeneral: 4,
+    calificacionLimpieza: 5,
+    calificacionUbicacion: 5,
+    calificacionCalidadPrecio: 4,
+    calificacionServicio: 4.5,
+    calificacionComodidad: 4,
+    esAnonimo: false,
+    comentario: 'Ubicación inmejorable en pleno Equipetrol, muy seguro y tranquilo. El personal de conserjería fue muy atento durante toda la estancia.',
+    sentimientoNlp: 'POSITIVO',
+    confianzaNlp: 0.91,
+    topicoPredicho: 'UBICACION_Y_SEGURIDAD',
+    fechaCreacion: '2026-10-21T18:30:00Z'
+  },
+
+  // --- Suite Presidencial con Balcón & Vista a Jardines (u-tajibos-1) ---
+  {
+    idValoracion: 'val-taj-u1-1',
+    idAlojamiento: '49768530-76ae-459e-9bbe-faf2f3d488ba',
+    idUnidad: 'u-tajibos-1',
+    nombreUnidad: 'Suite Presidencial con Balcón & Vista a Jardines',
+    idUsuario: '6c1a8902-33dd-45ab-9912-78814aa88231',
+    nombreUsuario: 'Roberto Fernández',
+    puntuacionGeneral: 5,
+    calificacionLimpieza: 5,
+    calificacionUbicacion: 5,
+    calificacionCalidadPrecio: 5,
+    calificacionServicio: 5,
+    calificacionComodidad: 5,
+    esAnonimo: false,
+    comentario: 'La suite es maravillosa, la tina de hidromasaje en mármol y la vista al jardín botánico valen cada centavo. Cama King super cómoda y silencio absoluto.',
+    sentimientoNlp: 'POSITIVO',
+    confianzaNlp: 0.98,
+    topicoPredicho: 'CONFORT_Y_LUJO',
+    fechaCreacion: '2026-10-26T14:20:00Z'
+  },
+  {
+    idValoracion: 'val-taj-u1-2',
+    idAlojamiento: '49768530-76ae-459e-9bbe-faf2f3d488ba',
+    idUnidad: 'u-tajibos-1',
+    nombreUnidad: 'Suite Presidencial con Balcón & Vista a Jardines',
+    idUsuario: '8f220199-77aa-42a1-bb00-112233445566',
+    nombreUsuario: 'Sofía Banegas',
+    puntuacionGeneral: 5,
+    calificacionLimpieza: 5,
+    calificacionUbicacion: 5,
+    calificacionCalidadPrecio: 4.8,
+    calificacionServicio: 5,
+    calificacionComodidad: 5,
+    esAnonimo: false,
+    comentario: 'Inolvidable estadía de aniversario. El balcón privado hacia las palmeras y el room service fueron impecables. 100% recomendado.',
+    sentimientoNlp: 'POSITIVO',
+    confianzaNlp: 0.95,
+    topicoPredicho: 'EXPERIENCIA_Y_VISTAS',
+    fechaCreacion: '2026-10-27T11:00:00Z'
+  },
+
+  // --- Habitación Ejecutiva Doble Twin (u-tajibos-2) (CON RESEÑAS NEGATIVAS DETECTADAS POR IA NLP) ---
+  {
+    idValoracion: 'val-taj-u2-1',
+    idAlojamiento: '49768530-76ae-459e-9bbe-faf2f3d488ba',
+    idUnidad: 'u-tajibos-2',
+    nombreUnidad: 'Habitación Ejecutiva Doble Twin',
+    idUsuario: '99aa0011-22bb-43cc-88dd-776655443322',
+    nombreUsuario: 'Javier Arnez',
+    puntuacionGeneral: 2,
+    calificacionLimpieza: 3,
+    calificacionUbicacion: 4,
+    calificacionCalidadPrecio: 2,
+    calificacionServicio: 2,
+    calificacionComodidad: 1,
+    esAnonimo: false,
+    comentario: 'El aire acondicionado hacía un ruido metálico ensordecedor toda la noche y apenas enfriaba. Tuvimos que abrir la ventana y entraron mosquitos, pésima noche de descanso.',
+    sentimientoNlp: 'NEGATIVO',
+    confianzaNlp: 0.94,
+    topicoPredicho: 'CLIMATIZACION_Y_RUIDO',
+    fechaCreacion: '2026-10-29T08:45:00Z'
+  },
+  {
+    idValoracion: 'val-taj-u2-2',
+    idAlojamiento: '49768530-76ae-459e-9bbe-faf2f3d488ba',
+    idUnidad: 'u-tajibos-2',
+    nombreUnidad: 'Habitación Ejecutiva Doble Twin',
+    idUsuario: '55bb6677-88cc-49dd-a0ee-112233445577',
+    nombreUsuario: 'Carla Mercado',
+    puntuacionGeneral: 2,
+    calificacionLimpieza: 4,
+    calificacionUbicacion: 5,
+    calificacionCalidadPrecio: 2,
+    calificacionServicio: 2,
+    calificacionComodidad: 2,
+    esAnonimo: true,
+    comentario: 'El agua de la ducha salía completamente fría en la mañana. Llamé a recepción y dijeron que el termotanque del bloque ejecutivo estaba en mantenimiento. Inaceptable para la tarifa que cobran.',
+    sentimientoNlp: 'NEGATIVO',
+    confianzaNlp: 0.92,
+    topicoPredicho: 'AGUA_CALIENTE_Y_BANO',
+    fechaCreacion: '2026-10-30T09:12:00Z'
+  },
+  {
+    idValoracion: 'val-taj-u2-3',
+    idAlojamiento: '49768530-76ae-459e-9bbe-faf2f3d488ba',
+    idUnidad: 'u-tajibos-2',
+    nombreUnidad: 'Habitación Ejecutiva Doble Twin',
+    idUsuario: '11aa22bb-33cc-44dd-55ee-6677889900aa',
+    nombreUsuario: 'Andrés Guidi',
+    puntuacionGeneral: 3,
+    calificacionLimpieza: 4,
+    calificacionUbicacion: 4.5,
+    calificacionCalidadPrecio: 3,
+    calificacionServicio: 3.5,
+    calificacionComodidad: 3,
+    esAnonimo: false,
+    comentario: 'El escritorio ejecutivo y el internet son buenos para trabajar, pero deberían revisar el aislamiento acústico y el clima de estas habitaciones.',
+    sentimientoNlp: 'NEUTRO',
+    confianzaNlp: 0.82,
+    topicoPredicho: 'EQUIPAMIENTO_Y_TRABAJO',
+    fechaCreacion: '2026-10-30T17:00:00Z'
+  },
+
+  // --- Lodge Mirador del Illimani (ea199203-91aa-42a1-bf00-881273918a22 - OBSERVADO POR NLP) ---
+  {
+    idValoracion: 'val-illi-1',
+    idAlojamiento: 'ea199203-91aa-42a1-bf00-881273918a22',
+    idUsuario: '44cc55dd-66ee-47ff-88aa-99bb00112233',
+    nombreUsuario: 'Diego Morales',
+    puntuacionGeneral: 2,
+    calificacionLimpieza: 4,
+    calificacionUbicacion: 4.5,
+    calificacionCalidadPrecio: 2,
+    calificacionServicio: 3,
+    calificacionComodidad: 1.5,
+    esAnonimo: false,
+    comentario: 'La vista al majestuoso nevado Illimani es insuperable, pero por la noche la estufa a leña no dio abasto y pasamos un frío extremo en el dormitorio. No había frazadas térmicas suficientes.',
+    sentimientoNlp: 'NEGATIVO',
+    confianzaNlp: 0.96,
+    topicoPredicho: 'TEMPERATURA_Y_CALEFACCION',
+    fechaCreacion: '2026-10-17T22:30:00Z'
+  },
+  {
+    idValoracion: 'val-illi-2',
+    idAlojamiento: 'ea199203-91aa-42a1-bf00-881273918a22',
+    idUsuario: '77dd88ee-99ff-40aa-bb11-223344556677',
+    nombreUsuario: 'Valeria Soliz',
+    puntuacionGeneral: 3,
+    calificacionLimpieza: 4,
+    calificacionUbicacion: 5,
+    calificacionCalidadPrecio: 3,
+    calificacionServicio: 4,
+    calificacionComodidad: 2.5,
+    esAnonimo: false,
+    comentario: 'Lugar mágico para desconectar de la ciudad, pero vengan muy preparados para las bajas temperaturas porque las noches son realmente heladas en Mecapaca.',
+    sentimientoNlp: 'NEUTRO',
+    confianzaNlp: 0.88,
+    topicoPredicho: 'CLIMA_Y_TEMPERATURA',
+    fechaCreacion: '2026-10-18T07:15:00Z'
+  },
+
+  // --- Chalet Boutique Los Viñedos (ca4d2e81-7b90-41f2-9854-1b3a88c22110) ---
+  {
+    idValoracion: 'val-tari-1',
+    idAlojamiento: 'ca4d2e81-7b90-41f2-9854-1b3a88c22110',
+    idUsuario: '88ee99ff-00aa-41bb-cc22-334455667788',
+    nombreUsuario: 'Sebastián Farfán',
+    puntuacionGeneral: 5,
+    calificacionLimpieza: 5,
+    calificacionUbicacion: 5,
+    calificacionCalidadPrecio: 5,
+    calificacionServicio: 5,
+    calificacionComodidad: 5,
+    esAnonimo: false,
+    comentario: 'Una de las mejores experiencias en Tarija. El viñedo privado, la cata de vinos guiada y el desayuno chapaco fueron de diez. Doña Elena es una anfitriona de primer nivel.',
+    sentimientoNlp: 'POSITIVO',
+    confianzaNlp: 0.97,
+    topicoPredicho: 'HOSPITALIDAD_Y_VINOS',
+    fechaCreacion: '2026-10-23T16:00:00Z'
+  },
+
+  // --- Cabaña Chiquitana El Palmar (93fce18e-32fa-400c-8f49-8d4f2fe2f5bb) ---
+  {
+    idValoracion: 'val-chiqui-1',
+    idAlojamiento: '93fce18e-32fa-400c-8f49-8d4f2fe2f5bb',
+    idUsuario: '22ff33aa-44bb-42cc-dd33-445566778899',
+    nombreUsuario: 'Mariana Roca',
+    puntuacionGeneral: 5,
+    calificacionLimpieza: 5,
+    calificacionUbicacion: 4.8,
+    calificacionCalidadPrecio: 5,
+    calificacionServicio: 5,
+    calificacionComodidad: 5,
+    esAnonimo: false,
+    comentario: 'Hermosa cabaña en San José de Chiquitos, la galería con hamacas y la piscina privada son perfectas para desconectarse en familia bajo el cielo estrellado.',
+    sentimientoNlp: 'POSITIVO',
+    confianzaNlp: 0.95,
+    topicoPredicho: 'DESCANSO_Y_FAMILIA',
+    fechaCreacion: '2026-10-26T20:00:00Z'
+  }
+];
 
 @Component({
   selector: 'app-root',
@@ -631,6 +863,12 @@ export interface ValoracionAdmin {
                 🕒 Pendientes ({{ conteoPendientes() }})
               </button>
               <button
+                (click)="filtroAlojamientos = 'ATENCION'"
+                [class]="filtroAlojamientos === 'ATENCION' ? 'px-3.5 py-2 rounded-xl bg-amber-700 text-white font-semibold shadow-md shadow-amber-700/20' : 'px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-stone-900 text-slate-600 dark:text-stone-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-stone-800 border border-slate-200 dark:border-stone-800 font-medium transition'"
+              >
+                ⚠️ Atención ({{ conteoAtencion() }})
+              </button>
+              <button
                 (click)="filtroAlojamientos = 'EN_REVISION'"
                 [class]="filtroAlojamientos === 'EN_REVISION' ? 'px-3.5 py-2 rounded-xl bg-blue-600 text-white font-semibold shadow-md shadow-blue-500/20' : 'px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-stone-900 text-slate-600 dark:text-stone-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-stone-800 border border-slate-200 dark:border-stone-800 font-medium transition'"
               >
@@ -689,7 +927,21 @@ export interface ValoracionAdmin {
                       </div>
 
                       <h4 (click)="inspeccionarAlojamiento(a, 'general')" class="font-serif text-lg font-bold text-slate-900 dark:text-white cursor-pointer hover:text-blue-600 transition">{{ a.titulo }}</h4>
-                      <p class="text-xs text-slate-500 dark:text-stone-400">Anfitrión: <strong class="text-slate-700 dark:text-stone-300">{{ a.anfitrion }}</strong> • {{ a.ciudad }}</p>
+                      <p class="text-xs text-slate-500 dark:text-stone-400 flex items-center gap-1.5 flex-wrap">
+
+                        <span>Anfitrión: <strong class="text-slate-700 dark:text-stone-300">{{ a.anfitrion }}</strong></span>
+
+                        <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-700 dark:bg-blue-950/70 dark:text-blue-300 text-[9px] font-bold border border-blue-200 dark:border-blue-800 shadow-sm" title="Anfitrión Verificado con C.I. y Documentos">
+
+                          <svg class="w-2.5 h-2.5 text-blue-600 dark:text-blue-400 fill-current" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1.2 14.2l-4-4 1.41-1.41L10.8 13.38l6.79-6.79 1.41 1.41-8.2 8.2z"/></svg>
+
+                          <span>Verificado</span>
+
+                        </span>
+
+                        <span>• {{ a.ciudad }}</span>
+
+                      </p>
                     </div>
 
                     <!-- Badge Estado Oficial -->
@@ -735,6 +987,15 @@ export interface ValoracionAdmin {
                     {{ a.motivoRechazo }}
                   </div>
 
+                  <!-- Estado de la revisión automática -->
+                  <div *ngIf="a.estado === 'PENDIENTE' && a.requiereAtencion" class="p-3 rounded-xl border text-[11px] bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-700 text-amber-900 dark:text-amber-200">
+                    <strong class="font-semibold block mb-0.5">⚠️ Requiere atención</strong>
+                    La revisión automática falló {{ a.intentosRevision }} veces seguidas. Verifique que n8n y LlavaGuard estén encendidos y pulse «Reintentar Revisión».
+                  </div>
+                  <div *ngIf="(a.estado === 'PENDIENTE' && !a.requiereAtencion) || a.estado === 'EN_REVISION'" class="p-3 rounded-xl border text-[11px] bg-sky-50 dark:bg-sky-950/30 border-sky-200 dark:border-sky-800 text-sky-800 dark:text-sky-200">
+                    🤖 La revisión automática (LlavaGuard) se inicia sola al completar el registro y decide si publica, observa o rechaza.
+                  </div>
+
                   <!-- Ficha de Modalidad, Capacidad y Horarios -->
                   <div class="flex flex-col gap-1.5 text-xs text-slate-500 dark:text-stone-400 pt-2 border-t border-slate-200 dark:border-stone-800">
                     <div class="flex items-center justify-between">
@@ -758,38 +1019,14 @@ export interface ValoracionAdmin {
                   </div>
                 </div>
 
-                <!-- Botonera de Decisiones Oficial (6 Estados) -->
+                <!-- Acciones del admin: la IA decide publicar, observar o rechazar; el admin solo reintenta la revisión, suspende o reactiva -->
                 <div class="pt-3 border-t border-slate-200/80 dark:border-stone-800/80 flex items-center gap-2 flex-wrap">
                   <button
-                    *ngIf="a.estado === 'PENDIENTE'"
-                    (click)="iniciarRevision(a.id)"
-                    class="flex-1 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md shadow-blue-500/20 transition flex items-center justify-center gap-1 min-w-[120px]"
+                    *ngIf="a.estado === 'PENDIENTE' && a.requiereAtencion"
+                    (click)="reintentarRevision(a.id)"
+                    class="flex-1 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md shadow-blue-500/20 transition flex items-center justify-center gap-1 min-w-[140px]"
                   >
-                    <span>🔍 Iniciar Revisión</span>
-                  </button>
-
-                  <button
-                    *ngIf="a.estado !== 'PUBLICADO'"
-                    (click)="aprobarAlojamiento(a.id)"
-                    class="flex-1 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md shadow-emerald-500/20 transition flex items-center justify-center gap-1 min-w-[110px]"
-                  >
-                    <span>✓ Publicar</span>
-                  </button>
-
-                  <button
-                    *ngIf="a.estado === 'PENDIENTE' || a.estado === 'EN_REVISION'"
-                    (click)="abrirModalObservacion(a)"
-                    class="flex-1 py-2 rounded-xl bg-orange-50 hover:bg-orange-100 dark:bg-stone-800 dark:hover:bg-stone-700 text-orange-700 dark:text-orange-300 font-bold text-xs border border-orange-200 dark:border-orange-800 transition flex items-center justify-center gap-1 min-w-[95px]"
-                  >
-                    <span>⚠️ Observar</span>
-                  </button>
-
-                  <button
-                    *ngIf="a.estado === 'PENDIENTE' || a.estado === 'EN_REVISION'"
-                    (click)="abrirModalRechazo(a)"
-                    class="flex-1 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-stone-800 dark:hover:bg-stone-700 text-rose-700 dark:text-rose-300 font-bold text-xs border border-rose-200 dark:border-rose-800 transition flex items-center justify-center gap-1 min-w-[95px]"
-                  >
-                    <span>❌ Rechazar</span>
+                    <span>🔁 Reintentar Revisión</span>
                   </button>
 
                   <button
@@ -799,6 +1036,15 @@ export interface ValoracionAdmin {
                   >
                     <span>⛔ Suspender</span>
                   </button>
+
+                  <button
+                    *ngIf="a.estado === 'SUSPENDIDO'"
+                    (click)="reactivarAlojamiento(a.id)"
+                    class="flex-1 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md shadow-emerald-500/20 transition flex items-center justify-center gap-1 min-w-[110px]"
+                  >
+                    <span>✓ Reactivar</span>
+                  </button>
+
 
                   <button
                     *ngIf="a.modalidad === 'HOTEL_HOSTAL'"
@@ -901,152 +1147,348 @@ export interface ValoracionAdmin {
 
           </div>
 
-          <!-- ======================================================== -->
+                    <!-- ======================================================== -->
           <!-- VISTA 5: REPORTES GENERATIVOS CON INTELIGENCIA ARTIFICIAL-->
           <!-- ======================================================== -->
           <div *ngIf="activeTab === 'reportes-ia'" class="space-y-6 animate-fade-in">
             
-            <!-- Generador de Informes Estratégicos -->
-            <div class="p-6 rounded-3xl liquid-card border-blue-500/30 space-y-5">
-              <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                  <div class="flex items-center gap-2 mb-1">
-                    <span class="w-2.5 h-2.5 rounded-full bg-cyan-500 animate-ping"></span>
-                    <span class="text-[10px] font-bold uppercase tracking-widest text-cyan-600 dark:text-cyan-400">
-                      Motor de Analítica Predictiva & Generativa
-                    </span>
-                  </div>
-                  <h3 class="font-serif text-2xl font-bold text-slate-900 dark:text-white">Generador de Informes de Negocio con Inteligencia Artificial</h3>
-                  <p class="text-xs text-slate-500 dark:text-stone-400 mt-1">Sintetiza tendencias de ocupación regional, simulación fiscal y proyecciones estratégicas</p>
+            <!-- Barra de Consulta Multimodal con IA -->
+            <div class="p-6 rounded-3xl bg-white dark:bg-stone-900 border border-slate-200 dark:border-stone-800 shadow-xl relative overflow-hidden">
+              <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-2 text-xs font-bold text-blue-600 dark:text-blue-400">
+                  <span class="w-2.5 h-2.5 rounded-full bg-cyan-500 animate-ping"></span>
+                  <span class="uppercase tracking-widest text-[10px]">Motor de Analítica Predictiva & Generativa Nacional</span>
                 </div>
 
-                <button
-                  (click)="generarReporteIA()"
-                  [disabled]="generandoReporte"
-                  class="px-5 py-3 rounded-2xl bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-600 hover:opacity-95 text-white font-bold text-xs shadow-xl shadow-blue-500/25 flex items-center justify-center gap-2 disabled:opacity-50 transition shrink-0"
-                >
-                  <svg *ngIf="!generandoReporte" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                <div *ngIf="resultadoIAAdmin" class="flex items-center gap-2 text-[11px] text-slate-400 font-mono">
+                  <span>{{ resultadoIAAdmin.tiempoMs }} ms • {{ resultadoIAAdmin.proveedorIA }}</span>
+                </div>
+              </div>
+
+              <!-- Input y botones de acción -->
+              <form (submit)="ejecutarReporteIAAdmin(); $event.preventDefault()" class="flex items-center gap-2.5">
+                <div class="relative flex-1">
+                  <input
+                    type="text"
+                    [(ngModel)]="queryIAAdmin"
+                    name="queryIAAdmin"
+                    placeholder="Consulta ejecutiva: 'Comisiones por departamento', 'Anfitriones pendientes de verificación', 'Solo 3 columnas'..."
+                    class="w-full pl-11 pr-4 py-3.5 rounded-2xl bg-slate-50 dark:bg-stone-800/80 border border-slate-200 dark:border-stone-700 text-xs font-medium text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <svg class="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
-                  <svg *ngIf="generandoReporte" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                </div>
+
+                <!-- Botón de Voz -->
+                <button
+                  type="button"
+                  (click)="toggleVozAdmin()"
+                  [class]="escuchandoVozAdmin ? 'p-3.5 rounded-2xl bg-rose-500 text-white border border-rose-600 animate-pulse ring-4 ring-rose-500/30 shrink-0 cursor-pointer' : 'p-3.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-stone-800 dark:hover:bg-stone-700 text-slate-700 dark:text-stone-300 border border-slate-200 dark:border-stone-700 shrink-0 cursor-pointer'"
+                  title="Hablar por micrófono (Español Bolivia)"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                  </svg>
+                </button>
+
+                <!-- Botón de Ejecutar -->
+                <button
+                  type="submit"
+                  [disabled]="cargandoIAAdmin"
+                  class="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-600 hover:opacity-95 text-white text-xs font-bold shadow-lg shadow-blue-500/25 transition disabled:opacity-50 cursor-pointer shrink-0 flex items-center gap-2"
+                >
+                  <svg *ngIf="cargandoIAAdmin" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
                   </svg>
-                  <span>{{ generandoReporte ? 'Procesando Datos y Generando...' : 'Generar Informe Ejecutivo con IA' }}</span>
+                  <svg *ngIf="!cargandoIAAdmin" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  <span>{{ cargandoIAAdmin ? 'Consultando IA...' : 'Generar Reporte' }}</span>
                 </button>
-              </div>
+              </form>
 
-              <!-- Selector de Tipo de Reporte -->
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
+              <!-- Píldoras de sugerencias rápidas administrativas -->
+              <div class="flex flex-wrap items-center gap-2 mt-3.5 pt-3 border-t border-slate-100 dark:border-stone-800/80">
+                <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Consultas Estratégicas:</span>
                 <button
-                  (click)="tipoReporteSeleccionado = 1"
-                  [class]="tipoReporteSeleccionado === 1 ? 'p-4 rounded-2xl bg-blue-50 dark:bg-blue-950/60 border-2 border-blue-600 text-left space-y-1 shadow-md shadow-blue-500/10 transition' : 'p-4 rounded-2xl bg-slate-50 dark:bg-stone-900/60 border border-slate-200 dark:border-stone-800 text-left space-y-1 hover:border-slate-300 dark:hover:border-stone-700 transition'"
+                  type="button"
+                  (click)="ejecutarReporteIAAdmin('Comisiones y facturación consolidada por departamento')"
+                  class="px-3 py-1 rounded-xl bg-slate-100 dark:bg-stone-800 hover:bg-blue-50 dark:hover:bg-blue-950 text-slate-600 dark:text-stone-300 hover:text-blue-600 dark:hover:text-blue-400 text-[11px] font-semibold transition border border-slate-200/60 dark:border-stone-700/60 cursor-pointer"
                 >
-                  <span class="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider block">Auditoría & Proyección</span>
-                  <h4 class="text-xs font-bold text-slate-900 dark:text-white">Cierre Fiscal & Rendimiento</h4>
-                  <p class="text-[11px] text-slate-500 dark:text-stone-400 leading-relaxed">Balance contable, retenciones impositivas y margen neto de comisiones.</p>
+                  Comisiones por Departamento
                 </button>
-
                 <button
-                  (click)="tipoReporteSeleccionado = 2"
-                  [class]="tipoReporteSeleccionado === 2 ? 'p-4 rounded-2xl bg-blue-50 dark:bg-blue-950/60 border-2 border-blue-600 text-left space-y-1 shadow-md shadow-blue-500/10 transition' : 'p-4 rounded-2xl bg-slate-50 dark:bg-stone-900/60 border border-slate-200 dark:border-stone-800 text-left space-y-1 hover:border-slate-300 dark:hover:border-stone-700 transition'"
+                  type="button"
+                  (click)="ejecutarReporteIAAdmin('Anfitriones pendientes de verificación legal')"
+                  class="px-3 py-1 rounded-xl bg-slate-100 dark:bg-stone-800 hover:bg-blue-50 dark:hover:bg-blue-950 text-slate-600 dark:text-stone-300 hover:text-blue-600 dark:hover:text-blue-400 text-[11px] font-semibold transition border border-slate-200/60 dark:border-stone-700/60 cursor-pointer"
                 >
-                  <span class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider block">Tendencia Regional</span>
-                  <h4 class="text-xs font-bold text-slate-900 dark:text-white">Demanda Festividades 2026</h4>
-                  <p class="text-[11px] text-slate-500 dark:text-stone-400 leading-relaxed">Predicción de ocupación en Chiquitanía, Carnaval de Oruro y Lago Titicaca.</p>
+                  Verificación de Anfitriones
                 </button>
-
                 <button
-                  (click)="tipoReporteSeleccionado = 3"
-                  [class]="tipoReporteSeleccionado === 3 ? 'p-4 rounded-2xl bg-cyan-50 dark:bg-cyan-950/60 border-2 border-cyan-600 text-left space-y-1 shadow-md shadow-cyan-500/10 transition' : 'p-4 rounded-2xl bg-slate-50 dark:bg-stone-900/60 border border-slate-200 dark:border-stone-800 text-left space-y-1 hover:border-slate-300 dark:hover:border-stone-700 transition'"
+                  type="button"
+                  (click)="ejecutarReporteIAAdmin('Reservas canceladas o expiradas por 15 min')"
+                  class="px-3 py-1 rounded-xl bg-slate-100 dark:bg-stone-800 hover:bg-blue-50 dark:hover:bg-blue-950 text-slate-600 dark:text-stone-300 hover:text-blue-600 dark:hover:text-blue-400 text-[11px] font-semibold transition border border-slate-200/60 dark:border-stone-700/60 cursor-pointer"
                 >
-                  <span class="text-[10px] font-bold text-cyan-600 dark:text-cyan-400 uppercase tracking-wider block">Calidad & Detección</span>
-                  <h4 class="text-xs font-bold text-slate-900 dark:text-white">Detección de Anomalías</h4>
-                  <p class="text-[11px] text-slate-500 dark:text-stone-400 leading-relaxed">Monitoreo de cancelaciones inusuales y auditoría de precios por noche.</p>
+                  Reservas Expiradas (15 min)
+                </button>
+                <button
+                  type="button"
+                  (click)="ejecutarReporteIAAdmin('Liquidaciones pagadas a anfitriones')"
+                  class="px-3 py-1 rounded-xl bg-slate-100 dark:bg-stone-800 hover:bg-blue-50 dark:hover:bg-blue-950 text-slate-600 dark:text-stone-300 hover:text-blue-600 dark:hover:text-blue-400 text-[11px] font-semibold transition border border-slate-200/60 dark:border-stone-700/60 cursor-pointer"
+                >
+                  Desembolsos Netos BNB
+                </button>
+                <button
+                  type="button"
+                  (click)="ejecutarReporteIAAdmin('Solo 3 columnas: Alojamiento, Departamento y Precio')"
+                  class="px-3 py-1 rounded-xl bg-slate-100 dark:bg-stone-800 hover:bg-blue-50 dark:hover:bg-blue-950 text-slate-600 dark:text-stone-300 hover:text-blue-600 dark:hover:text-blue-400 text-[11px] font-semibold transition border border-slate-200/60 dark:border-stone-700/60 cursor-pointer"
+                >
+                  Solo 3 Columnas Clave
                 </button>
               </div>
             </div>
 
-            <!-- Previsualización del Informe Generado -->
-            <div *ngIf="reporteActual" class="p-8 rounded-3xl liquid-card border-slate-200 dark:border-stone-800 space-y-8 animate-fade-in shadow-xl">
+            <!-- Tarjetas de KPIs Ejecutivos Automáticos -->
+            <div *ngIf="resultadoIAAdmin && resultadoIAAdmin.kpis.length > 0" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div *ngFor="let kpi of resultadoIAAdmin.kpis" class="p-5 rounded-3xl bg-white dark:bg-stone-900 border border-slate-200/80 dark:border-stone-800 shadow-sm">
+                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">{{ kpi.label }}</span>
+                <div [class]="'font-serif text-2xl font-bold mt-1 ' + (kpi.color || 'text-slate-900 dark:text-white')">
+                  {{ kpi.valor }}
+                </div>
+                <p *ngIf="kpi.subtexto" class="text-[10px] text-slate-500 dark:text-stone-400 mt-0.5">{{ kpi.subtexto }}</p>
+              </div>
+            </div>
+
+            <!-- Contenedor Principal: Pestañas de Vista & Tabla Dinámica -->
+            <div *ngIf="resultadoIAAdmin" class="bg-white dark:bg-stone-900 rounded-3xl border border-slate-200/80 dark:border-stone-800 shadow-xl overflow-hidden">
               
-              <!-- Encabezado del Documento -->
-              <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-6 border-b border-slate-200 dark:border-stone-800">
-                <div>
-                  <div class="flex items-center gap-2 mb-1.5">
-                    <span class="px-2.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 text-[10px] font-bold uppercase tracking-wider border border-blue-200 dark:border-blue-800">
-                      {{ reporteActual.categoria }}
-                    </span>
-                    <span class="text-xs text-slate-400 dark:text-stone-500 font-mono">• Emitido: {{ reporteActual.fechaEmision }}</span>
-                  </div>
-                  <h2 class="font-serif text-2xl font-bold text-slate-900 dark:text-white">{{ reporteActual.titulo }}</h2>
-                  <p class="text-xs text-slate-500 dark:text-stone-400 mt-1">Período evaluado: {{ reporteActual.periodo }}</p>
+              <!-- Header de Herramientas -->
+              <div class="p-4 sm:p-5 border-b border-slate-100 dark:border-stone-800 flex flex-wrap items-center justify-between gap-3 bg-slate-50/50 dark:bg-stone-900/50">
+                
+                <!-- Selector de Pestañas: Tabla, Gráfico SVG, Consulta SQL, Informes Estratégicos -->
+                <div class="flex items-center gap-1.5 p-1 rounded-2xl bg-slate-200/70 dark:bg-stone-800 text-xs font-bold">
+                  <button
+                    type="button"
+                    (click)="tabReporteAdmin = 'tabla'"
+                    [class]="tabReporteAdmin === 'tabla' ? 'flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white dark:bg-stone-900 text-blue-600 dark:text-blue-400 shadow-sm transition' : 'flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-slate-600 dark:text-stone-400 hover:text-slate-900 transition'"
+                  >
+                    <span>Tabla de Datos</span>
+                    <span class="px-1.5 py-0.2 rounded-md bg-slate-100 dark:bg-stone-800 text-[10px]">{{ resultadoIAAdmin.totalFilas }}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    (click)="tabReporteAdmin = 'grafico'"
+                    [class]="tabReporteAdmin === 'grafico' ? 'flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white dark:bg-stone-900 text-blue-600 dark:text-blue-400 shadow-sm transition' : 'flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-slate-600 dark:text-stone-400 hover:text-slate-900 transition'"
+                  >
+                    <span>Gráficos Ejecutivos</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    (click)="tabReporteAdmin = 'sql'"
+                    [class]="tabReporteAdmin === 'sql' ? 'flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white dark:bg-stone-900 text-blue-600 dark:text-blue-400 shadow-sm transition' : 'flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-slate-600 dark:text-stone-400 hover:text-slate-900 transition'"
+                  >
+                    <span>Consulta SQL</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    (click)="tabReporteAdmin = 'informes'"
+                    [class]="tabReporteAdmin === 'informes' ? 'flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white dark:bg-stone-900 text-indigo-600 dark:text-indigo-400 shadow-sm transition' : 'flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-slate-600 dark:text-stone-400 hover:text-slate-900 transition'"
+                  >
+                    <span>Informes Ejecutivos</span>
+                  </button>
                 </div>
 
+                <!-- Acciones de Tabla: Selector de Columnas y Descarga Excel -->
                 <div class="flex items-center gap-2">
-                  <button
-                    (click)="exportarPdfSimulado()"
-                    class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-stone-800 dark:hover:bg-stone-700 text-slate-700 hover:text-slate-900 dark:text-stone-200 text-xs font-semibold flex items-center gap-2 transition border border-slate-200 dark:border-stone-700"
-                  >
-                    <svg class="w-4 h-4 text-slate-500 dark:text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    <span>Descargar PDF</span>
-                  </button>
+                  <!-- Selector de Columnas -->
+                  <div class="relative">
+                    <button
+                      type="button"
+                      (click)="mostrarSelectorColsAdmin = !mostrarSelectorColsAdmin"
+                      class="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white dark:bg-stone-800 text-slate-700 dark:text-stone-200 border border-slate-200 dark:border-stone-700 hover:bg-slate-50 text-xs font-bold transition shadow-sm cursor-pointer"
+                    >
+                      <span>Columnas ({{ columnasVisiblesAdmin.length }})</span>
+                      <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
 
+                    <div *ngIf="mostrarSelectorColsAdmin" class="absolute right-0 mt-2 w-64 p-3 rounded-2xl bg-white dark:bg-stone-900 border border-slate-200 dark:border-stone-800 shadow-2xl z-30 space-y-2 animate-fade-in">
+                      <div class="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-stone-800">
+                        <span class="text-[11px] font-bold text-slate-900 dark:text-white">Personalizar Columnas</span>
+                        <button type="button" (click)="restaurarColumnasAdmin()" class="text-[10px] text-blue-600 font-bold hover:underline">Restaurar todas</button>
+                      </div>
+
+                      <div class="max-h-52 overflow-y-auto space-y-1">
+                        <button
+                          *ngFor="let col of resultadoIAAdmin.columnas"
+                          type="button"
+                          (click)="toggleColumnaAdmin(col.key)"
+                          class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-stone-800 text-xs text-left"
+                        >
+                          <span class="text-slate-700 dark:text-stone-200 truncate">{{ col.label }}</span>
+                          <span class="text-[10px] font-bold text-blue-600">✓</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Botón Exportar a Excel -->
                   <button
-                    (click)="exportarExcelSimulado()"
-                    class="px-4 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 border border-emerald-200 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs font-semibold flex items-center gap-2 transition"
+                    type="button"
+                    (click)="exportarExcelDinamicoAdmin()"
+                    class="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-sm cursor-pointer"
                   >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                     </svg>
-                    <span>Exportar Excel</span>
+                    <span>Exportar a Excel</span>
                   </button>
                 </div>
               </div>
 
-              <!-- Métricas Clave del Informe -->
-              <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div *ngFor="let k of reporteActual.kpis" class="p-4 rounded-2xl bg-slate-50 dark:bg-stone-900/80 border border-slate-200 dark:border-stone-800 space-y-1">
-                  <span class="text-[11px] text-slate-500 dark:text-stone-400 font-semibold">{{ k.etiqueta }}</span>
-                  <div class="text-2xl font-black text-slate-900 dark:text-white font-sans">{{ k.valor }}</div>
-                  <div [class]="k.esPositivo ? 'text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold' : 'text-[11px] text-blue-600 dark:text-blue-400 font-semibold'">
-                    {{ k.variacion }}
+              <!-- PESTAÑA 1: TABLA DINÁMICA CON ARRASTRE Y DESGLOSE -->
+              <div *ngIf="tabReporteAdmin === 'tabla'" class="overflow-x-auto">
+                <div class="px-4 py-2 bg-blue-50/50 dark:bg-blue-950/20 text-[11px] text-blue-700 dark:text-blue-300 flex items-center gap-2 border-b border-blue-100 dark:border-blue-900/50">
+                  <span>💡 Tip: Puedes <strong>arrastrar los encabezados</strong> para reordenar las columnas y hacer <strong>clic en cualquier fila</strong> para ver su desglose pormenorizado.</span>
+                </div>
+
+                <table class="w-full text-left text-xs text-slate-600 dark:text-stone-300">
+                  <thead class="bg-slate-50 dark:bg-stone-800/60 text-slate-900 dark:text-white uppercase font-bold text-[10px] tracking-wider select-none">
+                    <tr>
+                      <th class="px-4 py-3.5 w-10 text-center">#</th>
+                      <th
+                        *ngFor="let col of columnasVisiblesAdmin; let idx = index"
+                        draggable="true"
+                        (dragstart)="dragStartColAdmin(idx)"
+                        (dragover)="dragOverColAdmin($event, idx)"
+                        (dragend)="dragEndColAdmin()"
+                        [class]="'px-4 py-3.5 cursor-grab active:cursor-grabbing hover:bg-blue-100/60 dark:hover:bg-blue-900/40 transition border-r border-slate-200/40 dark:border-stone-800/60 last:border-r-0 ' + (columnaArrastradaAdmin === idx ? 'bg-blue-200/70 dark:bg-blue-800/70' : '')"
+                        title="Arrastra para reordenar esta columna"
+                      >
+                        <div class="flex items-center justify-between gap-2">
+                          <span class="truncate">{{ col.label }}</span>
+                          <span class="text-slate-400 opacity-60">⇄</span>
+                        </div>
+                      </th>
+                      <th class="px-4 py-3.5 text-right">Desglose</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100 dark:divide-stone-800">
+                    <tr
+                      *ngFor="let fila of resultadoIAAdmin.filas; let fIdx = index"
+                      (click)="desglosarFilaAdmin(fila)"
+                      class="hover:bg-blue-50/40 dark:hover:bg-stone-800/50 transition cursor-pointer"
+                    >
+                      <td class="px-4 py-3 text-center text-slate-400 font-mono text-[10px]">{{ fIdx + 1 }}</td>
+                      <td *ngFor="let col of columnasVisiblesAdmin" class="px-4 py-3 font-medium">
+                        <span *ngIf="col.type === 'currency'" class="font-bold text-slate-900 dark:text-white">
+                          Bs. {{ fila[col.key] | number:'1.2-2' }}
+                        </span>
+                        <span *ngIf="col.type === 'badge'" [class]="'inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold ' + (fila[col.key]?.toString().includes('Verificado') || fila[col.key]?.toString().includes('PUBLICADO') || fila[col.key]?.toString().includes('ACTIVO') ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300')">
+                          {{ fila[col.key] || 'Activo' }}
+                        </span>
+                        <span *ngIf="col.type !== 'currency' && col.type !== 'badge'">
+                          {{ fila[col.key] !== null && fila[col.key] !== undefined ? fila[col.key] : '—' }}
+                        </span>
+                      </td>
+                      <td class="px-4 py-3 text-right">
+                        <span class="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-700">
+                          <span>Ver</span>
+                          <span>→</span>
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- PESTAÑA 2: GRÁFICOS EJECUTIVOS SVG -->
+              <div *ngIf="tabReporteAdmin === 'grafico'" class="p-6 sm:p-8 space-y-6">
+                <div *ngIf="resultadoIAAdmin.grafico">
+                  <h4 class="font-serif text-lg font-bold text-slate-900 dark:text-white mb-2">{{ resultadoIAAdmin.grafico.titulo }}</h4>
+                  <p class="text-xs text-slate-400 mb-6">Distribución comparativa calculada automáticamente en tiempo real.</p>
+                  <div class="space-y-4">
+                    <div *ngFor="let etiq of resultadoIAAdmin.grafico.etiquetas; let i = index" class="space-y-1">
+                      <div class="flex items-center justify-between text-xs font-semibold">
+                        <span class="text-slate-800 dark:text-stone-200 truncate">{{ etiq }}</span>
+                        <span class="font-bold text-blue-600 dark:text-blue-400">
+                          {{ resultadoIAAdmin.grafico.formato === 'moneda' ? 'Bs. ' + (resultadoIAAdmin.grafico.valores[i] | number:'1.2-2') : resultadoIAAdmin.grafico.valores[i] }}
+                        </span>
+                      </div>
+                      <div class="w-full h-3 rounded-full bg-slate-100 dark:bg-stone-800 overflow-hidden">
+                        <div class="h-full rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500" style="width: 75%"></div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <!-- Resumen Ejecutivo -->
-              <div class="p-5 rounded-2xl bg-slate-50 dark:bg-stone-900/50 border border-slate-200 dark:border-stone-800/80 space-y-2">
-                <h4 class="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">Resumen Ejecutivo</h4>
-                <p class="text-xs leading-relaxed text-slate-700 dark:text-stone-300">
-                  {{ reporteActual.resumenEjecutivo }}
-                </p>
+              <!-- PESTAÑA 3: SENTENCIA SQL GENERADA -->
+              <div *ngIf="tabReporteAdmin === 'sql'" class="p-6 bg-slate-950 text-slate-100 font-mono text-xs overflow-x-auto space-y-3">
+                <div class="flex items-center justify-between text-slate-400 text-[11px] pb-2 border-b border-slate-800">
+                  <span>Consulta ANSI SQL generada por el Copiloto IA (Rol Administrador):</span>
+                  <span class="px-2 py-0.5 rounded-md bg-blue-900/60 text-blue-300 font-sans font-bold">{{ resultadoIAAdmin.proveedorIA }}</span>
+                </div>
+                <pre class="text-emerald-400 font-mono leading-relaxed">{{ resultadoIAAdmin.sqlEjecutado }}</pre>
               </div>
 
-              <!-- Puntos Clave & Hallazgos -->
-              <div class="space-y-3">
-                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-stone-400">Hallazgos Principales</h4>
-                <ul class="space-y-2.5 text-xs text-slate-700 dark:text-stone-300">
-                  <li *ngFor="let punto of reporteActual.puntosClave" class="flex items-start gap-2.5">
-                    <span class="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 shrink-0"></span>
-                    <span class="leading-relaxed">{{ punto }}</span>
-                  </li>
-                </ul>
+              <!-- PESTAÑA 4: INFORMES ESTRATÉGICOS PREGENERADOS -->
+              <div *ngIf="tabReporteAdmin === 'informes'" class="p-6 space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <button (click)="tipoReporteSeleccionado = 1; generarReporteIA()" [class]="tipoReporteSeleccionado === 1 ? 'p-4 rounded-2xl bg-blue-50 dark:bg-blue-950/60 border-2 border-blue-600 text-left space-y-1 cursor-pointer' : 'p-4 rounded-2xl bg-slate-50 dark:bg-stone-900/60 border border-slate-200 dark:border-stone-800 text-left space-y-1 cursor-pointer'">
+                    <span class="text-[10px] font-bold text-blue-600 uppercase tracking-wider block">Auditoría & Proyección</span>
+                    <h4 class="text-xs font-bold text-slate-900 dark:text-white">Cierre Fiscal & Rendimiento</h4>
+                  </button>
+                  <button (click)="tipoReporteSeleccionado = 2; generarReporteIA()" [class]="tipoReporteSeleccionado === 2 ? 'p-4 rounded-2xl bg-blue-50 dark:bg-blue-950/60 border-2 border-blue-600 text-left space-y-1 cursor-pointer' : 'p-4 rounded-2xl bg-slate-50 dark:bg-stone-900/60 border border-slate-200 dark:border-stone-800 text-left space-y-1 cursor-pointer'">
+                    <span class="text-[10px] font-bold text-indigo-600 uppercase tracking-wider block">Tendencia Regional</span>
+                    <h4 class="text-xs font-bold text-slate-900 dark:text-white">Demanda Festividades 2026</h4>
+                  </button>
+                  <button (click)="tipoReporteSeleccionado = 3; generarReporteIA()" [class]="tipoReporteSeleccionado === 3 ? 'p-4 rounded-2xl bg-cyan-50 dark:bg-cyan-950/60 border-2 border-cyan-600 text-left space-y-1 cursor-pointer' : 'p-4 rounded-2xl bg-slate-50 dark:bg-stone-900/60 border border-slate-200 dark:border-stone-800 text-left space-y-1 cursor-pointer'">
+                    <span class="text-[10px] font-bold text-cyan-600 uppercase tracking-wider block">Calidad & Detección</span>
+                    <h4 class="text-xs font-bold text-slate-900 dark:text-white">Detección de Anomalías</h4>
+                  </button>
+                </div>
+
+                <div *ngIf="reporteActual" class="p-6 rounded-3xl bg-slate-50 dark:bg-stone-900/80 border border-slate-200 dark:border-stone-800 space-y-4">
+                  <div class="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-stone-800">
+                    <div>
+                      <span class="text-[10px] font-bold uppercase text-blue-600">{{ reporteActual.categoria }}</span>
+                      <h3 class="font-serif text-xl font-bold text-slate-900 dark:text-white">{{ reporteActual.titulo }}</h3>
+                    </div>
+                    <span class="text-xs text-slate-400 font-mono">{{ reporteActual.fechaEmision }}</span>
+                  </div>
+                  <p class="text-xs text-slate-600 dark:text-stone-300 leading-relaxed">{{ reporteActual.resumenEjecutivo }}</p>
+                </div>
               </div>
 
-              <!-- Recomendaciones Estratégicas para la Dirección -->
-              <div class="p-5 rounded-2xl bg-blue-50/60 dark:bg-gradient-to-br dark:from-blue-950/40 dark:to-carbon-900 border border-blue-200 dark:border-blue-500/30 space-y-3">
-                <h4 class="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">Recomendaciones Estratégicas</h4>
-                <ul class="space-y-2 text-xs text-slate-800 dark:text-stone-200">
-                  <li *ngFor="let rec of reporteActual.recomendacionesEstrategicas" class="flex items-start gap-2.5">
-                    <span class="text-emerald-600 dark:text-emerald-400 font-bold shrink-0">✓</span>
-                    <span class="leading-relaxed">{{ rec }}</span>
-                  </li>
-                </ul>
-              </div>
+            </div>
 
+            <!-- Modal / Panel Desglose Detallado de Fila (Drill-Down) -->
+            <div *ngIf="filaDesglosadaAdmin" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+              <div class="relative w-full max-w-lg p-6 bg-white dark:bg-stone-900 rounded-3xl border border-slate-200 dark:border-stone-800 shadow-2xl space-y-4 animate-modal-in">
+                <div class="flex items-start justify-between pb-3 border-b border-slate-100 dark:border-stone-800">
+                  <div>
+                    <span class="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider block">Desglose Operativo Pormenorizado</span>
+                    <h3 class="font-serif text-xl font-bold text-slate-900 dark:text-white mt-0.5">Detalle del Registro Seleccionado</h3>
+                  </div>
+                  <button type="button" (click)="cerrarDesgloseAdmin()" class="p-1.5 rounded-xl bg-slate-100 dark:bg-stone-800 text-slate-400 hover:text-slate-600 transition cursor-pointer">✕</button>
+                </div>
+
+                <div class="space-y-2.5 max-h-96 overflow-y-auto pr-1">
+                  <div *ngFor="let item of obtenerEntradasFila(filaDesglosadaAdmin)" class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-stone-800/60 text-xs">
+                    <span class="text-slate-400 font-bold uppercase text-[10px]">{{ item.key }}</span>
+                    <span class="font-semibold text-slate-900 dark:text-white text-right ml-4">{{ item.valor }}</span>
+                  </div>
+                </div>
+
+                <button type="button" (click)="cerrarDesgloseAdmin()" class="w-full py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-500/25 transition cursor-pointer">Cerrar Desglose</button>
+              </div>
             </div>
 
           </div>
@@ -1085,8 +1527,15 @@ export interface ValoracionAdmin {
               </div>
 
               <h2 class="font-serif text-2xl font-bold text-slate-900 dark:text-white">{{ alojamientoInspeccionado.titulo }}</h2>
-              <p class="text-xs text-slate-500 dark:text-stone-400">
-                Anfitrión Responsable: <strong class="text-slate-800 dark:text-stone-200">{{ alojamientoInspeccionado.anfitrion }}</strong> • Dirección: <strong class="text-slate-700 dark:text-stone-300">{{ alojamientoInspeccionado.direccion || 'Zona registrada' }}</strong> • ID: <span class="font-mono text-slate-400 dark:text-stone-500">{{ alojamientoInspeccionado.id }}</span>
+              <p class="text-xs text-slate-500 dark:text-stone-400 flex items-center gap-1.5 flex-wrap">
+                <span>Anfitrión Responsable:</span>
+                <strong class="text-slate-800 dark:text-stone-200">{{ alojamientoInspeccionado.anfitrion }}</strong>
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 dark:bg-blue-950/70 dark:text-blue-300 text-[10px] font-bold border border-blue-200 dark:border-blue-800 shadow-sm" title="Anfitrión con Cédula de Identidad y documentación oficial verificada">
+                  <svg class="w-3 h-3 text-blue-600 dark:text-blue-400 fill-current" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1.2 14.2l-4-4 1.41-1.41L10.8 13.38l6.79-6.79 1.41 1.41-8.2 8.2z"/></svg>
+                  <span>Verificado</span>
+                </span>
+                <span>• Dirección:</span>
+                <strong class="text-slate-700 dark:text-stone-300">{{ alojamientoInspeccionado.direccion || 'Zona registrada' }}</strong>
               </p>
             </div>
 
@@ -1368,10 +1817,6 @@ export interface ValoracionAdmin {
                             [ngClass]="habitacionEnDetalleAdmin.estado === 'MANTENIMIENTO' ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : 'bg-slate-800 hover:bg-slate-900 text-white'">
                       <span>{{ habitacionEnDetalleAdmin.estado === 'MANTENIMIENTO' ? '✓ Habilitar Habitación' : '⛔ Poner en Mantenimiento' }}</span>
                     </button>
-                    <button (click)="observarPorComentariosHabitacion(habitacionEnDetalleAdmin)"
-                            class="w-full py-2.5 px-3 rounded-xl bg-white dark:bg-stone-900 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-rose-700 dark:text-rose-300 font-bold text-xs border border-rose-300 dark:border-rose-800 transition flex items-center justify-center gap-1.5 cursor-pointer">
-                      <span>⚠️ Solicitar Corrección al Anfitrión</span>
-                    </button>
                   </div>
                 </div>
               </div>
@@ -1433,10 +1878,6 @@ export interface ValoracionAdmin {
                     <button (click)="alternarEstadoHabitacion(habitacionEnDetalleAdmin)"
                             class="px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-sm cursor-pointer transition">
                       ⛔ {{ habitacionEnDetalleAdmin.estado === 'MANTENIMIENTO' ? 'Habitación ya en Mantenimiento' : 'Poner Habitación en Mantenimiento' }}
-                    </button>
-                    <button (click)="observarPorComentariosHabitacion(habitacionEnDetalleAdmin)"
-                            class="px-3.5 py-1.5 rounded-xl bg-white dark:bg-stone-900 text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-stone-800 font-bold text-xs border border-rose-300 dark:border-rose-700 cursor-pointer transition">
-                      ⚠️ Solicitar Corrección al Anfitrión
                     </button>
                   </div>
                 </div>
@@ -1557,6 +1998,13 @@ export interface ValoracionAdmin {
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div *ngFor="let u of alojamientoInspeccionado.unidades" class="p-4 rounded-2xl bg-slate-50 dark:bg-stone-950 border border-slate-200 dark:border-stone-800 space-y-3">
+                <!-- Miniatura de foto propia de la habitación -->
+                <div *ngIf="u.fotos && u.fotos.length > 0" class="h-28 rounded-xl overflow-hidden relative border border-slate-200 dark:border-stone-800 cursor-pointer group" (click)="abrirVistaClienteHabitacion(u)">
+                  <img [src]="u.fotos[0]" [alt]="u.nombre" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                  <span class="absolute bottom-1.5 left-1.5 px-2 py-0.5 rounded-md bg-black/75 backdrop-blur-sm text-white text-[10px] font-bold">
+                    📷 {{ u.fotos.length }} {{ u.fotos.length === 1 ? 'foto' : 'fotos' }}
+                  </span>
+                </div>
                 <div class="flex items-start justify-between gap-2">
                   <div>
                     <h5 class="text-sm font-bold text-slate-900 dark:text-white">{{ u.nombre }}</h5>
@@ -1659,10 +2107,6 @@ export interface ValoracionAdmin {
                 </div>
               </div>
               <div class="flex items-center gap-2 pt-2 border-t border-amber-200 dark:border-amber-800/60">
-                <button (click)="aprobarAlojamiento(alojamientoInspeccionado.id); cerrarInspeccion()"
-                        class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md shadow-emerald-500/20 transition cursor-pointer">
-                  ✓ Levantar Observación y Habilitar
-                </button>
                 <button (click)="suspenderAlojamiento(alojamientoInspeccionado.id); cerrarInspeccion()"
                         class="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition cursor-pointer">
                   ⛔ Suspender Establecimiento
@@ -1787,27 +2231,11 @@ export interface ValoracionAdmin {
 
             <div class="flex items-center gap-2 flex-wrap">
               <button
-                *ngIf="alojamientoInspeccionado.estado === 'PENDIENTE'"
-                (click)="iniciarRevision(alojamientoInspeccionado.id); cerrarInspeccion()"
+                *ngIf="alojamientoInspeccionado.estado === 'PENDIENTE' && alojamientoInspeccionado.requiereAtencion"
+                (click)="reintentarRevision(alojamientoInspeccionado.id); cerrarInspeccion()"
                 class="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-md shadow-blue-500/20 transition flex items-center gap-1.5"
               >
-                <span>🔍 Iniciar Revisión</span>
-              </button>
-
-              <button
-                *ngIf="alojamientoInspeccionado.estado === 'PENDIENTE' || alojamientoInspeccionado.estado === 'EN_REVISION'"
-                (click)="abrirModalObservacion(alojamientoInspeccionado); cerrarInspeccion()"
-                class="px-4 py-2.5 rounded-xl bg-orange-50 hover:bg-orange-100 dark:bg-stone-800 dark:hover:bg-stone-700 text-orange-700 dark:text-orange-300 text-xs font-bold border border-orange-200 dark:border-orange-800 transition flex items-center gap-1.5"
-              >
-                <span>⚠️ Observar</span>
-              </button>
-
-              <button
-                *ngIf="alojamientoInspeccionado.estado === 'PENDIENTE' || alojamientoInspeccionado.estado === 'EN_REVISION'"
-                (click)="abrirModalRechazo(alojamientoInspeccionado); cerrarInspeccion()"
-                class="px-4 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-stone-800 dark:hover:bg-stone-700 text-rose-700 dark:text-rose-300 text-xs font-bold border border-rose-200 dark:border-rose-800 transition flex items-center gap-1.5"
-              >
-                <span>❌ Rechazar</span>
+                <span>🔁 Reintentar Revisión</span>
               </button>
 
               <button
@@ -1819,64 +2247,15 @@ export interface ValoracionAdmin {
               </button>
 
               <button
-                *ngIf="alojamientoInspeccionado.estado !== 'PUBLICADO'"
-                (click)="aprobarAlojamiento(alojamientoInspeccionado.id); cerrarInspeccion()"
+                *ngIf="alojamientoInspeccionado.estado === 'SUSPENDIDO'"
+                (click)="reactivarAlojamiento(alojamientoInspeccionado.id); cerrarInspeccion()"
                 class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md shadow-emerald-500/25 transition flex items-center gap-1.5"
               >
-                <span>✓ Aprobar y Publicar en Catálogo</span>
+                <span>✓ Reactivar</span>
               </button>
             </div>
           </div>
 
-        </div>
-      </div>
-
-      <!-- ========================================== -->
-      <!-- MODAL DE OBSERVACIÓN / RECHAZO             -->
-      <!-- ========================================== -->
-      <div *ngIf="modalRechazoAbierto" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in">
-        <div class="absolute inset-0" (click)="modalRechazoAbierto = false"></div>
-
-        <div class="relative w-full max-w-lg p-6 rounded-3xl bg-white dark:bg-carbon-900 border border-slate-200 dark:border-stone-700 text-slate-900 dark:text-white z-10 space-y-4 shadow-2xl animate-modal-in">
-          <div class="flex items-start justify-between">
-            <div>
-              <span class="text-[10px] font-bold text-rose-600 dark:text-rose-400 uppercase tracking-widest block mb-0.5">
-                Moderación de Calidad
-              </span>
-              <h3 class="font-serif text-lg font-bold text-slate-900 dark:text-white">Observar Solicitud de Alojamiento</h3>
-              <p class="text-xs text-slate-500 dark:text-stone-400">{{ alojamientoParaRechazo?.titulo }}</p>
-            </div>
-            <button (click)="modalRechazoAbierto = false" class="p-1.5 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-stone-800 dark:hover:bg-stone-700 text-slate-500 dark:text-stone-400 hover:text-slate-900 dark:hover:text-white transition">✕</button>
-          </div>
-
-          <p class="text-xs text-slate-600 dark:text-stone-300 leading-relaxed">
-            Especifique el motivo técnico o administrativo de la observación. El anfitrión recibirá esta notificación para corregir su solicitud y volver a postularla.
-          </p>
-
-          <div>
-            <label class="block text-[11px] font-semibold text-slate-600 dark:text-stone-400 mb-1">Motivo de la Observación:</label>
-            <textarea
-              [(ngModel)]="motivoRechazoTexto"
-              rows="4"
-              class="w-full p-3.5 rounded-2xl bg-slate-50 dark:bg-stone-950 border border-slate-300 dark:border-stone-800 text-slate-900 dark:text-white text-xs placeholder-slate-400 dark:placeholder-stone-500 focus:outline-none focus:border-rose-500 transition"
-              placeholder="Indique las observaciones sobre fotografías, normas de habitabilidad o licencias..."
-            ></textarea>
-          </div>
-
-          <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-200 dark:border-stone-800">
-            <button
-              (click)="modalRechazoAbierto = false"
-              class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-stone-800 dark:hover:bg-stone-700 text-slate-700 hover:text-slate-900 dark:text-stone-300 text-xs font-semibold transition border border-slate-200 dark:border-stone-700"
-            >
-              Cancelar
-            </button>
-            <button
-              (click)="confirmarRechazo()"
-              class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md shadow-rose-600/30 transition"
-            >
-              Confirmar Observación
-            </button>
-          </div>
         </div>
       </div>
 
@@ -1982,10 +2361,7 @@ export class AppComponent implements OnInit {
   cargandoResenasAdmin: boolean = false;
   resenasAlojamientoActual: ValoracionAdmin[] = [];
   resenasHabitacionActual: ValoracionAdmin[] = [];
-  filtroAlojamientos: 'TODOS' | 'PENDIENTE' | 'PENDIENTES' | 'EN_REVISION' | 'PUBLICADO' | 'PUBLICADOS' | 'OBSERVADO' | 'OBSERVADOS' | 'SUSPENDIDO' | 'SUSPENDIDOS' | 'RECHAZADO' | 'RECHAZADOS' = 'TODOS';
-  modalRechazoAbierto: boolean = false;
-  alojamientoParaRechazo: SolicitudAlojamiento | null = null;
-  motivoRechazoTexto: string = '';
+  filtroAlojamientos: 'TODOS' | 'ATENCION' | 'PENDIENTE' | 'PENDIENTES' | 'EN_REVISION' | 'PUBLICADO' | 'PUBLICADOS' | 'OBSERVADO' | 'OBSERVADOS' | 'SUSPENDIDO' | 'SUSPENDIDOS' | 'RECHAZADO' | 'RECHAZADOS' = 'TODOS';
 
   /** Estados que requieren atención del admin: el cuadro de observación se muestra en rojo. */
   esEstadoAlarma(estado?: string): boolean {
@@ -2045,6 +2421,18 @@ export class AppComponent implements OnInit {
   generandoReporte: boolean = false;
   reporteActual: ReporteGenerativo | null = null;
 
+  // Reportes Generativos con IA Avanzados para Administrador
+  private reportAdminService = new ReportAdminService();
+  queryIAAdmin: string = 'Comisiones y facturación consolidada por departamento';
+  cargandoIAAdmin: boolean = false;
+  escuchandoVozAdmin: boolean = false;
+  tabReporteAdmin: 'tabla' | 'grafico' | 'sql' | 'informes' = 'tabla';
+  resultadoIAAdmin: ReportQueryResultAdmin | null = null;
+  columnasVisiblesAdmin: ReportColumnAdmin[] = [];
+  mostrarSelectorColsAdmin: boolean = false;
+  columnaArrastradaAdmin: number | null = null;
+  filaDesglosadaAdmin: Record<string, any> | null = null;
+
   ngOnInit() {
     // 1. Inicializar Tema persistente desde LocalStorage
     try {
@@ -2072,6 +2460,7 @@ export class AppComponent implements OnInit {
     this.cargarMovimientos();
     this.cargarAlojamientos();
     this.generarReporteIA();
+    this.ejecutarReporteIAAdmin();
   }
 
   toggleTheme() {
@@ -2180,10 +2569,17 @@ export class AppComponent implements OnInit {
       const raw = localStorage.getItem('alojate_valoraciones_local');
       if (raw) {
         const parsed: ValoracionAdmin[] = JSON.parse(raw);
-        if (Array.isArray(parsed)) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const ids = new Set(parsed.map(p => p.idValoracion));
+          const combinadas = [...parsed];
+          VALORACIONES_ADMIN_DEMO.forEach(v => {
+            if (!ids.has(v.idValoracion)) combinadas.push(v);
+          });
+          return combinadas;
+        }
       }
     } catch {}
-    return [];
+    return [...VALORACIONES_ADMIN_DEMO];
   }
 
   resenasHabitacionFiltradas(): ValoracionAdmin[] {
@@ -2281,14 +2677,6 @@ export class AppComponent implements OnInit {
     };
     if (mapa[t]) return mapa[t];
     return t.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
-  }
-
-  observarPorComentariosHabitacion(u: UnidadAdmin) {
-    if (!this.alojamientoInspeccionado) return;
-    const aspectos = this.topicosDetectadosHabitacion().map(t => this.formatearTopico(t)).join(', ');
-    const detalle = aspectos ? ` (motivo: ${aspectos})` : '';
-    const motivo = `Reclamos de huéspedes en ${u.nombre}${detalle}. Se solicita al anfitrión realizar las mejoras correspondientes.`;
-    this.confirmarObservacionDirecta(this.alojamientoInspeccionado.id, motivo);
   }
 
   sincronizarRuta() {
@@ -2412,63 +2800,88 @@ export class AppComponent implements OnInit {
         console.warn('MS-01 todos no disponible, intentando rutas específicas', e);
       }
 
-      if (rawData.length === 0) {
-        let pendientesData: any[] = [];
-        try {
-          const resPendientes = await fetch('http://localhost:8080/api/v1/alojamientos/moderacion/pendientes');
-          if (resPendientes.ok) { pendientesData = await resPendientes.json(); backendRespondio = true; }
-        } catch {}
+      // Consultar siempre también la bandeja de pendientes de moderación para mergear
+      try {
+        const resPendientes = await fetch('http://localhost:8080/api/v1/alojamientos/moderacion/pendientes');
+        if (resPendientes.ok) {
+          backendRespondio = true;
+          const pendientesData: any[] = await resPendientes.json();
+          const idSet = new Set(rawData.map((r: any) => r.idAlojamiento || r.id));
+          for (const p of pendientesData) {
+            const pId = p.idAlojamiento || p.id;
+            if (!idSet.has(pId)) {
+              rawData.push(p);
+              idSet.add(pId);
+            }
+          }
+        }
+      } catch (e) {}
 
-        let publicadosData: any[] = [];
+      if (rawData.length === 0) {
         try {
           const resPublicados = await fetch('http://localhost:8080/api/v1/alojamientos');
-          if (resPublicados.ok) { publicadosData = await resPublicados.json(); backendRespondio = true; }
+          if (resPublicados.ok) { rawData = await resPublicados.json(); backendRespondio = true; }
         } catch {}
-
-        rawData = [...pendientesData, ...publicadosData];
       }
 
       const mapAlojamiento = (raw: any): SolicitudAlojamiento => {
         const u = raw.unidades?.[0];
-        const fotosList: string[] = (raw.fotografias || []).map((f: any) => f.url || f).filter(Boolean);
+        const fotosList: string[] = (raw.fotografias && raw.fotografias.length > 0)
+          ? raw.fotografias.map((f: any) => (typeof f === 'string' ? f : (f.url || f))).filter(Boolean)
+          : ((raw.fotos || []).filter(Boolean));
+        const principalObj = Array.isArray(raw.fotografias) ? raw.fotografias.find((f: any) => f.esPrincipal) : null;
         // Solo datos reales de la base de datos: sin foto, tarifa ni capacidad inventadas.
-        const foto = fotosList[0] || '';
+        const foto = principalObj?.url || fotosList[0] || raw.imagen || '';
         const preciosUnidades: number[] = (raw.unidades || [])
           .map((un: any) => Number(un.precioNoche))
           .filter((p: number) => !isNaN(p) && p > 0);
         return {
-          id: raw.idAlojamiento || String(Math.random()),
-          titulo: raw.titulo || 'Alojamiento Tradicional',
-          anfitrion: raw.nombreAnfitrion || 'Anfitrión no disponible',
-          departamento: raw.departamento || 'Santa Cruz',
-          ciudad: raw.ciudad || 'Bolivia',
+          id: raw.idAlojamiento || raw.id || '',
+          titulo: raw.titulo || '',
+          anfitrion: raw.nombreAnfitrion || raw.anfitrion || 'Anfitrión no disponible',
+          departamento: raw.departamento || '',
+          ciudad: raw.ciudad || '',
           direccion: raw.direccion || '',
-          tipoPropiedad: raw.tipoPropiedadNombre || 'Hospedaje Tradicional',
+          tipoPropiedad: raw.tipoPropiedadNombre || raw.tipoPropiedad || '',
           modalidad: raw.modalidad || 'CASA_DEPARTAMENTO',
-          precioNoche: preciosUnidades.length > 0 ? Math.min(...preciosUnidades) : 0,
-          capacidad: Number(u?.capacidadHuespedes ?? 0),
-          habitaciones: Number(u?.cantidadDormitorios ?? 0),
-          estado: (raw.estadoPublicacion as any) || 'PENDIENTE',
-          fechaRegistro: raw.fechaCreacion || new Date().toISOString(),
+          precioNoche: preciosUnidades.length > 0
+            ? Math.min(...preciosUnidades)
+            : Number(raw.precioNoche ?? raw.precioBaseNoche ?? 0),
+          capacidad: Number(u?.capacidadHuespedes ?? raw.capacidad ?? 0),
+          habitaciones: Number(u?.cantidadDormitorios ?? raw.habitaciones ?? 0),
+          estado: (raw.estadoPublicacion as any) || (raw.estado as any) || 'PENDIENTE',
+          fechaRegistro: raw.fechaCreacion || raw.fechaRegistro || new Date().toISOString(),
           imagen: foto,
           fotos: fotosList,
           descripcion: raw.descripcion || '',
-          politicas: raw.politicas || 'Ambiente respetuoso y cumplimiento de horarios de ingreso.',
-          horarioEntrada: raw.horarioEntrada || '14:00',
-          horarioSalida: raw.horarioSalida || '11:00',
+          politicas: raw.politicas || '',
+          horarioEntrada: raw.horarioEntrada || '',
+          horarioSalida: raw.horarioSalida || '',
           motivoRechazo: raw.motivoObservacionRechazo || raw.motivoRechazo || '',
           motivoObservacionRechazo: raw.motivoObservacionRechazo || raw.motivoRechazo || '',
           origenUltimoCambio: raw.origenUltimoCambio || '',
-          unidades: (raw.unidades || []).map((un: any) => ({
-            idUnidad: un.idUnidad,
-            nombre: un.nombre,
-            capacidadHuespedes: un.capacidadHuespedes ?? 2,
-            cantidadCamas: un.cantidadCamas ?? 1,
-            cantidadBanos: un.cantidadBanos ?? 1,
-            inventarioTotal: un.inventarioTotal ?? 1,
-            precioNoche: Number(un.precioNoche ?? 0),
-            estado: un.estado || 'DISPONIBLE'
-          })),
+          requiereAtencion: !!raw.requiereAtencion,
+          intentosRevision: Number(raw.intentosRevision ?? 0),
+          unidades: (raw.unidades || []).map((un: any) => {
+            const rawFotos: any[] = (un.fotos && un.fotos.length > 0)
+              ? un.fotos
+              : (un.fotografias || (un.fotoUrl ? [un.fotoUrl] : []));
+            const fotosArray: string[] = rawFotos
+              .map((f: any) => (typeof f === 'string' ? f : f?.url))
+              .filter(Boolean);
+            return {
+              idUnidad: un.idUnidad || '',
+              nombre: un.nombre,
+              capacidadHuespedes: un.capacidadHuespedes ?? un.capacidadPersonas ?? 0,
+              cantidadCamas: un.cantidadCamas ?? 0,
+              cantidadBanos: un.cantidadBanos ?? un.cantidadBanios ?? 0,
+              inventarioTotal: un.inventarioTotal ?? 0,
+              precioNoche: Number(un.precioNoche ?? 0),
+              estado: un.estado || 'DISPONIBLE',
+              descripcion: un.descripcion || '',
+              fotos: fotosArray
+            };
+          }),
           servicios: (raw.servicios || []).map((s: any) => s.nombre || s)
         };
       };
@@ -2520,6 +2933,7 @@ export class AppComponent implements OnInit {
 
   alojamientosFiltrados(): SolicitudAlojamiento[] {
     return this.alojamientos.filter(a => {
+      if (this.filtroAlojamientos === 'ATENCION') return !!a.requiereAtencion;
       if (this.filtroAlojamientos === 'PENDIENTE' || this.filtroAlojamientos === 'PENDIENTES') return a.estado === 'PENDIENTE';
       if (this.filtroAlojamientos === 'EN_REVISION') return a.estado === 'EN_REVISION';
       if (this.filtroAlojamientos === 'PUBLICADO' || this.filtroAlojamientos === 'PUBLICADOS') return a.estado === 'PUBLICADO';
@@ -2532,6 +2946,10 @@ export class AppComponent implements OnInit {
 
   conteoPendientes(): number {
     return this.alojamientos.filter(a => a.estado === 'PENDIENTE').length;
+  }
+
+  conteoAtencion(): number {
+    return this.alojamientos.filter(a => a.requiereAtencion).length;
   }
 
   conteoEnRevision(): number {
@@ -2554,165 +2972,46 @@ export class AppComponent implements OnInit {
     return this.alojamientos.filter(a => a.estado === 'RECHAZADO').length;
   }
 
-  private persistirCambioEstadoLocal(id: string, nuevoEstado: any, motivo?: string) {
-    const item = this.alojamientos.find(a => a.id === id);
-    if (item) {
-      item.estado = nuevoEstado;
-      if (motivo) {
-        item.motivoRechazo = motivo;
-        item.motivoObservacionRechazo = motivo;
-      } else if (nuevoEstado === 'PUBLICADO') {
-        item.motivoRechazo = undefined;
-        item.motivoObservacionRechazo = undefined;
-      }
-    }
-    try {
-      localStorage.setItem('alojate_admin_alojamientos', JSON.stringify(this.alojamientos));
-      const customRaw = localStorage.getItem('alojate_alojamientos_custom');
-      if (customRaw) {
-        const customList: any[] = JSON.parse(customRaw);
-        const idx = customList.findIndex(c => c.idAlojamiento === id);
-        if (idx !== -1) {
-          customList[idx].estado = nuevoEstado;
-          customList[idx].estadoPublicacion = nuevoEstado;
-          if (motivo) {
-            customList[idx].motivoRechazo = motivo;
-            customList[idx].motivoObservacionRechazo = motivo;
-          }
-          localStorage.setItem('alojate_alojamientos_custom', JSON.stringify(customList));
-        }
-      }
-    } catch {}
-  }
-
-  async iniciarRevision(id: string) {
-    // MS-01 pasa el alojamiento a EN_REVISION y avisa al workflow de moderación automática (n8n).
-    try {
-      const res = await fetch(`http://localhost:8080/api/v1/alojamientos/${id}/enviar-revision`, {
-        method: 'POST'
-      });
-      if (res.ok) {
-        this.persistirCambioEstadoLocal(id, 'EN_REVISION');
-        await this.cargarAlojamientos();
-        return;
-      }
-      let detalle = `Error ${res.status}`;
-      try {
-        const body = await res.json();
-        detalle = body?.mensaje || detalle;
-      } catch {}
-      alert(`No se pudo iniciar la revisión.\n${detalle}`);
-      await this.cargarAlojamientos();
-    } catch {
-      alert('No se pudo iniciar la revisión: no hay conexión con el servidor.');
-    }
-  }
-
-  abrirModalObservacion(a: SolicitudAlojamiento) {
-    const motivo = prompt('Ingrese el motivo de observación para este alojamiento:', 'Las fotografías requieren revisión adicional de resolución o contenido.');
-    if (!motivo) return;
-    this.confirmarObservacionDirecta(a.id, motivo);
-  }
-
-  async confirmarObservacionDirecta(id: string, motivo: string) {
-    this.persistirCambioEstadoLocal(id, 'OBSERVADO', motivo);
-    try {
-      const res = await fetch(`http://localhost:8080/api/v1/alojamientos/${id}/observar`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ motivo, origen: 'ADMIN_MANUAL' })
-      });
-      if (res.ok) {
-        alert('Alojamiento marcado como OBSERVADO exitosamente.');
-        await this.cargarAlojamientos();
-      } else {
-        alert('Observación registrada en la auditoría.');
-      }
-    } catch {
-      alert('Observación registrada exitosamente.');
-    }
-  }
-
-  async aprobarAlojamiento(id: string) {
-    this.persistirCambioEstadoLocal(id, 'PUBLICADO');
-    const item = this.alojamientos.find(a => a.id === id);
-    if (item && item.unidades) {
-      item.unidades.forEach(u => u.estado = 'DISPONIBLE');
-    }
-
-    try {
-      const res = await fetch(`http://localhost:8080/api/v1/alojamientos/${id}/aceptar`, {
-        method: 'POST'
-      });
-      if (res.ok) {
-        alert('Alojamiento aprobado y publicado exitosamente en el catálogo nacional.');
-        await this.cargarAlojamientos();
-      } else {
-        alert('Alojamiento aprobado y publicado en el catálogo.');
-      }
-    } catch {
-      alert('Alojamiento aprobado y publicado exitosamente.');
-    }
-  }
-
-  abrirModalRechazo(a: SolicitudAlojamiento) {
-    this.alojamientoParaRechazo = a;
-    this.motivoRechazoTexto = 'Las fotografías no cumplen con la resolución mínima requerida o falta documentación de licencia turística municipal.';
-    this.modalRechazoAbierto = true;
-  }
-
-  async confirmarRechazo() {
-    if (!this.alojamientoParaRechazo) return;
-    const item = this.alojamientoParaRechazo;
-    const targetId = item.id;
-    const motivo = this.motivoRechazoTexto;
-
-    this.persistirCambioEstadoLocal(targetId, 'RECHAZADO', motivo);
-    this.modalRechazoAbierto = false;
-    this.alojamientoParaRechazo = null;
-
-    try {
-      const res = await fetch(`http://localhost:8080/api/v1/alojamientos/${targetId}/rechazar`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ motivo })
-      });
-      if (res.ok) {
-        alert('Solicitud rechazada y notificada al anfitrión.');
-        await this.cargarAlojamientos();
-      } else {
-        alert('Rechazo registrado.');
-      }
-    } catch {
-      alert('Rechazo registrado correctamente.');
-    }
+  /**
+   * Las únicas acciones del admin sobre el ciclo de publicación son reintentar la revisión, suspender y reactivar:
+   * publicar, observar y rechazar son decisiones de la revisión automática. MS-01 valida cada transición.
+   */
+  async reintentarRevision(id: string) {
+    await this.ejecutarAccionAlojamiento(id, 'reintentar-revision', 'No se pudo reintentar la revisión.');
   }
 
   async suspenderAlojamiento(id: string) {
     if (!confirm('¿Está seguro de suspender temporalmente este alojamiento del catálogo público?')) return;
-    const motivo = 'Suspensión preventiva por auditoría de calidad.';
+    await this.ejecutarAccionAlojamiento(id, 'suspender', 'No se pudo suspender el alojamiento.', {
+      motivo: 'Suspensión preventiva por auditoría de calidad.',
+      origen: 'ADMIN_MANUAL'
+    });
+  }
 
-    this.persistirCambioEstadoLocal(id, 'SUSPENDIDO', motivo);
-    const item = this.alojamientos.find(a => a.id === id);
-    if (item && item.unidades) {
-      item.unidades.forEach(u => u.estado = 'MANTENIMIENTO');
-    }
+  async reactivarAlojamiento(id: string) {
+    if (!confirm('¿Reactivar este alojamiento y volver a publicarlo en el catálogo?')) return;
+    await this.ejecutarAccionAlojamiento(id, 'reactivar', 'No se pudo reactivar el alojamiento.');
+  }
 
+  private async ejecutarAccionAlojamiento(id: string, accion: string, errorBase: string, cuerpo?: object) {
     try {
-      const res = await fetch(`http://localhost:8080/api/v1/alojamientos/${id}/suspender`, {
+      const res = await fetch(`http://localhost:8080/api/v1/alojamientos/${id}/${accion}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ motivo, origen: 'ADMIN_MANUAL' })
+        body: cuerpo ? JSON.stringify(cuerpo) : undefined
       });
-      if (res.ok) {
-        alert('Alojamiento suspendido preventivamente en el sistema nacional.');
-        await this.cargarAlojamientos();
-      } else {
-        alert('Alojamiento suspendido preventivamente.');
+      if (!res.ok) {
+        let detalle = `Error ${res.status}`;
+        try {
+          const body = await res.json();
+          detalle = body?.mensaje || detalle;
+        } catch {}
+        alert(`${errorBase}\n${detalle}`);
       }
     } catch {
-      alert('Alojamiento suspendido preventivamente (actualizado localmente).');
+      alert(`${errorBase}\nNo hay conexión con el servidor.`);
     }
+    await this.cargarAlojamientos();
   }
 
   @HostListener('window:keydown', ['$event'])
@@ -2773,32 +3072,6 @@ export class AppComponent implements OnInit {
     } catch {
       u.estado = nuevoEstado;
       alert(`Estado de la habitación "${u.nombre}" actualizado a ${nuevoEstado === 'DISPONIBLE' ? 'Disponible' : 'En Mantenimiento'}.`);
-    }
-  }
-
-  async ocultarAlojamiento(id: string) {
-    if (!confirm('¿Desea ocultar/pausar temporalmente este alojamiento del catálogo? Sus habitaciones asociadas se desactivarán en cascada.')) return;
-    try {
-      const res = await fetch(`http://localhost:8080/api/v1/alojamientos/${id}/estado?estado=SUSPENDIDO`, {
-        method: 'PATCH'
-      });
-      const item = this.alojamientos.find(a => a.id === id);
-      if (item) {
-        item.estado = 'SUSPENDIDO';
-        if (item.unidades) {
-          item.unidades.forEach(u => u.estado = 'MANTENIMIENTO');
-        }
-      }
-      alert('Alojamiento suspendido del catálogo y sus habitaciones han sido desactivadas en cascada.');
-      await this.cargarAlojamientos();
-    } catch {
-      const item = this.alojamientos.find(a => a.id === id);
-      if (item) {
-        item.estado = 'SUSPENDIDO';
-        if (item.unidades) {
-          item.unidades.forEach(u => u.estado = 'MANTENIMIENTO');
-        }
-      }
     }
   }
 
@@ -2894,5 +3167,131 @@ export class AppComponent implements OnInit {
 
   exportarExcelSimulado() {
     alert('Exportando Libro Diario y métricas consolidadas en formato XLSX...');
+  }
+
+  // ==========================================
+  // METODOS DEL GENERADOR DE REPORTES CON IA (ADMIN)
+  // ==========================================
+  async ejecutarReporteIAAdmin(consulta?: string) {
+    const q = consulta || this.queryIAAdmin;
+    if (!q || !q.trim()) return;
+    this.queryIAAdmin = q;
+    this.cargandoIAAdmin = true;
+    this.filaDesglosadaAdmin = null;
+
+    try {
+      const res = await this.reportAdminService.resolverReporteAdmin(q, {
+        alojamientos: this.alojamientos,
+        liquidaciones: this.liquidaciones,
+        valoraciones: this.resenasHabitacionActual.length > 0 ? this.resenasHabitacionActual : VALORACIONES_ADMIN_DEMO
+      });
+      this.resultadoIAAdmin = res;
+      this.columnasVisiblesAdmin = [...res.columnas];
+    } catch (e) {
+      console.warn('Error en reporte IA admin:', e);
+    } finally {
+      this.cargandoIAAdmin = false;
+    }
+  }
+
+  toggleVozAdmin() {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert('El navegador no admite reconocimiento de voz nativo en este entorno.');
+      return;
+    }
+
+    if (this.escuchandoVozAdmin) {
+      this.escuchandoVozAdmin = false;
+      return;
+    }
+
+    try {
+      const rec = new SpeechRecognition();
+      rec.lang = 'es-BO';
+      rec.continuous = false;
+      rec.interimResults = false;
+
+      rec.onstart = () => {
+        this.escuchandoVozAdmin = true;
+      };
+
+      rec.onresult = (event: any) => {
+        const transcrito = event.results[0][0].transcript;
+        this.queryIAAdmin = transcrito;
+        this.escuchandoVozAdmin = false;
+        this.ejecutarReporteIAAdmin(transcrito);
+      };
+
+      rec.onerror = () => {
+        this.escuchandoVozAdmin = false;
+      };
+
+      rec.onend = () => {
+        this.escuchandoVozAdmin = false;
+      };
+
+      rec.start();
+    } catch {
+      this.escuchandoVozAdmin = false;
+    }
+  }
+
+  dragStartColAdmin(idx: number) {
+    this.columnaArrastradaAdmin = idx;
+  }
+
+  dragOverColAdmin(e: Event, idx: number) {
+    e.preventDefault();
+    if (this.columnaArrastradaAdmin === null || this.columnaArrastradaAdmin === idx) return;
+
+    const nuevas = [...this.columnasVisiblesAdmin];
+    const [arrastrada] = nuevas.splice(this.columnaArrastradaAdmin, 1);
+    nuevas.splice(idx, 0, arrastrada);
+    this.columnaArrastradaAdmin = idx;
+    this.columnasVisiblesAdmin = nuevas;
+  }
+
+  dragEndColAdmin() {
+    this.columnaArrastradaAdmin = null;
+  }
+
+  toggleColumnaAdmin(key: string) {
+    if (!this.resultadoIAAdmin) return;
+    const existe = this.columnasVisiblesAdmin.some(c => c.key === key);
+    if (existe) {
+      if (this.columnasVisiblesAdmin.length <= 1) return;
+      this.columnasVisiblesAdmin = this.columnasVisiblesAdmin.filter(c => c.key !== key);
+    } else {
+      const original = this.resultadoIAAdmin.columnas.find(c => c.key === key);
+      if (original) {
+        this.columnasVisiblesAdmin = [...this.columnasVisiblesAdmin, original];
+      }
+    }
+  }
+
+  restaurarColumnasAdmin() {
+    if (this.resultadoIAAdmin) {
+      this.columnasVisiblesAdmin = [...this.resultadoIAAdmin.columnas];
+    }
+  }
+
+  exportarExcelDinamicoAdmin() {
+    if (this.resultadoIAAdmin && this.resultadoIAAdmin.filas.length > 0) {
+      this.reportAdminService.exportarCSV(this.resultadoIAAdmin.filas, 'reporte_admin_nacional_alojate.csv');
+    }
+  }
+
+  desglosarFilaAdmin(fila: any) {
+    this.filaDesglosadaAdmin = fila;
+  }
+
+  cerrarDesgloseAdmin() {
+    this.filaDesglosadaAdmin = null;
+  }
+
+  obtenerEntradasFila(obj: any): { key: string; valor: any }[] {
+    if (!obj) return [];
+    return Object.entries(obj).map(([k, v]) => ({ key: k, valor: v }));
   }
 }

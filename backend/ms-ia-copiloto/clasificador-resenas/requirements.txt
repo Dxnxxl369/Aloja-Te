@@ -1,0 +1,21 @@
+# Dependencias congeladas para el Clasificador de Reseñas (Aloja-Te Bolivia)
+# Machine Learning y Datos
+numpy>=1.26.0
+pandas>=2.0.0
+scikit-learn>=1.4.0
+joblib>=1.3.0
+
+# Procesamiento de Lenguaje Natural (NLP)
+nltk>=3.8.1
+emoji>=2.10.0
+
+# Configuración y Backend
+pyyaml>=6.0.1
+fastapi>=0.110.0
+uvicorn>=0.28.0
+pydantic>=2.6.0
+python-multipart>=0.0.9
+sqlalchemy>=2.0.0
+
+# Pruebas automatizadas
+pytest>=8.0.0

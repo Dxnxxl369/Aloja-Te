@@ -7,5 +7,9 @@ import java.util.UUID;
  * debe ser evaluado. Debe lanzar {@code ModeracionNoDisponibleException} si el aviso no se pudo entregar.
  */
 public interface ModeracionNotificadorPort {
-    void solicitarModeracion(UUID idAlojamiento);
+    /**
+     * @param idRevision identifica este intento; el workflow debe devolverlo al informar su resultado
+     *                   para que MS-01 pueda descartar resultados de revisiones anteriores.
+     */
+    void solicitarModeracion(UUID idAlojamiento, UUID idRevision);
 }

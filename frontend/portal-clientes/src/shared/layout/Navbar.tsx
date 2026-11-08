@@ -74,17 +74,30 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Panel Anfitrión: Exclusivo para usuarios con rol ANFITRION */}
           {user?.rol === 'ANFITRION' && (
-            <button
-              onClick={() => onChangeView('anfitrion')}
-              className={`px-4 py-2 rounded-xl transition flex items-center gap-1.5 ${
-                currentView === 'anfitrion'
-                  ? 'bg-white dark:bg-slate-800 text-blue-700 dark:text-blue-400 shadow-sm'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              <DollarSign className="w-4 h-4" />
-              <span>Panel Anfitrión</span>
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => onChangeView('anfitrion')}
+                className={`px-3 py-2 rounded-xl transition flex items-center gap-1.5 ${
+                  currentView === 'anfitrion'
+                    ? 'bg-white dark:bg-slate-800 text-blue-700 dark:text-blue-400 shadow-sm'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <DollarSign className="w-4 h-4" />
+                <span>Panel Local</span>
+              </button>
+
+              <a
+                href="http://localhost:3005"
+                target="_blank"
+                rel="noreferrer"
+                className="px-3 py-2 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/60 border border-blue-200 dark:border-blue-800 transition flex items-center gap-1.5 font-bold text-xs shadow-sm"
+                title="Abrir Microfrontend Dedicado del Anfitrión en Puerto 3005"
+              >
+                <span>Portal Anfitrión</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            </div>
           )}
 
           {/* Panel de Control de Auditoría: Exclusivo para ADMINISTRADOR */}

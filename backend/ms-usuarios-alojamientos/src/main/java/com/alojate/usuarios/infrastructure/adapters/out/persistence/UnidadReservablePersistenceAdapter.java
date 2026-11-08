@@ -1,10 +1,12 @@
 package com.alojate.usuarios.infrastructure.adapters.out.persistence;
 
+import com.alojate.usuarios.domain.model.Fotografia;
 import com.alojate.usuarios.domain.model.TipoEspacio;
 import com.alojate.usuarios.domain.model.UnidadReservable;
 import com.alojate.usuarios.domain.ports.out.UnidadReservableRepositoryPort;
 import com.alojate.usuarios.infrastructure.adapters.out.persistence.entity.TipoEspacioJpaEntity;
 import com.alojate.usuarios.infrastructure.adapters.out.persistence.entity.UnidadReservableJpaEntity;
+import com.alojate.usuarios.infrastructure.adapters.out.persistence.repository.SpringDataFotografiaRepository;
 import com.alojate.usuarios.infrastructure.adapters.out.persistence.repository.SpringDataTipoEspacioRepository;
 import com.alojate.usuarios.infrastructure.adapters.out.persistence.repository.SpringDataUnidadReservableRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +23,7 @@ public class UnidadReservablePersistenceAdapter implements UnidadReservableRepos
 
     private final SpringDataUnidadReservableRepository repository;
     private final SpringDataTipoEspacioRepository tipoEspacioRepository;
+    private final SpringDataFotografiaRepository fotografiaRepository;
 
     @Override
     public UnidadReservable guardar(UnidadReservable unidad) {
@@ -67,6 +70,16 @@ public class UnidadReservablePersistenceAdapter implements UnidadReservableRepos
                 .inventarioTotal(entity.getInventarioTotal())
                 .precioNoche(entity.getPrecioNoche())
                 .estado(entity.getEstado())
+                .fotografias(fotografiaRepository.findByIdUnidadOrderByOrdenAsc(entity.getIdUnidad()).stream()
+                        .map(f -> Fotografia.builder()
+                                .idFotografia(f.getIdFotografia())
+                                .idAlojamiento(f.getIdAlojamiento())
+                                .idUnidad(f.getIdUnidad())
+                                .nombreUnidad(entity.getNombre())
+                                .url(f.getUrl())
+                                .orden(f.getOrden())
+                                .build())
+                        .collect(Collectors.toList()))
                 .build();
     }
 

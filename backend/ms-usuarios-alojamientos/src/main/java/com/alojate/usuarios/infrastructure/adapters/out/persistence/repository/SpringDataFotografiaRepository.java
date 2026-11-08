@@ -10,4 +10,6 @@ import java.util.UUID;
 @Repository
 public interface SpringDataFotografiaRepository extends JpaRepository<FotografiaJpaEntity, UUID> {
     List<FotografiaJpaEntity> findByIdAlojamientoOrderByOrdenAsc(UUID idAlojamiento);
+    List<FotografiaJpaEntity> findByIdUnidadOrderByOrdenAsc(UUID idUnidad);
+    void deleteByIdUnidad(UUID idUnidad);
 }

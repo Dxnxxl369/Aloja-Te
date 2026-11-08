@@ -41,6 +41,16 @@ public class Alojamiento {
     private EstadoPublicacion estadoPublicacion;
     private LocalDateTime fechaCreacion;
 
+    // --- Control de la revisión automática ---
+    /** Fallos técnicos seguidos de la revisión automática (0 = ninguno). */
+    private Integer intentosRevision;
+    /** Cuándo cambió por última vez el estado (null en datos anteriores: se usa fechaCreacion). */
+    private LocalDateTime fechaUltimoCambioEstado;
+    /** Resumen de las fotos evaluadas en la última revisión; sirve para saber si el anfitrión corrigió algo. */
+    private String huellaFotos;
+    /** Identifica la revisión vigente; descarta resultados tardíos de revisiones anteriores. */
+    private UUID idRevision;
+
     @Builder.Default
     private Set<Servicio> servicios = new HashSet<>();
 
@@ -52,5 +62,14 @@ public class Alojamiento {
 
     public boolean estaPublicado() {
         return this.estadoPublicacion == EstadoPublicacion.PUBLICADO;
+    }
+
+    public int intentosRevisionActuales() {
+        return intentosRevision != null ? intentosRevision : 0;
+    }
+
+    /** Fecha desde la que se miden esperas y tiempos agotados. */
+    public LocalDateTime fechaReferenciaEstado() {
+        return fechaUltimoCambioEstado != null ? fechaUltimoCambioEstado : fechaCreacion;
     }
 }

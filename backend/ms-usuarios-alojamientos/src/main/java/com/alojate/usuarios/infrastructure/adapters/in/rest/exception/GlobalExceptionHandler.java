@@ -1,7 +1,9 @@
 package com.alojate.usuarios.infrastructure.adapters.in.rest.exception;
 
 import com.alojate.usuarios.domain.exception.AccesoDenegadoException;
+import com.alojate.usuarios.domain.exception.AlmacenamientoNoDisponibleException;
 import com.alojate.usuarios.domain.exception.CredencialesInvalidasException;
+import com.alojate.usuarios.domain.exception.ImagenInvalidaException;
 import com.alojate.usuarios.domain.exception.ModeracionNoDisponibleException;
 import com.alojate.usuarios.domain.exception.TransicionEstadoInvalidaException;
 import com.alojate.usuarios.domain.exception.UsuarioYaExisteException;
@@ -11,6 +13,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -42,6 +45,21 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ModeracionNoDisponibleException.class)
     public ResponseEntity<Map<String, Object>> handleModeracionNoDisponible(ModeracionNoDisponibleException ex) {
         return buildResponse(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage());
+    }
+
+    @ExceptionHandler(ImagenInvalidaException.class)
+    public ResponseEntity<Map<String, Object>> handleImagenInvalida(ImagenInvalidaException ex) {
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    @ExceptionHandler(AlmacenamientoNoDisponibleException.class)
+    public ResponseEntity<Map<String, Object>> handleAlmacenamientoNoDisponible(AlmacenamientoNoDisponibleException ex) {
+        return buildResponse(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage());
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<Map<String, Object>> handleArchivoGrande(MaxUploadSizeExceededException ex) {
+        return buildResponse(HttpStatus.PAYLOAD_TOO_LARGE, "La imagen supera el tamaño máximo permitido (10 MB).");
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

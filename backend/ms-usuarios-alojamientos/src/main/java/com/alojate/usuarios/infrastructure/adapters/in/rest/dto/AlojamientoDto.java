@@ -38,6 +38,11 @@ public class AlojamientoDto {
     private String origenUltimoCambio;
     private EstadoPublicacion estadoPublicacion;
     private LocalDateTime fechaCreacion;
+    /** PENDIENTE que agotó los reintentos automáticos: el admin puede usar "Reintentar revisión". */
+    private Boolean requiereAtencion;
+    private Integer intentosRevision;
+    /** Hora desde la que el job puede reenviar el alojamiento (null si no está en cola). */
+    private LocalDateTime proximoReintento;
     private Set<ServicioDto> servicios;
     private List<FotografiaDto> fotografias;
     private List<UnidadReservableDto> unidades;

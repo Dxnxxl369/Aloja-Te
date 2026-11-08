@@ -1,0 +1,8 @@
+node_modules/
+.expo/
+dist/
+*.log
+.env
+
+# El .gitignore de la raiz ignora "data/" (pensado para datos locales). Aqui "data" es una capa de codigo de cada feature.
+!src/features/*/data/

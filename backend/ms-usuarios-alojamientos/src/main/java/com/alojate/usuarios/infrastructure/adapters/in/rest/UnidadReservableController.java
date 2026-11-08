@@ -1,9 +1,12 @@
 package com.alojate.usuarios.infrastructure.adapters.in.rest;
 
 import com.alojate.usuarios.domain.model.EstadoUnidad;
+import com.alojate.usuarios.domain.model.Fotografia;
 import com.alojate.usuarios.domain.model.UnidadReservable;
 import com.alojate.usuarios.domain.ports.in.UnidadReservableUseCase;
+import com.alojate.usuarios.infrastructure.adapters.in.rest.dto.CrearFotografiaRequest;
 import com.alojate.usuarios.infrastructure.adapters.in.rest.dto.CrearUnidadRequest;
+import com.alojate.usuarios.infrastructure.adapters.in.rest.dto.FotografiaDto;
 import com.alojate.usuarios.infrastructure.adapters.in.rest.dto.UnidadReservableDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -50,6 +53,7 @@ public class UnidadReservableController {
                 .inventarioTotal(request.getInventarioTotal())
                 .precioNoche(request.getPrecioNoche())
                 .estado(request.getEstado() != null ? request.getEstado() : EstadoUnidad.DISPONIBLE)
+                .fotografias(aFotos(request.getFotografias()))
                 .build();
 
         UnidadReservable guardada = unidadUseCase.crearUnidad(alojamientoId, unidad);
@@ -71,6 +75,7 @@ public class UnidadReservableController {
                 .inventarioTotal(request.getInventarioTotal())
                 .precioNoche(request.getPrecioNoche())
                 .estado(request.getEstado())
+                .fotografias(aFotos(request.getFotografias()))
                 .build();
 
         UnidadReservable actualizada = unidadUseCase.actualizarUnidad(id, datos);
@@ -90,6 +95,14 @@ public class UnidadReservableController {
         return ResponseEntity.noContent().build();
     }
 
+    /** null (campo omitido) = no tocar fotos; lista (aunque vacía) = reemplazar. */
+    private List<Fotografia> aFotos(List<CrearFotografiaRequest> fotos) {
+        if (fotos == null) return null;
+        return fotos.stream()
+                .map(f -> Fotografia.builder().url(f.getUrl()).orden(f.getOrden()).build())
+                .collect(Collectors.toList());
+    }
+
     private UnidadReservableDto toDto(UnidadReservable u) {
         if (u == null) return null;
         String tipoEspacioNombre = u.getTipoEspacio() != null ? u.getTipoEspacio().getNombre() : null;
@@ -107,6 +120,19 @@ public class UnidadReservableController {
                 .inventarioTotal(u.getInventarioTotal())
                 .precioNoche(u.getPrecioNoche())
                 .estado(u.getEstado())
+                .fotografias(u.getFotografias() != null
+                        ? u.getFotografias().stream().map(f -> FotografiaDto.builder()
+                                .idFotografia(f.getIdFotografia())
+                                .idAlojamiento(f.getIdAlojamiento())
+                                .idUnidad(f.getIdUnidad())
+                                .nombreUnidad(u.getNombre())
+                                .url(f.getUrl())
+                                .orden(f.getOrden())
+                                .build()).collect(Collectors.toList())
+                        : List.of())
+                .fotos(u.getFotografias() != null
+                        ? u.getFotografias().stream().map(Fotografia::getUrl).collect(Collectors.toList())
+                        : List.of())
                 .build();
     }
 }

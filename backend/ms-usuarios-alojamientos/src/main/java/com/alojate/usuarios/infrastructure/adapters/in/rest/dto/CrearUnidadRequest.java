@@ -1,6 +1,7 @@
 package com.alojate.usuarios.infrastructure.adapters.in.rest.dto;
 
 import com.alojate.usuarios.domain.model.EstadoUnidad;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -11,6 +12,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Data
 @Builder
@@ -44,4 +46,11 @@ public class CrearUnidadRequest {
     private BigDecimal precioNoche;
 
     private EstadoUnidad estado;
+
+    /**
+     * Fotos de la habitación, en orden (la primera es la portada). Opcional:
+     * si se omite al actualizar, las fotos existentes no se tocan; si se envía (aunque vacía), reemplaza las existentes.
+     */
+    @Valid
+    private List<CrearFotografiaRequest> fotografias;
 }
