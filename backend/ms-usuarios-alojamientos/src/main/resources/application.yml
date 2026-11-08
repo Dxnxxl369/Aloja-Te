@@ -21,3 +21,9 @@ spring:
     port: ${RABBITMQ_PORT:5672}
     username: ${RABBITMQ_USER:guest}
     password: ${RABBITMQ_PASSWORD:guest}
+
+# Moderación automática de fotos (workflow de n8n + LlavaGuard)
+moderacion:
+  n8n:
+    webhook-url: ${N8N_WEBHOOK_URL:http://localhost:5678/webhook/moderar-alojamiento}
+    timeout-ms: 10000

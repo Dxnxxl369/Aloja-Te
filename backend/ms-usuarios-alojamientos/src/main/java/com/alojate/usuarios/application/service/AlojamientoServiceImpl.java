@@ -1,5 +1,7 @@
 package com.alojate.usuarios.application.service;
 
+import com.alojate.usuarios.domain.exception.ModeracionNoDisponibleException;
+import com.alojate.usuarios.domain.exception.TransicionEstadoInvalidaException;
 import com.alojate.usuarios.domain.model.Alojamiento;
 import com.alojate.usuarios.domain.model.EstadoPublicacion;
 import com.alojate.usuarios.domain.model.Fotografia;
@@ -7,10 +9,12 @@ import com.alojate.usuarios.domain.model.UnidadReservable;
 import com.alojate.usuarios.domain.ports.in.AlojamientoUseCase;
 import com.alojate.usuarios.domain.ports.out.AlojamientoRepositoryPort;
 import com.alojate.usuarios.domain.ports.out.FotografiaRepositoryPort;
+import com.alojate.usuarios.domain.ports.out.ModeracionNotificadorPort;
 import com.alojate.usuarios.domain.ports.out.UnidadReservableRepositoryPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -25,6 +29,8 @@ public class AlojamientoServiceImpl implements AlojamientoUseCase {
     private final AlojamientoRepositoryPort alojamientoRepository;
     private final FotografiaRepositoryPort fotografiaRepository;
     private final UnidadReservableRepositoryPort unidadReservableRepository;
+    private final ModeracionNotificadorPort moderacionNotificador;
+    private final TransactionTemplate transactionTemplate;
 
     @Override
     @Transactional
@@ -197,10 +203,33 @@ public class AlojamientoServiceImpl implements AlojamientoUseCase {
         return cambiarEstado(idAlojamiento, EstadoPublicacion.SUSPENDIDO, motivo != null ? motivo.trim() : "Publicación suspendida por auditoría.", "ADMIN_MANUAL");
     }
 
+    /**
+     * Inicia la revisión: pasa a EN_REVISION (transacción confirmada) y recién después avisa al workflow de n8n,
+     * para que n8n nunca actúe sobre un estado aún no guardado. Si el aviso falla, vuelve al estado anterior.
+     */
     @Override
-    @Transactional
     public Alojamiento enviarARevision(UUID idAlojamiento) {
-        return cambiarEstado(idAlojamiento, EstadoPublicacion.EN_REVISION, null, "ADMIN_MANUAL");
+        Alojamiento actual = obtenerPorId(idAlojamiento);
+        EstadoPublicacion estadoAnterior = actual.getEstadoPublicacion() != null
+                ? actual.getEstadoPublicacion()
+                : EstadoPublicacion.PENDIENTE;
+
+        if (estadoAnterior != EstadoPublicacion.PENDIENTE && estadoAnterior != EstadoPublicacion.OBSERVADO) {
+            throw new TransicionEstadoInvalidaException(
+                    "Solo se puede iniciar la revisión de alojamientos PENDIENTE u OBSERVADO. Estado actual: " + estadoAnterior);
+        }
+
+        Alojamiento enRevision = transactionTemplate.execute(
+                status -> cambiarEstado(idAlojamiento, EstadoPublicacion.EN_REVISION, null, "ADMIN_MANUAL"));
+
+        try {
+            moderacionNotificador.solicitarModeracion(idAlojamiento);
+        } catch (ModeracionNoDisponibleException ex) {
+            transactionTemplate.executeWithoutResult(
+                    status -> cambiarEstado(idAlojamiento, estadoAnterior, null, null));
+            throw ex;
+        }
+        return enRevision;
     }
 
     // --- MODALIDAD CASA VS HOTEL ---

@@ -19,6 +19,7 @@ import java.util.UUID;
 public class AlojamientoDto {
     private UUID idAlojamiento;
     private UUID idAnfitrion;
+    private String nombreAnfitrion;
     private Integer idTipoPropiedad;
     private String tipoPropiedadNombre;
     private String titulo;

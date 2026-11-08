@@ -2,6 +2,8 @@ package com.alojate.usuarios.infrastructure.adapters.in.rest.exception;
 
 import com.alojate.usuarios.domain.exception.AccesoDenegadoException;
 import com.alojate.usuarios.domain.exception.CredencialesInvalidasException;
+import com.alojate.usuarios.domain.exception.ModeracionNoDisponibleException;
+import com.alojate.usuarios.domain.exception.TransicionEstadoInvalidaException;
 import com.alojate.usuarios.domain.exception.UsuarioYaExisteException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,6 +32,16 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AccesoDenegadoException.class)
     public ResponseEntity<Map<String, Object>> handleAccesoDenegado(AccesoDenegadoException ex) {
         return buildResponse(HttpStatus.FORBIDDEN, ex.getMessage());
+    }
+
+    @ExceptionHandler(TransicionEstadoInvalidaException.class)
+    public ResponseEntity<Map<String, Object>> handleTransicionInvalida(TransicionEstadoInvalidaException ex) {
+        return buildResponse(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(ModeracionNoDisponibleException.class)
+    public ResponseEntity<Map<String, Object>> handleModeracionNoDisponible(ModeracionNoDisponibleException ex) {
+        return buildResponse(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

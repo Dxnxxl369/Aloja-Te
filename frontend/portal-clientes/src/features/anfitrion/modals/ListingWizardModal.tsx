@@ -321,12 +321,64 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
       serviciosIds: [1, 2, 3]
     };
 
+    // Persistencia real en MS-01 de habitaciones/unidades y fotografías (el POST principal solo crea la ficha base).
+    let fotosOmitidas = 0;
+    const persistirDetallesEnBackend = async (idAlojamiento: string) => {
+      try {
+        if (modalidad === 'CASA_DEPARTAMENTO') {
+          await httpClient.put(`/api/v1/alojamientos/${idAlojamiento}/oferta-unica`, {
+            precioNoche: precioCasa,
+            capacidadHuespedes: capacidadCasa,
+            cantidadDormitorios: dormitoriosCasa,
+            cantidadCamas: camasCasa,
+            cantidadBanos: banosCasa
+          });
+        } else {
+          for (const h of habitacionesHotel) {
+            await httpClient.post(`/api/v1/alojamientos/${idAlojamiento}/habitaciones`, {
+              nombre: h.nombre,
+              precioNoche: h.precioNoche,
+              inventarioTotal: h.inventarioTotal,
+              capacidadHuespedes: h.capacidad,
+              cantidadDormitorios: 1,
+              cantidadCamas: h.camas,
+              cantidadBanos: h.banos,
+              idTipoEspacio: 2
+            });
+          }
+        }
+      } catch (e) {
+        console.warn('No se pudieron guardar las habitaciones/unidades en MS-01:', e);
+      }
+
+      // Portada primero. La columna de URL admite hasta 500 caracteres, por lo que las imágenes
+      // subidas como data-URL (base64) no se pueden guardar en la base de datos.
+      const fotosOrdenadas = [...fotos].sort((a, b) => Number(b.esPrincipal) - Number(a.esPrincipal));
+      let orden = 1;
+      for (const f of fotosOrdenadas) {
+        if (f.url.startsWith('data:') || f.url.length > 500) {
+          fotosOmitidas++;
+          continue;
+        }
+        try {
+          await httpClient.post(`/api/v1/alojamientos/${idAlojamiento}/fotografias`, { url: f.url, orden });
+          orden++;
+        } catch (e) {
+          fotosOmitidas++;
+          console.warn('No se pudo guardar una fotografía en MS-01:', e);
+        }
+      }
+    };
+
     try {
       let nuevoAlojamiento: Alojamiento;
 
       try {
         const res = await httpClient.post<any>('/api/v1/alojamientos', payloadBackend);
         const data = res.data;
+        if (data?.idAlojamiento) {
+          await persistirDetallesEnBackend(data.idAlojamiento);
+        }
         nuevoAlojamiento = {
           idAlojamiento: data.idAlojamiento || `aloj-${Date.now()}`,
           idAnfitrion: anfitrionId,
@@ -390,7 +442,12 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
       }
 
       onAlojamientoCreado(nuevoAlojamiento);
-      alert('¡Alojamiento registrado exitosamente! Su estado inicial es PENDIENTE mientras la automatización y administración auditan las fotografías y contenido.');
+      alert(
+        '¡Alojamiento registrado exitosamente! Su estado inicial es PENDIENTE mientras la automatización y administración auditan las fotografías y contenido.' +
+        (fotosOmitidas > 0
+          ? `\n\nAviso: ${fotosOmitidas} fotografía(s) subida(s) desde tu equipo no se guardaron en el servidor (solo se admiten enlaces de imagen). Agrégalas con su URL.`
+          : '')
+      );
       onClose();
     } catch (err: any) {
       setError(err.message || 'Error al registrar el alojamiento.');

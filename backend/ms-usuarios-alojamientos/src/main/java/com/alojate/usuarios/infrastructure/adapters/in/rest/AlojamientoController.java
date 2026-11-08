@@ -4,6 +4,7 @@ import com.alojate.usuarios.domain.model.Alojamiento;
 import com.alojate.usuarios.domain.model.EstadoPublicacion;
 import com.alojate.usuarios.domain.model.Fotografia;
 import com.alojate.usuarios.domain.ports.in.AlojamientoUseCase;
+import com.alojate.usuarios.domain.ports.in.UsuarioUseCase;
 import com.alojate.usuarios.infrastructure.adapters.in.rest.dto.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,7 @@ import java.util.stream.Collectors;
 public class AlojamientoController {
 
     private final AlojamientoUseCase alojamientoUseCase;
+    private final UsuarioUseCase usuarioUseCase;
 
     @GetMapping
     public ResponseEntity<List<AlojamientoDto>> buscarAlojamientos(
@@ -213,6 +215,18 @@ public class AlojamientoController {
     }
 
     // --- MAPPERS ---
+    private String resolverNombreAnfitrion(UUID idAnfitrion) {
+        if (idAnfitrion == null) return null;
+        try {
+            com.alojate.usuarios.domain.model.Usuario u = usuarioUseCase.obtenerPorId(idAnfitrion);
+            if (u == null) return null;
+            String nombre = ((u.getNombre() != null ? u.getNombre() : "") + " " + (u.getApellido() != null ? u.getApellido() : "")).trim();
+            return nombre.isEmpty() ? null : nombre;
+        } catch (RuntimeException e) {
+            return null;
+        }
+    }
+
     private AlojamientoDto toDto(Alojamiento domain) {
         if (domain == null) return null;
         String tipoPropiedadNombre = domain.getTipoPropiedad() != null ? domain.getTipoPropiedad().getNombre() : null;
@@ -249,6 +263,7 @@ public class AlojamientoController {
         return AlojamientoDto.builder()
                 .idAlojamiento(domain.getIdAlojamiento())
                 .idAnfitrion(domain.getIdAnfitrion())
+                .nombreAnfitrion(resolverNombreAnfitrion(domain.getIdAnfitrion()))
                 .idTipoPropiedad(domain.getIdTipoPropiedad())
                 .tipoPropiedadNombre(tipoPropiedadNombre)
                 .titulo(domain.getTitulo())

@@ -9,6 +9,7 @@ export const ENDPOINTS = {
   ALOJAMIENTOS: {
     LISTAR: `${API_BASE_URL}/api/v1/alojamientos`,
     DETALLE: (id: string) => `${API_BASE_URL}/api/v1/alojamientos/${id}`,
+    POR_ANFITRION: (anfitrionId: string) => `${API_BASE_URL}/api/v1/alojamientos/anfitrion/${anfitrionId}`,
     UNIDADES: (id: string) => `${API_BASE_URL}/api/v1/alojamientos/${id}/unidades`,
     CATALOGOS: `${API_BASE_URL}/api/v1/catalogos`,
     VALORACIONES: (idAlojamiento: string) => `${API_BASE_URL}/api/v1/alojamientos/${idAlojamiento}/valoraciones`,
