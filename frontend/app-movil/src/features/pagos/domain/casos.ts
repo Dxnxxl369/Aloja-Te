@@ -31,9 +31,12 @@ export function crearCasosPagos(deps: {
       return repo.iniciar(s, `pago:${s.reservaId}`);
     },
     obtenerPago: (id) => repo.obtener(id),
+    obtenerDatosAnfitrion: (anfitrionId) => repo.obtenerDatosAnfitrion(anfitrionId),
     esFinal: (p) => p.estado !== 'PENDIENTE',
   };
 
-  if (deps.simulacionHabilitada) casos.confirmarSimulado = (id) => repo.confirmarSimulado(id);
+  if (deps.simulacionHabilitada) {
+    casos.confirmarSimulado = (id, reservaId) => repo.confirmarSimulado(id, reservaId);
+  }
   return casos;
 }

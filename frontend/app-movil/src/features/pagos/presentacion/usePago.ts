@@ -9,12 +9,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { POLL_PAGO_MS } from '../constantes';
 import type { CasosPagos } from '../domain/interfaces';
-import type { Pago, SolicitudPago } from '../domain/modelos';
+import type { DatosAnfitrionPago, Pago, SolicitudPago } from '../domain/modelos';
 
 export function usePago(casos: CasosPagos, solicitud: SolicitudPago) {
   const [pago, setPago] = useState<Pago | null>(null);
+  const [anfitrion, setAnfitrion] = useState<DatosAnfitrionPago | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [cargando, setCargando] = useState(true);
+  const [confirmando, setConfirmando] = useState(false);
   const [reloj, setReloj] = useState<{ inicio: number; ahora: number } | null>(null);
   const solicitudRef = useRef(solicitud); // no re-iniciar si el padre re-renderiza
   const pagoId = pago?.id;
@@ -25,7 +27,12 @@ export function usePago(casos: CasosPagos, solicitud: SolicitudPago) {
     setCargando(true);
     setError(null);
     try {
-      setPago(await casos.iniciarPago(solicitudRef.current));
+      const [nuevoPago, datosAnfitrion] = await Promise.all([
+        casos.iniciarPago(solicitudRef.current),
+        casos.obtenerDatosAnfitrion(solicitudRef.current.anfitrionId).catch(() => null),
+      ]);
+      setPago(nuevoPago);
+      setAnfitrion(datosAnfitrion);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No se pudo iniciar el pago');
     } finally {
@@ -65,12 +72,17 @@ export function usePago(casos: CasosPagos, solicitud: SolicitudPago) {
   }, [cadenaQr, final]);
 
   const confirmarSimulado = casos.confirmarSimulado;
-  const simular = useCallback(async () => {
+  const confirmarPago = useCallback(async () => {
     if (!pagoId || !confirmarSimulado) return;
+    setConfirmando(true);
+    setError(null);
     try {
-      setPago(await confirmarSimulado(pagoId));
+      const pagoConfirmado = await confirmarSimulado(pagoId, solicitudRef.current.reservaId);
+      setPago(pagoConfirmado);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'No se pudo confirmar');
+      setError(e instanceof Error ? e.message : 'No se pudo confirmar el pago.');
+    } finally {
+      setConfirmando(false);
     }
   }, [pagoId, confirmarSimulado]);
 
@@ -80,11 +92,14 @@ export function usePago(casos: CasosPagos, solicitud: SolicitudPago) {
       ? Math.max(0, pago.qr.expiraEnSegundos - Math.floor((reloj.ahora - reloj.inicio) / 1000))
       : null;
 
-  return { pago, error, cargando, segundosQr, reintentar: iniciar, simular: confirmarSimulado ? simular : null };
-}
-
-export function formatearSegundos(total: number): string {
-  const m = Math.floor(total / 60);
-  const s = total % 60;
-  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  return {
+    pago,
+    anfitrion,
+    error,
+    cargando,
+    confirmando,
+    segundosQr,
+    reintentar: iniciar,
+    confirmarPago: confirmarSimulado ? confirmarPago : null,
+  };
 }

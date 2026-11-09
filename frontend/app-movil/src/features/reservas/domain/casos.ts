@@ -6,11 +6,9 @@
 // NO VA AQUÍ: HTTP, SQLite ni React: solo recibe el repositorio por interfaz.
 // ======================================================================
 
-import { MAX_NOCHES, OFFSET_BOLIVIA_MS } from '../constantes';
+import { DIA_MS, MAX_NOCHES, OFFSET_BOLIVIA_MS } from '../constantes';
 import type { CasosReservas, RepositorioReservas } from './interfaces';
 import type { Reserva, SolicitudReserva } from './modelos';
-
-const DIA_MS = 24 * 60 * 60 * 1000;
 
 /** 'YYYY-MM-DD' -> epoch ms (UTC) o null si no es una fecha real (ej. 2026-02-30). */
 function fechaUtc(texto: string): number | null {
@@ -80,6 +78,14 @@ export function crearCasosReservas(deps: {
     verificarDisponibilidad: (unidadId, checkIn, checkOut) => {
       if (noches(checkIn, checkOut) === null) throw new Error('Las fechas no son válidas.');
       return repo.disponibilidad(unidadId, checkIn, checkOut);
+    },
+    async cancelarReserva(id) {
+      // Se pregunta al servidor el estado actual: la copia guardada puede ser vieja y MS-02 cancela sin mirar.
+      const actual = await repo.obtener(id);
+      if (actual.estado !== 'PENDIENTE_PAGO') {
+        throw new Error('Esta reserva ya no está pendiente de pago, por eso no se puede cancelar desde aquí.');
+      }
+      return repo.cancelar(id, 'Cancelada por el usuario');
     },
     validarFechas,
     noches,

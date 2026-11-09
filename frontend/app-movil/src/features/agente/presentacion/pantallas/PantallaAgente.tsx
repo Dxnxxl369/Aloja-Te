@@ -1,37 +1,35 @@
 // ======================================================================
 // ARCHIVO: agente/presentacion/pantallas/PantallaAgente.tsx      IMPORTANCIA: ★★★ MUCHA
-// QUÉ ES: La pantalla del agente: chat, avance compacto, tarjetas de alojamientos, respuestas rápidas y botones de confirmar o pagar.
+// QUÉ ES: La pantalla del agente: cabecera fija con el avance en puntos, chat, tarjetas de alojamientos, respuestas rápidas y botones de confirmar o pagar.
 // PARA QUÉ SIRVE: Es donde el usuario genera la reserva hablando; al terminar entrega el `reservaId` para el pago.
 // SIN ÉL: No habría interfaz para el agente.
 // NO VA AQUÍ: Reglas del plan ni llamadas HTTP.
 // ======================================================================
-// La conversación es el centro: el plan va en una barra compacta y las respuestas rápidas
-// evitan escribir. El indicador de modo dice la verdad: "IA local" solo si el modelo está cargado.
+// La conversación es el centro: el plan va en una cabecera fija de cuatro puntos y las respuestas rápidas
+// salen en una franja sobre la barra de escribir. El chat se apoya abajo. El modo (IA local o básico) es un icono junto al título (lo pone app/).
 
-import { Bot, Send } from 'lucide-react-native';
+import { Bot, Building2, Send } from 'lucide-react-native';
 import { useEffect, useRef, useState } from 'react';
 import type { ComponentRef } from 'react';
-import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Boton } from '../../../../shared/ui/Boton';
-import { COLOR, ESPACIO, FUENTE, RADIO } from '../../../../shared/ui/tema';
-import { CIUDADES } from '../../constantes';
+import { Chip } from '../../../../shared/ui/Chip';
+import { Insignia } from '../../../../shared/ui/Insignia';
+import { pluralize } from '../../../../shared/ui/plural';
+import { COLOR } from '../../../../shared/ui/tema';
+import { CIUDADES_RAPIDAS, PERSONAS_RAPIDAS, POLL_COLA_MS } from '../../constantes';
 import type { CasosAgente } from '../../domain/interfaces';
-import type { Mensaje, Opcion } from '../../domain/modelos';
+import type { ContextoAlojamiento } from '../../domain/modelos';
 import { faltantes, recomendar } from '../../domain/plan';
-import { BarraProgreso } from '../componentes/BarraProgreso';
+import { PlanPuntos } from '../componentes/PlanPuntos';
+import { PuntosEscribiendo } from '../componentes/PuntosEscribiendo';
 import { TarjetaOpcion } from '../componentes/TarjetaOpcion';
+import { formatearHora, insigniasDe, nochesEntre, quitarListaDeOpciones } from '../conversacion';
+import { ACTIVIDAD, ACTIVIDAD_GENERICA } from '../texts';
 import { useAgente } from '../useAgente';
+import { useHoras } from '../useHoras';
+import { estilos } from './PantallaAgente.styles';
 
 interface Props {
   casos: CasosAgente;
@@ -42,65 +40,30 @@ interface Props {
    * Devuelve null mientras siga pendiente. Lo conecta app/ con el feature reservas.
    */
   resolverReservaEnCola?: (claveCola: string) => Promise<string | null>;
-  /** "local" si el modelo de IA del celular está cargado; "basico" si entiende con reglas. */
-  modoIa?: 'local' | 'basico';
-  /** Si se pasa, tocar el indicador de modo abre la pantalla para descargar o activar la IA local. */
-  alAbrirIa?: () => void;
+  /** El alojamiento elegido en el explorador. Con él, la reserva se limita a ese alojamiento. */
+  contexto?: ContextoAlojamiento | null;
+  /**
+   * Identifica CADA llegada desde un alojamiento: cuando cambia, la conversación empieza de nuevo con el `contexto`.
+   * Volver a la pestaña con la misma clave no borra lo que ya se habló.
+   */
+  claveContexto?: number;
 }
 
-const POLL_COLA_MS = 3_000;
-const DIA_MS = 24 * 60 * 60 * 1000;
-const CIUDADES_RAPIDAS = CIUDADES.slice(0, 4);
-const PERSONAS_RAPIDAS = [1, 2, 3, 4];
-
-/** Misma forma que `descripcionOpcion` (domain/plan.ts): sirve para no repetir la lista que ya se dibuja como tarjetas. */
-const LINEA_OPCION = /^\d+\. .+ · hasta \d+ personas · Bs \d+(\.\d+)? por noche$/;
-
-function quitarListaDeOpciones(texto: string): string {
-  return texto
-    .split('\n')
-    .filter((l) => !LINEA_OPCION.test(l))
-    .join('\n')
-    .replace(/\n{3,}/g, '\n\n')
-    .trim();
-}
-
-function nochesEntre(entrada?: string, salida?: string): number | null {
-  if (!entrada || !salida) return null;
-  const n = (Date.parse(`${salida}T00:00:00Z`) - Date.parse(`${entrada}T00:00:00Z`)) / DIA_MS;
-  return Number.isFinite(n) && n >= 1 ? Math.round(n) : null;
-}
-
-function formatearHora(ms: number): string {
-  const d = new Date(ms);
-  const h = d.getHours();
-  const m = String(d.getMinutes()).padStart(2, '0');
-  return `${h % 12 === 0 ? 12 : h % 12}:${m} ${h < 12 ? 'AM' : 'PM'}`;
-}
-
-/** Recuerda a qué hora apareció cada mensaje (el modelo del agente no guarda la hora). */
-function useHoras(mensajes: Mensaje[]): Map<number, number> {
-  const horas = useRef(new Map<number, number>());
-  if (mensajes.length <= 1) horas.current.clear(); // conversación nueva
-  for (const m of mensajes) if (!horas.current.has(m.id)) horas.current.set(m.id, Date.now());
-  return horas.current;
-}
-
-function insigniasDe(indice: number, o: Opcion, todas: Opcion[], indiceRecomendada: number | null): string[] {
-  const etiquetas: string[] = [];
-  if (indice === indiceRecomendada) etiquetas.push('Recomendada');
-  if (todas.length >= 2) {
-    const masBarata = Math.min(...todas.map((x) => x.precioNoche));
-    const mayorCapacidad = Math.max(...todas.map((x) => x.capacidad));
-    const menorCapacidad = Math.min(...todas.map((x) => x.capacidad));
-    if (o.precioNoche === masBarata) etiquetas.push('Económico');
-    else if (o.capacidad === mayorCapacidad && mayorCapacidad > menorCapacidad) etiquetas.push('Espacioso');
-  }
-  return etiquetas;
-}
-
-export function PantallaAgente({ casos, alPagar, resolverReservaEnCola, modoIa = 'basico', alAbrirIa }: Props) {
-  const { estado, ocupado, enviar, elegir, confirmar, rechazar, reiniciar } = useAgente(casos);
+export function PantallaAgente({
+  casos,
+  alPagar,
+  resolverReservaEnCola,
+  contexto,
+  claveContexto,
+}: Props) {
+  const { estado, ocupado, enviar, elegir, confirmar, rechazar, reiniciar } = useAgente(casos, contexto ?? undefined);
+  // La primera conversación ya nació con el contexto; solo una llegada NUEVA (otra clave) la reinicia.
+  const claveAtendida = useRef(claveContexto);
+  useEffect(() => {
+    if (claveContexto === claveAtendida.current) return;
+    claveAtendida.current = claveContexto;
+    reiniciar(contexto ?? undefined);
+  }, [claveContexto, contexto, reiniciar]);
   const [texto, setTexto] = useState('');
   const [verPlan, setVerPlan] = useState(false);
   const [reservaDeCola, setReservaDeCola] = useState<string | null>(null);
@@ -141,38 +104,35 @@ export function PantallaAgente({ casos, alPagar, resolverReservaEnCola, modoIa =
   const ultimoDelAgente = [...estado.mensajes].reverse().find((m) => m.rol === 'agente')?.id;
   const recomendada = estado.fase === 'ELIGIENDO' ? recomendar(estado.opciones, estado.criterios) : null;
   const noches = nochesEntre(estado.criterios.checkIn, estado.criterios.checkOut);
+  const pasoActivo = estado.plan.find((p) => p.estado === 'EN_CURSO');
+  const actividad = (pasoActivo && ACTIVIDAD[pasoActivo.id]) ?? ACTIVIDAD_GENERICA;
+  const buscando = pasoActivo?.id === 'BUSCAR';
 
-  // Respuestas rápidas: según lo que el agente esté esperando.
+  // Respuestas rápidas a lo que el agente pregunta (ciudad o personas). Salen en la franja sobre la barra de escribir.
+  // Elegir una opción y confirmar ya tienen sus propios botones en el chat (tarjetas y "Sí, reservar"), por eso no se repiten aquí.
   const falta = estado.fase === 'CONVERSANDO' ? faltantes(estado.criterios)[0] : undefined;
   const rapidas: { etiqueta: string; accion: () => void }[] = [];
-  if (estado.fase === 'ELIGIENDO') {
-    estado.opciones.forEach((_, i) => rapidas.push({ etiqueta: `Opción ${i + 1}`, accion: () => void elegir(i) }));
-  } else if (estado.fase === 'CONFIRMANDO') {
-    rapidas.push({ etiqueta: 'Sí, reservar', accion: () => void confirmar() });
-    rapidas.push({ etiqueta: 'No', accion: () => void rechazar() });
-  } else if (falta === 'ciudad') {
+  if (falta === 'ciudad') {
     CIUDADES_RAPIDAS.forEach((c) => rapidas.push({ etiqueta: c, accion: () => mandar(`en ${c}`) }));
   } else if (falta === 'huespedes') {
     PERSONAS_RAPIDAS.forEach((n) =>
-      rapidas.push({ etiqueta: `${n} persona${n === 1 ? '' : 's'}`, accion: () => mandar(`${n} personas`) }),
+      rapidas.push({ etiqueta: `${n} ${pluralize(n, 'persona', 'personas')}`, accion: () => mandar(`${n} personas`) }),
     );
   }
 
   return (
     <KeyboardAvoidingView style={estilos.pantalla} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <Pressable
-        accessibilityRole={alAbrirIa ? 'button' : 'text'}
-        accessibilityLabel="Modo del asistente"
-        disabled={!alAbrirIa}
-        onPress={alAbrirIa}
-        style={estilos.estadoFila}
-      >
-        <View style={[estilos.punto, { backgroundColor: modoIa === 'local' ? COLOR.exito : COLOR.aviso }]} />
-        <Text style={estilos.estadoTexto}>
-          {modoIa === 'local' ? 'Asistente · IA local en el dispositivo' : 'Asistente · modo básico (sin IA local)'}
-        </Text>
-        {alAbrirIa && <Text style={estilos.estadoEnlace}>{modoIa === 'local' ? 'Gestionar' : 'Activar IA'}</Text>}
-      </Pressable>
+      {/* Cabecera fija: alojamiento elegido (si hay) y avance del agente. El modo (IA local o básico) es el punto del título. */}
+      <View style={estilos.cabecera}>
+        {estado.alojamiento ? (
+          <View style={estilos.cabeceraFila}>
+            <View style={{ flexShrink: 1 }}>
+              <Insignia texto={`Reservando en ${estado.alojamiento.titulo}`} tono="exito" />
+            </View>
+          </View>
+        ) : null}
+        <PlanPuntos plan={estado.plan} abierto={verPlan} alAlternar={() => setVerPlan((v) => !v)} />
+      </View>
 
       <ScrollView
         ref={scroll}
@@ -180,8 +140,6 @@ export function PantallaAgente({ casos, alPagar, resolverReservaEnCola, modoIa =
         keyboardShouldPersistTaps="handled"
         onContentSizeChange={() => scroll.current?.scrollToEnd({ animated: true })}
       >
-        <BarraProgreso plan={estado.plan} abierto={verPlan} alAlternar={() => setVerPlan((v) => !v)} />
-
         {estado.mensajes.map((m) => {
           const esUsuario = m.rol === 'usuario';
           const mostrar =
@@ -200,13 +158,26 @@ export function PantallaAgente({ casos, alPagar, resolverReservaEnCola, modoIa =
         })}
 
         {ocupado && (
-          <View style={estilos.filaMensaje}>
-            <Avatar />
-            <View style={[estilos.burbuja, estilos.agente, estilos.escribiendo]}>
-              <Text style={estilos.textoAgente}>Trabajando en tu pedido</Text>
-              <ActivityIndicator size="small" color={COLOR.primario} />
+          <>
+            <View style={estilos.filaMensaje}>
+              <Avatar />
+              <View style={[estilos.burbuja, estilos.agente, estilos.escribiendo]}>
+                <Text style={estilos.textoAgente}>{actividad}</Text>
+                <PuntosEscribiendo />
+              </View>
             </View>
-          </View>
+            {buscando && estado.criterios.ciudad ? (
+              <View style={estilos.progresoBusqueda}>
+                <View style={estilos.progresoIcono}>
+                  <Building2 color={COLOR.primario} size={22} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={estilos.progresoTitulo}>{estado.criterios.ciudad}</Text>
+                  <Text style={estilos.progresoTexto}>Filtrando opciones disponibles…</Text>
+                </View>
+              </View>
+            ) : null}
+          </>
         )}
 
         {estado.fase === 'ELIGIENDO' &&
@@ -239,45 +210,50 @@ export function PantallaAgente({ casos, alPagar, resolverReservaEnCola, modoIa =
         {estado.fase === 'EN_COLA' && reservaDeCola && (
           <Boton titulo="Ver reserva y pagar" onPress={() => alPagar(reservaDeCola)} />
         )}
-        {terminada && <Boton variante="contorno" titulo="Nueva reserva" onPress={reiniciar} />}
+        {terminada && <Boton variante="contorno" titulo="Nueva reserva" onPress={() => reiniciar()} />}
       </ScrollView>
 
       {!terminada && (
         <View style={[estilos.pie, { paddingBottom: insets.bottom }]}>
-          {rapidas.length > 0 && (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={estilos.chips} keyboardShouldPersistTaps="handled">
+          {/* Sugerencias: una sola fila que se desliza, justo sobre la barra de escribir. Solo cuando el agente hace una pregunta. */}
+          {rapidas.length > 0 && !ocupado ? (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={estilos.franja}
+              contentContainerStyle={estilos.chips}
+              keyboardShouldPersistTaps="handled"
+            >
               {rapidas.map((r) => (
-                <Pressable
-                  key={r.etiqueta}
-                  accessibilityRole="button"
-                  accessibilityLabel={r.etiqueta}
-                  disabled={ocupado}
-                  onPress={r.accion}
-                  style={[estilos.chip, ocupado && { opacity: 0.5 }]}
-                >
-                  <Text style={estilos.chipTexto}>{r.etiqueta}</Text>
-                </Pressable>
+                <Chip key={r.etiqueta} etiqueta={r.etiqueta} onPress={r.accion} />
               ))}
             </ScrollView>
-          )}
+          ) : null}
           <View style={estilos.entrada}>
             <TextInput
               style={estilos.input}
               value={texto}
               onChangeText={setTexto}
-              placeholder="Ej: 2 personas en Cochabamba del 12 al 15 de diciembre"
+              placeholder="Escribe tu pedido…"
               placeholderTextColor={COLOR.textoSuave}
               editable={!ocupado}
               onSubmitEditing={() => mandar(texto)}
               returnKeyType="send"
             />
-            <Boton
-              titulo="Enviar"
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Enviar mensaje"
+              accessibilityState={{ disabled: ocupado || !texto.trim() }}
+              disabled={ocupado || !texto.trim()}
               onPress={() => mandar(texto)}
-              cargando={ocupado}
-              deshabilitado={!texto.trim()}
-              iconoDerecha={(c) => <Send color={c} size={18} />}
-            />
+              style={({ pressed }) => [
+                estilos.enviar,
+                (ocupado || !texto.trim()) && estilos.enviarInactivo,
+                pressed && { backgroundColor: COLOR.primarioPresionado },
+              ]}
+            >
+              {ocupado ? <ActivityIndicator color={COLOR.textoSuave} /> : <Send color={texto.trim() ? COLOR.blanco : COLOR.textoSuave} size={20} />}
+            </Pressable>
           </View>
         </View>
       )}
@@ -292,43 +268,3 @@ function Avatar() {
     </View>
   );
 }
-
-const estilos = StyleSheet.create({
-  pantalla: { flex: 1, backgroundColor: COLOR.fondo },
-  contenido: { padding: ESPACIO.l, gap: ESPACIO.m },
-
-  estadoFila: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.s, paddingHorizontal: ESPACIO.l, paddingTop: ESPACIO.s },
-  punto: { width: 8, height: 8, borderRadius: 4 },
-  estadoTexto: { fontFamily: FUENTE.medio, fontSize: 13, color: COLOR.textoSuave },
-  estadoEnlace: { fontFamily: FUENTE.semi, fontSize: 13, color: COLOR.primario },
-
-  filaMensaje: { flexDirection: 'row', alignItems: 'flex-end', gap: ESPACIO.s },
-  avatar: { width: 32, height: 32, borderRadius: 16, backgroundColor: COLOR.primarioSuave, alignItems: 'center', justifyContent: 'center' },
-  burbuja: { paddingHorizontal: ESPACIO.l, paddingVertical: ESPACIO.m, borderRadius: RADIO.tarjeta },
-  usuario: { backgroundColor: COLOR.primario, borderBottomRightRadius: 4 },
-  agente: { backgroundColor: COLOR.tarjeta, borderWidth: 1, borderColor: COLOR.borde, borderBottomLeftRadius: 4 },
-  escribiendo: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.m },
-  textoUsuario: { fontFamily: FUENTE.normal, fontSize: 16, lineHeight: 23, color: '#fff' },
-  textoAgente: { fontFamily: FUENTE.normal, fontSize: 16, lineHeight: 23, color: COLOR.texto },
-  hora: { fontFamily: FUENTE.normal, fontSize: 12, color: COLOR.textoSuave, marginTop: 4 },
-
-  fila: { flexDirection: 'row', gap: ESPACIO.s },
-
-  pie: { backgroundColor: COLOR.fondo, borderTopWidth: 1, borderTopColor: COLOR.borde },
-  chips: { gap: ESPACIO.s, paddingHorizontal: ESPACIO.l, paddingTop: ESPACIO.m },
-  chip: { minHeight: 44, paddingHorizontal: 16, borderRadius: RADIO.pildora, borderWidth: 1, borderColor: COLOR.primario, backgroundColor: COLOR.primarioSuave, justifyContent: 'center' },
-  chipTexto: { fontFamily: FUENTE.semi, fontSize: 14, color: COLOR.primario },
-  entrada: { flexDirection: 'row', gap: ESPACIO.s, padding: ESPACIO.l, alignItems: 'center' },
-  input: {
-    flex: 1,
-    minHeight: 48,
-    borderWidth: 1,
-    borderColor: COLOR.borde,
-    borderRadius: RADIO.control,
-    paddingHorizontal: ESPACIO.l,
-    backgroundColor: COLOR.tarjeta,
-    fontFamily: FUENTE.normal,
-    fontSize: 15,
-    color: COLOR.texto,
-  },
-});

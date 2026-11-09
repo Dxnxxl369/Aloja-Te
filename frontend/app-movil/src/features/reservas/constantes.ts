@@ -6,6 +6,8 @@
 // NO VA AQUÍ: Lógica ni lectura de variables de entorno.
 // ======================================================================
 
+import { DIA_MS, OFFSET_BOLIVIA_MS } from '../../shared/ui/tiempo';
+
 /** Ruta de MS-02 vía Gateway (ReservasController: @Controller('api/v1/reservas')). */
 export const RUTA_RESERVAS = '/api/v1/reservas';
 
@@ -18,17 +20,20 @@ export const MINUTOS_BLOQUEO = 15;
 /** Cada cuánto se vuelve a preguntar el estado mientras espera el pago. */
 export const POLL_RESERVA_MS = 4_000;
 
+/** Segundos de espera antes de avisar que la confirmación del pago tarda más de lo normal. */
+export const ESPERA_LARGA_S = 45;
+
 export const MAX_NOCHES = 30;
 
-/** Bolivia no usa horario de verano: UTC-4 todo el año. */
-export const OFFSET_BOLIVIA_MS = -4 * 60 * 60 * 1000;
+/** Un día en milisegundos y la hora de Bolivia (UTC-4 todo el año): se definen en shared/ui/tiempo.ts porque los usan varios features. */
+export { DIA_MS, OFFSET_BOLIVIA_MS };
 
 /** Prefijos de la caché local (tabla `cache` de core). */
 export const CACHE = {
   PREFIJO_RESERVA: 'reserva:',
   PREFIJO_CLAVE: 'reserva-clave:',
   PREFIJO_LISTA: 'reservas-cliente:',
-  TTL_MS: 24 * 60 * 60 * 1000,
+  TTL_MS: DIA_MS,
 } as const;
 
 export const ESTADOS_RESERVA = [

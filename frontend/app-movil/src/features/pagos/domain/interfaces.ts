@@ -6,21 +6,23 @@
 // NO VA AQUÍ: Implementaciones.
 // ======================================================================
 
-import type { Pago, SolicitudPago } from './modelos';
+import type { DatosAnfitrionPago, Pago, SolicitudPago } from './modelos';
 
 export interface RepositorioPagos {
   /** `idempotencyKey` hace que repetir la llamada no cree otro pago. */
   iniciar(solicitud: SolicitudPago, idempotencyKey: string): Promise<Pago>;
   obtener(pagoId: string): Promise<Pago>;
+  obtenerDatosAnfitrion(anfitrionId: string): Promise<DatosAnfitrionPago>;
   /** SOLO DEMO: simula el aviso del banco (POST /pagos/:id/confirmar). */
-  confirmarSimulado(pagoId: string): Promise<Pago>;
+  confirmarSimulado(pagoId: string, reservaId?: string): Promise<Pago>;
 }
 
 export interface CasosPagos {
   iniciarPago(solicitud: SolicitudPago): Promise<Pago>;
   obtenerPago(pagoId: string): Promise<Pago>;
+  obtenerDatosAnfitrion(anfitrionId: string): Promise<DatosAnfitrionPago>;
   /** ¿El pago ya no va a cambiar? (COMPLETADO, FALLIDO, REEMBOLSADO) */
   esFinal(pago: Pago): boolean;
   /** Existe solo si la app se arrancó con la simulación habilitada. */
-  confirmarSimulado?: (pagoId: string) => Promise<Pago>;
+  confirmarSimulado?: (pagoId: string, reservaId?: string) => Promise<Pago>;
 }

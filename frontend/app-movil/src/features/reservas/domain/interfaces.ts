@@ -16,6 +16,8 @@ export interface RepositorioReservas {
   disponibilidad(unidadId: string, checkIn: string, checkOut: string): Promise<Disponibilidad>;
   /** Reservas del cliente, de la más reciente a la más antigua. Sin red usa lo último guardado. */
   listarPorCliente(clienteId: string): Promise<Reserva[]>;
+  /** Cancela la reserva en MS-02 (libera las fechas). Necesita red: no se encola. */
+  cancelar(id: string, motivo: string): Promise<Reserva>;
 }
 
 export interface CasosReservas {
@@ -24,6 +26,11 @@ export interface CasosReservas {
   obtenerReservaPorClave(idempotencyKey: string): Promise<Reserva | null>;
   listarReservasDeCliente(clienteId: string): Promise<Reserva[]>;
   verificarDisponibilidad(unidadId: string, checkIn: string, checkOut: string): Promise<Disponibilidad>;
+  /**
+   * Cancela una reserva que todavía espera el pago. Lanza un Error con mensaje para el usuario si ya
+   * no está pendiente (MS-02 no lo comprueba: cancelaría hasta una reserva confirmada).
+   */
+  cancelarReserva(id: string): Promise<Reserva>;
   /** Mensaje de error si las fechas no sirven para reservar (formato, orden, pasado, máximo); null si están bien. */
   validarFechas(checkIn: string, checkOut: string): string | null;
   /** Noches entre dos fechas; null si alguna fecha es inválida o no hay al menos una noche. */

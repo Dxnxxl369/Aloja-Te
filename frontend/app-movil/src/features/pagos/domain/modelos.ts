@@ -10,6 +10,14 @@ import type { ESTADOS_PAGO } from '../constantes';
 
 export type EstadoPago = (typeof ESTADOS_PAGO)[number];
 
+export interface DatosAnfitrionPago {
+  id: string;
+  nombreCompleto: string;
+  bancoNombre: string;
+  numeroCuentaBancaria: string;
+  qrUrl: string | null;
+}
+
 /** Lo necesario para pagar una reserva. Lo arma quien tiene la reserva (el feature reservas no se importa aquí). */
 export interface SolicitudPago {
   reservaId: string;
@@ -49,5 +57,6 @@ export interface Pago {
   estado: EstadoPago;
   /** null cuando MS-03 responde una repetición del pago (solo trae el QR al crearlo). */
   qr: QrPago | null;
+  anfitrion?: DatosAnfitrionPago | null;
   comprobantes: Comprobante[];
 }

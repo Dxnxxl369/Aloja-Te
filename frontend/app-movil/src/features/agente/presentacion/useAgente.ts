@@ -8,10 +8,11 @@
 
 import { useCallback, useRef, useState } from 'react';
 import type { CasosAgente } from '../domain/interfaces';
-import type { EstadoAgente } from '../domain/modelos';
+import type { ContextoAlojamiento, EstadoAgente } from '../domain/modelos';
 
-export function useAgente(casos: CasosAgente) {
-  const [estado, setEstadoReact] = useState<EstadoAgente>(() => casos.iniciar());
+/** `contexto`: si la conversación empieza desde la ficha de un alojamiento, solo se usa al crear el hook. */
+export function useAgente(casos: CasosAgente, contexto?: ContextoAlojamiento) {
+  const [estado, setEstadoReact] = useState<EstadoAgente>(() => casos.iniciar(contexto));
   const [ocupado, setOcupado] = useState(false);
   const actual = useRef(estado); // el estado más reciente, sin esperar al render
   const bloqueo = useRef(false); // corta el doble toque
@@ -43,6 +44,7 @@ export function useAgente(casos: CasosAgente) {
     elegir: (i: number) => ejecutar((e) => casos.elegirOpcion(e, i)),
     confirmar: () => ejecutar((e) => casos.confirmar(e)),
     rechazar: () => ejecutar(async (e) => casos.rechazar(e)),
-    reiniciar: () => poner(casos.iniciar()),
+    /** Empieza una conversación nueva (con un alojamiento ya elegido, si se pasa). */
+    reiniciar: (nuevoContexto?: ContextoAlojamiento) => poner(casos.iniciar(nuevoContexto)),
   };
 }

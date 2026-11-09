@@ -97,6 +97,13 @@ export function crearRepositorioReservas(deps: DepsRepositorioReservas): Reposit
       return reservas.sort((a, b) => b.checkIn.localeCompare(a.checkIn));
     },
 
+    async cancelar(id, motivo) {
+      // Un POST no se reintenta ni se encola: si no hay red, el error llega a la pantalla.
+      const resp = await api.post<ReservaDto>(`${RUTA_RESERVAS}/${id}/cancelar`, { motivo });
+      await guardarCache(CACHE.PREFIJO_RESERVA + id, resp, CACHE.TTL_MS);
+      return reservaDesdeDto(resp);
+    },
+
     async disponibilidad(unidadId, checkIn, checkOut) {
       const resp = await api.get<DisponibilidadDto>(`${RUTA_RESERVAS}/disponibilidad/${unidadId}`, {
         query: { checkIn, checkOut },

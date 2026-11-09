@@ -1,61 +1,66 @@
 // ======================================================================
 // ARCHIVO: shared/ui/Encabezado.tsx      IMPORTANCIA: ★ POCA
-// QUÉ ES: La barra de arriba de cada pantalla: flecha para volver, título en Playfair y el botón de perfil.
+// QUÉ ES: La barra de arriba de cada pantalla: flecha para volver, el título y, si aplica, compartir.
 // PARA QUÉ SIRVE: Que todas las pantallas tengan la misma cabecera y respeten la zona segura del celular.
 // SIN ÉL: Cada pantalla dibujaría su propia barra.
-// NO VA AQUÍ: Navegación ni sesión: solo avisa con `alVolver` y `alPerfil`.
+// NO VA AQUÍ: Navegación ni sesión: solo avisa con `alVolver` y `alCompartir`. El perfil se abre desde la barra de abajo.
 // ======================================================================
 
-import { ArrowLeft, CalendarDays, User } from 'lucide-react-native';
+import { ArrowLeft, Share2 } from 'lucide-react-native';
+import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { COLOR, ESPACIO, FUENTE } from './tema';
+import { Logo } from './Logo';
+import { COLOR, ESPACIO, FUENTE, TAMANO } from './tema';
 
 interface Props {
-  titulo: string;
+  /** Título de la pantalla. Se ignora si `marca` es true. */
+  titulo?: string;
+  /** Cabecera del explorador: logo + "Aloja-Te" en lugar de flecha y título. */
+  marca?: boolean;
   alVolver?: () => void;
-  alPerfil?: () => void;
-  /** Si se pasa, muestra el acceso a "Mis reservas". */
-  alMisReservas?: () => void;
+  /** Si se pasa, muestra el botón de compartir a la derecha. */
+  alCompartir?: () => void;
+  /** Algo propio de la pantalla a la derecha del título (por ejemplo, el punto de modo del agente). */
+  derecha?: ReactNode;
 }
 
-export function Encabezado({ titulo, alVolver, alPerfil, alMisReservas }: Props) {
+export function Encabezado({ titulo, marca, alVolver, alCompartir, derecha }: Props) {
   const insets = useSafeAreaInsets();
   return (
     <View style={[estilos.barra, { paddingTop: insets.top + ESPACIO.s }]}>
-      <View style={estilos.izquierda}>
-        {alVolver ? (
-          <Pressable accessibilityRole="button" accessibilityLabel="Volver" onPress={alVolver} hitSlop={12}>
-            <ArrowLeft color={COLOR.texto} size={24} />
-          </Pressable>
-        ) : null}
-        <Text style={estilos.titulo} numberOfLines={1}>
-          {titulo}
-        </Text>
-      </View>
+      {marca ? (
+        <View style={estilos.marca} accessibilityRole="header">
+          <Logo tamano={36} />
+          <Text style={estilos.nombreMarca} numberOfLines={1}>
+            Aloja<Text style={{ color: COLOR.primario }}>-Te</Text>
+          </Text>
+        </View>
+      ) : (
+        <View style={estilos.izquierda}>
+          {alVolver ? (
+            <Pressable accessibilityRole="button" accessibilityLabel="Volver" onPress={alVolver} hitSlop={12}>
+              <ArrowLeft color={COLOR.texto} size={24} />
+            </Pressable>
+          ) : null}
+          <Text style={estilos.titulo} numberOfLines={1}>
+            {titulo}
+          </Text>
+        </View>
+      )}
       <View style={estilos.derecha}>
-        {alMisReservas ? (
+        {alCompartir ? (
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Mis reservas"
-            onPress={alMisReservas}
+            accessibilityLabel="Compartir"
+            onPress={alCompartir}
             style={estilos.icono}
             hitSlop={4}
           >
-            <CalendarDays color={COLOR.primario} size={20} />
+            <Share2 color={COLOR.primario} size={20} />
           </Pressable>
         ) : null}
-        {alPerfil ? (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Mi cuenta"
-            onPress={alPerfil}
-            style={estilos.avatar}
-            hitSlop={4}
-          >
-            <User color="#fff" size={18} />
-          </Pressable>
-        ) : null}
+        {derecha}
       </View>
     </View>
   );
@@ -82,13 +87,7 @@ const estilos = StyleSheet.create({
     justifyContent: 'center',
   },
   izquierda: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.l, flex: 1 },
-  titulo: { fontFamily: FUENTE.titulo, fontSize: 20, color: COLOR.texto, flexShrink: 1 },
-  avatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: COLOR.primario,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  marca: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.s, flex: 1 },
+  nombreMarca: { ...FUENTE.tituloFuerte, fontSize: TAMANO.titulo, color: COLOR.texto, flexShrink: 1 },
+  titulo: { ...FUENTE.titulo, fontSize: TAMANO.titulo, color: COLOR.texto, flexShrink: 1 },
 });

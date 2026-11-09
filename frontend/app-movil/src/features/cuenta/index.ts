@@ -7,3 +7,4 @@
 // ======================================================================
 
 export { PantallaLogin } from './presentacion/pantallas/PantallaLogin';
+export { PantallaPerfil } from './presentacion/pantallas/PantallaPerfil';

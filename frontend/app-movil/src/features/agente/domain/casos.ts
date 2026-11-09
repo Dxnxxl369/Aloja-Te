@@ -12,7 +12,7 @@
 
 import { MAX_OPCIONES } from '../constantes';
 import type { CasosAgente, CatalogoAlojamientos, MotorLenguaje, Reservador } from './interfaces';
-import type { Criterios, EstadoAgente, Mensaje, Opcion, PasoId, EstadoPaso } from './modelos';
+import type { ContextoAlojamiento, Criterios, EstadoAgente, Mensaje, Opcion, PasoId, EstadoPaso } from './modelos';
 import {
   descripcionOpcion,
   faltantes,
@@ -21,6 +21,7 @@ import {
   interpretarEleccion,
   marcar,
   mezclar,
+  normalizar,
   planInicial,
   preguntaPara,
   recomendar,
@@ -45,20 +46,25 @@ export function crearCasosAgente(deps: {
   });
   const mensajeDeError = (err: unknown) => (err instanceof Error ? err.message : 'Ocurrió un error inesperado.');
 
-  function inicial(): EstadoAgente {
+  function inicial(contexto?: ContextoAlojamiento): EstadoAgente {
+    const ciudad = contexto?.ciudad.trim();
     return decir(
       {
         fase: 'CONVERSANDO',
-        criterios: {},
+        // El alojamiento elegido ya fija la ciudad: no hace falta preguntarla.
+        criterios: ciudad ? { ciudad } : {},
         opciones: [],
         eleccion: null,
         plan: planInicial(),
         mensajes: [],
         reservaId: null,
         claveCola: null,
+        alojamiento: contexto ?? null,
       },
       'agente',
-      '¡Hola! Cuéntame qué alojamiento buscas: ciudad, fechas y cuántas personas.',
+      contexto
+        ? `¡Hola! Vamos a reservar en ${contexto.titulo}. Cuéntame las fechas y cuántas personas son.`
+        : '¡Hola! Cuéntame qué alojamiento buscas: ciudad, fechas y cuántas personas.',
     );
   }
 
@@ -83,10 +89,19 @@ export function crearCasosAgente(deps: {
       s = paso({ ...s, fase: 'CONVERSANDO' }, 'BUSCAR', 'FALLIDO', mensajeDeError(err));
       return decir(s, 'agente', 'No pude consultar los alojamientos ahora. Inténtalo de nuevo en un momento.');
     }
+    // Si el usuario llegó desde la ficha de un alojamiento, solo se ofrecen las habitaciones de ese.
+    const fijo = s.alojamiento;
+    if (fijo) encontradas = encontradas.filter((o) => o.alojamientoId === fijo.id);
     const opciones = [...encontradas].sort((a, b) => a.precioNoche - b.precioNoche).slice(0, MAX_OPCIONES);
     if (opciones.length === 0) {
       s = paso({ ...s, fase: 'CONVERSANDO', opciones: [] }, 'BUSCAR', 'FALLIDO', 'Sin resultados');
-      return decir(s, 'agente', 'No encontré alojamientos con esos datos. ¿Quieres cambiar la ciudad, el presupuesto o el número de personas?');
+      return decir(
+        s,
+        'agente',
+        fijo
+          ? `No encontré habitaciones disponibles en ${fijo.titulo} con esos datos. ¿Quieres cambiar el número de personas o el presupuesto? También puedes decirme otra ciudad para buscar en otros alojamientos.`
+          : 'No encontré alojamientos con esos datos. ¿Quieres cambiar la ciudad, el presupuesto o el número de personas?',
+      );
     }
     s = paso(paso({ ...s, fase: 'ELIGIENDO', opciones }, 'BUSCAR', 'HECHO', `${opciones.length} opciones`), 'ELEGIR', 'EN_CURSO');
     const lista = opciones.map((o, i) => descripcionOpcion(o, i + 1)).join('\n');
@@ -151,6 +166,12 @@ export function crearCasosAgente(deps: {
 
     const criterios = mezclar(s.criterios, nuevo);
     s = paso({ ...s, criterios }, 'ENTENDER', 'HECHO');
+
+    // Si pide otra ciudad, ya no quiere ese alojamiento: se deja de limitar la búsqueda.
+    const fijo = s.alojamiento;
+    if (fijo && nuevo.ciudad && normalizar(nuevo.ciudad) !== normalizar(fijo.ciudad)) {
+      s = decir({ ...s, alojamiento: null }, 'agente', `Dejo de limitar la búsqueda a ${fijo.titulo} y busco en ${nuevo.ciudad}.`);
+    }
 
     // Las fechas inválidas se descartan y se avisa por qué.
     if (criterios.checkIn && criterios.checkOut) {

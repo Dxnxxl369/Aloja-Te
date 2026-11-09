@@ -7,7 +7,6 @@ import {
   Download,
   BarChart3,
   Table as TableIcon,
-  Code,
   SlidersHorizontal,
   ChevronDown,
   ChevronRight,
@@ -45,10 +44,10 @@ export const ReportesGenerativosIA: React.FC<ReportesGenerativosIAProps> = ({
   alojamientos,
   onMostrarToast
 }) => {
-  const [prompt, setPrompt] = useState('Ocupación y tarifas de todas mis habitaciones');
+  const [prompt, setPrompt] = useState('');
   const [cargando, setCargando] = useState(false);
   const [escuchandoVoz, setEscuchandoVoz] = useState(false);
-  const [tabActiva, setTabActiva] = useState<'tabla' | 'grafico' | 'sql'>('tabla');
+  const [tabActiva, setTabActiva] = useState<'tabla' | 'grafico'>('tabla');
   const [resultado, setResultado] = useState<ReportQueryResult | null>(null);
 
   // Columnas activas y reordenables (Drag & Reorder / Toggle)
@@ -58,11 +57,6 @@ export const ReportesGenerativosIA: React.FC<ReportesGenerativosIAProps> = ({
 
   // Fila expandida para desglose (Drill-Down)
   const [filaDesglosada, setFilaDesglosada] = useState<Record<string, any> | null>(null);
-
-  // Ejecución inicial automática
-  useEffect(() => {
-    handleEjecutarConsulta('Ocupación y tarifas de todas mis habitaciones');
-  }, [alojamientos]);
 
   const handleEjecutarConsulta = async (textoConsulta: string) => {
     if (!textoConsulta.trim()) return;
@@ -255,6 +249,21 @@ export const ReportesGenerativosIA: React.FC<ReportesGenerativosIAProps> = ({
         </div>
       </div>
 
+      {/* Estado Inicial sin consulta activa */}
+      {!resultado && !cargando && (
+        <div className="p-10 text-center rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-3">
+          <div className="w-12 h-12 mx-auto rounded-2xl bg-blue-50 dark:bg-blue-950/80 flex items-center justify-center text-blue-600 dark:text-blue-400">
+            <Sparkles className="w-6 h-6" />
+          </div>
+          <h3 className="font-serif text-lg font-bold text-slate-900 dark:text-white">
+            Generador de Reportes con Inteligencia Artificial
+          </h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+            Ingresa tu consulta en lenguaje natural arriba o pulsa cualquiera de las sugerencias rápidas para generar tu reporte ejecutivo al instante.
+          </p>
+        </div>
+      )}
+
       {/* Tarjetas de KPIs Ejecutivos Automáticos */}
       {resultado && resultado.kpis.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -286,7 +295,7 @@ export const ReportesGenerativosIA: React.FC<ReportesGenerativosIAProps> = ({
           {/* Header de Herramientas */}
           <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 bg-slate-50/50 dark:bg-slate-900/50">
             
-            {/* Selector de Pestañas: Tabla, Gráfico SVG, Consulta SQL */}
+            {/* Selector de Pestañas: Tabla, Gráficos Ejecutivos */}
             <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-slate-200/70 dark:bg-slate-800 text-xs font-bold">
               <button
                 type="button"
@@ -315,19 +324,6 @@ export const ReportesGenerativosIA: React.FC<ReportesGenerativosIAProps> = ({
               >
                 <BarChart3 className="w-3.5 h-3.5" />
                 <span>Gráficos Ejecutivos</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setTabActiva('sql')}
-                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl transition ${
-                  tabActiva === 'sql'
-                    ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-                }`}
-              >
-                <Code className="w-3.5 h-3.5" />
-                <span>Consulta SQL</span>
               </button>
             </div>
 
@@ -536,20 +532,6 @@ export const ReportesGenerativosIA: React.FC<ReportesGenerativosIAProps> = ({
             </div>
           )}
 
-          {/* 3. Vista Sentencia SQL Generada */}
-          {tabActiva === 'sql' && (
-            <div className="p-6 bg-slate-950 text-slate-100 font-mono text-xs overflow-x-auto space-y-4">
-              <div className="flex items-center justify-between text-slate-400 text-[11px] pb-3 border-b border-slate-800">
-                <span>Consulta ANSI SQL generada por el Copiloto IA:</span>
-                <span className="px-2 py-0.5 rounded-md bg-blue-900/60 text-blue-300 font-sans font-bold">
-                  {resultado.proveedorIA}
-                </span>
-              </div>
-              <pre className="text-emerald-400 leading-relaxed font-mono">
-                {resultado.sqlEjecutado}
-              </pre>
-            </div>
-          )}
         </div>
       )}
 

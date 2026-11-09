@@ -14,6 +14,7 @@
 import { createContext, useContext } from 'react';
 import { AGENTE_LLM_HABILITADO, api, GROQ_API_KEY, auth, cola, guardarCache, leerCache, modeloLocal, nuevoId, PAGO_SIMULADO_HABILITADO } from '../core';
 import { crearFeatureAgente } from '../features/agente';
+import { crearRepositorioAnfitrion } from '../features/anfitrion';
 import { crearFeatureCatalogo } from '../features/catalogo';
 import { crearFeaturePagos } from '../features/pagos';
 import { crearFeatureReservas } from '../features/reservas';
@@ -37,7 +38,8 @@ export function crearFeatures() {
     },
   });
   const fichaAlojamiento = crearFichaAlojamiento({ api, guardarCache, leerCache });
-  return { reservas, pagos, agente, catalogo, fichaAlojamiento };
+  const anfitrion = crearRepositorioAnfitrion({ api });
+  return { reservas, pagos, agente, catalogo, fichaAlojamiento, anfitrion };
 }
 
 export type Features = ReturnType<typeof crearFeatures>;

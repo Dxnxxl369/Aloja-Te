@@ -8,55 +8,68 @@
 // Diseño: mockup "4. Reserva y cuenta regresiva". Solo se muestran datos reales de la reserva:
 // no hay foto ni ubicación en el modelo, por eso la cabecera usa un ícono en lugar de una imagen.
 
-import { Building2, Calendar, CalendarCheck, CheckCircle2, Hourglass, Lock, Moon, Users } from 'lucide-react-native';
+import { Image } from 'expo-image';
+import { Building2, Calendar, CalendarCheck, CheckCircle2, CreditCard, Hourglass, Lock, MapPin, Moon, Users, X } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
-import type { ReactNode } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Boton } from '../../../../shared/ui/Boton';
+import { FilaDato } from '../../../../shared/ui/FilaDato';
+import { formatearDinero } from '../../../../shared/ui/dinero';
 import { Insignia } from '../../../../shared/ui/Insignia';
-import type { Tono } from '../../../../shared/ui/Insignia';
-import { COLOR, ESPACIO, FUENTE, RADIO, SOMBRA_FLOTANTE } from '../../../../shared/ui/tema';
-import { MINUTOS_BLOQUEO } from '../../constantes';
+import { pluralize } from '../../../../shared/ui/plural';
+import { formatearSegundos } from '../../../../shared/ui/tiempo';
+import { COLOR, ESPACIO } from '../../../../shared/ui/tema';
+import { Verificado } from '../../../../shared/ui/Verificado';
+import { ESPERA_LARGA_S, MINUTOS_BLOQUEO } from '../../constantes';
 import type { CasosReservas } from '../../domain/interfaces';
-import type { Reserva } from '../../domain/modelos';
-import { formatearSegundos, useReserva } from '../useReserva';
+import type { FichaAlojamiento, Reserva } from '../../domain/modelos';
+import { TEXTO_ESTADO, TONO_ESTADO } from '../texts';
+import { useReserva } from '../useReserva';
+import { estilos } from './PantallaReserva.styles';
 
 interface Props {
   casos: CasosReservas;
   reservaId: string;
   alPagar: (reserva: Reserva) => void;
+  /**
+   * Trae la foto y el lugar del alojamiento (la reserva solo guarda el título). Lo conecta app/.
+   * Si falla o no se pasa, la portada usa un ícono: nunca bloquea la pantalla.
+   */
+  cargarFicha?: (alojamientoId: string) => Promise<FichaAlojamiento | null>;
   /** true cuando el usuario viene de pagar: la reserva se confirma sola cuando el servidor la actualice. */
   pagoRecibido?: boolean;
 }
 
-/** Segundos de espera antes de avisar que la confirmación tarda más de lo normal. */
-const ESPERA_LARGA_S = 45;
-
-const TEXTO_ESTADO: Record<Reserva['estado'], string> = {
-  PENDIENTE_PAGO: 'Pendiente de pago',
-  CONFIRMADA: 'Confirmada',
-  CHECKIN_REALIZADO: 'Check-in realizado',
-  COMPLETADA: 'Completada',
-  CANCELADA: 'Cancelada',
-  EXPIRADA: 'Expirada (no se pagó a tiempo)',
-  RECHAZADA_COMPENSADA: 'Rechazada',
-};
-
-const TONO_ESTADO: Record<Reserva['estado'], Tono> = {
-  PENDIENTE_PAGO: 'aviso',
-  CONFIRMADA: 'exito',
-  CHECKIN_REALIZADO: 'exito',
-  COMPLETADA: 'exito',
-  CANCELADA: 'error',
-  EXPIRADA: 'error',
-  RECHAZADA_COMPENSADA: 'error',
-};
-
-export function PantallaReserva({ casos, reservaId, alPagar, pagoRecibido = false }: Props) {
-  const { reserva, error, segundos, sePuedePagar } = useReserva(casos, reservaId);
+export function PantallaReserva({ casos, reservaId, alPagar, cargarFicha, pagoRecibido = false }: Props) {
+  const { reserva, error, segundos, sePuedePagar, cancelar, cancelando, errorCancelar } = useReserva(casos, reservaId);
   const insets = useSafeAreaInsets();
   const [esperaLarga, setEsperaLarga] = useState(false);
+  const [ficha, setFicha] = useState<FichaAlojamiento | null>(null);
+  const alojamientoId = reserva?.alojamientoId;
+
+  // La foto y el lugar llegan aparte y sin apuro: mientras tanto se ve el ícono.
+  useEffect(() => {
+    if (!alojamientoId || !cargarFicha) return;
+    let vivo = true;
+    cargarFicha(alojamientoId).then(
+      (f) => vivo && setFicha(f),
+      () => undefined,
+    );
+    return () => {
+      vivo = false;
+    };
+  }, [alojamientoId, cargarFicha]);
+
+  const confirmarCancelacion = () =>
+    Alert.alert(
+      '¿Cancelar la reserva?',
+      'Se liberan las fechas para otros huéspedes. Si ya pagaste, no canceles: espera la confirmación del banco.',
+      [
+        { text: 'Volver', style: 'cancel' },
+        { text: 'Cancelar reserva', style: 'destructive', onPress: () => void cancelar() },
+      ],
+    );
   useEffect(() => {
     if (!pagoRecibido) return;
     const t = setTimeout(() => setEsperaLarga(true), ESPERA_LARGA_S * 1000);
@@ -72,7 +85,7 @@ export function PantallaReserva({ casos, reservaId, alPagar, pagoRecibido = fals
   }
 
   const pendiente = reserva.estado === 'PENDIENTE_PAGO';
-  const total = `${reserva.moneda} ${reserva.total.toFixed(2)}`;
+  const total = formatearDinero(reserva.total, reserva.moneda);
   const plazoTotal = MINUTOS_BLOQUEO * 60;
   const progreso = segundos === null ? 0 : Math.min(1, Math.max(0, segundos / plazoTotal));
   const vencido = segundos === 0;
@@ -83,7 +96,23 @@ export function PantallaReserva({ casos, reservaId, alPagar, pagoRecibido = fals
         {/* Cabecera del alojamiento */}
         <View style={estilos.tarjeta}>
           <View style={estilos.portada}>
-            <Building2 color={COLOR.primario} size={44} strokeWidth={1.5} />
+            {ficha?.fotoUrl ? (
+              <Image
+                source={{ uri: ficha.fotoUrl }}
+                style={StyleSheet.absoluteFill}
+                contentFit="cover"
+                transition={150}
+                cachePolicy="memory-disk"
+                accessibilityLabel={`Foto de ${reserva.alojamientoTitulo}`}
+              />
+            ) : (
+              <Building2 color={COLOR.primario} size={44} strokeWidth={1.5} />
+            )}
+            {ficha?.verificado ? (
+              <View style={estilos.verificado}>
+                <Verificado texto="Alojamiento verificado" variante="sobreFoto" />
+              </View>
+            ) : null}
             <View style={estilos.codigo}>
               <Text style={estilos.codigoTexto}>#{reserva.id.slice(0, 8).toUpperCase()}</Text>
             </View>
@@ -91,6 +120,14 @@ export function PantallaReserva({ casos, reservaId, alPagar, pagoRecibido = fals
           <View style={estilos.cuerpo}>
             <Text style={estilos.titulo}>{reserva.alojamientoTitulo}</Text>
             <Text style={estilos.suave}>{reserva.unidadNombre}</Text>
+            {ficha?.ubicacion ? (
+              <View style={estilos.lugar}>
+                <MapPin color={COLOR.primario} size={16} />
+                <Text style={estilos.suave} numberOfLines={2}>
+                  {ficha.ubicacion}
+                </Text>
+              </View>
+            ) : null}
           </View>
         </View>
 
@@ -124,7 +161,7 @@ export function PantallaReserva({ casos, reservaId, alPagar, pagoRecibido = fals
             </View>
             <Text style={estilos.cuentaDescripcion}>
               {vencido
-                ? 'Las fechas ya pueden reservarse por otros huéspedes. Vuelve al asistente para hacer una nueva reserva.'
+                ? 'Las fechas ya pueden reservarse por otros huéspedes. Vuelve al agente para hacer una nueva reserva.'
                 : `Tu cupo está garantizado ${MINUTOS_BLOQUEO} minutos mientras completas el pago. Pasado el plazo, la habitación quedará disponible para otros huéspedes.`}
             </Text>
             <View style={estilos.barra}>
@@ -141,15 +178,15 @@ export function PantallaReserva({ casos, reservaId, alPagar, pagoRecibido = fals
               <Insignia texto={TEXTO_ESTADO[reserva.estado]} tono={TONO_ESTADO[reserva.estado]} />
             </View>
 
-            <Fila icono={<Calendar color={COLOR.textoSuave} size={20} />} etiqueta="Entrada (check-in)" valor={reserva.checkIn} />
-            <Fila icono={<CalendarCheck color={COLOR.textoSuave} size={20} />} etiqueta="Salida (check-out)" valor={reserva.checkOut} />
-            <Fila icono={<Moon color={COLOR.textoSuave} size={20} />} etiqueta="Duración" valor={`${reserva.noches} noche${reserva.noches === 1 ? '' : 's'}`} />
-            <Fila icono={<Users color={COLOR.textoSuave} size={20} />} etiqueta="Huéspedes" valor={String(reserva.huespedes)} />
+            <FilaDato icono={<Calendar color={COLOR.textoSuave} size={20} />} etiqueta="Entrada (check-in)" valor={reserva.checkIn} />
+            <FilaDato icono={<CalendarCheck color={COLOR.textoSuave} size={20} />} etiqueta="Salida (check-out)" valor={reserva.checkOut} />
+            <FilaDato icono={<Moon color={COLOR.textoSuave} size={20} />} etiqueta="Duración" valor={`${reserva.noches} ${pluralize(reserva.noches, 'noche', 'noches')}`} />
+            <FilaDato icono={<Users color={COLOR.textoSuave} size={20} />} etiqueta="Huéspedes" valor={String(reserva.huespedes)} />
 
             <View style={estilos.resumen}>
               <View style={estilos.filaPrecio}>
                 <Text style={estilos.suave}>
-                  {reserva.moneda} {reserva.precioNoche.toFixed(2)} × {reserva.noches} noche{reserva.noches === 1 ? '' : 's'}
+                  {formatearDinero(reserva.precioNoche, reserva.moneda)} × {reserva.noches} {pluralize(reserva.noches, 'noche', 'noches')}
                 </Text>
                 <Text style={estilos.suave}>{total}</Text>
               </View>
@@ -178,7 +215,7 @@ export function PantallaReserva({ casos, reservaId, alPagar, pagoRecibido = fals
           </View>
         )}
 
-        {error && <Text style={estilos.error}>Sin conexión con el servidor: se muestra el último dato guardado.</Text>}
+        {error ? <Text style={estilos.error}>Sin conexión: se muestra lo último guardado.</Text> : null}
 
         {pendiente && !pagoRecibido && (
           <View style={estilos.seguro}>
@@ -193,87 +230,28 @@ export function PantallaReserva({ casos, reservaId, alPagar, pagoRecibido = fals
           <Boton
             titulo={`Pagar ahora • ${total}`}
             onPress={() => alPagar(reserva)}
-            deshabilitado={!sePuedePagar}
+            deshabilitado={!sePuedePagar || cancelando}
+            iconoIzquierda={(c) => <CreditCard color={c} size={20} />}
           />
+          {errorCancelar ? (
+            <Text accessibilityRole="alert" style={estilos.error}>
+              {errorCancelar}
+            </Text>
+          ) : null}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Cancelar esta solicitud de reserva"
+            accessibilityState={{ disabled: cancelando, busy: cancelando }}
+            disabled={cancelando}
+            onPress={confirmarCancelacion}
+            hitSlop={8}
+            style={[estilos.cancelar, cancelando && { opacity: 0.5 }]}
+          >
+            {cancelando ? <ActivityIndicator size="small" color={COLOR.textoSuave} /> : <X color={COLOR.textoSuave} size={18} />}
+            <Text style={estilos.cancelarTexto}>{cancelando ? 'Cancelando…' : 'Cancelar esta solicitud de reserva'}</Text>
+          </Pressable>
         </View>
       )}
     </View>
   );
 }
-
-function Fila({ icono, etiqueta, valor }: { icono: ReactNode; etiqueta: string; valor: string }) {
-  return (
-    <View style={estilos.fila}>
-      <View style={estilos.filaEtiqueta}>
-        {icono}
-        <Text style={estilos.texto}>{etiqueta}</Text>
-      </View>
-      <Text style={estilos.valor}>{valor}</Text>
-    </View>
-  );
-}
-
-const estilos = StyleSheet.create({
-  pantalla: { flex: 1, backgroundColor: COLOR.fondo },
-  pagina: { padding: ESPACIO.l, gap: ESPACIO.l, paddingBottom: ESPACIO.xxl },
-  centro: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: ESPACIO.l, backgroundColor: COLOR.fondo },
-
-  tarjeta: { backgroundColor: COLOR.tarjeta, borderRadius: RADIO.tarjeta, borderWidth: 1, borderColor: COLOR.borde, overflow: 'hidden' },
-  portada: { height: 120, backgroundColor: COLOR.primarioSuave, alignItems: 'center', justifyContent: 'center' },
-  codigo: { position: 'absolute', right: ESPACIO.m, bottom: ESPACIO.m, backgroundColor: '#fff', borderRadius: RADIO.control, paddingHorizontal: ESPACIO.s, paddingVertical: 2 },
-  codigoTexto: { fontFamily: FUENTE.semi, fontSize: 11, color: COLOR.textoSuave, letterSpacing: 0.5 },
-  cuerpo: { padding: ESPACIO.l, gap: ESPACIO.xs },
-  titulo: { fontFamily: FUENTE.tituloFuerte, fontSize: 24, color: COLOR.texto },
-  suave: { fontFamily: FUENTE.normal, fontSize: 14, color: COLOR.textoSuave },
-  texto: { fontFamily: FUENTE.normal, fontSize: 15, color: COLOR.texto },
-  valor: { fontFamily: FUENTE.semi, fontSize: 15, color: COLOR.texto },
-
-  cuenta: { backgroundColor: COLOR.avisoFondo, borderRadius: RADIO.tarjeta, borderWidth: 1, borderColor: COLOR.avisoBorde, padding: ESPACIO.l, gap: ESPACIO.m },
-  cuentaCabecera: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.m },
-  cuentaIcono: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#fef3c7', alignItems: 'center', justifyContent: 'center' },
-  cuentaTitulo: { flex: 1, fontFamily: FUENTE.titulo, fontSize: 17, lineHeight: 22, color: '#92400e' },
-  reloj: { backgroundColor: COLOR.aviso, borderRadius: RADIO.pildora, paddingHorizontal: ESPACIO.m, paddingVertical: 4 },
-  relojTexto: { fontFamily: FUENTE.fuerte, fontSize: 14, color: '#fff', fontVariant: ['tabular-nums'] },
-  cuentaDescripcion: { fontFamily: FUENTE.normal, fontSize: 13, lineHeight: 19, color: '#92400e' },
-  barra: { height: 6, borderRadius: 3, backgroundColor: '#fde68a', overflow: 'hidden' },
-  barraRelleno: { height: 6, borderRadius: 3 },
-
-  estado: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: COLOR.campo, borderRadius: RADIO.control, padding: ESPACIO.m },
-  etiquetaMayus: { fontFamily: FUENTE.medio, fontSize: 12, letterSpacing: 0.8, color: COLOR.textoSuave },
-  fila: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  filaEtiqueta: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.m },
-  resumen: { backgroundColor: COLOR.campo, borderRadius: RADIO.control, padding: ESPACIO.l, gap: ESPACIO.s },
-  filaPrecio: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  nota: { fontFamily: FUENTE.normal, fontSize: 12, color: COLOR.textoSuave },
-  separador: { height: 1, backgroundColor: COLOR.borde, marginVertical: ESPACIO.xs },
-  total: { fontFamily: FUENTE.tituloFuerte, fontSize: 24, color: COLOR.primario },
-
-  confirmada: { alignItems: 'center', gap: ESPACIO.s, backgroundColor: COLOR.exitoFondo, borderWidth: 1, borderColor: COLOR.exitoBorde, borderRadius: RADIO.tarjeta, padding: ESPACIO.xl },
-  confirmadaTitulo: { fontFamily: FUENTE.titulo, fontSize: 22, color: COLOR.exito, textAlign: 'center' },
-  confirmadaTexto: { fontFamily: FUENTE.normal, fontSize: 15, color: COLOR.texto, textAlign: 'center' },
-  pinCaja: { flexDirection: 'row', gap: ESPACIO.s, marginTop: ESPACIO.s },
-  pinDigito: {
-    width: 44,
-    height: 56,
-    textAlign: 'center',
-    textAlignVertical: 'center',
-    lineHeight: 56,
-    fontFamily: FUENTE.fuerte,
-    fontSize: 28,
-    color: COLOR.texto,
-    backgroundColor: '#fff',
-    borderRadius: RADIO.control,
-    borderWidth: 1,
-    borderColor: COLOR.exitoBorde,
-    overflow: 'hidden',
-  },
-  confirmando: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.m, backgroundColor: COLOR.primarioSuave, borderWidth: 1, borderColor: '#bfdbfe', borderRadius: RADIO.tarjeta, padding: ESPACIO.l },
-  confirmandoTitulo: { fontFamily: FUENTE.semi, fontSize: 15, color: COLOR.primario },
-  confirmandoTexto: { fontFamily: FUENTE.normal, fontSize: 13, lineHeight: 19, color: COLOR.texto, marginTop: 2 },
-
-  seguro: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: ESPACIO.s },
-  seguroTexto: { fontFamily: FUENTE.medio, fontSize: 12, color: COLOR.textoSuave },
-  error: { fontFamily: FUENTE.normal, fontSize: 13, color: COLOR.error, textAlign: 'center' },
-
-  barraInferior: { padding: ESPACIO.l, backgroundColor: COLOR.tarjeta, borderTopWidth: 1, borderTopColor: COLOR.borde, ...SOMBRA_FLOTANTE },
-});

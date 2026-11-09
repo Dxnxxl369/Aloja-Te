@@ -6,7 +6,7 @@
 // NO VA AQUÍ: Diseño ni reglas (están en domain/casos.ts).
 // ======================================================================
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { POLL_RESERVA_MS } from '../constantes';
 import type { CasosReservas } from '../domain/interfaces';
 import type { Reserva } from '../domain/modelos';
@@ -15,6 +15,8 @@ export function useReserva(casos: CasosReservas, id: string | null) {
   const [reserva, setReserva] = useState<Reserva | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [segundos, setSegundos] = useState<number | null>(null);
+  const [cancelando, setCancelando] = useState(false);
+  const [errorCancelar, setErrorCancelar] = useState<string | null>(null);
 
   // Pide la reserva y, mientras esté PENDIENTE_PAGO, la vuelve a pedir cada POLL_RESERVA_MS.
   useEffect(() => {
@@ -52,11 +54,27 @@ export function useReserva(casos: CasosReservas, id: string | null) {
     return () => clearInterval(t);
   }, [casos, reserva]);
 
-  return { reserva, error, segundos, sePuedePagar: reserva ? casos.sePuedePagar(reserva) : false };
-}
+  /** Cancela la reserva pendiente. Si sale bien, la pantalla pasa a mostrarla como cancelada. */
+  const cancelar = useCallback(async () => {
+    if (!id) return;
+    setCancelando(true);
+    setErrorCancelar(null);
+    try {
+      setReserva(await casos.cancelarReserva(id));
+    } catch (e) {
+      setErrorCancelar(e instanceof Error ? e.message : 'No se pudo cancelar la reserva.');
+    } finally {
+      setCancelando(false);
+    }
+  }, [casos, id]);
 
-export function formatearSegundos(total: number): string {
-  const m = Math.floor(total / 60);
-  const s = total % 60;
-  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  return {
+    reserva,
+    error,
+    segundos,
+    sePuedePagar: reserva ? casos.sePuedePagar(reserva) : false,
+    cancelar,
+    cancelando,
+    errorCancelar,
+  };
 }

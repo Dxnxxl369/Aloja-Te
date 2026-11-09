@@ -12,7 +12,8 @@ import { ChevronDown, ChevronUp } from 'lucide-react-native';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { COLOR, ESPACIO, FUENTE, RADIO } from '../../../../shared/ui/tema';
 import type { Paso } from '../../domain/modelos';
-import { PanelPlan, pasoActual } from './PanelPlan';
+import { PanelPlan } from './PanelPlan';
+import { pasoActual } from '../etapasPlan';
 
 interface Props {
   plan: Paso[];
@@ -83,9 +84,9 @@ const estilos = StyleSheet.create({
   },
   fila: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   derecha: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.xs },
-  titulo: { fontFamily: FUENTE.semi, fontSize: 15, color: COLOR.texto },
-  paso: { fontFamily: FUENTE.semi, fontSize: 13, color: COLOR.primario },
+  titulo: { ...FUENTE.semi, fontSize: 15, color: COLOR.texto },
+  paso: { ...FUENTE.semi, fontSize: 13, color: COLOR.primario },
   segmentos: { flexDirection: 'row', gap: 4 },
   segmento: { flex: 1, height: 6, borderRadius: 3, backgroundColor: COLOR.borde },
-  actual: { fontFamily: FUENTE.normal, fontSize: 13, color: COLOR.textoSuave },
+  actual: { ...FUENTE.normal, fontSize: 13, color: COLOR.textoSuave },
 });

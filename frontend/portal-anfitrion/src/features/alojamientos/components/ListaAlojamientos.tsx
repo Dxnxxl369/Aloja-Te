@@ -15,7 +15,7 @@ import { alojamientoService } from '../services/alojamientoService';
 
 interface ListaAlojamientosProps {
   alojamientos: Alojamiento[];
-  onGuardarLista: (nuevaLista: Alojamiento[]) => void;
+  onGuardarLista: (nuevaLista: Alojamiento[], mostrarToast?: boolean) => void;
   onPublicarNuevo?: () => void;
   alojamientoEnEdicionId?: string | null;
   habitacionEnEdicionId?: string | null;
@@ -61,7 +61,7 @@ export const ListaAlojamientos: React.FC<ListaAlojamientosProps> = ({
     setSincronizando(true);
     try {
       const actualizados = await alojamientoService.sincronizarConServidor(anfitrionClave);
-      onGuardarLista(actualizados);
+      onGuardarLista(actualizados, false);
     } catch (e) {
       console.warn('Error durante sincronización:', e);
     } finally {
@@ -132,14 +132,14 @@ export const ListaAlojamientos: React.FC<ListaAlojamientosProps> = ({
     const nuevaLista = alojamientos.map(a =>
       a.idAlojamiento === actualizado.idAlojamiento ? actualizado : a
     );
-    onGuardarLista(nuevaLista);
+    onGuardarLista(nuevaLista, true);
     alojamientoService.guardar(anfitrionClave, nuevaLista);
     abrirEdicion(null);
   };
 
   const handleNuevoAlojamientoCreado = (nuevo: Alojamiento) => {
     const nuevaLista = [nuevo, ...alojamientos.filter(a => a.idAlojamiento !== nuevo.idAlojamiento)];
-    onGuardarLista(nuevaLista);
+    onGuardarLista(nuevaLista, true);
     setWizardAbierto(false);
   };
 

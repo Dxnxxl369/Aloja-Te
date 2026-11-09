@@ -27,4 +27,4 @@ export function crearFeaturePagos(deps: {
 
 export { PantallaPago } from './presentacion/pantallas/PantallaPago';
 export type { CasosPagos, RepositorioPagos } from './domain/interfaces';
-export type { EstadoPago, Pago, QrPago, SolicitudPago } from './domain/modelos';
+export type { DatosAnfitrionPago, EstadoPago, Pago, QrPago, SolicitudPago } from './domain/modelos';

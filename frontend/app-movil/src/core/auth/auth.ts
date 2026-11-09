@@ -55,12 +55,19 @@ export function sesionDesdeLoginDto(dto: LoginDto | undefined | null): Sesion {
   const claims = leerClaimsJwt(dto.token);
   const usuarioId = dto.usuarioId ?? (typeof claims?.sub === 'string' ? claims.sub : '');
   if (!usuarioId) throw new AppError('DESCONOCIDO', 'No se pudo determinar el usuario');
+  const rol =
+    dto.rol ??
+    (typeof claims?.rol === 'string'
+      ? claims.rol
+      : typeof claims?.role === 'string'
+      ? claims.role
+      : 'CLIENTE');
   return {
     token: dto.token,
     usuarioId,
     nombre: dto.nombreCompleto ?? '',
     email: dto.email ?? '',
-    rol: dto.rol ?? 'CLIENTE',
+    rol,
     expiraEn: typeof claims?.exp === 'number' ? claims.exp * 1000 : null,
   };
 }

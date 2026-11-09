@@ -270,9 +270,11 @@ export const AppContent: React.FC = () => {
           {seccionActiva === 'alojamientos' && (
             <ListaAlojamientos
               alojamientos={alojamientos}
-              onGuardarLista={(nuevaLista) => {
+              onGuardarLista={(nuevaLista, mostrarAviso = false) => {
                 handleGuardarAlojamientos(nuevaLista);
-                mostrarToast('Alojamiento y unidades guardados exitosamente.');
+                if (mostrarAviso) {
+                  mostrarToast('Alojamiento y unidades guardados exitosamente.');
+                }
               }}
               onPublicarNuevo={() => setWizardGlobalAbierto(true)}
               alojamientoEnEdicionId={alojamientoIdActivo}

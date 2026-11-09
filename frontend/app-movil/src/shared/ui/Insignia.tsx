@@ -8,15 +8,15 @@
 
 import type { ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { COLOR, ESPACIO, FUENTE, RADIO } from './tema';
+import { COLOR, ESPACIO, FUENTE, RADIO, TAMANO } from './tema';
 
 export type Tono = 'primario' | 'exito' | 'aviso' | 'error' | 'neutro';
 
 const TONOS: Record<Tono, { texto: string; fondo: string; borde: string }> = {
-  primario: { texto: COLOR.primario, fondo: COLOR.primarioSuave, borde: '#bfdbfe' },
-  exito: { texto: COLOR.exito, fondo: COLOR.exitoFondo, borde: COLOR.exitoBorde },
-  aviso: { texto: COLOR.aviso, fondo: COLOR.avisoFondo, borde: COLOR.avisoBorde },
-  error: { texto: COLOR.error, fondo: COLOR.errorFondo, borde: COLOR.errorBorde },
+  primario: { texto: COLOR.primario, fondo: COLOR.primarioSuave, borde: COLOR.primarioBorde },
+  exito: { texto: COLOR.exitoOscuro, fondo: COLOR.exitoFondo, borde: COLOR.exitoBorde },
+  aviso: { texto: COLOR.avisoOscuro, fondo: COLOR.avisoFondo, borde: COLOR.avisoBorde },
+  error: { texto: COLOR.errorOscuro, fondo: COLOR.errorFondo, borde: COLOR.errorBorde },
   neutro: { texto: COLOR.textoSuave, fondo: COLOR.fondo, borde: COLOR.borde },
 };
 
@@ -48,5 +48,5 @@ const estilos = StyleSheet.create({
     borderRadius: RADIO.pildora,
     borderWidth: 1,
   },
-  texto: { fontFamily: FUENTE.semi, fontSize: 11, letterSpacing: 0.4 },
+  texto: { ...FUENTE.semi, fontSize: TAMANO.micro, letterSpacing: 0.4 },
 });

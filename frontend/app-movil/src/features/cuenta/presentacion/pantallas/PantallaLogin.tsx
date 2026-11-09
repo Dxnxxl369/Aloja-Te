@@ -7,22 +7,14 @@
 // ======================================================================
 // Diseño: mockup "1. Inicio de sesión". Los textos de error salen de AppError (core/base).
 
-import { ArrowRight, Eye, EyeOff, Lock, Mail, ShieldCheck, Sun } from 'lucide-react-native';
+import { ArrowRight, Eye, EyeOff, Lock, Mail, ShieldCheck } from 'lucide-react-native';
 import { useState } from 'react';
-import {
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Boton } from '../../../../shared/ui/Boton';
-import { Insignia } from '../../../../shared/ui/Insignia';
-import { COLOR, ESPACIO, FUENTE, RADIO, SOMBRA_FLOTANTE } from '../../../../shared/ui/tema';
+import { Logo } from '../../../../shared/ui/Logo';
+import { COLOR, ESPACIO } from '../../../../shared/ui/tema';
+import { estilos } from './PantallaLogin.styles';
 
 interface Props {
   /** Debe lanzar un Error con mensaje apto para el usuario si falla. */
@@ -59,21 +51,15 @@ export function PantallaLogin({ alIniciar }: Props) {
         keyboardShouldPersistTaps="handled"
       >
         <View style={estilos.marca}>
-          <View style={estilos.logo}>
-            <Sun color="#fff" size={34} />
-          </View>
-          <View style={estilos.nombreFila}>
-            <Text style={estilos.nombre}>
-              Aloja<Text style={{ color: COLOR.primario }}>-Te</Text>
-            </Text>
-            <Insignia texto="BOLIVIA" />
-          </View>
+          <Logo tamano={56} />
+          <Text style={estilos.nombre}>
+            Aloja<Text style={{ color: COLOR.primario }}>-Te</Text>
+          </Text>
           <Text style={estilos.lema}>Plataforma Nacional de Alojamientos</Text>
         </View>
 
         <View style={estilos.tarjeta}>
           <Text style={estilos.titulo}>Inicia sesión</Text>
-          <Text style={estilos.subtitulo}>Entra para reservar con el asistente.</Text>
 
           <Text style={estilos.etiqueta}>Correo Electrónico</Text>
           <View style={estilos.campo}>
@@ -121,11 +107,11 @@ export function PantallaLogin({ alIniciar }: Props) {
             </Pressable>
           </View>
 
-          {error && (
+          {error ? (
             <Text accessibilityRole="alert" style={estilos.error}>
               {error}
             </Text>
-          )}
+          ) : null}
 
           <View style={{ marginTop: ESPACIO.l }}>
             <Boton
@@ -138,6 +124,45 @@ export function PantallaLogin({ alIniciar }: Props) {
           </View>
         </View>
 
+        {/* Acceso Rápido para Pruebas de Roles */}
+        <View style={estilosDemo.contenedorDemo}>
+          <Text style={estilosDemo.tituloDemo}>ACCESO RÁPIDO PARA EVALUACIÓN</Text>
+          <View style={estilosDemo.filaDemo}>
+            <Pressable
+              style={estilosDemo.botonDemo}
+              onPress={() => {
+                setEmail('cliente@alojate.bo');
+                setPassword('Password123!');
+              }}
+            >
+              <Text style={estilosDemo.rolDemo}>Huésped</Text>
+              <Text style={estilosDemo.emailDemo}>cliente@alojate.bo</Text>
+            </Pressable>
+
+            <Pressable
+              style={[estilosDemo.botonDemo, estilosDemo.botonDemoAnfitrion]}
+              onPress={() => {
+                setEmail('carlos.mendoza@alojate.bo');
+                setPassword('Password123!');
+              }}
+            >
+              <Text style={[estilosDemo.rolDemo, { color: COLOR.primario }]}>Anfitrión (Carlos BMSC)</Text>
+              <Text style={estilosDemo.emailDemo}>carlos.mendoza@alojate.bo</Text>
+            </Pressable>
+
+            <Pressable
+              style={[estilosDemo.botonDemo, estilosDemo.botonDemoAnfitrion]}
+              onPress={() => {
+                setEmail('danielqczn@gmail.com');
+                setPassword('Password123!');
+              }}
+            >
+              <Text style={[estilosDemo.rolDemo, { color: COLOR.primario }]}>Anfitrión (Daniel)</Text>
+              <Text style={estilosDemo.emailDemo}>danielqczn@gmail.com</Text>
+            </Pressable>
+          </View>
+        </View>
+
         <View style={estilos.seguro}>
           <ShieldCheck color={COLOR.textoSuave} size={16} />
           <Text style={estilos.seguroTexto}>Conexión cifrada de alta seguridad</Text>
@@ -147,32 +172,47 @@ export function PantallaLogin({ alIniciar }: Props) {
   );
 }
 
-const estilos = StyleSheet.create({
-  pantalla: { flex: 1, backgroundColor: COLOR.fondo },
-  contenido: { paddingHorizontal: ESPACIO.xl, gap: ESPACIO.xl, flexGrow: 1 },
-
-  marca: { alignItems: 'center', gap: ESPACIO.s },
-  logo: { width: 56, height: 56, borderRadius: 16, backgroundColor: COLOR.primario, alignItems: 'center', justifyContent: 'center', ...SOMBRA_FLOTANTE },
-  nombreFila: { flexDirection: 'row', alignItems: 'center', gap: ESPACIO.s, marginTop: ESPACIO.s },
-  nombre: { fontFamily: FUENTE.tituloFuerte, fontSize: 32, color: COLOR.texto },
-  lema: { fontFamily: FUENTE.normal, fontSize: 14, color: COLOR.textoSuave },
-
-  tarjeta: { backgroundColor: COLOR.tarjeta, borderRadius: 20, padding: ESPACIO.xl, ...SOMBRA_FLOTANTE },
-  titulo: { fontFamily: FUENTE.tituloFuerte, fontSize: 26, color: COLOR.texto },
-  subtitulo: { fontFamily: FUENTE.normal, fontSize: 15, color: COLOR.textoSuave, marginTop: ESPACIO.xs, marginBottom: ESPACIO.l },
-  etiqueta: { fontFamily: FUENTE.medio, fontSize: 14, color: COLOR.texto, marginTop: ESPACIO.m, marginBottom: ESPACIO.s },
-  campo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: ESPACIO.m,
-    minHeight: 52,
-    paddingHorizontal: ESPACIO.l,
-    borderRadius: RADIO.control,
-    backgroundColor: COLOR.campo,
+const estilosDemo = StyleSheet.create({
+  contenedorDemo: {
+    padding: ESPACIO.m,
+    backgroundColor: 'rgba(255, 255, 255, 0.85)',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: COLOR.borde,
+    gap: 8,
   },
-  input: { flex: 1, fontFamily: FUENTE.normal, fontSize: 16, color: COLOR.texto, paddingVertical: ESPACIO.m },
-  error: { fontFamily: FUENTE.medio, fontSize: 14, color: COLOR.error, marginTop: ESPACIO.m },
-
-  seguro: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: ESPACIO.s },
-  seguroTexto: { fontFamily: FUENTE.medio, fontSize: 13, color: COLOR.textoSuave, letterSpacing: 0.3 },
+  tituloDemo: {
+    fontSize: 10,
+    color: COLOR.textoSuave,
+    letterSpacing: 0.8,
+    textAlign: 'center',
+    fontWeight: '700',
+  },
+  filaDemo: {
+    gap: 6,
+  },
+  botonDemo: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    backgroundColor: COLOR.tarjeta,
+    borderWidth: 1,
+    borderColor: COLOR.borde,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  botonDemoAnfitrion: {
+    borderColor: '#BFDBFE',
+    backgroundColor: '#EFF6FF',
+  },
+  rolDemo: {
+    fontSize: 12,
+    color: COLOR.texto,
+    fontWeight: '600',
+  },
+  emailDemo: {
+    fontSize: 11,
+    color: COLOR.textoSuave,
+  },
 });

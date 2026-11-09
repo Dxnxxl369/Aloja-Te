@@ -10,7 +10,7 @@
 
 import type { ReactNode } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text } from 'react-native';
-import { COLOR, ESPACIO, FUENTE, RADIO } from './tema';
+import { COLOR, ESPACIO, FUENTE, RADIO, TAMANO } from './tema';
 
 type Variante = 'primario' | 'secundario' | 'contorno';
 
@@ -27,7 +27,7 @@ interface Props {
 }
 
 const COLOR_TEXTO: Record<Variante, string> = {
-  primario: '#ffffff',
+  primario: COLOR.blanco,
   secundario: COLOR.primario,
   contorno: COLOR.texto,
 };
@@ -46,7 +46,7 @@ export function Boton({ titulo, onPress, deshabilitado, cargando, secundario, va
       style={({ pressed }) => [
         estilos.base,
         v === 'primario' && { backgroundColor: pressed ? COLOR.primarioPresionado : COLOR.primario },
-        v === 'secundario' && { backgroundColor: pressed ? '#dbeafe' : COLOR.primarioSuave },
+        v === 'secundario' && { backgroundColor: pressed ? COLOR.primarioSuavePresionado : COLOR.primarioSuave },
         v === 'contorno' && { backgroundColor: pressed ? COLOR.fondo : 'transparent', borderWidth: 1, borderColor: COLOR.borde },
         inactivo && estilos.inactivo,
       ]}
@@ -75,5 +75,5 @@ const estilos = StyleSheet.create({
     gap: ESPACIO.s,
   },
   inactivo: { opacity: 0.5 },
-  texto: { fontFamily: FUENTE.semi, fontSize: 15 },
+  texto: { ...FUENTE.semi, fontSize: TAMANO.cuerpo },
 });
