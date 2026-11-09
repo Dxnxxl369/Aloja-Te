@@ -9,7 +9,7 @@
 import { StyleSheet } from 'react-native';
 import { COLOR, ESPACIO, FUENTE, TAMANO } from '../../../../shared/ui/tema';
 
-export const DIAMETRO = 28;
+const DIAMETRO = 28;
 
 export const estilos = StyleSheet.create({
   caja: { paddingHorizontal: ESPACIO.l, paddingVertical: ESPACIO.m },

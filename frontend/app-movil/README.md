@@ -23,6 +23,8 @@ App React Native (Expo SDK 58) offline-first para buscar alojamientos en Bolivia
 | `EXPO_PUBLIC_API_URL` | `http://10.0.2.2:8080` | URL del Gateway |
 | `EXPO_PUBLIC_PAGO_SIMULADO` | desactivado | `1` muestra "Simular pago del banco (demo)" |
 | `EXPO_PUBLIC_IA_LOCAL` | `true` | `false` desactiva la IA local |
+| `EXPO_PUBLIC_AGENTE_LLM` | `true` | `false` apaga la IA de la nube del agente (queda siempre en modo básico) |
+| `EXPO_PUBLIC_GROQ_API_KEY` | vacía | Clave de Groq: la app llama a la IA directo (solo demo, ver "Cómo decide el agente") |
 
 | Dónde corre la app | `EXPO_PUBLIC_API_URL` |
 |---|---|
@@ -55,6 +57,33 @@ Tres pestañas (**Explorar**, **Agente** al centro, **Perfil**) y, encima, las d
 | Pago | QR Simple: pendiente, aprobado, fallido y vencido |
 
 **Avisos:** la app programa notificaciones **locales** (5 minutos antes de que venza el pago y la víspera del check-in). Las push de servidor no existen en Expo Go de Android; hacen falta un development build y un servicio que las envíe.
+
+## Cómo decide el agente
+
+- **Modo normal:** una IA de la nube (Groq, directo o a través de MS-04) decide qué hacer con ocho herramientas, que la app ejecuta con tu sesión:
+
+  | Herramienta | Qué hace |
+  |---|---|
+  | `search_accommodations` | Busca habitaciones (ciudad, personas, presupuesto) |
+  | `check_availability` | Verifica fechas y calcula el total |
+  | `propose_booking` | Muestra el resumen con el total (no reserva) |
+  | `get_accommodation_details` | Ficha: políticas, horarios, servicios (solo lee) |
+  | `list_my_bookings` | Tus reservas, su estado y el tiempo para pagar (solo lee) |
+  | `confirm_booking` | Crea la reserva que ya viste en el resumen |
+  | `cancel_booking` | Cancela una reserva pendiente de pago |
+  | `open_payment` | Deja lista la pantalla "Pagar ahora" |
+
+- **Candados que no dependen de la IA** (están en `llmCases.ts`):
+  - **Reservar:** `confirm_booking` solo funciona si el resumen ya estaba en pantalla y tu mensaje es un sí claro: trae una palabra afirmativa ("dale", "adelante", "confirmo"...) y ninguna de duda, negación o cambio. Un "sí" o "no" solo lo resuelve el código, sin IA.
+  - **Datos inventados:** si no dijiste cuántas personas son, la IA no puede poner un número por su cuenta: el código lo rechaza y la IA te pregunta.
+  - **Errores:** el agente nunca reinicia la conversación solo. Si una herramienta falla (sin resultados, dato faltante, sin cupo, fechas inválidas), la IA explica y pregunta por lo que hay que cambiar, y los datos ya dados se conservan. Solo el botón "Nueva reserva" empieza de cero.
+  - **Cancelar:** nunca cancela en la misma llamada. La app te pregunta "¿Seguro?" (texto fijo) y solo cancela si respondes en el mensaje siguiente. Solo se cancelan reservas pendientes de pago.
+  - **Pagar:** la IA no cobra. `open_payment` solo muestra el botón; el pago lo haces tú con el QR en la app de tu banco.
+  - El resumen y el total los arma el código; el PIN de check-in y los ids nunca se le muestran a la IA.
+- **Límite de Groq (plan gratis):** unos 8.000 tokens por minuto por modelo. Cada consulta cuesta ~1.200 tokens, así que una charla muy rápida puede toparse con el límite; entonces prueba el segundo modelo y, si tampoco, pasa al modo básico.
+- **Modo básico:** si la nube no responde (sin internet, sin clave), atiende el plan fijo con la IA local (si la descargaste) o con reglas simples, y avisa una vez. Reintenta la nube a los 30 s.
+- **Clave de Groq en la app:** `EXPO_PUBLIC_GROQ_API_KEY` en el `.env` de la app (no se sube a git). Con clave, la app llama a Groq directo. **Va dentro de la app instalada: cualquiera con el APK puede sacarla**, así que solo para demos y rótala al terminar.
+- **Sin clave en la app:** el agente pasa por MS-04, que usa `GROQ_API_KEY` de `backend/ms-ia-copiloto/.env`.
 
 ## IA local (opcional)
 

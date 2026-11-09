@@ -18,6 +18,12 @@ export const PAGO_SIMULADO_HABILITADO = process.env.EXPO_PUBLIC_PAGO_SIMULADO ==
 
 export const IA_LOCAL_HABILITADA = (process.env.EXPO_PUBLIC_IA_LOCAL ?? 'true') === 'true';
 
+/** El agente usa la IA de la nube (Groq) para planear con herramientas; si falla, sigue en modo básico. `false` = siempre modo básico. */
+export const AGENTE_LLM_HABILITADO = (process.env.EXPO_PUBLIC_AGENTE_LLM ?? 'true') === 'true';
+
+/** Clave de Groq para que la app llame a la IA directo. Queda DENTRO de la app instalada (no es secreta): solo para demos. Vacía = el agente usa MS-04. */
+export const GROQ_API_KEY = process.env.EXPO_PUBLIC_GROQ_API_KEY ?? '';
+
 // --- http -------------------------------------------------------------------
 export const HTTP = {
   TIMEOUT_MS: 15_000,

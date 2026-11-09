@@ -3,7 +3,8 @@
 // QUÉ ES: Consigue la foto y el lugar de un alojamiento a partir de su id (MS-01).
 // PARA QUÉ SIRVE: La reserva (MS-02) solo guarda el título; la pantalla de reserva muestra la portada con esto.
 // SIN ÉL: La portada de la reserva sería siempre un ícono.
-// NO VA AQUÍ: Pantallas ni reglas de reserva. Cuando exista el feature de catálogo, esto pasa allí.
+// NO VA AQUÍ: Pantallas ni reglas de reserva. El feature catálogo ya trae la ficha completa (`obtenerDetalle`), pero esta versión liviana
+// (foto, lugar y "verificado") es la que usa la reserva; juntar las dos queda pendiente.
 // ======================================================================
 // Si no hay red usa lo último guardado; si tampoco hay, devuelve null y la pantalla sigue sin foto.
 

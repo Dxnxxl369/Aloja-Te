@@ -15,7 +15,7 @@ import type { Paso } from '../../domain/modelos';
 import type { Etapa } from '../etapasPlan';
 import { etapasDelPlan, pasoVisible } from '../etapasPlan';
 import { PanelPlan } from './PanelPlan';
-import { DIAMETRO, estilos } from './PlanPuntos.styles';
+import { estilos } from './PlanPuntos.styles';
 
 interface Props {
   plan: Paso[];

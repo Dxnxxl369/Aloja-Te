@@ -12,7 +12,7 @@
 //  los necesita ya registrados para enviar lo que quedó pendiente de la sesión anterior).
 
 import { createContext, useContext } from 'react';
-import { api, auth, cola, guardarCache, leerCache, modeloLocal, nuevoId, PAGO_SIMULADO_HABILITADO } from '../core';
+import { AGENTE_LLM_HABILITADO, api, GROQ_API_KEY, auth, cola, guardarCache, leerCache, modeloLocal, nuevoId, PAGO_SIMULADO_HABILITADO } from '../core';
 import { crearFeatureAgente } from '../features/agente';
 import { crearFeatureCatalogo } from '../features/catalogo';
 import { crearFeaturePagos } from '../features/pagos';
@@ -22,17 +22,20 @@ import { crearFichaAlojamiento } from './fichaAlojamiento';
 export function crearFeatures() {
   const reservas = crearFeatureReservas({ api, cola, nuevoId, guardarCache, leerCache });
   const pagos = crearFeaturePagos({ api, simulacionHabilitada: PAGO_SIMULADO_HABILITADO });
+  const catalogo = crearFeatureCatalogo({ api, guardarCache, leerCache });
   const agente = crearFeatureAgente({
     api,
     reservas: reservas.casos,
     modeloLocal,
+    llmHabilitado: AGENTE_LLM_HABILITADO,
+    groqApiKey: GROQ_API_KEY,
+    obtenerDetalle: catalogo.casos.obtenerDetalle,
     obtenerCliente: async () => {
       const s = await auth.sesionActual();
       if (!s) throw new Error('Inicia sesión para reservar.');
       return { id: s.usuarioId, nombre: s.nombre };
     },
   });
-  const catalogo = crearFeatureCatalogo({ api, guardarCache, leerCache });
   const fichaAlojamiento = crearFichaAlojamiento({ api, guardarCache, leerCache });
   return { reservas, pagos, agente, catalogo, fichaAlojamiento };
 }
