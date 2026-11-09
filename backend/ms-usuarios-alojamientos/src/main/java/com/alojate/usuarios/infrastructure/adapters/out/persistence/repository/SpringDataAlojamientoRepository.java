@@ -18,12 +18,14 @@ public interface SpringDataAlojamientoRepository extends JpaRepository<Alojamien
 
     List<AlojamientoJpaEntity> findByEstadoPublicacion(EstadoPublicacion estadoPublicacion);
 
+    long countByEstadoPublicacion(EstadoPublicacion estadoPublicacion);
+
     @Query("SELECT DISTINCT a FROM AlojamientoJpaEntity a " +
            "LEFT JOIN a.unidades u " +
            "WHERE (a.estadoPublicacion = com.alojate.usuarios.domain.model.EstadoPublicacion.PUBLICADO " +
            "   OR (a.estadoPublicacion = com.alojate.usuarios.domain.model.EstadoPublicacion.OBSERVADO AND (LOWER(a.origenUltimoCambio) LIKE '%nlp%' OR LOWER(a.origenUltimoCambio) LIKE '%resena%'))) " +
-           "AND (:ciudad IS NULL OR LOWER(a.ciudad) LIKE LOWER(CONCAT('%', CAST(:ciudad AS string), '%'))) " +
-           "AND (:departamento IS NULL OR LOWER(a.departamento) LIKE LOWER(CONCAT('%', CAST(:departamento AS string), '%'))) " +
+           "AND (CAST(:ciudad AS string) IS NULL OR LOWER(a.ciudad) LIKE LOWER(CONCAT('%', CAST(:ciudad AS string), '%'))) " +
+           "AND (CAST(:departamento AS string) IS NULL OR LOWER(a.departamento) LIKE LOWER(CONCAT('%', CAST(:departamento AS string), '%'))) " +
            "AND (:idTipoPropiedad IS NULL OR a.tipoPropiedad.idTipoPropiedad = :idTipoPropiedad) " +
            "AND (:precioMax IS NULL OR u.precioNoche <= :precioMax) " +
            "AND (:minHuespedes IS NULL OR u.capacidadHuespedes >= :minHuespedes)")

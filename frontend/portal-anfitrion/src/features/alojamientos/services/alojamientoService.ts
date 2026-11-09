@@ -1,6 +1,185 @@
 import { Alojamiento } from '../../../core/types/anfitrion.types';
 
 export const ALOJAMIENTOS_INICIALES: Record<string, Alojamiento[]> = {
+  daniel: [
+    {
+      idAlojamiento: 'a0000000-0000-4000-8000-000000000010',
+      idAnfitrion: 'a0000000-0000-4000-8000-000000000004',
+      nombreAnfitrion: 'Daniel Quispe',
+      titulo: 'Departamento Moderno en Calacoto',
+      descripcion: 'Hermoso departamento en la zona sur de La Paz con vista panorámica, sala amplia y garaje privado.',
+      departamento: 'La Paz',
+      ciudad: 'La Paz',
+      direccion: 'Calle 15 de Calacoto #450',
+      tipoPropiedad: 'DEPARTAMENTO',
+      modalidad: 'CASA_DEPARTAMENTO',
+      horarioEntrada: '14:00 hrs',
+      horarioSalida: '11:00 hrs',
+      politicas: 'No fumar en ambientes interiores. Check-in con código PIN de reserva.',
+      precioBaseNoche: 350,
+      moneda: 'BOB',
+      calificacionPromedio: 5.0,
+      totalResenas: 12,
+      estado: 'PUBLICADO',
+      estadoOperativo: 'LIBRE',
+      estadoPublicacion: 'PUBLICADO',
+      motivoObservacionRechazo: 'Aprobado automáticamente: 3 fotos revisadas, sin problemas.',
+      origenUltimoCambio: 'AUTOMATIZACION_VISION_IA',
+      fotografias: [
+        {
+          idFotografia: 'f-depto-1',
+          url: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800',
+          esPrincipal: true,
+          orden: 1
+        },
+        {
+          idFotografia: 'f-depto-2',
+          url: 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=800',
+          esPrincipal: false,
+          orden: 2
+        },
+        {
+          idFotografia: 'f-depto-3',
+          url: 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?w=800',
+          esPrincipal: false,
+          orden: 3
+        }
+      ],
+      servicios: ['WIFI', 'COCINA', 'ESTACIONAMIENTO', 'AGUA_CALIENTE', 'TV_CABLE'],
+      unidades: [
+        {
+          idUnidad: 'u-depto-1',
+          nombre: 'Departamento Completo',
+          capacidadPersonas: 4,
+          cantidadDormitorios: 2,
+          cantidadCamas: 2,
+          cantidadBanios: 2,
+          cantidadBanos: 2,
+          precioNoche: 350,
+          moneda: 'BOB',
+          inventarioTotal: 1,
+          activo: true,
+          estado: 'PUBLICADO',
+          estadoOperativo: 'LIBRE',
+          fotografias: [
+            {
+              idFotografia: 'f-depto-u1',
+              url: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800',
+              orden: 1,
+              esPrincipal: true
+            }
+          ]
+        }
+      ],
+      reservas: []
+    },
+    {
+      idAlojamiento: 'a0000000-0000-4000-8000-000000000020',
+      idAnfitrion: 'a0000000-0000-4000-8000-000000000004',
+      nombreAnfitrion: 'Daniel Quispe',
+      titulo: 'Hotel Boutique Real & Spa Illimani',
+      descripcion: 'Exclusivo hotel boutique en La Paz con spa andino, piscina climatizada y habitaciones con vista a la cordillera.',
+      departamento: 'La Paz',
+      ciudad: 'La Paz',
+      direccion: 'Av. Arce #2450',
+      tipoPropiedad: 'HOTEL',
+      modalidad: 'HOTEL_HOSTAL',
+      horarioEntrada: '15:00 hrs',
+      horarioSalida: '12:00 hrs',
+      politicas: 'Prohibido fumar. Recepción 24 horas y check-in con código PIN de reserva.',
+      precioBaseNoche: 450,
+      moneda: 'BOB',
+      calificacionPromedio: 4.8,
+      totalResenas: 24,
+      estado: 'OBSERVADO',
+      estadoOperativo: 'LIBRE',
+      estadoPublicacion: 'OBSERVADO',
+      motivoObservacionRechazo: 'Observado: contenido dudoso en Habitación Doble Superior, foto 2 (contenido no permitido).',
+      origenUltimoCambio: 'AUTOMATIZACION_VISION_IA',
+      fotografias: [
+        {
+          idFotografia: 'f-hotel-d1',
+          url: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800',
+          esPrincipal: true,
+          orden: 1
+        },
+        {
+          idFotografia: 'f-hotel-d2',
+          url: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800',
+          esPrincipal: false,
+          orden: 2
+        },
+        {
+          idFotografia: 'f-hotel-d3',
+          url: 'https://images.unsplash.com/photo-1584132967334-10e028bd69f7?w=800',
+          esPrincipal: false,
+          orden: 3
+        },
+        {
+          idFotografia: 'f-hotel-d4',
+          url: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?w=800',
+          esPrincipal: false,
+          orden: 4
+        },
+        {
+          idFotografia: 'f-hotel-d5',
+          url: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800',
+          esPrincipal: false,
+          orden: 5
+        }
+      ],
+      servicios: ['WIFI', 'PISCINA', 'DESAYUNO', 'GIMNASIO', 'SPA'],
+      unidades: [
+        {
+          idUnidad: 'u-hotel-d1',
+          nombre: 'Suite Presidencial Deluxe',
+          capacidadPersonas: 2,
+          cantidadDormitorios: 1,
+          cantidadCamas: 1,
+          cantidadBanios: 1,
+          cantidadBanos: 1,
+          precioNoche: 800,
+          moneda: 'BOB',
+          inventarioTotal: 3,
+          activo: true,
+          estado: 'OBSERVADO',
+          estadoOperativo: 'LIBRE',
+          fotografias: [
+            {
+              idFotografia: 'f-u-d1',
+              url: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800',
+              orden: 1,
+              esPrincipal: true
+            }
+          ]
+        },
+        {
+          idUnidad: 'u-hotel-d2',
+          nombre: 'Habitación Doble Superior',
+          capacidadPersonas: 2,
+          cantidadDormitorios: 1,
+          cantidadCamas: 2,
+          cantidadBanios: 1,
+          cantidadBanos: 1,
+          precioNoche: 450,
+          moneda: 'BOB',
+          inventarioTotal: 5,
+          activo: true,
+          estado: 'OBSERVADO',
+          estadoOperativo: 'LIBRE',
+          fotografias: [
+            {
+              idFotografia: 'f-u-d2',
+              url: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800',
+              orden: 1,
+              esPrincipal: true
+            }
+          ]
+        }
+      ],
+      reservas: []
+    }
+  ],
   carlos: [
     {
       idAlojamiento: 'aloj-carlos-1',
@@ -720,7 +899,7 @@ function sincronizarConDecisionesAdmin(lista: Alojamiento[]): Alojamiento[] {
 }
 
 export const alojamientoService = {
-  obtenerPorAnfitrion(clave: 'carlos' | 'elena'): Alojamiento[] {
+  obtenerPorAnfitrion(clave: string): Alojamiento[] {
     let listaBase: Alojamiento[] = ALOJAMIENTOS_INICIALES[clave] || [];
 
     try {
@@ -740,8 +919,11 @@ export const alojamientoService = {
         
         itemsGlobal.forEach(item => {
           const matchAnfitrion = 
+            (item.idAnfitrion && (item.idAnfitrion === clave || item.idAnfitrion.toLowerCase().includes(clave.toLowerCase()))) ||
+            (item.nombreAnfitrion && item.nombreAnfitrion.toLowerCase().includes(clave.toLowerCase())) ||
             (clave === 'carlos' && (item.idAnfitrion?.includes('carlos') || item.nombreAnfitrion?.toLowerCase().includes('carlos') || !item.idAnfitrion)) ||
-            (clave === 'elena' && (item.idAnfitrion?.includes('elena') || item.nombreAnfitrion?.toLowerCase().includes('elena')));
+            (clave === 'elena' && (item.idAnfitrion?.includes('elena') || item.nombreAnfitrion?.toLowerCase().includes('elena'))) ||
+            (clave === 'daniel' && (item.idAnfitrion?.includes('daniel') || item.nombreAnfitrion?.toLowerCase().includes('daniel') || item.idAnfitrion === 'a0000000-0000-4000-8000-000000000004'));
           
           if (matchAnfitrion) {
             map.set(item.idAlojamiento, { ...map.get(item.idAlojamiento), ...item });
@@ -755,7 +937,7 @@ export const alojamientoService = {
     return sincronizarConDecisionesAdmin(listaBase);
   },
 
-  async sincronizarConServidor(clave: 'carlos' | 'elena'): Promise<Alojamiento[]> {
+  async sincronizarConServidor(clave: string): Promise<Alojamiento[]> {
     let listaActual = this.obtenerPorAnfitrion(clave);
 
     try {
@@ -771,8 +953,11 @@ export const alojamientoService = {
           remotos.forEach(r => {
             const id = r.idAlojamiento || r.id;
             const matchAnf = 
+              (r.idAnfitrion && (r.idAnfitrion === clave || r.idAnfitrion.toLowerCase().includes(clave.toLowerCase()))) ||
+              (r.nombreAnfitrion && r.nombreAnfitrion.toLowerCase().includes(clave.toLowerCase())) ||
               (clave === 'carlos' && (r.idAnfitrion?.includes('carlos') || r.nombreAnfitrion?.toLowerCase().includes('carlos') || !r.idAnfitrion)) ||
-              (clave === 'elena' && (r.idAnfitrion?.includes('elena') || r.nombreAnfitrion?.toLowerCase().includes('elena')));
+              (clave === 'elena' && (r.idAnfitrion?.includes('elena') || r.nombreAnfitrion?.toLowerCase().includes('elena'))) ||
+              (clave === 'daniel' && (r.idAnfitrion?.includes('daniel') || r.nombreAnfitrion?.toLowerCase().includes('daniel') || r.idAnfitrion === 'a0000000-0000-4000-8000-000000000004'));
             
             if (id && matchAnf) {
               const previo = map.get(id);
@@ -814,7 +999,7 @@ export const alojamientoService = {
     return sincronizarConDecisionesAdmin(listaActual);
   },
 
-  guardar(clave: 'carlos' | 'elena', lista: Alojamiento[]): void {
+  guardar(clave: string, lista: Alojamiento[]): void {
     try {
       localStorage.setItem(`alojate_anfitrion_${clave}`, JSON.stringify(lista));
       
@@ -828,7 +1013,7 @@ export const alojamientoService = {
     } catch {}
   },
 
-  async crear(clave: 'carlos' | 'elena', nuevo: Alojamiento): Promise<Alojamiento> {
+  async crear(clave: string, nuevo: Alojamiento): Promise<Alojamiento> {
     const listaActual = this.obtenerPorAnfitrion(clave);
     const id = nuevo.idAlojamiento || `aloj-${Date.now()}`;
     const preparado: Alojamiento = {

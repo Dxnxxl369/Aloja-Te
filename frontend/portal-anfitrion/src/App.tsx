@@ -200,20 +200,27 @@ export const AppContent: React.FC = () => {
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
 
-            <div className="flex items-center gap-2 pt-2">
+            <div className="grid grid-cols-3 gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => loginDemo('daniel')}
+                className="py-2.5 px-2 rounded-xl border border-blue-500/50 bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 font-bold text-xs transition cursor-pointer"
+              >
+                Daniel Quispe
+              </button>
               <button
                 type="button"
                 onClick={() => loginDemo('carlos')}
-                className="flex-1 py-2.5 px-3 rounded-xl border border-slate-700 hover:border-slate-600 hover:bg-slate-700/50 text-slate-300 font-semibold text-xs transition cursor-pointer"
+                className="py-2.5 px-2 rounded-xl border border-slate-700 hover:border-slate-600 hover:bg-slate-700/50 text-slate-300 font-semibold text-xs transition cursor-pointer"
               >
-                Acceso Carlos (SCZ)
+                Carlos (SCZ)
               </button>
               <button
                 type="button"
                 onClick={() => loginDemo('elena')}
-                className="flex-1 py-2.5 px-3 rounded-xl border border-slate-700 hover:border-slate-600 hover:bg-slate-700/50 text-slate-300 font-semibold text-xs transition cursor-pointer"
+                className="py-2.5 px-2 rounded-xl border border-slate-700 hover:border-slate-600 hover:bg-slate-700/50 text-slate-300 font-semibold text-xs transition cursor-pointer"
               >
-                Acceso Elena (TJA)
+                Elena (TJA)
               </button>
             </div>
           </div>

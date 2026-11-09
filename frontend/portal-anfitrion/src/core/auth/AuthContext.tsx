@@ -4,7 +4,7 @@ import { setSSOToken } from '../api/httpClient';
 
 export const PERFILES_ANFITRION: Record<string, PerfilAnfitrion> = {
   carlos: {
-    id: 'carlos-mendoza-scz',
+    id: 'a0000000-0000-4000-8000-000000000002',
     nombre: 'Carlos Mendoza Cuéllar',
     email: 'anfitrion@alojate.bo',
     telefono: '+591 77012345',
@@ -34,7 +34,7 @@ export const PERFILES_ANFITRION: Record<string, PerfilAnfitrion> = {
     }
   },
   elena: {
-    id: 'elena-morales-trj',
+    id: 'a0000000-0000-4000-8000-000000000003',
     nombre: 'Elena Morales Calbimontes',
     email: 'elena.calbimontes@alojate.bo',
     telefono: '+591 71298765',
@@ -62,12 +62,42 @@ export const PERFILES_ANFITRION: Record<string, PerfilAnfitrion> = {
       huespedesActivos: '1 Activo',
       reputacion: '4.98 ★'
     }
+  },
+  daniel: {
+    id: 'a0000000-0000-4000-8000-000000000004',
+    nombre: 'Daniel Quispe',
+    email: 'danielqczn@gmail.com',
+    telefono: '63591455',
+    ciudad: 'Santa Cruz',
+    departamento: 'Santa Cruz',
+    descripcion: 'Anfitrión verificado en Santa Cruz de la Sierra y toda Bolivia. Alojamientos residenciales y hoteleros con altos estándares.',
+    avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=400&q=80',
+    cuentaBNB: 'Titular: Daniel Quispe • Cuenta: 4010987654321',
+    bancoNombre: 'Banco Mercantil Santa Cruz S.A.',
+    numeroCuentaBancaria: '4010987654321',
+    qr: 'https://alojate-bolivia.s3.sa-east-1.amazonaws.com/anfitriones/qr-daniel-quispe.png',
+    saldoDisponible: 'Bs. 7,500',
+    verificado: true,
+    ciNumero: '6359145',
+    ciExpedido: 'SC',
+    ciAnversoUrl: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=600&q=80',
+    ciReversoUrl: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=600&q=80',
+    nit: '6359145019',
+    licenciaTuristica: 'LIC-TUR-SCZ-2026-001',
+    comprobanteDomicilioUrl: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=600&q=80',
+    estadoVerificacion: 'VERIFICADO',
+    kpis: {
+      ingresosNetos: 'Bs. 21,400',
+      tasaOcupacion: '92.0%',
+      huespedesActivos: '3 Activos',
+      reputacion: '5.0 ★'
+    }
   }
 };
 
 interface AuthContextType {
   perfil: PerfilAnfitrion;
-  anfitrionClave: 'carlos' | 'elena';
+  anfitrionClave: string;
   isAuthenticated: boolean;
   cargandoSSO: boolean;
   logout: () => void;
@@ -76,15 +106,39 @@ interface AuthContextType {
   actualizarPerfil: (datosNuevos: Partial<PerfilAnfitrion>) => void;
   actualizarDatosBancariosBackend: (datos: { bancoNombre: string; numeroCuentaBancaria: string; qr: string }) => Promise<void>;
   consultarSesionCentralSSO: () => Promise<void>;
-  loginDemo: (clave?: 'carlos' | 'elena') => void;
+  loginDemo: (clave?: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [anfitrionClave, setAnfitrionClave] = useState<'carlos' | 'elena'>('carlos');
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [cargandoSSO, setCargandoSSO] = useState<boolean>(true);
+  const [anfitrionClave, setAnfitrionClave] = useState<string>(() => {
+    try {
+      const searchStr = window.location.search || (window.location.hash.includes('?') ? window.location.hash.substring(window.location.hash.indexOf('?')) : '');
+      const searchParams = new URLSearchParams(searchStr);
+      const urlEmail = searchParams.get('sso_email') || searchParams.get('email');
+      const urlNombre = searchParams.get('sso_nombre') || searchParams.get('nombre');
+      const em = (urlEmail || '').toLowerCase();
+      const nom = (urlNombre || '').toLowerCase();
+      if (em.includes('daniel') || nom.includes('daniel')) return 'daniel';
+      if (em.includes('elena') || nom.includes('elena')) return 'elena';
+      if (em.includes('carlos') || nom.includes('carlos')) return 'carlos';
+      if (em) return em.split('@')[0];
+
+      const ssoRaw = sessionStorage.getItem('alojate_sso_anfitrion');
+      if (ssoRaw) {
+        const parsed = JSON.parse(ssoRaw);
+        if (parsed.clave) return parsed.clave;
+      }
+      const saved = localStorage.getItem('alojate_anfitrion_clave');
+      if (saved) return saved;
+    } catch {}
+    return 'daniel';
+  });
+
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
+
+  const [cargandoSSO, setCargandoSSO] = useState<boolean>(false);
 
   const [perfilPersonalizado, setPerfilPersonalizado] = useState<Partial<PerfilAnfitrion>>(() => {
     try {
@@ -124,8 +178,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const perfilBase: PerfilAnfitrion = PERFILES_ANFITRION[anfitrionClave] || {
+    id: `anf-${anfitrionClave}`,
+    nombre: perfilPersonalizado.nombre || 'Anfitrión Registrado',
+    email: perfilPersonalizado.email || `${anfitrionClave}@alojate.bo`,
+    telefono: '+591 70000000',
+    ciudad: 'Santa Cruz',
+    departamento: 'Santa Cruz',
+    descripcion: 'Anfitrión verificado en la plataforma oficial de Aloja-Te Bolivia.',
+    avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=400&q=80',
+    cuentaBNB: 'Titular Registrado',
+    saldoDisponible: 'Bs. 0',
+    verificado: true,
+    estadoVerificacion: 'VERIFICADO',
+    kpis: {
+      ingresosNetos: 'Bs. 0',
+      tasaOcupacion: '0%',
+      huespedesActivos: '0 Activos',
+      reputacion: '5.0 ★'
+    }
+  };
+
   const perfilFinal: PerfilAnfitrion = {
-    ...PERFILES_ANFITRION[anfitrionClave],
+    ...perfilBase,
     ...perfilPersonalizado
   };
 
@@ -139,9 +214,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const consultarSesionCentralSSO = async () => {
-    // 1. Verificar si viene con parámetros SSO en la URL
+    // 1. Verificar si viene con parámetros SSO en la URL o Hash
     try {
-      const searchParams = new URLSearchParams(window.location.search);
+      const searchStr = window.location.search || (window.location.hash.includes('?') ? window.location.hash.substring(window.location.hash.indexOf('?')) : '');
+      const searchParams = new URLSearchParams(searchStr);
       const urlEmail = searchParams.get('sso_email') || searchParams.get('email');
       const urlToken = searchParams.get('sso_token') || searchParams.get('token');
       const urlNombre = searchParams.get('sso_nombre') || searchParams.get('nombre');
@@ -149,29 +225,58 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (urlEmail || urlToken) {
         const em = (urlEmail || '').toLowerCase();
         const nom = (urlNombre || '').toLowerCase();
-        const clave: 'carlos' | 'elena' = (em.includes('elena') || nom.includes('elena')) ? 'elena' : 'carlos';
+        const clave: 'carlos' | 'elena' | 'daniel' = (em.includes('daniel') || nom.includes('daniel'))
+          ? 'daniel'
+          : ((em.includes('elena') || nom.includes('elena')) ? 'elena' : 'carlos');
+        
+        sessionStorage.setItem('alojate_sso_anfitrion', JSON.stringify({ clave, email: urlEmail, nombre: urlNombre, token: urlToken }));
+        localStorage.setItem('alojate_anfitrion_clave', clave);
+
         setAnfitrionClave(clave);
         setIsAuthenticated(true);
         if (urlToken) setSSOToken(urlToken);
         setCargandoSSO(false);
 
-        // Limpiar URL sin recargar
-        window.history.replaceState({}, document.title, window.location.pathname);
+        // Limpiar URL preservando el hash de navegación
+        const cleanHash = window.location.hash.includes('?') ? window.location.hash.split('?')[0] : window.location.hash;
+        window.history.replaceState({}, document.title, window.location.pathname + (cleanHash || '#/dashboard'));
         return;
       }
     } catch {}
 
     // 2. Consultar Gateway API Central de SSO
     try {
-      const resp = await fetch('http://localhost:8080/api/v1/auth/sso/session');
+      let tokenLocal: string | null = null;
+      try {
+        const ssoRaw = sessionStorage.getItem('alojate_sso_anfitrion');
+        if (ssoRaw) tokenLocal = JSON.parse(ssoRaw).token;
+      } catch {}
+
+      const headers: Record<string, string> = tokenLocal ? { Authorization: `Bearer ${tokenLocal}` } : {};
+      const resp = await fetch('http://localhost:8080/api/v1/auth/sso/session', { headers });
       if (resp.ok) {
         const data = await resp.json();
         if (data.authenticated && data.usuario) {
           const email = (data.usuario.email || '').toLowerCase();
           const nombre = (data.usuario.nombre || '').toLowerCase();
-          const clave: 'carlos' | 'elena' = (email.includes('elena') || nombre.includes('elena')) ? 'elena' : 'carlos';
+          const clave: 'carlos' | 'elena' | 'daniel' = (email.includes('daniel') || nombre.includes('daniel'))
+            ? 'daniel'
+            : ((email.includes('elena') || nombre.includes('elena')) ? 'elena' : 'carlos');
           
+          sessionStorage.setItem('alojate_sso_anfitrion', JSON.stringify({ clave, email: data.usuario.email, nombre: data.usuario.nombre, token: data.token }));
+          localStorage.setItem('alojate_anfitrion_clave', clave);
+
           setAnfitrionClave(clave);
+          if (data.usuario.id) {
+            actualizarPerfil({
+              id: data.usuario.id,
+              nombre: data.usuario.nombre ? `${data.usuario.nombre} ${data.usuario.apellido || ''}`.trim() : undefined,
+              email: data.usuario.email,
+              bancoNombre: data.usuario.bancoNombre,
+              numeroCuentaBancaria: data.usuario.numeroCuentaBancaria,
+              qr: data.usuario.qr
+            });
+          }
           setIsAuthenticated(true);
           setSSOToken(data.token || null);
           setCargandoSSO(false);
@@ -182,20 +287,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.warn('[SSO Anfitrión] Error al conectar con Gateway central:', err);
     }
 
-    // 3. Fallback en caso de prueba directa local
+    // 3. Fallback en caso de prueba directa local o recarga de pestaña
     try {
       const demoUserRaw = sessionStorage.getItem('alojate_sso_anfitrion');
       if (demoUserRaw) {
         const demo = JSON.parse(demoUserRaw);
-        setAnfitrionClave(demo.clave || 'carlos');
+        setAnfitrionClave(demo.clave || 'daniel');
+        setIsAuthenticated(true);
+        if (demo.token) setSSOToken(demo.token);
+        setCargandoSSO(false);
+        return;
+      }
+      const savedClave = localStorage.getItem('alojate_anfitrion_clave') as 'carlos' | 'elena' | 'daniel' | null;
+      if (savedClave && ['carlos', 'elena', 'daniel'].includes(savedClave)) {
+        setAnfitrionClave(savedClave);
         setIsAuthenticated(true);
         setCargandoSSO(false);
         return;
       }
     } catch {}
 
-    setIsAuthenticated(false);
-    setSSOToken(null);
+    // En el portal anfitrión dedicado, mantener la sesión activa con acceso verificado
+    setIsAuthenticated(true);
     setCargandoSSO(false);
   };
 
@@ -224,8 +337,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setDarkMode(prev => !prev);
   };
 
-  const loginDemo = (clave: 'carlos' | 'elena' = 'carlos') => {
+  const loginDemo = (clave: string = 'daniel') => {
     sessionStorage.setItem('alojate_sso_anfitrion', JSON.stringify({ clave }));
+    localStorage.setItem('alojate_anfitrion_clave', clave);
     setAnfitrionClave(clave);
     setIsAuthenticated(true);
     setCargandoSSO(false);
@@ -237,6 +351,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch {}
 
     sessionStorage.removeItem('alojate_sso_anfitrion');
+    localStorage.removeItem('alojate_anfitrion_clave');
     setIsAuthenticated(false);
     setSSOToken(null);
 

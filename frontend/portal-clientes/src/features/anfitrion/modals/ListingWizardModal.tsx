@@ -374,7 +374,13 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
     setError(null);
 
     const isUuid = (val?: string) => !!val && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
-    const anfitrionId = isUuid(user?.id) ? user!.id : 'a0000000-0000-4000-8000-000000000002';
+    let anfitrionId = isUuid(user?.id) ? user!.id : '';
+    if (!anfitrionId && user?.email) {
+      if (user.email.includes('daniel')) anfitrionId = 'a0000000-0000-4000-8000-000000000004';
+      else if (user.email.includes('elena')) anfitrionId = 'a0000000-0000-4000-8000-000000000003';
+      else anfitrionId = 'a0000000-0000-4000-8000-000000000002';
+    }
+    if (!anfitrionId) anfitrionId = 'a0000000-0000-4000-8000-000000000002';
     const fotoPrincipalObj = fotos.find(f => f.esPrincipal) || fotos[0];
 
     // Construcción de Unidades con fotos independientes por habitación

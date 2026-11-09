@@ -83,6 +83,19 @@ public class AlojamientoJpaEntity {
     @Column(name = "fecha_creacion", nullable = false, updatable = false)
     private LocalDateTime fechaCreacion;
 
+    // Control de la revisión automática (columnas opcionales: las filas anteriores quedan en null / 0).
+    @Column(name = "intentos_revision", columnDefinition = "integer default 0")
+    private Integer intentosRevision;
+
+    @Column(name = "fecha_ultimo_cambio_estado")
+    private LocalDateTime fechaUltimoCambioEstado;
+
+    @Column(name = "huella_fotos", length = 64)
+    private String huellaFotos;
+
+    @Column(name = "id_revision")
+    private UUID idRevision;
+
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "alojamiento_servicio",

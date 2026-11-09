@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAuth } from '../../core/auth/AuthContext';
-import { Sun, Moon, Sparkles, User, LogOut, Compass, KeyRound, DollarSign, ExternalLink, Building2 } from 'lucide-react';
+import { Sun, Moon, Sparkles, User, LogOut, Compass, KeyRound, DollarSign, ExternalLink, Building2, ShieldCheck } from 'lucide-react';
 
 interface NavbarProps {
   currentView: 'catalogo' | 'mis-viajes' | 'anfitrion' | 'detalle';
@@ -85,17 +85,16 @@ export const Navbar: React.FC<NavbarProps> = ({
             </a>
           )}
 
-          {/* Panel de Control de Auditoría: Exclusivo para ADMINISTRADOR */}
-          {user?.rol === 'ADMINISTRADOR' && (
+          {/* Panel Admin Oficial: Exclusivo para administradores o correos de administración */}
+          {(user?.rol === 'ADMINISTRADOR' || (user?.rol as string) === 'ADMIN' || user?.email?.toLowerCase().includes('admin')) && (
             <a
               href="http://localhost:4200"
-              target="_blank"
-              rel="noreferrer"
-              className="px-3.5 py-2 rounded-xl text-blue-600 dark:text-blue-400 hover:text-blue-500 transition flex items-center gap-1 font-semibold"
-              title="Acceso al Panel de Control Institucional"
+              className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-600 hover:opacity-95 text-white transition flex items-center gap-1.5 font-bold text-xs shadow-md shadow-blue-500/25"
+              title="Abrir Panel Oficial de Administración (4200)"
             >
-              <span>Panel de Control</span>
-              <ExternalLink className="w-3 h-3" />
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>Panel Admin</span>
+              <ExternalLink className="w-3 h-3 opacity-80" />
             </a>
           )}
         </nav>

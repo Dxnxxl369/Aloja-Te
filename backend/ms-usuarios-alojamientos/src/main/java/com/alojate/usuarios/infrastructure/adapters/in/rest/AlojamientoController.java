@@ -1,9 +1,12 @@
 package com.alojate.usuarios.infrastructure.adapters.in.rest;
 
+import com.alojate.usuarios.application.service.PoliticaRevision;
+import com.alojate.usuarios.domain.model.ActorPublicacion;
 import com.alojate.usuarios.domain.model.Alojamiento;
 import com.alojate.usuarios.domain.model.EstadoPublicacion;
 import com.alojate.usuarios.domain.model.Fotografia;
 import com.alojate.usuarios.domain.ports.in.AlojamientoUseCase;
+import com.alojate.usuarios.domain.ports.in.UsuarioUseCase;
 import com.alojate.usuarios.infrastructure.adapters.in.rest.dto.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +27,9 @@ import java.util.stream.Collectors;
 public class AlojamientoController {
 
     private final AlojamientoUseCase alojamientoUseCase;
+    private final UsuarioUseCase usuarioUseCase;
+    private final PoliticaRevision politicaRevision;
+    private final ResolverActorModeracion resolverActorModeracion;
 
     @GetMapping
     public ResponseEntity<List<AlojamientoDto>> buscarAlojamientos(
@@ -93,27 +99,15 @@ public class AlojamientoController {
                 .collect(Collectors.toList()));
     }
 
-    @PostMapping("/{id}/aceptar")
-    public ResponseEntity<AlojamientoDto> aceptarAlojamiento(@PathVariable UUID id) {
-        return ResponseEntity.ok(toDto(alojamientoUseCase.aceptarAlojamiento(id)));
+    /** Alojamientos PENDIENTE que agotaron los reintentos automáticos: solo el admin puede reintentarlos. */
+    @GetMapping("/moderacion/atencion")
+    public ResponseEntity<List<AlojamientoDto>> listarRequierenAtencion() {
+        return ResponseEntity.ok(alojamientoUseCase.listarRequierenAtencion().stream()
+                .map(this::toDto)
+                .collect(Collectors.toList()));
     }
 
-    @PostMapping("/{id}/observar")
-    public ResponseEntity<AlojamientoDto> observarAlojamiento(
-            @PathVariable UUID id,
-            @RequestBody(required = false) DecisionModeracionRequest request) {
-        String motivo = request != null && request.getMotivo() != null ? request.getMotivo() : "Observación por auditoría";
-        String origen = request != null && request.getOrigen() != null ? request.getOrigen() : "MANUAL";
-        return ResponseEntity.ok(toDto(alojamientoUseCase.observarAlojamiento(id, motivo, origen)));
-    }
-
-    @PostMapping("/{id}/rechazar")
-    public ResponseEntity<AlojamientoDto> rechazarAlojamiento(
-            @PathVariable UUID id,
-            @RequestBody(required = false) DecisionModeracionRequest request) {
-        String motivo = request != null ? request.getMotivo() : null;
-        return ResponseEntity.ok(toDto(alojamientoUseCase.rechazarAlojamiento(id, motivo)));
-    }
+    // Publicar, observar y rechazar son decisiones de la IA: solo entran por PATCH /{id}/estado con el token de moderación.
 
     @PostMapping("/{id}/suspender")
     public ResponseEntity<AlojamientoDto> suspenderAlojamiento(
@@ -123,9 +117,20 @@ public class AlojamientoController {
         return ResponseEntity.ok(toDto(alojamientoUseCase.suspenderAlojamiento(id, motivo)));
     }
 
+    @PostMapping("/{id}/reactivar")
+    public ResponseEntity<AlojamientoDto> reactivarAlojamiento(@PathVariable UUID id) {
+        return ResponseEntity.ok(toDto(alojamientoUseCase.reactivarAlojamiento(id)));
+    }
+
+    /** Disparo de la revisión automática: registro completo (PENDIENTE) o reenvío del anfitrión (OBSERVADO). */
     @PostMapping("/{id}/enviar-revision")
     public ResponseEntity<AlojamientoDto> enviarARevision(@PathVariable UUID id) {
         return ResponseEntity.ok(toDto(alojamientoUseCase.enviarARevision(id)));
+    }
+
+    @PostMapping("/{id}/reintentar-revision")
+    public ResponseEntity<AlojamientoDto> reintentarRevision(@PathVariable UUID id) {
+        return ResponseEntity.ok(toDto(alojamientoUseCase.reintentarRevision(id)));
     }
 
     // --- MODALIDAD CASA VS HOTEL ---
@@ -147,7 +152,10 @@ public class AlojamientoController {
         com.alojate.usuarios.domain.model.UnidadReservable u = alojamientoUseCase.agregarHabitacionHotel(
                 id, req.getNombre(), req.getPrecioNoche(), req.getInventarioTotal(),
                 req.getCapacidadHuespedes(), req.getCantidadDormitorios(), req.getCantidadCamas(),
-                req.getCantidadBanos(), req.getIdTipoEspacio()
+                req.getCantidadBanos(), req.getIdTipoEspacio(),
+                req.getFotografias() == null ? null : req.getFotografias().stream()
+                        .map(f -> Fotografia.builder().url(f.getUrl()).orden(f.getOrden()).build())
+                        .collect(Collectors.toList())
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(toUnidadDto(u));
     }
@@ -171,14 +179,19 @@ public class AlojamientoController {
         return ResponseEntity.ok(toDto(actualizado));
     }
 
+    /**
+     * Decisión de la IA (n8n) o de NLP. Exige el token de moderación: sin él nadie puede publicar,
+     * observar ni rechazar. El estado destino se valida contra la máquina de estados (409 si no corresponde).
+     */
     @PatchMapping("/{id}/estado")
     public ResponseEntity<AlojamientoDto> cambiarEstado(
             @PathVariable UUID id,
+            @RequestHeader(value = ResolverActorModeracion.CABECERA_TOKEN, required = false) String token,
             @RequestParam(required = false) EstadoPublicacion estado,
             @RequestParam(required = false) String motivo,
             @RequestParam(required = false) String origen,
             @RequestBody(required = false) DecisionModeracionRequest body) {
-        
+
         EstadoPublicacion nuevoEstado = estado != null ? estado : (body != null ? body.getNuevoEstado() : null);
         String motivoFinal = motivo != null ? motivo : (body != null ? body.getMotivo() : null);
         String origenFinal = origen != null ? origen : (body != null ? body.getOrigen() : null);
@@ -187,7 +200,10 @@ public class AlojamientoController {
             return ResponseEntity.badRequest().build();
         }
 
-        return ResponseEntity.ok(toDto(alojamientoUseCase.cambiarEstado(id, nuevoEstado, motivoFinal, origenFinal)));
+        ActorPublicacion actor = resolverActorModeracion.resolver(token, origenFinal);
+        UUID idRevision = body != null ? body.getIdRevision() : null;
+        return ResponseEntity.ok(toDto(
+                alojamientoUseCase.cambiarEstado(id, nuevoEstado, motivoFinal, origenFinal, actor, idRevision)));
     }
 
     // --- FOTOGRAFÍAS ---
@@ -213,6 +229,18 @@ public class AlojamientoController {
     }
 
     // --- MAPPERS ---
+    private String resolverNombreAnfitrion(UUID idAnfitrion) {
+        if (idAnfitrion == null) return null;
+        try {
+            com.alojate.usuarios.domain.model.Usuario u = usuarioUseCase.obtenerPorId(idAnfitrion);
+            if (u == null) return null;
+            String nombre = ((u.getNombre() != null ? u.getNombre() : "") + " " + (u.getApellido() != null ? u.getApellido() : "")).trim();
+            return nombre.isEmpty() ? null : nombre;
+        } catch (RuntimeException e) {
+            return null;
+        }
+    }
+
     private AlojamientoDto toDto(Alojamiento domain) {
         if (domain == null) return null;
         String tipoPropiedadNombre = domain.getTipoPropiedad() != null ? domain.getTipoPropiedad().getNombre() : null;
@@ -243,12 +271,15 @@ public class AlojamientoController {
                         .inventarioTotal(u.getInventarioTotal())
                         .precioNoche(u.getPrecioNoche())
                         .estado(u.getEstado())
+                        .fotografias(fotosDeUnidad(u))
+                        .fotos(urlsDeFotos(u))
                         .build()).collect(Collectors.toList())
                 : List.of();
 
         return AlojamientoDto.builder()
                 .idAlojamiento(domain.getIdAlojamiento())
                 .idAnfitrion(domain.getIdAnfitrion())
+                .nombreAnfitrion(resolverNombreAnfitrion(domain.getIdAnfitrion()))
                 .idTipoPropiedad(domain.getIdTipoPropiedad())
                 .tipoPropiedadNombre(tipoPropiedadNombre)
                 .titulo(domain.getTitulo())
@@ -267,6 +298,9 @@ public class AlojamientoController {
                 .origenUltimoCambio(domain.getOrigenUltimoCambio())
                 .estadoPublicacion(domain.getEstadoPublicacion())
                 .fechaCreacion(domain.getFechaCreacion())
+                .requiereAtencion(politicaRevision.requiereAtencion(domain))
+                .intentosRevision(domain.intentosRevisionActuales())
+                .proximoReintento(politicaRevision.proximoReintento(domain))
                 .servicios(serviciosDto)
                 .fotografias(fotosDto)
                 .unidades(unidadesDto)
@@ -288,7 +322,21 @@ public class AlojamientoController {
                 .inventarioTotal(u.getInventarioTotal())
                 .precioNoche(u.getPrecioNoche())
                 .estado(u.getEstado())
+                .fotografias(fotosDeUnidad(u))
+                .fotos(urlsDeFotos(u))
                 .build();
+    }
+
+    private List<FotografiaDto> fotosDeUnidad(com.alojate.usuarios.domain.model.UnidadReservable u) {
+        return u.getFotografias() != null
+                ? u.getFotografias().stream().map(this::toFotoDto).collect(Collectors.toList())
+                : List.of();
+    }
+
+    private List<String> urlsDeFotos(com.alojate.usuarios.domain.model.UnidadReservable u) {
+        return u.getFotografias() != null
+                ? u.getFotografias().stream().map(Fotografia::getUrl).collect(Collectors.toList())
+                : List.of();
     }
 
     private FotografiaDto toFotoDto(Fotografia f) {
@@ -296,6 +344,8 @@ public class AlojamientoController {
         return FotografiaDto.builder()
                 .idFotografia(f.getIdFotografia())
                 .idAlojamiento(f.getIdAlojamiento())
+                .idUnidad(f.getIdUnidad())
+                .nombreUnidad(f.getNombreUnidad())
                 .url(f.getUrl())
                 .orden(f.getOrden())
                 .build();

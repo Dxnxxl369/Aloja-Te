@@ -8,13 +8,33 @@ interface PerfilDemo {
   nombre: string;
   email: string;
   pass: string;
-  rol: 'ANFITRION' | 'CLIENTE';
+  rol: 'ANFITRION' | 'CLIENTE' | 'ADMINISTRADOR';
   rolTexto: string;
   descripcion: string;
   icono: string;
 }
 
 const PERFILES_DEMO: PerfilDemo[] = [
+  {
+    id: 'adm-andrea',
+    nombre: 'Lic. Andrea Quiroga',
+    email: 'admin@alojate.bo',
+    pass: 'Admin1234!',
+    rol: 'ADMINISTRADOR',
+    rolTexto: 'Administradora General',
+    descripcion: 'Panel de Control Nacional (4200)',
+    icono: '🛡️',
+  },
+  {
+    id: 'anf-daniel',
+    nombre: 'Daniel Quispe',
+    email: 'danielqczn@gmail.com',
+    pass: 'Bolivia2026!',
+    rol: 'ANFITRION',
+    rolTexto: 'Anfitrión Verificado',
+    descripcion: 'Calacoto & Hotel Illimani',
+    icono: '🏔️',
+  },
   {
     id: 'anf-carlos',
     nombre: 'Carlos Mendoza',

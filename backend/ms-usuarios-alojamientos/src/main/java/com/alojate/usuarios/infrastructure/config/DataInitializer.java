@@ -167,6 +167,7 @@ public class DataInitializer implements CommandLineRunner {
 
         if (!usuarioRepo.existsByEmail("elena.calbimontes@alojate.bo")) {
             usuarioRepo.save(UsuarioJpaEntity.builder()
+                    .idUsuario(UUID.fromString("a0000000-0000-4000-8000-000000000003"))
                     .email("elena.calbimontes@alojate.bo")
                     .passwordHash(passwordEncoder.encode("Anfitrion1234!"))
                     .nombre("Elena")
@@ -184,6 +185,28 @@ public class DataInitializer implements CommandLineRunner {
                     .fechaActualizacion(LocalDateTime.now())
                     .build());
             log.info("[DataInitializer] Usuario Anfitriona creado: elena.calbimontes@alojate.bo / Anfitrion1234!");
+        }
+
+        if (!usuarioRepo.existsByEmail("danielqczn@gmail.com")) {
+            usuarioRepo.save(UsuarioJpaEntity.builder()
+                    .idUsuario(UUID.fromString("a0000000-0000-4000-8000-000000000004"))
+                    .email("danielqczn@gmail.com")
+                    .passwordHash(passwordEncoder.encode("Bolivia2026!"))
+                    .nombre("Daniel")
+                    .apellido("Quispe")
+                    .ci("6359145")
+                    .ciExpedido("SCZ")
+                    .telefono("63591455")
+                    .tipoCuenta("ANFITRION_VERIFICADO")
+                    .rol(rolAnfitrion)
+                    .estado(EstadoUsuario.ACTIVO)
+                    .bancoNombre("Banco Mercantil Santa Cruz S.A.")
+                    .numeroCuentaBancaria("4010987654321")
+                    .qr("https://alojate-bolivia.s3.sa-east-1.amazonaws.com/anfitriones/qr-daniel-quispe.png")
+                    .fechaRegistro(LocalDateTime.now())
+                    .fechaActualizacion(LocalDateTime.now())
+                    .build());
+            log.info("[DataInitializer] Usuario Anfitrión Daniel creado: danielqczn@gmail.com / Bolivia2026!");
         }
 
         if (!usuarioRepo.existsByEmail("anfitrion.pendiente@alojate.bo")) {
@@ -539,6 +562,112 @@ public class DataInitializer implements CommandLineRunner {
 
                 log.info("[DataInitializer] Reseñas y valoraciones sembradas (Casa, Hotel general y Habitaciones).");
             }
+        }
+
+        // 14. Sembrar publicaciones de Daniel Quispe (PUBLICADO y OBSERVADO)
+        UUID idDaniel = UUID.fromString("a0000000-0000-4000-8000-000000000004");
+        UUID idDeptoDaniel = UUID.fromString("a0000000-0000-4000-8000-000000000010");
+        UUID idHotelDaniel = UUID.fromString("a0000000-0000-4000-8000-000000000020");
+
+        if (!alojamientoRepo.existsById(idDeptoDaniel)) {
+            TipoPropiedadJpaEntity tipoDepto = obtenerOCrearTipoPropiedad("Departamento Urbano");
+            TipoEspacioJpaEntity espEntero = obtenerOCrearTipoEspacio("Lugar entero");
+            AlojamientoJpaEntity depto = alojamientoRepo.save(AlojamientoJpaEntity.builder()
+                    .idAlojamiento(idDeptoDaniel)
+                    .idAnfitrion(idDaniel)
+                    .tipoPropiedad(tipoDepto)
+                    .modalidad("CASA_DEPARTAMENTO")
+                    .politicas("No fumar en ambientes interiores. Check-in con código PIN de reserva.")
+                    .horarioEntrada("14:00")
+                    .horarioSalida("11:00")
+                    .titulo("Departamento Moderno en Calacoto")
+                    .descripcion("Hermoso departamento en la zona sur con vista panorámica, sala amplia y garaje privado.")
+                    .direccion("Calle 15 de Calacoto #450")
+                    .ciudad("La Paz")
+                    .departamento("La Paz")
+                    .latitud(new BigDecimal("-16.5412000"))
+                    .longitud(new BigDecimal("-68.0874000"))
+                    .estadoPublicacion(EstadoPublicacion.PUBLICADO)
+                    .motivoObservacionRechazo("Aprobado automáticamente: 3 fotos revisadas, sin problemas.")
+                    .origenUltimoCambio("AUTOMATIZACION_VISION_IA")
+                    .fechaCreacion(LocalDateTime.now())
+                    .build());
+
+            unidadRepo.save(UnidadReservableJpaEntity.builder()
+                    .idAlojamiento(depto.getIdAlojamiento())
+                    .tipoEspacio(espEntero)
+                    .nombre("Departamento Completo")
+                    .capacidadHuespedes(4)
+                    .cantidadDormitorios(2)
+                    .cantidadCamas(2)
+                    .cantidadBanos(new BigDecimal("2.0"))
+                    .inventarioTotal(1)
+                    .precioNoche(new BigDecimal("350.00"))
+                    .estado(EstadoUnidad.DISPONIBLE)
+                    .build());
+
+            fotoRepo.save(FotografiaJpaEntity.builder().idAlojamiento(depto.getIdAlojamiento()).url("https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800").orden(1).build());
+            fotoRepo.save(FotografiaJpaEntity.builder().idAlojamiento(depto.getIdAlojamiento()).url("https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=800").orden(2).build());
+            fotoRepo.save(FotografiaJpaEntity.builder().idAlojamiento(depto.getIdAlojamiento()).url("https://images.unsplash.com/photo-1556911220-e15b29be8c8f?w=800").orden(3).build());
+            log.info("[DataInitializer] Departamento Calacoto de Daniel Quispe sembrado: PUBLICADO");
+        }
+
+        if (!alojamientoRepo.existsById(idHotelDaniel)) {
+            TipoPropiedadJpaEntity tipoHotel = obtenerOCrearTipoPropiedad("Hotel Boutique");
+            TipoEspacioJpaEntity espPrivado = obtenerOCrearTipoEspacio("Habitación privada");
+            AlojamientoJpaEntity hotel = alojamientoRepo.save(AlojamientoJpaEntity.builder()
+                    .idAlojamiento(idHotelDaniel)
+                    .idAnfitrion(idDaniel)
+                    .tipoPropiedad(tipoHotel)
+                    .modalidad("HOTEL_HOSTAL")
+                    .politicas("Mascotas no permitidas en suites ejecutivas.")
+                    .horarioEntrada("15:00")
+                    .horarioSalida("12:00")
+                    .titulo("Hotel Boutique Real & Spa Illimani")
+                    .descripcion("Exclusivo hotel boutique en La Paz con spa andino, piscina climatizada y habitaciones con vista a la cordillera.")
+                    .direccion("Av. Arce #2450")
+                    .ciudad("La Paz")
+                    .departamento("La Paz")
+                    .latitud(new BigDecimal("-16.5122000"))
+                    .longitud(new BigDecimal("-68.1254000"))
+                    .estadoPublicacion(EstadoPublicacion.OBSERVADO)
+                    .motivoObservacionRechazo("Observado: contenido dudoso en Habitación Doble Superior, foto 2 (contenido no permitido).")
+                    .origenUltimoCambio("AUTOMATIZACION_VISION_IA")
+                    .fechaCreacion(LocalDateTime.now())
+                    .build());
+
+            unidadRepo.save(UnidadReservableJpaEntity.builder()
+                    .idAlojamiento(hotel.getIdAlojamiento())
+                    .tipoEspacio(espPrivado)
+                    .nombre("Suite Presidencial Deluxe")
+                    .capacidadHuespedes(2)
+                    .cantidadDormitorios(1)
+                    .cantidadCamas(1)
+                    .cantidadBanos(new BigDecimal("2.0"))
+                    .inventarioTotal(2)
+                    .precioNoche(new BigDecimal("800.00"))
+                    .estado(EstadoUnidad.DISPONIBLE)
+                    .build());
+
+            unidadRepo.save(UnidadReservableJpaEntity.builder()
+                    .idAlojamiento(hotel.getIdAlojamiento())
+                    .tipoEspacio(espPrivado)
+                    .nombre("Habitación Doble Superior")
+                    .capacidadHuespedes(2)
+                    .cantidadDormitorios(1)
+                    .cantidadCamas(2)
+                    .cantidadBanos(new BigDecimal("1.0"))
+                    .inventarioTotal(5)
+                    .precioNoche(new BigDecimal("450.00"))
+                    .estado(EstadoUnidad.MANTENIMIENTO)
+                    .build());
+
+            fotoRepo.save(FotografiaJpaEntity.builder().idAlojamiento(hotel.getIdAlojamiento()).url("https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800").orden(1).build());
+            fotoRepo.save(FotografiaJpaEntity.builder().idAlojamiento(hotel.getIdAlojamiento()).url("https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800").orden(2).build());
+            fotoRepo.save(FotografiaJpaEntity.builder().idAlojamiento(hotel.getIdAlojamiento()).url("https://images.unsplash.com/photo-1584132967334-10e028bd69f7?w=800").orden(3).build());
+            fotoRepo.save(FotografiaJpaEntity.builder().idAlojamiento(hotel.getIdAlojamiento()).url("https://images.unsplash.com/photo-1590490360182-c33d57733427?w=800").orden(4).build());
+            fotoRepo.save(FotografiaJpaEntity.builder().idAlojamiento(hotel.getIdAlojamiento()).url("https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800").orden(5).build());
+            log.info("[DataInitializer] Hotel Boutique Illimani de Daniel Quispe sembrado: OBSERVADO");
         }
 
         log.info("[DataInitializer] Inicialización completada con éxito.");

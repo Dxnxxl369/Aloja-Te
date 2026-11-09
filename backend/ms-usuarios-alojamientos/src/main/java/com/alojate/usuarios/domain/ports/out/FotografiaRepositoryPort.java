@@ -10,5 +10,7 @@ public interface FotografiaRepositoryPort {
     Fotografia guardar(Fotografia fotografia);
     Optional<Fotografia> buscarPorId(UUID idFotografia);
     List<Fotografia> listarPorAlojamiento(UUID idAlojamiento);
+    List<Fotografia> listarPorUnidad(UUID idUnidad);
+    void eliminarPorUnidad(UUID idUnidad);
     void eliminarPorId(UUID idFotografia);
 }

@@ -5,6 +5,16 @@ import { LoginCredentials, RegistroData, AuthResponse } from '../types/auth.type
 // Cuentas oficiales sembradas para fallback resiliente ante fallas de red o gateway
 const DEMO_USERS_AUTH = [
   {
+    id: 'a0000000-0000-4000-8000-000000000001',
+    email: 'admin@alojate.bo',
+    aliases: ['administrador@alojate.bo', 'andrea.quiroga@alojate.bo', 'admin@gmail.com'],
+    nombre: 'Lic. Andrea',
+    apellido: 'Quiroga',
+    rol: 'ADMINISTRADOR' as const,
+    tipoCuenta: 'SUPER_ADMIN',
+    passwords: ['Admin1234!', 'Bolivia2026!'],
+  },
+  {
     id: 'a0000000-0000-4000-8000-000000000002',
     email: 'anfitrion@alojate.bo',
     aliases: ['carlos.mendoza@alojate.bo'],
@@ -20,6 +30,16 @@ const DEMO_USERS_AUTH = [
     aliases: ['elena.morales@alojate.bo'],
     nombre: 'Elena',
     apellido: 'Morales',
+    rol: 'ANFITRION' as const,
+    tipoCuenta: 'ANFITRION_VERIFICADO',
+    passwords: ['Anfitrion1234!', 'Bolivia2026!'],
+  },
+  {
+    id: 'a0000000-0000-4000-8000-000000000004',
+    email: 'danielqczn@gmail.com',
+    aliases: ['daniel.quispe@alojate.bo'],
+    nombre: 'Daniel',
+    apellido: 'Quispe',
     rol: 'ANFITRION' as const,
     tipoCuenta: 'ANFITRION_VERIFICADO',
     passwords: ['Anfitrion1234!', 'Bolivia2026!'],
@@ -48,13 +68,35 @@ const DEMO_USERS_AUTH = [
 
 function normalizarAuthResponse(raw: any): AuthResponse {
   if (raw.usuario && raw.usuario.id) {
-    return raw as AuthResponse;
+    const rolBackend = String(raw.usuario.rol || '').toUpperCase();
+    const emailBackend = String(raw.usuario.email || '').toLowerCase();
+    let rolFinal: 'CLIENTE' | 'ANFITRION' | 'ADMINISTRADOR' = 'CLIENTE';
+    if (rolBackend === 'ADMINISTRADOR' || rolBackend === 'ADMIN' || emailBackend.includes('admin@alojate.bo') || emailBackend.startsWith('admin@')) {
+      rolFinal = 'ADMINISTRADOR';
+    } else if (rolBackend === 'ANFITRION') {
+      rolFinal = 'ANFITRION';
+    }
+    return {
+      token: raw.token,
+      usuario: {
+        ...raw.usuario,
+        rol: rolFinal
+      }
+    };
   }
 
   // Armonizar formato plano de MS-01 (usuarioId, nombreCompleto, rol, estado, etc.)
   const partes = (raw.nombreCompleto || 'Usuario Aloja-Te').split(' ');
   const nombre = partes[0] || 'Usuario';
   const apellido = partes.slice(1).join(' ') || '';
+  const rolRaw = String(raw.rol || '').toUpperCase();
+  const emailRaw = String(raw.email || '').toLowerCase();
+  let rol: 'CLIENTE' | 'ANFITRION' | 'ADMINISTRADOR' = 'CLIENTE';
+  if (rolRaw === 'ADMINISTRADOR' || rolRaw === 'ADMIN' || emailRaw.includes('admin@alojate.bo') || emailRaw.startsWith('admin@')) {
+    rol = 'ADMINISTRADOR';
+  } else if (rolRaw === 'ANFITRION') {
+    rol = 'ANFITRION';
+  }
 
   return {
     token: raw.token,
@@ -63,7 +105,7 @@ function normalizarAuthResponse(raw: any): AuthResponse {
       email: raw.email,
       nombre: raw.nombre || nombre,
       apellido: raw.apellido || apellido,
-      rol: (raw.rol as any) || 'CLIENTE',
+      rol,
       tipoCuenta: raw.tipoCuenta || (typeof raw.estado === 'string' ? raw.estado : 'ACTIVO'),
     }
   };

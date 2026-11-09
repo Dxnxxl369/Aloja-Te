@@ -15,6 +15,7 @@ public interface AlojamientoRepositoryPort {
     List<Alojamiento> listarTodos();
     List<Alojamiento> listarPorAnfitrion(UUID idAnfitrion);
     List<Alojamiento> listarPorEstado(EstadoPublicacion estado);
+    long contarPorEstado(EstadoPublicacion estado);
     List<Alojamiento> buscarAvanzada(String ciudad, String departamento, Integer idTipoPropiedad, BigDecimal precioMax, Integer minHuespedes);
     void sincronizarServicios(UUID idAlojamiento, Set<Integer> idsServicios);
 }

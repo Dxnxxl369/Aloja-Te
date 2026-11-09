@@ -61,12 +61,17 @@ body.theme-light .liquid-card {
   background: #ffffff !important;
   border: 1px solid #e2e8f0 !important;
   box-shadow: 0 4px 14px -2px rgba(15, 23, 42, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.02) !important;
+  contain: content;
+  content-visibility: auto;
+  contain-intrinsic-size: 0 420px;
+  transform: translateZ(0);
 }
 
 body.theme-light .liquid-card-hover:hover {
   background: #ffffff !important;
   border-color: rgba(37, 99, 235, 0.5) !important;
   box-shadow: 0 12px 24px -4px rgba(37, 99, 235, 0.12) !important;
+  transform: translateY(-2px) !important;
 }
 
 /* ======================================================== */
@@ -103,9 +108,50 @@ body.theme-light .bg-cyan-950\/60 {
   color: #1e40af !important;
 }
 
-body.theme-light .text-stone-100,
-body.theme-light .text-white {
+body.theme-light .text-stone-100 {
   color: #0f172a !important;
+}
+
+/* Los elementos que son explícitamente blancos sobre fondos oscuros o botones sólidos mantienen texto blanco */
+body.theme-light .bg-gradient-to-r,
+body.theme-light button.bg-gradient-to-r,
+body.theme-light button.bg-blue-600,
+body.theme-light button.bg-blue-700,
+body.theme-light button.bg-emerald-600,
+body.theme-light button.bg-emerald-700,
+body.theme-light button.bg-rose-600,
+body.theme-light button.bg-rose-700,
+body.theme-light [class*="bg-blue-600"],
+body.theme-light [class*="bg-emerald-600"],
+body.theme-light .text-white-force {
+  color: #ffffff !important;
+}
+
+/* Botones secundarios con tonos suaves / transparentes en modo claro */
+body.theme-light button[class*="bg-rose-50"],
+body.theme-light button[class*="bg-rose-100"],
+body.theme-light button[class*="bg-rose-500\/15"],
+body.theme-light button[class*="bg-rose-500\/20"] {
+  color: #be123c !important;
+}
+body.theme-light button[class*="bg-rose-50"] svg,
+body.theme-light button[class*="bg-rose-100"] svg,
+body.theme-light button[class*="bg-rose-500\/15"] svg,
+body.theme-light button[class*="bg-rose-500\/20"] svg {
+  color: #e11d48 !important;
+}
+
+body.theme-light button[class*="bg-amber-50"],
+body.theme-light button[class*="bg-amber-100"],
+body.theme-light button[class*="bg-amber-500\/15"],
+body.theme-light button[class*="bg-amber-500\/20"] {
+  color: #b45309 !important;
+}
+body.theme-light button[class*="bg-amber-50"] svg,
+body.theme-light button[class*="bg-amber-100"] svg,
+body.theme-light button[class*="bg-amber-500\/15"] svg,
+body.theme-light button[class*="bg-amber-500\/20"] svg {
+  color: #d97706 !important;
 }
 
 body.theme-light .text-stone-200,
@@ -171,18 +217,64 @@ body.theme-light textarea {
 }
 
 /* ======================================================== */
-/* SOBREESCRITURAS DEFENSIVAS: CERO NARANJA / AMBER EN ADMIN*/
+/* ESTILOS DE CONTRASTE Y LEGIBILIDAD EN MODO CLARO Y OSCURO */
 /* ======================================================== */
-[class*="bg-amber"], [class*="bg-orange"] {
-  background-color: #2563eb !important;
+/* Modo Claro */
+body.theme-light .badge-observado {
+  background-color: #fef3c7 !important;
+  color: #92400e !important;
+  border-color: #fcd34d !important;
 }
 
-[class*="text-amber"], [class*="text-orange"] {
-  color: #3b82f6 !important;
+body.theme-light .banner-observacion {
+  background-color: #fffbeb !important;
+  color: #78350f !important;
+  border-color: #fde68a !important;
 }
 
-[class*="border-amber"], [class*="border-orange"] {
-  border-color: #3b82f6 !important;
+body.theme-light .banner-observacion p,
+body.theme-light .banner-observacion span {
+  color: #78350f !important;
+}
+
+body.theme-light .banner-alerta-ia {
+  background-color: #fff1f2 !important;
+  color: #9f1239 !important;
+  border-color: #fecdd3 !important;
+}
+
+body.theme-light .banner-alerta-ia p,
+body.theme-light .banner-alerta-ia span {
+  color: #9f1239 !important;
+}
+
+/* Modo Oscuro (Default) */
+.badge-observado {
+  background-color: rgba(245, 158, 11, 0.2) !important;
+  color: #fde68a !important;
+  border-color: rgba(245, 158, 11, 0.5) !important;
+}
+
+.banner-observacion {
+  background-color: rgba(120, 53, 15, 0.28) !important;
+  color: #fef3c7 !important;
+  border-color: rgba(245, 158, 11, 0.45) !important;
+}
+
+.banner-observacion p,
+.banner-observacion span {
+  color: #fef3c7 !important;
+}
+
+.banner-alerta-ia {
+  background-color: rgba(136, 19, 55, 0.25) !important;
+  color: #ffe4e6 !important;
+  border-color: rgba(244, 63, 94, 0.45) !important;
+}
+
+.banner-alerta-ia p,
+.banner-alerta-ia span {
+  color: #ffe4e6 !important;
 }
 
 /* ======================================================== */
@@ -242,21 +334,23 @@ body.theme-light textarea {
 
 @layer utilities {
   .liquid-card {
-    background: linear-gradient(135deg, rgba(17, 24, 39, 0.85) 0%, rgba(11, 15, 23, 0.92) 100%);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    background: #111827;
     border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5), 0 0 20px -5px rgba(37, 99, 235, 0.05);
+    box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.4);
+    contain: content;
+    content-visibility: auto;
+    contain-intrinsic-size: 0 420px;
+    transform: translateZ(0);
   }
 
   .liquid-card-hover {
-    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease, box-shadow 0.2s ease;
+    will-change: transform;
   }
   .liquid-card-hover:hover {
     border-color: rgba(37, 99, 235, 0.45);
-    background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.95) 100%);
-    transform: translateY(-3px);
-    box-shadow: 0 16px 32px -8px rgba(37, 99, 235, 0.18), 0 4px 12px rgba(0, 0, 0, 0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px -8px rgba(37, 99, 235, 0.18), 0 4px 12px rgba(0, 0, 0, 0.2);
   }
 
   .glow-brand {

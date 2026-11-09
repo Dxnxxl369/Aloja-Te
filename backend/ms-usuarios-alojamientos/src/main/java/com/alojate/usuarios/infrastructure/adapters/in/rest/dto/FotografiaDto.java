@@ -14,6 +14,8 @@ import java.util.UUID;
 public class FotografiaDto {
     private UUID idFotografia;
     private UUID idAlojamiento;
+    private UUID idUnidad;
+    private String nombreUnidad;
     private String url;
     private Integer orden;
 }

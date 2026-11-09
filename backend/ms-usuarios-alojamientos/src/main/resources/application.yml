@@ -16,8 +16,36 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: false
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 12MB
   rabbitmq:
     host: ${RABBITMQ_HOST:localhost}
     port: ${RABBITMQ_PORT:5672}
     username: ${RABBITMQ_USER:guest}
     password: ${RABBITMQ_PASSWORD:guest}
+
+almacenamiento:
+  s3:
+    bucket: ${S3_BUCKET:}
+    region: ${S3_REGION:us-east-1}
+    access-key: ${AWS_ACCESS_KEY_ID:}
+    secret-key: ${AWS_SECRET_ACCESS_KEY:}
+    public-base-url: ${S3_PUBLIC_BASE_URL:}
+
+moderacion:
+  token: ${MODERACION_TOKEN:alojate-moderacion-dev}
+  n8n:
+    webhook-url: ${N8N_WEBHOOK_URL:http://localhost:5678/webhook/moderar-alojamiento}
+    timeout-ms: 10000
+  revision:
+    max-intentos: 3
+    esperas-minutos: 1,5,15
+    gracia-registro-minutos: 10
+    limite-base-minutos: 3
+    limite-por-foto-minutos: 2
+    cupo-concurrente: 1
+  job:
+    habilitado: true
+    intervalo-ms: 60000

@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Data
 @Builder
@@ -20,4 +21,6 @@ public class AgregarHabitacionRequest {
     private Integer cantidadCamas;
     private BigDecimal cantidadBanos;
     private Integer idTipoEspacio;
+    /** Fotos de la habitación, en orden (la primera es la portada). Opcional. */
+    private List<CrearFotografiaRequest> fotografias;
 }

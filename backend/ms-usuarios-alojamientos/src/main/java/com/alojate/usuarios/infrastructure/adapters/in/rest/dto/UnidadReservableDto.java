@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -26,4 +27,8 @@ public class UnidadReservableDto {
     private Integer inventarioTotal;
     private BigDecimal precioNoche;
     private EstadoUnidad estado;
+    /** Fotos propias de la habitación (la primera, por orden, es la portada). */
+    private List<FotografiaDto> fotografias;
+    /** Mismas fotos como lista de URLs, para los clientes que solo necesitan el enlace. */
+    private List<String> fotos;
 }
