@@ -30,6 +30,13 @@ import {
 } from './core/types/admin.types';
 import { VALORACIONES_ADMIN_DEMO } from './core/data/valoraciones-demo.data';
 
+const API_GATEWAY_URL =
+  (typeof window !== 'undefined' &&
+    ((window as any).__ENV__?.API_GATEWAY_URL ||
+      (window as any).VITE_API_GATEWAY_URL ||
+      (window as any).API_GATEWAY_URL)) ||
+  'http://localhost:8080';
+
 @Component({
   selector: 'app-root',
   standalone: true,
@@ -414,12 +421,12 @@ export class AppComponent implements OnInit {
       let rawData: any[] = [];
 
       try {
-        const resTodos = await fetch('http://localhost:8080/api/v1/alojamientos/todos');
+        const resTodos = await fetch(`${API_GATEWAY_URL}/api/v1/alojamientos/todos`);
         if (resTodos.ok) rawData = await resTodos.json();
       } catch {}
 
       try {
-        const resPendientes = await fetch('http://localhost:8080/api/v1/alojamientos/moderacion/pendientes');
+        const resPendientes = await fetch(`${API_GATEWAY_URL}/api/v1/alojamientos/moderacion/pendientes`);
         if (resPendientes.ok) {
           const pendientesData: any[] = await resPendientes.json();
           const idSet = new Set(rawData.map((r: any) => r.idAlojamiento || r.id));
@@ -816,7 +823,7 @@ export class AppComponent implements OnInit {
   // --- Contabilidad ---
   async cargarMovimientos() {
     try {
-      const res = await fetch('http://localhost:8080/api/v1/finanzas/contabilidad');
+      const res = await fetch(`${API_GATEWAY_URL}/api/v1/finanzas/contabilidad`);
       if (res.ok) {
         this.movimientos = await res.json();
         return;
@@ -859,7 +866,7 @@ export class AppComponent implements OnInit {
   async alternarEstadoHabitacion(u: UnidadAdmin) {
     const nuevoEstado = u.estado === 'MANTENIMIENTO' ? 'DISPONIBLE' : 'MANTENIMIENTO';
     try {
-      await fetch(`http://localhost:8080/api/v1/unidades/${u.idUnidad}/estado?estado=${nuevoEstado}`, { method: 'PATCH' });
+      await fetch(`${API_GATEWAY_URL}/api/v1/unidades/${u.idUnidad}/estado?estado=${nuevoEstado}`, { method: 'PATCH' });
     } catch {}
     u.estado = nuevoEstado;
     this.persistirCambiosLocal();
@@ -875,7 +882,7 @@ export class AppComponent implements OnInit {
 
   async cargarResenasAlojamiento(idAlojamiento: string) {
     try {
-      const res = await fetch(`http://localhost:8080/api/v1/alojamientos/${idAlojamiento}/valoraciones`);
+      const res = await fetch(`${API_GATEWAY_URL}/api/v1/alojamientos/${idAlojamiento}/valoraciones`);
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data) && data.length > 0) {
@@ -895,7 +902,7 @@ export class AppComponent implements OnInit {
   async confirmarObservacion(id: string, motivo: string) {
     this.persistirCambioEstado(id, 'OBSERVADO', motivo);
     try {
-      await fetch(`http://localhost:8080/api/v1/alojamientos/${id}/observar`, {
+      await fetch(`${API_GATEWAY_URL}/api/v1/alojamientos/${id}/observar`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ motivo, origen: 'ADMIN_MANUAL' })
@@ -912,7 +919,7 @@ export class AppComponent implements OnInit {
   async confirmarRechazo(id: string, motivo: string) {
     this.persistirCambioEstado(id, 'RECHAZADO', motivo);
     try {
-      await fetch(`http://localhost:8080/api/v1/alojamientos/${id}/rechazar`, {
+      await fetch(`${API_GATEWAY_URL}/api/v1/alojamientos/${id}/rechazar`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ motivo })
@@ -929,7 +936,7 @@ export class AppComponent implements OnInit {
       item.unidades.forEach(u => u.estado = 'DISPONIBLE');
     }
     try {
-      await fetch(`http://localhost:8080/api/v1/alojamientos/${id}/aceptar`, { method: 'POST' });
+      await fetch(`${API_GATEWAY_URL}/api/v1/alojamientos/${id}/aceptar`, { method: 'POST' });
     } catch {}
     alert('Alojamiento APROBADO y PUBLICADO en el catálogo.');
     this.cargarAlojamientos();
@@ -943,7 +950,7 @@ export class AppComponent implements OnInit {
       item.unidades.forEach(u => u.estado = 'MANTENIMIENTO');
     }
     try {
-      await fetch(`http://localhost:8080/api/v1/alojamientos/${id}/estado?estado=SUSPENDIDO`, { method: 'PATCH' });
+      await fetch(`${API_GATEWAY_URL}/api/v1/alojamientos/${id}/estado?estado=SUSPENDIDO`, { method: 'PATCH' });
     } catch {}
     alert('Alojamiento pausado del catálogo.');
     this.cargarAlojamientos();
