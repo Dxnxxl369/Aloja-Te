@@ -1,27 +1,25 @@
 // ======================================================================
 // ARCHIVO: agente/data/motores.ts      IMPORTANCIA: ★★★ MUCHA
-// QUÉ ES: Las formas de ENTENDER un mensaje: IA local en el celular, IA en la nube (MS-04) y reglas simples. Más el compuesto que elige la mejor disponible.
-// PARA QUÉ SIRVE: El agente nunca se queda mudo: modelo local si está cargado, si no la nube, y si tampoco hay red, las reglas.
-// SIN ÉL: Sin internet y sin modelo, el agente no entendería nada.
-// NO VA AQUÍ: Decidir qué hacer con lo entendido (eso es el plan).
+// QUÉ ES: Las formas de ENTENDER un mensaje en el MODO BÁSICO (cuando la IA de la nube que planea con herramientas no responde): IA local en el celular y reglas simples. Más el compuesto que elige la mejor disponible.
+// PARA QUÉ SIRVE: El agente nunca se queda mudo: modelo local si está cargado y, si no, las reglas (sin red ni modelo).
+// SIN ÉL: Sin internet y sin IA de la nube, el agente no entendería nada.
+// NO VA AQUÍ: Decidir qué hacer con lo entendido (eso es el plan) ni la IA de la nube (eso es planner.ts).
 // ======================================================================
 // Todos devuelven solo DATOS (Intencion). Ninguno ejecuta acciones.
 
-import type { Api, ModeloLocal } from '../../../core';
-import { CIUDADES, ESQUEMA_INTENCION, MESES, NUMEROS_EN_PALABRAS, PROMPT_INTENCION, RUTA_IA_INTENCION } from '../constantes';
+import type { ModeloLocal } from '../../../core';
+import { CIUDADES, DIA_MS, ESQUEMA_INTENCION, MESES, NUMEROS_EN_PALABRAS, OFFSET_BOLIVIA_MS, PROMPT_INTENCION } from '../constantes';
 import { normalizar } from '../domain/plan';
 import type { MotorLenguaje } from '../domain/interfaces';
 import type { Criterios, Intencion } from '../domain/modelos';
 import { intencionDesdeObjeto, intencionDesdeTexto } from './mapeadores';
-import type { PeticionIntencionDto, RespuestaIntencionDto } from './modelos';
 
-const DIA_MS = 24 * 60 * 60 * 1000;
 const iso = (ms: number) => new Date(ms).toISOString().slice(0, 10);
 const tieneDatos = (i: Intencion) => Object.values(i).some((v) => v !== undefined);
 
 /** `ahora` en horario de Bolivia -> 'YYYY-MM-DD'. */
 function hoyIso(ahora: () => number): string {
-  return iso(ahora() - 4 * 60 * 60 * 1000);
+  return iso(ahora() + OFFSET_BOLIVIA_MS);
 }
 
 // --- 1) Reglas: siempre disponible, sin red ni modelo ------------------------
@@ -99,38 +97,18 @@ export function crearMotorLocal(deps: { modelo: ModeloLocal; ahora?: () => numbe
   };
 }
 
-// --- 3) IA en la nube: MS-04 --------------------------------------------------
+// --- 3) Compuesto: local (si está cargado) -> reglas --------------------------
 
-export function crearMotorRemoto(deps: { api: Api; ahora?: () => number }): MotorLenguaje {
-  const ahora = deps.ahora ?? Date.now;
+export function crearMotorCompuesto(deps: { reglas: MotorLenguaje; local?: MotorLenguaje & { listo(): boolean } }): MotorLenguaje {
+  const { reglas, local } = deps;
   return {
     async extraerIntencion(texto, actuales) {
-      const cuerpo: PeticionIntencionDto = { texto, criterios: { ...actuales }, hoy: hoyIso(ahora) };
-      const resp = await deps.api.post<RespuestaIntencionDto>(RUTA_IA_INTENCION, cuerpo);
-      return intencionDesdeObjeto(resp?.intencion);
-    },
-  };
-}
-
-// --- 4) Compuesto: local -> nube -> reglas ------------------------------------
-
-export function crearMotorCompuesto(deps: {
-  reglas: MotorLenguaje;
-  local?: MotorLenguaje & { listo(): boolean };
-  remoto?: MotorLenguaje;
-}): MotorLenguaje {
-  const { reglas, local, remoto } = deps;
-  return {
-    async extraerIntencion(texto, actuales) {
-      const candidatos: MotorLenguaje[] = [];
-      if (local?.listo()) candidatos.push(local);
-      if (remoto) candidatos.push(remoto);
-      for (const motor of candidatos) {
+      if (local?.listo()) {
         try {
-          const r = await motor.extraerIntencion(texto, actuales);
-          if (tieneDatos(r)) return r; // si no encontró nada, prueba el siguiente
+          const r = await local.extraerIntencion(texto, actuales);
+          if (tieneDatos(r)) return r; // si no encontró nada, las reglas lo intentan
         } catch (e) {
-          console.warn('Motor de lenguaje falló, probando el siguiente', e instanceof Error ? e.message : e);
+          console.warn('La IA local falló, uso las reglas', e instanceof Error ? e.message : e);
         }
       }
       return reglas.extraerIntencion(texto, actuales);

@@ -7,7 +7,7 @@ import json
 import time
 import logging
 from pathlib import Path
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Literal
 
 from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -610,6 +610,110 @@ async def extraer_intencion_agente(req: PeticionIntencionDto):
         intencion["presupuestoMaxNoche"] = float(p_match.group(1))
 
     return {"intencion": intencion}
+
+# ============================================================================
+# AGENTE MÓVIL CON HERRAMIENTAS
+# Groq decide qué herramienta usar y cuándo; la app EJECUTA las herramientas (con la sesión del usuario)
+# y devuelve los resultados. Este servicio no ejecuta nada: solo pregunta a Groq por el siguiente paso.
+# ============================================================================
+
+# Modelos de Groq que soportan herramientas, en orden de preferencia (el primero puede cambiarse en el .env).
+MODELOS_AGENTE = [m for m in dict.fromkeys([os.getenv("GROQ_AGENT_MODEL", "openai/gpt-oss-120b"), "openai/gpt-oss-20b"]) if m]
+GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
+TIMEOUT_TURNO_SEG = 12.0  # la app corta a los 15 s: cada intento debe caber
+
+
+class LlamadaHerramientaDto(BaseModel):
+    id: str = Field(max_length=80)
+    nombre: str = Field(max_length=64)
+    argumentos: Dict[str, Any] = Field(default_factory=dict)
+
+
+class MensajeAgenteDto(BaseModel):
+    rol: Literal["user", "assistant", "tool"]
+    contenido: Optional[str] = Field(default=None, max_length=6000)
+    llamadas: Optional[List[LlamadaHerramientaDto]] = Field(default=None, max_length=8)
+    llamadaId: Optional[str] = Field(default=None, max_length=80)
+
+
+class HerramientaAgenteDto(BaseModel):
+    nombre: str = Field(pattern=r"^[a-z][a-z0-9_]{0,47}$")
+    descripcion: str = Field(max_length=800)
+    parametros: Dict[str, Any]
+
+
+class PeticionTurnoAgenteDto(BaseModel):
+    sistema: str = Field(max_length=8000)
+    mensajes: List[MensajeAgenteDto] = Field(min_length=1, max_length=40)
+    herramientas: List[HerramientaAgenteDto] = Field(default_factory=list, max_length=8)
+
+
+def _mensajes_para_groq(req: PeticionTurnoAgenteDto) -> List[Dict[str, Any]]:
+    salida: List[Dict[str, Any]] = [{"role": "system", "content": req.sistema}]
+    for m in req.mensajes:
+        if m.rol == "assistant":
+            msg: Dict[str, Any] = {"role": "assistant", "content": m.contenido or ""}
+            if m.llamadas:
+                msg["tool_calls"] = [
+                    {"id": l.id, "type": "function", "function": {"name": l.nombre, "arguments": json.dumps(l.argumentos, ensure_ascii=False)}}
+                    for l in m.llamadas
+                ]
+            salida.append(msg)
+        elif m.rol == "tool":
+            salida.append({"role": "tool", "tool_call_id": m.llamadaId or "", "content": m.contenido or ""})
+        else:
+            salida.append({"role": "user", "content": m.contenido or ""})
+    return salida
+
+
+@app.post("/api/v1/ia/agente/turno")
+async def turno_agente(req: PeticionTurnoAgenteDto):
+    """
+    Un paso del agente: recibe la conversación y las herramientas disponibles y devuelve el texto
+    para el usuario y/o las herramientas que Groq quiere usar. Responde 503 si Groq no está disponible
+    (la app entonces sigue con su modo básico).
+    """
+    if not GROQ_API_KEY:
+        raise HTTPException(status_code=503, detail="El asistente no está configurado.")
+
+    herramientas = [
+        {"type": "function", "function": {"name": h.nombre, "description": h.descripcion, "parameters": h.parametros}}
+        for h in req.herramientas
+    ]
+    headers = {"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"}
+    mensajes = _mensajes_para_groq(req)
+
+    for modelo in MODELOS_AGENTE:
+        payload: Dict[str, Any] = {"model": modelo, "messages": mensajes, "temperature": 0.2, "max_tokens": 700}
+        if herramientas:
+            payload["tools"] = herramientas
+            payload["tool_choice"] = "auto"
+        if modelo.startswith("openai/gpt-oss"):
+            payload["reasoning_effort"] = "low"  # respuestas rápidas: el plan es corto
+        try:
+            async with httpx.AsyncClient(timeout=TIMEOUT_TURNO_SEG) as client:
+                resp = await client.post(GROQ_URL, headers=headers, json=payload)
+            if resp.status_code != 200:
+                logger.warning(f"Turno de agente con {modelo}: HTTP {resp.status_code} {resp.text[:200]}")
+                continue
+            msg = resp.json()["choices"][0]["message"]
+        except Exception as err:
+            logger.warning(f"Turno de agente con {modelo} falló: {err}")
+            continue
+
+        llamadas = []
+        for tc in msg.get("tool_calls") or []:
+            fn = tc.get("function") or {}
+            try:
+                args = json.loads(fn.get("arguments") or "{}")
+            except json.JSONDecodeError:
+                args = {}
+            llamadas.append({"id": tc.get("id") or f"call_{len(llamadas)}", "nombre": fn.get("name", ""), "argumentos": args if isinstance(args, dict) else {}})
+        texto = (msg.get("content") or "").strip() or None
+        return {"texto": texto, "llamadas": llamadas, "modelo": modelo}
+
+    raise HTTPException(status_code=503, detail="El asistente no respondió.")
+
 
 if __name__ == "__main__":
     import uvicorn

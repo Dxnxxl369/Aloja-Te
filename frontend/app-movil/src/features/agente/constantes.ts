@@ -1,19 +1,74 @@
 // ======================================================================
 // ARCHIVO: agente/constantes.ts      IMPORTANCIA: ★★ MEDIA
-// QUÉ ES: Todos los valores fijos del agente: rutas, límites, ciudades conocidas, palabras de confirmación y el prompt del modelo.
+// QUÉ ES: Todos los valores fijos del agente: rutas, Groq, límites, ciudades conocidas, palabras de confirmación y el prompt del modelo local.
 // PARA QUÉ SIRVE: Ajustar el comportamiento del agente sin tocar su lógica.
 // SIN ÉL: Textos y números repartidos por el código.
 // NO VA AQUÍ: Lógica ni variables de entorno.
 // ======================================================================
 
-/** MS-01 vía Gateway (AlojamientoController: GET /api/v1/alojamientos?ciudad&precioMax&minHuespedes). */
-export const RUTA_ALOJAMIENTOS = '/api/v1/alojamientos';
+import { RUTA_ALOJAMIENTOS } from '../../shared/rutas';
+import { DIA_MS, OFFSET_BOLIVIA_MS } from '../../shared/ui/tiempo';
+
+/** La ruta de alojamientos (MS-01) y los tiempos se definen una sola vez en shared y se reexportan aquí. */
+export { DIA_MS, OFFSET_BOLIVIA_MS, RUTA_ALOJAMIENTOS };
 
 /**
- * PROPUESTA, NO EXISTE AÚN: MS-04 hoy solo tiene /health. Contrato pedido:
- *   POST { texto, criterios, hoy } -> { intencion: { ciudad?, checkIn?, checkOut?, huespedes?, presupuestoMaxNoche? } }
+ * MS-04 (main.py, vía Gateway), solo cuando la app no tiene clave de Groq: un paso del agente con herramientas
+ * (Groq decide qué herramienta usar; la app la ejecuta).
+ *   POST { sistema, mensajes, herramientas } -> { texto, llamadas: [{ id, nombre, argumentos }] }   (503 si Groq no responde)
  */
-export const RUTA_IA_INTENCION = '/api/v1/ia/agente/intencion';
+export const RUTA_IA_AGENTE_TURNO = '/api/v1/ia/agente/turno';
+
+/** Groq directo desde la app (cuando hay clave en EXPO_PUBLIC_GROQ_API_KEY). Modelos con herramientas, en orden de preferencia. */
+export const GROQ = {
+  URL: 'https://api.groq.com/openai/v1/chat/completions',
+  MODELS: ['openai/gpt-oss-120b', 'openai/gpt-oss-20b'],
+  /** Cada intento debe caber antes del corte general de la app (15 s). */
+  TIMEOUT_MS: 12_000,
+  /** Si el fallo es pasajero (límite por minuto, llamada mal armada, error del servidor) se repite UNA vez en el mismo modelo antes de pasar al otro. */
+  ATTEMPTS_PER_MODEL: 2,
+  /** Solo se espera si Groq pide esperar poco; si pide más, se pasa al otro modelo. */
+  RETRY_MAX_WAIT_MS: 5_000,
+  RETRY_MARGIN_MS: 300,
+  RETRY_SERVER_MS: 500,
+  TEMPERATURE: 0.2,
+  MAX_TOKENS: 700,
+  /** Solo los modelos gpt-oss lo aceptan: respuestas rápidas porque el plan es corto. */
+  REASONING_EFFORT: 'low',
+  REASONING_MODEL_PREFIX: 'openai/gpt-oss',
+} as const;
+
+/** Lo que las herramientas de consulta le devuelven a la IA (se recorta para gastar poco y limitar texto ajeno). */
+export const TOOL_LIMITS = {
+  /** Descripción y políticas las escribe el anfitrión: se cortan a este largo. */
+  FREE_TEXT_MAX_CHARS: 600,
+  SERVICES_MAX: 20,
+  /** Reservas recientes que ve la IA. */
+  BOOKINGS_MAX: 5,
+} as const;
+
+/**
+ * Palabras que, si aparecen en el mensaje del usuario, impiden que la IA confirme o cancele por su cuenta
+ * (duda, negación o cambio). Ya normalizado: sin tildes y en minúsculas. En ese caso solo sirve el "sí" claro de siempre.
+ */
+export const DOUBT_PATTERN = /\b(no|nada|nunca|cambi\w*|espera\w*|pero|mejor|otra|otro|antes|duda\w*|quiza\w*|tal vez|primero)\b/;
+
+/**
+ * Palabras que cuentan como un "sí" cuando la IA confirma o cancela por su cuenta: sin al menos una, el mensaje no es una
+ * respuesta afirmativa (por ejemplo "somos 2" no lo es). Ya normalizadas (sin tildes, minúsculas).
+ */
+export const AFFIRM_WORDS = [
+  'si', 'sii', 'ok', 'okay', 'dale', 'confirmo', 'confirma', 'confirmalo', 'confirmala', 'correcto', 'de acuerdo', 'listo', 'adelante',
+  'claro', 'perfecto', 'vale', 'hazla', 'hazlo', 'reserva', 'reservala', 'reservalo', 'procede', 'de una', 'bueno', 'esta bien', 'cancelala', 'cancelalo',
+] as const;
+
+/** Agente con herramientas: cuántos pasos (consultas a Groq) como máximo por mensaje del usuario y cuántos mensajes recientes ve. */
+export const AGENT_LLM = {
+  MAX_STEPS: 4,
+  HISTORY_MESSAGES: 12,
+  /** Tras fallar la IA de la nube, el modo básico atiende solo este tiempo antes de volver a intentarla (así no se espera el corte en cada mensaje). */
+  COOLDOWN_MS: 30_000,
+} as const;
 
 /** Cuántas opciones se le muestran al usuario. */
 export const MAX_OPCIONES = 3;
@@ -62,3 +117,16 @@ export const ESQUEMA_INTENCION = {
   },
   additionalProperties: false,
 } as const;
+
+/** Cada cuánto se vuelve a preguntar si una reserva en la cola offline ya se envió. */
+export const POLL_COLA_MS = 3_000;
+
+/** Respuestas rápidas que se ofrecen bajo la pregunta del agente. */
+export const CIUDADES_RAPIDAS = CIUDADES.slice(0, 4);
+export const PERSONAS_RAPIDAS = [1, 2, 3, 4];
+
+/** Los tres puntos que laten mientras el agente trabaja ("escribiendo"): cuántos son, cada cuánto sube uno, cuánto tarda en subir y las dos opacidades. */
+export const TYPING_DOTS = { COUNT: 3, STEP_MS: 160, RISE_MS: 320, OPACITY_LOW: 0.3, OPACITY_STILL: 0.6 } as const;
+
+/** Cuántos servicios se ven en la tarjeta de una opción antes del "+N". */
+export const MAX_OPTION_SERVICES = 3;
