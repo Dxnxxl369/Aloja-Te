@@ -1,0 +1,27 @@
+{
+  "name": "WF-02: Análisis Automatizado de Reseñas",
+  "nodes": [
+    {
+      "name": "Webhook Reseña Recibida",
+      "type": "n8n-nodes-base.webhook",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "resena-nueva"
+      }
+    },
+    {
+      "name": "MS-04 Sentiment & Entity Extraction",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "url": "http://ms-ia-copiloto:3004/api/v1/llm/analyze-sentiment",
+        "method": "POST"
+      }
+    },
+    {
+      "name": "Alerta de Problemas Recurrentes",
+      "type": "n8n-nodes-base.if",
+      "parameters": {}
+    }
+  ],
+  "connections": {}
+}
