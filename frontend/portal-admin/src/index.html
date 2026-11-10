@@ -68,6 +68,13 @@
       }
     }
   </script>
+  <script>
+    window.__ENV__ = window.__ENV__ || {
+      API_GATEWAY_URL: 'https://aloja-te-admin.duckdns.org',
+      CLIENTES_URL: 'https://aloja-te.duckdns.org',
+      BFF_GRAPHQL_URL: 'https://aloja-te-anfitrion.duckdns.org/graphql'
+    };
+  </script>
 </head>
 <body class="bg-carbon-950 text-stone-100 font-sans antialiased min-h-screen selection:bg-terracota-500/30 selection:text-white">
   <app-root></app-root>

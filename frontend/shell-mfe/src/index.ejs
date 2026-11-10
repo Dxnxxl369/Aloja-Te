@@ -3,12 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>Aloja-Te | Shell Microfrontends</title>
-  
+  <title>Aloja-Te | Multi-Cloud Architecture Hub & Shell</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/systemjs/dist/system.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/systemjs/dist/extras/amd.min.js"></script>
-
   <script type="systemjs-importmap">
     {
       "imports": {
@@ -16,9 +14,73 @@
       }
     }
   </script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    iframe { border: none; width: 100%; height: calc(100vh - 68px); }
+  </style>
 </head>
-<body class="bg-gray-50 m-0 p-0 font-sans">
-  <div id="single-spa-application:@alojate/portal-clientes"></div>
-  <div id="single-spa-application:@alojate/portal-admin"></div>
+<body class="bg-slate-900 text-slate-100 flex flex-col h-screen overflow-hidden">
+  <!-- Top Navigation & Cloud Status Bar -->
+  <header class="h-[68px] bg-slate-950/90 border-b border-slate-800 px-4 sm:px-6 flex items-center justify-between shrink-0 z-50">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-amber-500 flex items-center justify-center font-black text-white shadow-lg shadow-blue-500/20">
+        A
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="font-bold text-sm tracking-wide text-white">Aloja-Te</span>
+          <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30">Multi-Cloud Shell</span>
+        </div>
+        <p class="text-[10px] text-slate-400">AWS (EC2) • Azure • Google Cloud Platform</p>
+      </div>
+    </div>
+
+    <!-- Center Navigation Tabs -->
+    <nav class="hidden md:flex items-center gap-1.5 bg-slate-900 p-1 rounded-xl border border-slate-800">
+      <button onclick="switchPortal('clientes', 'https://aloja-te.duckdns.org')" id="tab-clientes" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition bg-blue-600 text-white shadow-md">
+        🌐 Clientes (Google Cloud)
+      </button>
+      <button onclick="switchPortal('anfitrion', 'https://aloja-te-anfitrion.duckdns.org')" id="tab-anfitrion" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition">
+        🏨 Anfitrión (Azure)
+      </button>
+      <button onclick="switchPortal('admin', 'https://aloja-te-admin.duckdns.org')" id="tab-admin" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition">
+        🛡️ Admin (AWS EC2)
+      </button>
+      <button onclick="switchPortal('gateway', 'https://aloja-te-admin.duckdns.org/api/health')" id="tab-gateway" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition">
+        ⚡ Gateway (AWS EC2)
+      </button>
+    </nav>
+
+    <!-- Cloud Badges & Direct Links -->
+    <div class="flex items-center gap-2 text-xs">
+      <a id="btn-open-external" href="https://aloja-te.duckdns.org" target="_blank" rel="noreferrer" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition flex items-center gap-1.5 text-xs font-medium">
+        <span>Abrir en nueva pestaña</span>
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke_linecap="round" stroke_linejoin="round" stroke_width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+      </a>
+    </div>
+  </header>
+
+  <!-- Main View Container -->
+  <main class="flex-1 relative bg-slate-950">
+    <iframe id="portal-frame" src="https://aloja-te.duckdns.org" title="Portal View"></iframe>
+    <div id="single-spa-application:@alojate/portal-clientes"></div>
+    <div id="single-spa-application:@alojate/portal-admin"></div>
+  </main>
+
+  <script src="/alojate-root-config.js"></script>
+  <script>
+    function switchPortal(portalId, url) {
+      document.getElementById('portal-frame').src = url;
+      document.getElementById('btn-open-external').href = url;
+      ['clientes', 'anfitrion', 'admin', 'gateway'].forEach(id => {
+        const btn = document.getElementById('tab-' + id);
+        if (id === portalId) {
+          btn.className = 'px-3.5 py-1.5 rounded-lg text-xs font-semibold transition bg-blue-600 text-white shadow-md';
+        } else {
+          btn.className = 'px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition';
+        }
+      });
+    }
+  </script>
 </body>
 </html>
