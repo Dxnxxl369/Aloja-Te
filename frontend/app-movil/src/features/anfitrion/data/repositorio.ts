@@ -64,14 +64,8 @@ export function crearRepositorioAnfitrion(deps: { api: Api }) {
         }
 
         if (!Array.isArray(lista) || lista.length === 0) {
-          // Si la lista está vacía para ese ID específico, buscar también por coincidencias canónicas
           const todos = await api.get<any[]>(`/api/v1/alojamientos`).catch(() => []);
-          lista = todos.filter(
-            (a) =>
-              a.idAnfitrion === anfitrionId ||
-              (a.nombreAnfitrion && a.nombreAnfitrion.toLowerCase().includes('carlos')) ||
-              (a.nombreAnfitrion && a.nombreAnfitrion.toLowerCase().includes('daniel'))
-          );
+          lista = todos.filter((a) => a.idAnfitrion === anfitrionId);
         }
 
         return lista.map((a) => {

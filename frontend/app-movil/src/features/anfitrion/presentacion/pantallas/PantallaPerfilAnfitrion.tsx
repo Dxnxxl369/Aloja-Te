@@ -5,6 +5,7 @@
 // ======================================================================
 
 import * as ImagePicker from 'expo-image-picker';
+import { uploadAsync, FileSystemUploadType } from 'expo-file-system/legacy';
 import {
   Building2,
   Camera,
@@ -35,6 +36,7 @@ import {
   View,
 } from 'react-native';
 import { useSesion } from '../../../../core';
+import { API_URL } from '../../../../core/base/constantes';
 import { Boton } from '../../../../shared/ui/Boton';
 import { COLOR, ESPACIO, FUENTE, RADIO, SOMBRA_FLOTANTE } from '../../../../shared/ui/tema';
 import type { PerfilAnfitrionDetalle } from '../../domain/modelos';
@@ -60,6 +62,16 @@ interface Props {
       bancoNombre: string,
       numeroCuentaBancaria: string,
       qr: string | null
+    ) => Promise<void>;
+    actualizarPerfil?: (
+      anfitrionId: string,
+      datos: {
+        nombre: string;
+        apellido: string;
+        telefono: string;
+        ciAnversoUrl?: string | null;
+        ciReversoUrl?: string | null;
+      }
     ) => Promise<void>;
   };
   alCerrarSesion: () => void;
@@ -117,6 +129,7 @@ export function PantallaPerfilAnfitrion({ repo, alCerrarSesion }: Props) {
     };
   }, [anfitrionId, repo]);
 
+  // 1. Solo selecciona la foto y la guarda en la caché/estado local en vista previa
   const seleccionarFoto = async (tipo: 'ciAnverso' | 'ciReverso' | 'qr') => {
     try {
       const permiso = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -132,24 +145,51 @@ export function PantallaPerfilAnfitrion({ repo, alCerrarSesion }: Props) {
         mediaTypes: ['images'],
         allowsEditing: true,
         quality: 0.8,
-        base64: true,
       });
 
       if (!res.canceled && res.assets && res.assets[0]) {
         const asset = res.assets[0];
-        const uriFinal = asset.base64 ? `data:image/jpeg;base64,${asset.base64}` : asset.uri;
+        if (tipo === 'ciAnverso') setCiAnverso(asset.uri);
+        if (tipo === 'ciReverso') setCiReverso(asset.uri);
+        if (tipo === 'qr') setQrUri(asset.uri);
 
-        if (tipo === 'ciAnverso') setCiAnverso(uriFinal);
-        if (tipo === 'ciReverso') setCiReverso(uriFinal);
-        if (tipo === 'qr') setQrUri(uriFinal);
-
-        Alert.alert('Imagen cargada', 'Documento adjuntado correctamente.');
+        Alert.alert('Foto seleccionada', 'Imagen cargada en vista previa. Presiona "Guardar Datos Bancarios" para guardarla.');
       }
     } catch (e) {
-      Alert.alert('Error', 'No se pudo seleccionar la imagen.');
+      Alert.alert('Error', 'No se pudo seleccionar la imagen de la galería.');
     }
   };
 
+  // Helper para subir solo si es una imagen nueva local (evita duplicar fotos existentes)
+  const subirSiEsLocal = async (uri: string | null, carpeta: string): Promise<string | null> => {
+    if (!uri) return null;
+    // Si ya empieza con http:// o https://, significa que ya está en la nube: NO volver a subir
+    if (uri.startsWith('http://') || uri.startsWith('https://')) {
+      return uri;
+    }
+    // Es un archivo local nuevo de la galería (file:// o content://)
+    const filename = uri.split('/').pop() || 'documento.jpg';
+    const match = /\.(\w+)$/.exec(filename);
+    const ext = (match && match[1]) ? match[1].toLowerCase() : 'jpg';
+    const mimeType = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
+
+    const uploadUrl = `${API_URL}/api/v1/alojamientos/imagenes?carpeta=${carpeta}`;
+    const uploadRes = await uploadAsync(uploadUrl, uri, {
+      httpMethod: 'POST',
+      uploadType: FileSystemUploadType.MULTIPART,
+      fieldName: 'archivo',
+      mimeType: mimeType,
+    });
+
+    if (uploadRes.status >= 200 && uploadRes.status < 300) {
+      const data = JSON.parse(uploadRes.body);
+      return data.url;
+    } else {
+      throw new Error(`Error en el servidor (${uploadRes.status})`);
+    }
+  };
+
+  // 2. Solo al presionar "Guardar Datos Bancarios", sube lo pendiente y guarda en el backend
   const guardarCambios = async () => {
     if (!numeroCuenta.trim()) {
       Alert.alert('Datos incompletos', 'Ingresa tu número de cuenta bancaria.');
@@ -157,13 +197,39 @@ export function PantallaPerfilAnfitrion({ repo, alCerrarSesion }: Props) {
     }
     setGuardando(true);
     try {
-      await repo.actualizarDatosBancarios(anfitrionId, bancoNombre, numeroCuenta.trim(), qrUri);
-      Alert.alert(
-        'Perfil Actualizado',
-        'Tus datos bancarios y credenciales de anfitrión se guardaron con éxito en la plataforma.'
-      );
-    } catch (e) {
-      Alert.alert('Error', 'No se pudo guardar la información en el servidor.');
+      let ciAnversoFinal = ciAnverso;
+      let ciReversoFinal = ciReverso;
+      let qrFinal = qrUri;
+
+      // Subir únicamente los que sean archivos locales nuevos (control anti-duplicados)
+      if (ciAnverso && !ciAnverso.startsWith('http')) {
+        ciAnversoFinal = await subirSiEsLocal(ciAnverso, 'carnets');
+        if (ciAnversoFinal) setCiAnverso(ciAnversoFinal);
+      }
+      if (ciReverso && !ciReverso.startsWith('http')) {
+        ciReversoFinal = await subirSiEsLocal(ciReverso, 'carnets');
+        if (ciReversoFinal) setCiReverso(ciReversoFinal);
+      }
+      if (qrUri && !qrUri.startsWith('http')) {
+        qrFinal = await subirSiEsLocal(qrUri, 'qr');
+        if (qrFinal) setQrUri(qrFinal);
+      }
+
+      await repo.actualizarDatosBancarios(anfitrionId, bancoNombre, numeroCuenta.trim(), qrFinal);
+      if (repo.actualizarPerfil) {
+        await repo.actualizarPerfil(anfitrionId, {
+          nombre,
+          apellido,
+          telefono,
+          ciAnversoUrl: ciAnversoFinal,
+          ciReversoUrl: ciReversoFinal,
+        });
+      }
+
+      Alert.alert('Guardado con éxito', 'Los datos y documentos han sido guardados correctamente.');
+    } catch (e: any) {
+      console.error('Error guardando cambios:', e);
+      Alert.alert('Error', 'No se pudo guardar la información en el servidor. Intenta de nuevo.');
     } finally {
       setGuardando(false);
     }

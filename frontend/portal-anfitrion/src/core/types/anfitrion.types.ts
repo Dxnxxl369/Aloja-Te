@@ -104,3 +104,38 @@ export interface PerfilAnfitrion {
     reputacion: string;
   };
 }
+
+export interface Valoracion {
+  idValoracion: string;
+  idAlojamiento: string;
+  idUnidad?: string | null;
+  nombreUnidad?: string | null;
+  idUsuario: string;
+  nombreUsuario: string;
+  idReserva?: string | null;
+  puntuacionGeneral: number;
+  calificacionLimpieza?: number;
+  calificacionUbicacion?: number;
+  calificacionCalidadPrecio?: number;
+  calificacionServicio?: number;
+  calificacionComodidad?: number;
+  esAnonimo?: boolean;
+  comentario: string;
+  sentimientoNlp?: 'POSITIVO' | 'NEUTRO' | 'NEGATIVO' | string;
+  confianzaNlp?: number;
+  topicoPredicho?: string;
+  fechaCreacion?: string;
+}
+
+export interface ResumenValoraciones {
+  calificacionPromedio: number;
+  totalResenas: number;
+  promedioLimpieza: number;
+  promedioUbicacion: number;
+  promedioCalidadPrecio: number;
+  promedioServicio: number;
+  promedioComodidad: number;
+  conteoPositivos: number;
+  conteoNeutros: number;
+  conteoNegativos: number;
+}

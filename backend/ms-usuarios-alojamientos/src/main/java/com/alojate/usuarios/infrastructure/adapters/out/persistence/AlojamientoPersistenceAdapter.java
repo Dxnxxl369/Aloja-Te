@@ -165,50 +165,70 @@ public class AlojamientoPersistenceAdapter implements AlojamientoRepositoryPort 
                 : new HashSet<>();
 
         // La tabla fotografias guarda juntas las fotos de la galería (id_unidad vacío) y las de cada habitación.
-        // Aquí se separan: Alojamiento.fotografias = solo galería; cada unidad lleva las suyas.
+        // Aquí se separan y DEDUPLICAN estrictamente para no multiplicar fotos en UI ni en moderación.
         List<FotografiaJpaEntity> todasLasFotos = entity.getFotografias() != null ? entity.getFotografias() : List.of();
-        Comparator<FotografiaJpaEntity> porOrden = Comparator.comparing(f -> f.getOrden() != null ? f.getOrden() : 0);
+        Comparator<Fotografia> porOrden = Comparator.comparing(f -> f.getOrden() != null ? f.getOrden() : 0);
 
-        List<Fotografia> fotografias = todasLasFotos.stream()
-                .filter(f -> f.getIdUnidad() == null)
-                .sorted(porOrden)
-                .map(f -> Fotografia.builder()
-                        .idFotografia(f.getIdFotografia())
-                        .idAlojamiento(f.getIdAlojamiento())
-                        .url(f.getUrl())
-                        .orden(f.getOrden())
-                        .build())
-                .collect(Collectors.toList());
+        Set<String> urlsGeneralesVistas = new HashSet<>();
+        List<Fotografia> fotografias = new ArrayList<>();
+        for (FotografiaJpaEntity f : todasLasFotos) {
+            if (f.getIdUnidad() == null && f.getUrl() != null) {
+                String uNorm = f.getUrl().trim();
+                if (!uNorm.isEmpty() && !urlsGeneralesVistas.contains(uNorm)) {
+                    urlsGeneralesVistas.add(uNorm);
+                    fotografias.add(Fotografia.builder()
+                            .idFotografia(f.getIdFotografia())
+                            .idAlojamiento(f.getIdAlojamiento())
+                            .url(uNorm)
+                            .orden(f.getOrden())
+                            .build());
+                }
+            }
+        }
+        fotografias.sort(porOrden);
 
         Map<UUID, List<FotografiaJpaEntity>> fotosPorUnidad = todasLasFotos.stream()
                 .filter(f -> f.getIdUnidad() != null)
                 .collect(Collectors.groupingBy(FotografiaJpaEntity::getIdUnidad));
 
         List<UnidadReservable> unidades = entity.getUnidades() != null
-                ? entity.getUnidades().stream().map(u -> UnidadReservable.builder()
-                        .idUnidad(u.getIdUnidad())
-                        .idAlojamiento(u.getIdAlojamiento())
-                        .idTipoEspacio(u.getTipoEspacio() != null ? u.getTipoEspacio().getIdTipoEspacio() : null)
-                        .nombre(u.getNombre())
-                        .capacidadHuespedes(u.getCapacidadHuespedes())
-                        .cantidadDormitorios(u.getCantidadDormitorios())
-                        .cantidadCamas(u.getCantidadCamas())
-                        .cantidadBanos(u.getCantidadBanos())
-                        .inventarioTotal(u.getInventarioTotal())
-                        .precioNoche(u.getPrecioNoche())
-                        .estado(u.getEstado())
-                        .fotografias(fotosPorUnidad.getOrDefault(u.getIdUnidad(), List.of()).stream()
-                                .sorted(porOrden)
-                                .map(f -> Fotografia.builder()
+                ? entity.getUnidades().stream().map(u -> {
+                    List<FotografiaJpaEntity> fotosEnt = fotosPorUnidad.getOrDefault(u.getIdUnidad(), List.of());
+                    Set<String> urlsUnidadVistas = new HashSet<>();
+                    List<Fotografia> fotosUnidad = new ArrayList<>();
+                    for (FotografiaJpaEntity f : fotosEnt) {
+                        if (f.getUrl() != null) {
+                            String uNorm = f.getUrl().trim();
+                            if (!uNorm.isEmpty() && !urlsUnidadVistas.contains(uNorm)) {
+                                urlsUnidadVistas.add(uNorm);
+                                fotosUnidad.add(Fotografia.builder()
                                         .idFotografia(f.getIdFotografia())
                                         .idAlojamiento(f.getIdAlojamiento())
                                         .idUnidad(f.getIdUnidad())
                                         .nombreUnidad(u.getNombre())
-                                        .url(f.getUrl())
+                                        .url(uNorm)
                                         .orden(f.getOrden())
-                                        .build())
-                                .collect(Collectors.toList()))
-                        .build()).collect(Collectors.toList())
+                                        .build());
+                            }
+                        }
+                    }
+                    fotosUnidad.sort(porOrden);
+
+                    return UnidadReservable.builder()
+                            .idUnidad(u.getIdUnidad())
+                            .idAlojamiento(u.getIdAlojamiento())
+                            .idTipoEspacio(u.getTipoEspacio() != null ? u.getTipoEspacio().getIdTipoEspacio() : null)
+                            .nombre(u.getNombre())
+                            .capacidadHuespedes(u.getCapacidadHuespedes())
+                            .cantidadDormitorios(u.getCantidadDormitorios())
+                            .cantidadCamas(u.getCantidadCamas())
+                            .cantidadBanos(u.getCantidadBanos())
+                            .inventarioTotal(u.getInventarioTotal())
+                            .precioNoche(u.getPrecioNoche())
+                            .estado(u.getEstado())
+                            .fotografias(fotosUnidad)
+                            .build();
+                }).collect(Collectors.toList())
                 : new ArrayList<>();
 
         return Alojamiento.builder()

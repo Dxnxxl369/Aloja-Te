@@ -26,15 +26,7 @@ public class UsuarioServiceImpl implements UsuarioUseCase {
         return usuarioRepositoryPort.buscarPorId(id)
                 .or(() -> {
                     if (UUID.fromString("a0000000-0000-4000-8000-000000000002").equals(id)) {
-                        return usuarioRepositoryPort.buscarPorEmail("carlos.mendoza@alojate.bo")
-                                .or(() -> usuarioRepositoryPort.buscarPorEmail("anfitrion@alojate.bo"));
-                    }
-                    if (UUID.fromString("a0000000-0000-4000-8000-000000000003").equals(id)) {
-                        return usuarioRepositoryPort.buscarPorEmail("elena.calbimontes@alojate.bo")
-                                .or(() -> usuarioRepositoryPort.buscarPorEmail("elena.morales@alojate.bo"));
-                    }
-                    if (UUID.fromString("a0000000-0000-4000-8000-000000000004").equals(id)) {
-                        return usuarioRepositoryPort.buscarPorEmail("danielqczn@gmail.com");
+                        return usuarioRepositoryPort.buscarPorEmail("anfitrion@alojate.bo");
                     }
                     return Optional.empty();
                 })

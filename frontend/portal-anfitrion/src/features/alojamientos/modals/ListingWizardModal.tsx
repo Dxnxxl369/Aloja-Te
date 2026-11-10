@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import {
   X, Home, Hotel, Building2, MapPin, Sparkles, ImagePlus, Star,
   Trash2, Plus, BedDouble, Users, Bath, Check, ArrowRight, ArrowLeft,
-  ShieldCheck, Clock, Loader2, DollarSign, UploadCloud, Edit3
+  ShieldCheck, Clock, Loader2, DollarSign, UploadCloud, Edit3, DoorOpen
 } from 'lucide-react';
 import { Alojamiento, UnidadReservable, Fotografia } from '../../../core/types/anfitrion.types';
 import { useAnfitrionAuth } from '../../../core/auth/AuthContext';
@@ -121,6 +121,7 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
     }
   ]);
   const [nuevaFotoHabUrl, setNuevaFotoHabUrl] = useState('');
+  const [subiendoFotoHab, setSubiendoFotoHab] = useState(false);
 
   if (!isOpen) return null;
 
@@ -151,10 +152,34 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
     );
   };
 
-  // Gestión de fotos de la propiedad
-  const handleArchivosLocales = (archivos: FileList | null) => {
+  // Gestión de fotos de la propiedad (Subida directa a la nube / Supabase / S3)
+  const handleArchivosLocales = async (archivos: FileList | null) => {
     if (!archivos || archivos.length === 0) return;
-    Array.from(archivos).forEach((file) => {
+    for (const file of Array.from(archivos)) {
+      try {
+        const formData = new FormData();
+        formData.append('archivo', file);
+        const res = await fetch('http://localhost:8080/api/v1/alojamientos/imagenes?carpeta=alojamientos', {
+          method: 'POST',
+          body: formData
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.url) {
+            setFotos(prev => [
+              ...prev,
+              {
+                id: `foto-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+                url: data.url,
+                esPrincipal: prev.length === 0
+              }
+            ]);
+            continue;
+          }
+        }
+      } catch (err) {
+        console.warn('Error al subir foto de alojamiento a la nube, usando fallback local:', err);
+      }
       const reader = new FileReader();
       reader.onload = (e) => {
         const dataUrl = e.target?.result as string;
@@ -170,7 +195,7 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
         }
       };
       reader.readAsDataURL(file);
-    });
+    }
   };
 
   const agregarFotoPorUrl = () => {
@@ -200,6 +225,89 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
 
   const eliminarFoto = (id: string) => {
     setFotos(prev => {
+      const filtradas = prev.filter(f => f.id !== id);
+      if (filtradas.length > 0 && !filtradas.some(f => f.esPrincipal)) {
+        filtradas[0].esPrincipal = true;
+      }
+      return filtradas;
+    });
+  };
+
+  // Gestión de fotos de cada habitación del hotel
+  const handleArchivosLocalesHabitacion = async (archivos: FileList | null) => {
+    if (!archivos || archivos.length === 0) return;
+    setSubiendoFotoHab(true);
+    for (const file of Array.from(archivos)) {
+      try {
+        const formData = new FormData();
+        formData.append('archivo', file);
+        const res = await fetch('http://localhost:8080/api/v1/alojamientos/imagenes?carpeta=habitaciones', {
+          method: 'POST',
+          body: formData
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.url) {
+            setHabFotos(prev => [
+              ...prev,
+              {
+                id: `fhab-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+                url: data.url,
+                esPrincipal: prev.length === 0
+              }
+            ]);
+            continue;
+          }
+        }
+      } catch (err) {
+        console.warn('Error al subir foto de habitación, usando fallback local:', err);
+      }
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const dataUrl = e.target?.result as string;
+        if (dataUrl) {
+          setHabFotos(prev => [
+            ...prev,
+            {
+              id: `fhab-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+              url: dataUrl,
+              esPrincipal: prev.length === 0
+            }
+          ]);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+    setSubiendoFotoHab(false);
+  };
+
+  const agregarFotoHabPorUrl = () => {
+    if (!nuevaFotoHabUrl.trim()) return;
+    setHabFotos(prev => [
+      ...prev,
+      {
+        id: `fhab-${Date.now()}`,
+        url: nuevaFotoHabUrl.trim(),
+        esPrincipal: prev.length === 0
+      }
+    ]);
+    setNuevaFotoHabUrl('');
+  };
+
+  const marcarFotoPrincipalHab = (id: string) => {
+    setHabFotos(prev => {
+      const seleccionada = prev.find(f => f.id === id);
+      if (!seleccionada) return prev;
+      const restantes = prev.filter(f => f.id !== id);
+      return [
+        { ...seleccionada, esPrincipal: true },
+        ...restantes.map(f => ({ ...f, esPrincipal: false }))
+      ];
+    });
+  };
+
+  const eliminarFotoHab = (id: string) => {
+    setHabFotos(prev => {
       const filtradas = prev.filter(f => f.id !== id);
       if (filtradas.length > 0 && !filtradas.some(f => f.esPrincipal)) {
         filtradas[0].esPrincipal = true;
@@ -333,9 +441,13 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
     const isUuid = (val?: string) => !!val && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
     let anfitrionUuid = isUuid(perfil.id) ? perfil.id : '';
     if (!anfitrionUuid) {
-      if (perfil.email?.includes('daniel') || perfil.nombre?.includes('Daniel')) anfitrionUuid = 'a0000000-0000-4000-8000-000000000004';
-      else if (perfil.email?.includes('elena') || perfil.nombre?.includes('Elena')) anfitrionUuid = 'a0000000-0000-4000-8000-000000000003';
-      else anfitrionUuid = 'a0000000-0000-4000-8000-000000000002';
+      if (perfil.email?.includes('daniel') || perfil.nombre?.includes('Daniel') || anfitrionClave.includes('daniel')) {
+        anfitrionUuid = '7c772f61-90f1-474a-8acf-e7ba66e20d40';
+      } else if (perfil.email?.includes('elena') || perfil.nombre?.includes('Elena')) {
+        anfitrionUuid = 'a0000000-0000-4000-8000-000000000003';
+      } else {
+        anfitrionUuid = 'a0000000-0000-4000-8000-000000000002';
+      }
     }
 
     const nuevoAlojamiento: Alojamiento = {
@@ -796,6 +908,7 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
                         setHabBanos(1);
                         setHabInventario(3);
                         setHabPrecio(350);
+                        setHabFotos([]);
                         setCreandoHabitacion(true);
                       }}
                       className="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm"
@@ -872,44 +985,58 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
 
         {/* Submodal para Crear / Editar Habitación */}
         {creandoHabitacion && (
-          <div className="absolute inset-0 z-50 bg-black/70 backdrop-blur-sm p-4 flex items-center justify-center animate-fade-in">
-            <div className="w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto">
-              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-                <h4 className="font-serif font-bold text-slate-900 dark:text-white text-base">
-                  {editandoHabId ? 'Editar Habitación' : 'Añadir Nueva Habitación al Hotel'}
-                </h4>
+          <div className="fixed inset-0 z-[10000] bg-black/75 backdrop-blur-md p-4 flex items-center justify-center animate-fade-in">
+            <div className="w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl flex flex-col max-h-[88vh] overflow-hidden">
+              {/* Header Fijo */}
+              <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/70 dark:bg-slate-900/70 shrink-0">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold">
+                    <DoorOpen className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="font-serif font-bold text-slate-900 dark:text-white text-base leading-tight">
+                      {editandoHabId ? 'Editar Habitación' : 'Añadir Nueva Habitación al Hotel'}
+                    </h4>
+                    <span className="text-[10px] text-slate-400 font-medium">
+                      Completa los detalles y confirma abajo para guardar
+                    </span>
+                  </div>
+                </div>
                 <button
                   type="button"
                   onClick={() => setCreandoHabitacion(false)}
-                  className="p-1 rounded-xl text-slate-400 hover:text-slate-600"
+                  className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                  title="Cerrar ventana"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              <div className="space-y-3">
+              {/* Formulario Scrolleable */}
+              <div className="p-5 overflow-y-auto flex-1 space-y-4 text-xs">
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Nombre o Categoría de la Habitación
+                    Nombre o Categoría de la Habitación *
                   </label>
                   <input
                     type="text"
                     value={habNombre}
                     onChange={e => setHabNombre(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-900 dark:text-white"
+                    placeholder="ej. Suite Ejecutiva Confort"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Tarifa por Noche (BOB)
+                      Tarifa por Noche (BOB) *
                     </label>
                     <input
                       type="number"
                       value={habPrecio}
                       onChange={e => setHabPrecio(Number(e.target.value))}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                   <div>
@@ -920,14 +1047,14 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
                       type="number"
                       value={habInventario}
                       onChange={e => setHabInventario(Number(e.target.value))}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-3 gap-3">
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">Capacidad</label>
+                    <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">Capacidad (pers.)</label>
                     <input
                       type="number"
                       value={habCapacidad}
@@ -954,22 +1081,130 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
                     />
                   </div>
                 </div>
+
+                {/* Sección de Fotografías de la Habitación */}
+                <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                        Fotografías de esta Habitación ({habFotos.length})
+                      </label>
+                      <span className="text-[10px] text-slate-400">
+                        Sube imágenes reales (la primera será la portada).
+                      </span>
+                    </div>
+
+                    <input
+                      type="file"
+                      ref={habFileInputRef}
+                      multiple
+                      accept="image/*"
+                      onChange={e => handleArchivosLocalesHabitacion(e.target.files)}
+                      className="hidden"
+                    />
+
+                    <button
+                      type="button"
+                      disabled={subiendoFotoHab}
+                      onClick={() => habFileInputRef.current?.click()}
+                      className="px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 text-[11px] font-bold flex items-center gap-1.5 transition cursor-pointer"
+                    >
+                      {subiendoFotoHab ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          <span>Subiendo...</span>
+                        </>
+                      ) : (
+                        <>
+                          <UploadCloud className="w-3.5 h-3.5" />
+                          <span>Subir Fotos</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  {/* Input URL opcional */}
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="O pega enlace https://... de foto para la habitación"
+                      value={nuevaFotoHabUrl}
+                      onChange={e => setNuevaFotoHabUrl(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); agregarFotoHabPorUrl(); } }}
+                      className="flex-1 px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white"
+                    />
+                    <button
+                      type="button"
+                      onClick={agregarFotoHabPorUrl}
+                      className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300"
+                    >
+                      + Añadir
+                    </button>
+                  </div>
+
+                  {/* Grid de miniaturas de la habitación */}
+                  {habFotos.length === 0 ? (
+                    <div className="p-4 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl text-center text-slate-400 text-[11px]">
+                      Aún no has agregado fotos para esta habitación. Sube al menos una foto para que se publique correctamente.
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 pt-1 max-h-40 overflow-y-auto">
+                      {habFotos.map((f, idx) => (
+                        <div
+                          key={f.id}
+                          className={`relative group aspect-video rounded-xl overflow-hidden border ${
+                            f.esPrincipal ? 'border-blue-600 ring-2 ring-blue-500/30' : 'border-slate-200 dark:border-slate-800'
+                          }`}
+                        >
+                          <img src={f.url} alt={`Habitación ${idx + 1}`} className="w-full h-full object-cover" />
+                          {f.esPrincipal && (
+                            <span className="absolute top-1 left-1 px-1.5 py-0.5 rounded bg-blue-600 text-white text-[9px] font-bold uppercase tracking-wider">
+                              Portada
+                            </span>
+                          )}
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-1.5">
+                            {!f.esPrincipal && (
+                              <button
+                                type="button"
+                                onClick={() => marcarFotoPrincipalHab(f.id)}
+                                className="p-1 rounded bg-white/90 text-amber-500 hover:bg-white text-xs"
+                                title="Hacer portada de la habitación"
+                              >
+                                <Star className="w-3.5 h-3.5 fill-amber-500" />
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => eliminarFotoHab(f.id)}
+                              className="p-1 rounded bg-red-600/90 text-white hover:bg-red-600 text-xs"
+                              title="Eliminar foto"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
-              <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-2">
+              {/* Footer Fijo SIEMPRE Visible */}
+              <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/90 flex items-center justify-between gap-3 shrink-0">
                 <button
                   type="button"
                   onClick={() => setCreandoHabitacion(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold"
+                  className="px-4 py-2.5 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold transition cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="button"
                   onClick={guardarHabitacionHotel}
-                  className="px-4 py-2 rounded-xl bg-blue-600 text-white text-xs font-bold shadow-sm"
+                  className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-lg shadow-blue-500/25 transition flex items-center gap-2 cursor-pointer"
                 >
-                  Guardar Habitación
+                  <Check className="w-4 h-4" />
+                  <span>Aceptar y Guardar Habitación</span>
                 </button>
               </div>
             </div>

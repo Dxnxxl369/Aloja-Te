@@ -155,10 +155,34 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
   };
 
   // Manejo de Fotos (Drag & Drop, Selector Local y URL)
-  const handleArchivosLocales = (archivos: FileList | null) => {
+  const handleArchivosLocales = async (archivos: FileList | null) => {
     if (!archivos || archivos.length === 0) return;
     const filesArray = Array.from(archivos);
-    filesArray.forEach((file) => {
+    for (const file of filesArray) {
+      try {
+        const formData = new FormData();
+        formData.append('archivo', file);
+        const res = await fetch('http://localhost:8080/api/v1/alojamientos/imagenes?carpeta=alojamientos', {
+          method: 'POST',
+          body: formData
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.url) {
+            setFotos(prev => [
+              ...prev,
+              {
+                id: `f-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+                url: data.url,
+                esPrincipal: prev.length === 0
+              }
+            ]);
+            continue;
+          }
+        }
+      } catch (err) {
+        console.warn('Error al subir foto de alojamiento a la nube, usando fallback local:', err);
+      }
       const reader = new FileReader();
       reader.onload = (e) => {
         const dataUrl = e.target?.result as string;
@@ -174,7 +198,7 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
         }
       };
       reader.readAsDataURL(file);
-    });
+    }
   };
 
   const agregarFoto = () => {
@@ -206,10 +230,34 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
   };
 
   // Manejo de Habitaciones en Hotel (Creación y Edición Completa con Fotos Múltiples)
-  const handleArchivosLocalesHabitacion = (archivos: FileList | null) => {
+  const handleArchivosLocalesHabitacion = async (archivos: FileList | null) => {
     if (!archivos || archivos.length === 0) return;
     const filesArray = Array.from(archivos);
-    filesArray.forEach((file) => {
+    for (const file of filesArray) {
+      try {
+        const formData = new FormData();
+        formData.append('archivo', file);
+        const res = await fetch('http://localhost:8080/api/v1/alojamientos/imagenes?carpeta=alojamientos', {
+          method: 'POST',
+          body: formData
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.url) {
+            setHabFotos(prev => [
+              ...prev,
+              {
+                id: `fhab-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+                url: data.url,
+                esPrincipal: prev.length === 0
+              }
+            ]);
+            continue;
+          }
+        }
+      } catch (err) {
+        console.warn('Error al subir foto de habitación a la nube, usando fallback local:', err);
+      }
       const reader = new FileReader();
       reader.onload = (e) => {
         const dataUrl = e.target?.result as string;
@@ -225,7 +273,7 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
         }
       };
       reader.readAsDataURL(file);
-    });
+    }
   };
 
   const agregarFotoHabitacion = () => {

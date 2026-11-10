@@ -336,9 +336,10 @@ export class InspeccionModalComponent {
 
   get fotosAlojamiento(): string[] {
     if (!this.alojamiento) return [];
-    if (this.alojamiento.fotos && this.alojamiento.fotos.length > 0) return this.alojamiento.fotos;
-    if (this.alojamiento.imagen) return [this.alojamiento.imagen];
-    return [];
+    const raw = (this.alojamiento.fotos && this.alojamiento.fotos.length > 0)
+      ? this.alojamiento.fotos
+      : (this.alojamiento.imagen ? [this.alojamiento.imagen] : []);
+    return Array.from(new Set(raw.map((f: any) => typeof f === 'string' ? f.trim() : f?.url?.trim()).filter(Boolean)));
   }
 
   get tieneHabitacionesObservadas(): boolean {
@@ -370,8 +371,11 @@ export class InspeccionModalComponent {
   }
 
   obtenerFotosHabitacion(u: UnidadAdmin): string[] {
-    if (u.fotos && u.fotos.length > 0) return u.fotos;
-    return [];
+    if (!u) return [];
+    const raw = (u.fotos && u.fotos.length > 0)
+      ? u.fotos
+      : ((u as any).fotografias ? (u as any).fotografias.map((f: any) => typeof f === 'string' ? f : f?.url) : []);
+    return Array.from(new Set(raw.map((f: any) => typeof f === 'string' ? f.trim() : f?.url?.trim()).filter(Boolean)));
   }
 
   esFotoObservada(u: UnidadAdmin, index: number): boolean {

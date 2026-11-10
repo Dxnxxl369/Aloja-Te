@@ -259,6 +259,9 @@ export class AppComponent implements OnInit {
   };
 
   ngOnInit() {
+    try {
+      localStorage.removeItem('alojate_admin_alojamientos');
+    } catch {}
     this.inicializarTema();
     this.cargarCacheLocal();
     this.sincronizarRuta();
@@ -395,17 +398,7 @@ export class AppComponent implements OnInit {
 
   // --- Carga de Alojamientos ---
   cargarCacheLocal() {
-    try {
-      const cached = localStorage.getItem('alojate_admin_alojamientos');
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          this.alojamientos = parsed;
-          return;
-        }
-      }
-    } catch {}
-    this.cargarAlojamientosFallback();
+    this.alojamientos = [];
   }
 
   async cargarAlojamientos() {
@@ -433,29 +426,15 @@ export class AppComponent implements OnInit {
         }
       } catch {}
 
-      if (rawData.length > 0) {
-        this.cargarAlojamientosFallback();
-        const uniqueMap = new Map<string, SolicitudAlojamiento>();
-        for (const can of this.alojamientos) {
-          uniqueMap.set(can.id, can);
-        }
-
-        for (const raw of rawData) {
-          const mapped = this.mapearAlojamientoBackend(raw);
-          const existente = uniqueMap.get(mapped.id);
-          if (existente && (!mapped.unidades || mapped.unidades.length === 0)) {
-            mapped.unidades = existente.unidades;
-          }
-          uniqueMap.set(mapped.id, mapped);
-        }
-
-        this.alojamientos = Array.from(uniqueMap.values());
-        try {
-          localStorage.setItem('alojate_admin_alojamientos', JSON.stringify(this.alojamientos));
-        } catch {}
+      if (Array.isArray(rawData) && rawData.length > 0) {
+        this.alojamientos = rawData.map(raw => this.mapearAlojamientoBackend(raw));
       } else {
-        this.cargarAlojamientosFallback();
+        this.alojamientos = [];
       }
+
+      try {
+        localStorage.setItem('alojate_admin_alojamientos', JSON.stringify(this.alojamientos));
+      } catch {}
 
       if (this.idPendienteInspeccion) {
         const item = this.alojamientos.find(a => a.id === this.idPendienteInspeccion);
@@ -463,7 +442,7 @@ export class AppComponent implements OnInit {
         this.idPendienteInspeccion = null;
       }
     } catch {
-      this.cargarAlojamientosFallback();
+      this.alojamientos = [];
     } finally {
       this.cargandoAlojamientos = false;
     }
@@ -471,9 +450,10 @@ export class AppComponent implements OnInit {
 
   private mapearAlojamientoBackend(raw: any): SolicitudAlojamiento {
     const u = raw.unidades?.[0];
-    const fotosList: string[] = (raw.fotografias && raw.fotografias.length > 0)
+    const rawFotosList: any[] = (raw.fotografias && raw.fotografias.length > 0)
       ? raw.fotografias.map((f: any) => (typeof f === 'string' ? f : (f.url || f))).filter(Boolean)
       : ((raw.fotos || []).filter(Boolean));
+    const fotosList: string[] = Array.from(new Set(rawFotosList.map(f => typeof f === 'string' ? f.trim() : f?.url?.trim() || f).filter(Boolean)));
     const principalObj = Array.isArray(raw.fotografias) ? raw.fotografias.find((f: any) => f.esPrincipal) : null;
     const foto = principalObj?.url || fotosList[0] || raw.imagen || 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1200&q=80';
     if (fotosList.length === 0) fotosList.push(foto);
@@ -505,9 +485,9 @@ export class AppComponent implements OnInit {
         const rawFotos: any[] = (un.fotos && un.fotos.length > 0)
           ? un.fotos
           : (un.fotografias || (un.fotoUrl ? [un.fotoUrl] : []));
-        const fotosArray: string[] = rawFotos
-          .map((f: any) => (typeof f === 'string' ? f : f?.url))
-          .filter(Boolean);
+        const fotosArray: string[] = Array.from(new Set(rawFotos
+          .map((f: any) => (typeof f === 'string' ? f.trim() : f?.url?.trim()))
+          .filter(Boolean)));
         return {
           idUnidad: un.idUnidad || `u-${Math.random()}`,
           nombre: un.nombre,
@@ -528,288 +508,9 @@ export class AppComponent implements OnInit {
   }
 
   cargarAlojamientosFallback() {
-    const canonicalAlojamientos: SolicitudAlojamiento[] = [
-      {
-        id: '49768530-76ae-459e-9bbe-faf2f3d488ba',
-        titulo: 'Hotel Boutique Los Tajibos Colonial',
-        anfitrion: 'Carlos Mendoza',
-        departamento: 'Santa Cruz',
-        ciudad: 'Santa Cruz de la Sierra',
-        direccion: 'Av. San Martín #120, Barrio Equipetrol',
-        tipoPropiedad: 'Hotel Boutique',
-        modalidad: 'HOTEL_HOSTAL',
-        precioNoche: 480.00,
-        capacidad: 2,
-        habitaciones: 1,
-        estado: 'PUBLICADO',
-        fechaRegistro: '2026-10-22',
-        imagen: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80',
-        fotos: [
-          'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80',
-          'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80',
-          'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80'
-        ],
-        descripcion: 'Exclusivo hotel boutique con arquitectura chiquitana colonial, restaurante de autor, piscina tropical, spa y jardines en el barrio Equipetrol.',
-        politicas: 'Recepción 24 horas. Desayuno buffet incluido de 07:00 a 10:30.',
-        horarioEntrada: '15:00',
-        horarioSalida: '12:00',
-        servicios: ['Desayuno Buffet', 'Piscina Tropical', 'Spa & Masajes', 'Recepción 24h'],
-        unidades: [
-          {
-            idUnidad: 'u-tajibos-1',
-            nombre: 'Suite Presidencial con Balcón & Vista a Jardines',
-            capacidadHuespedes: 2,
-            cantidadCamas: 1,
-            cantidadBanos: 1.5,
-            inventarioTotal: 3,
-            precioNoche: 950,
-            estado: 'DISPONIBLE',
-            descripcion: 'Suite de lujo con cama King, balcón privado y tina de hidromasaje.',
-            fotos: [
-              'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=1200&q=80',
-              'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80'
-            ]
-          },
-          {
-            idUnidad: 'u-tajibos-2',
-            nombre: 'Habitación Ejecutiva Doble Twin',
-            capacidadHuespedes: 2,
-            cantidadCamas: 2,
-            cantidadBanos: 1,
-            inventarioTotal: 12,
-            precioNoche: 480,
-            estado: 'DISPONIBLE',
-            descripcion: 'Habitación con dos camas Twin, escritorio de trabajo y baño contemporáneo.',
-            fotos: [
-              'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&w=1200&q=80',
-              'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=800&q=80'
-            ]
-          }
-        ]
-      },
-      {
-        id: '93fce18e-32fa-400c-8f49-8d4f2fe2f5bb',
-        titulo: 'Cabaña Chiquitana El Palmar',
-        anfitrion: 'Carlos Mendoza',
-        departamento: 'Santa Cruz',
-        ciudad: 'San José de Chiquitos',
-        direccion: 'Camino a San José Km 5',
-        tipoPropiedad: 'Cabaña Chiquitana',
-        modalidad: 'CASA_DEPARTAMENTO',
-        precioNoche: 650.00,
-        capacidad: 8,
-        habitaciones: 3,
-        estado: 'PUBLICADO',
-        fechaRegistro: '2026-10-25',
-        imagen: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1200&q=80',
-        fotos: [
-          'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1200&q=80',
-          'https://images.unsplash.com/photo-1584132967334-10e028bd69f7?auto=format&fit=crop&w=800&q=80'
-        ],
-        descripcion: 'Cabaña rústica colonial con piscina privada, galería con hamacas y cielo estrellado en la Chiquitanía.',
-        politicas: 'Prohibido fumar en interiores. Check-in 14:00.',
-        horarioEntrada: '14:00',
-        horarioSalida: '11:00',
-        servicios: ['Piscina Privada', 'Galería con Hamacas', 'WiFi Satelital'],
-        unidades: [
-          { idUnidad: '00547b62-d2f5-4aa8-80a5-8662b2e028ec', nombre: 'Cabaña Completa con Piscina', capacidadHuespedes: 8, cantidadCamas: 5, cantidadBanos: 2.5, inventarioTotal: 1, precioNoche: 650, estado: 'DISPONIBLE' }
-        ]
-      },
-      {
-        id: 'ca4d2e81-7b90-41f2-9854-1b3a88c22110',
-        titulo: 'Chalet Boutique Los Viñedos',
-        anfitrion: 'Elena Morales',
-        departamento: 'Tarija',
-        ciudad: 'Valle de la Concepción',
-        direccion: 'Camino a Calamuchita Km 4',
-        tipoPropiedad: 'Chalet de Campo',
-        modalidad: 'CASA_DEPARTAMENTO',
-        precioNoche: 780.00,
-        capacidad: 5,
-        habitaciones: 2,
-        estado: 'PUBLICADO',
-        fechaRegistro: '2026-10-20',
-        imagen: 'https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?auto=format&fit=crop&w=1200&q=80',
-        fotos: [
-          'https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?auto=format&fit=crop&w=1200&q=80'
-        ],
-        descripcion: 'Encantadora villa campestre en el Valle de la Concepción rodeada de viñedos.',
-        politicas: 'Ambiente tranquilo.',
-        horarioEntrada: '14:00',
-        horarioSalida: '11:00',
-        servicios: ['Cata de Vinos', 'WiFi', 'Parrilla'],
-        unidades: [
-          { idUnidad: 'd1a4e802-5c31-4a29-b612-426614174002', nombre: 'Villa Malbec del Valle', capacidadHuespedes: 5, cantidadCamas: 3, cantidadBanos: 2, inventarioTotal: 2, precioNoche: 780, estado: 'DISPONIBLE' }
-        ]
-      },
-      {
-        id: 'ea199203-91aa-42a1-bf00-881273918a22',
-        titulo: 'Lodge Mirador del Illimani',
-        anfitrion: 'Elena Morales',
-        departamento: 'La Paz',
-        ciudad: 'Mecapaca',
-        direccion: 'Colina del Cóndor s/n',
-        tipoPropiedad: 'Eco Lodge',
-        modalidad: 'CASA_DEPARTAMENTO',
-        precioNoche: 520.00,
-        capacidad: 2,
-        habitaciones: 1,
-        estado: 'OBSERVADO',
-        motivoObservacionRechazo: 'Revisión preventiva por comentarios sobre baja temperatura nocturna',
-        origenUltimoCambio: 'NLP_TOPICOS_RESENAS',
-        fechaRegistro: '2026-10-18',
-        imagen: 'https://images.unsplash.com/photo-1502784444187-359ac186c5bb?auto=format&fit=crop&w=1200&q=80',
-        fotos: [
-          'https://images.unsplash.com/photo-1502784444187-359ac186c5bb?auto=format&fit=crop&w=1200&q=80'
-        ],
-        descripcion: 'Refugio con ventanales hacia el nevado Illimani.',
-        politicas: 'Refugio de montaña.',
-        horarioEntrada: '14:00',
-        horarioSalida: '11:00',
-        servicios: ['Estufa a Leña', 'Telescopio', 'WiFi'],
-        unidades: [
-          { idUnidad: 'd1a4e803-5c31-4a29-b612-426614174003', nombre: 'Suite Cóndor Real', capacidadHuespedes: 2, cantidadCamas: 1, cantidadBanos: 1, inventarioTotal: 4, precioNoche: 520, estado: 'DISPONIBLE' }
-        ]
-      },
-      // --- Alojamientos de Daniel Quispe ---
-      {
-        id: 'a0000000-0000-4000-8000-000000000010',
-        titulo: 'Departamento Moderno en Calacoto',
-        anfitrion: 'Daniel Quispe',
-        departamento: 'La Paz',
-        ciudad: 'La Paz',
-        direccion: 'Calle 15 de Calacoto #450',
-        tipoPropiedad: 'Departamento Urbano',
-        modalidad: 'CASA_DEPARTAMENTO',
-        precioNoche: 350.00,
-        capacidad: 4,
-        habitaciones: 2,
-        estado: 'PUBLICADO',
-        fechaRegistro: '2026-11-08',
-        imagen: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800',
-        fotos: [
-          'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800',
-          'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=800',
-          'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?w=800'
-        ],
-        descripcion: 'Hermoso departamento en la zona sur con vista panorámica, sala amplia y garaje privado.',
-        politicas: 'No fumar, check-in puntual.',
-        horarioEntrada: '14:00',
-        horarioSalida: '11:00',
-        motivoObservacionRechazo: 'Aprobado automáticamente por Vision IA: 3 fotos revisadas sin incidencias.',
-        origenUltimoCambio: 'AUTOMATIZACION_VISION_IA',
-        servicios: ['WiFi de Alta Velocidad', 'Cocina Completa', 'Parqueo Gratuito', 'Agua Caliente 24/7'],
-        unidades: [
-          {
-            idUnidad: 'u-d-1',
-            nombre: 'Departamento Completo',
-            capacidadHuespedes: 4,
-            cantidadCamas: 2,
-            cantidadBanos: 2,
-            inventarioTotal: 1,
-            precioNoche: 350,
-            estado: 'DISPONIBLE'
-          }
-        ]
-      },
-      {
-        id: 'a0000000-0000-4000-8000-000000000020',
-        titulo: 'Hotel Boutique Real & Spa Illimani',
-        anfitrion: 'Daniel Quispe',
-        departamento: 'La Paz',
-        ciudad: 'La Paz',
-        direccion: 'Av. Arce #2450',
-        tipoPropiedad: 'Hotel Boutique',
-        modalidad: 'HOTEL_HOSTAL',
-        precioNoche: 450.00,
-        capacidad: 2,
-        habitaciones: 2,
-        estado: 'OBSERVADO',
-        motivoRechazo: 'Observado: contenido dudoso en Habitación Doble Superior, foto 2 (contenido no permitido).',
-        motivoObservacionRechazo: 'Observado: contenido dudoso en Habitación Doble Superior, foto 2 (contenido no permitido).',
-        origenUltimoCambio: 'AUTOMATIZACION_VISION_IA',
-        fechaRegistro: '2026-11-08',
-        imagen: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800',
-        fotos: [
-          'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800',
-          'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800',
-          'https://images.unsplash.com/photo-1584132967334-10e028bd69f7?w=800',
-          'https://images.unsplash.com/photo-1590490360182-c33d57733427?w=800',
-          'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800'
-        ],
-        descripcion: 'Exclusivo hotel boutique en La Paz con spa andino, piscina climatizada y habitaciones con vista a la cordillera.',
-        politicas: 'Check-in 15:00. No fumar.',
-        horarioEntrada: '15:00',
-        horarioSalida: '12:00',
-        servicios: ['Desayuno Buffet', 'Piscina Climatizada', 'Spa Andino', 'WiFi Fibra Óptica', 'Recepción 24h'],
-        unidades: [
-          {
-            idUnidad: 'u-h-1',
-            nombre: 'Suite Presidencial Deluxe',
-            capacidadHuespedes: 2,
-            cantidadCamas: 1,
-            cantidadBanos: 2,
-            inventarioTotal: 2,
-            precioNoche: 800,
-            estado: 'DISPONIBLE',
-            descripcion: 'Suite de lujo con jacuzzi y vista panorámica a la cordillera real.',
-            fotos: [
-              'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800',
-              'https://images.unsplash.com/photo-1584132967334-10e028bd69f7?w=800'
-            ]
-          },
-          {
-            idUnidad: 'u-h-2',
-            nombre: 'Habitación Doble Superior',
-            capacidadHuespedes: 2,
-            cantidadCamas: 2,
-            cantidadBanos: 1,
-            inventarioTotal: 5,
-            precioNoche: 450,
-            estado: 'OBSERVADO',
-            motivoObservacion: 'Foto 2 observada por Vision IA: contenido no permitido / sospechoso detectado.',
-            fotoObservadaIndex: 1,
-            descripcion: 'Habitación con dos camas Twin, escritorio ejecutivo y vista al jardín.',
-            fotos: [
-              'https://images.unsplash.com/photo-1590490360182-c33d57733427?w=800',
-              'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800'
-            ]
-          }
-        ]
-      }
-    ];
-
+    this.alojamientos = [];
     try {
-      const adminRaw = localStorage.getItem('alojate_admin_alojamientos');
-      if (adminRaw) {
-        const guardados: SolicitudAlojamiento[] = JSON.parse(adminRaw);
-        if (Array.isArray(guardados) && guardados.length > 0) {
-          canonicalAlojamientos.forEach(canon => {
-            const previo = guardados.find(g => g.id === canon.id);
-            if (previo) {
-              canon.estado = previo.estado;
-              if (previo.motivoObservacionRechazo) canon.motivoObservacionRechazo = previo.motivoObservacionRechazo;
-              if (previo.motivoRechazo) canon.motivoRechazo = previo.motivoRechazo;
-              if (previo.unidades && canon.unidades) {
-                canon.unidades.forEach(cu => {
-                  const pu = previo.unidades?.find(u => u.idUnidad === cu.idUnidad);
-                  if (pu?.estado) cu.estado = pu.estado;
-                });
-              }
-            }
-          });
-
-          const canonIds = new Set(canonicalAlojamientos.map(c => c.id));
-          guardados.forEach(g => {
-            if (!canonIds.has(g.id)) canonicalAlojamientos.push(g);
-          });
-        }
-      }
-    } catch {}
-
-    this.alojamientos = canonicalAlojamientos;
-    try {
-      localStorage.setItem('alojate_admin_alojamientos', JSON.stringify(this.alojamientos));
+      localStorage.setItem('alojate_admin_alojamientos', JSON.stringify([]));
     } catch {}
   }
 
@@ -878,13 +579,13 @@ export class AppComponent implements OnInit {
       const res = await fetch(`http://localhost:8080/api/v1/alojamientos/${idAlojamiento}/valoraciones`);
       if (res.ok) {
         const data = await res.json();
-        if (Array.isArray(data) && data.length > 0) {
+        if (Array.isArray(data)) {
           this.resenasAlojamientoActual = data;
           return;
         }
       }
     } catch {}
-    this.resenasAlojamientoActual = VALORACIONES_ADMIN_DEMO.filter(v => v.idAlojamiento === idAlojamiento);
+    this.resenasAlojamientoActual = [];
   }
 
   // --- Acciones de Moderación ---

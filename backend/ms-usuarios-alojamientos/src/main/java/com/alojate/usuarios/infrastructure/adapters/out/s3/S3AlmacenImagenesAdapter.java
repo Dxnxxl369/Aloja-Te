@@ -26,6 +26,8 @@ import java.util.UUID;
  */
 @Slf4j
 @Component
+@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(
+        name = "almacenamiento.proveedor", havingValue = "s3")
 public class S3AlmacenImagenesAdapter implements AlmacenImagenesPort {
 
     private static final Map<String, String> EXTENSIONES = Map.of(
@@ -42,6 +44,7 @@ public class S3AlmacenImagenesAdapter implements AlmacenImagenesPort {
     public S3AlmacenImagenesAdapter(
             @Value("${almacenamiento.s3.bucket:}") String bucket,
             @Value("${almacenamiento.s3.region:us-east-1}") String region,
+            @Value("${almacenamiento.s3.endpoint:}") String endpoint,
             @Value("${almacenamiento.s3.public-base-url:}") String publicBaseUrl,
             @Value("${almacenamiento.s3.access-key:}") String accessKey,
             @Value("${almacenamiento.s3.secret-key:}") String secretKey) {
@@ -49,6 +52,9 @@ public class S3AlmacenImagenesAdapter implements AlmacenImagenesPort {
         this.region = region;
         this.publicBaseUrl = publicBaseUrl == null ? "" : publicBaseUrl.replaceAll("/+$", "");
         S3ClientBuilder builder = S3Client.builder().region(Region.of(region));
+        if (endpoint != null && !endpoint.isBlank()) {
+            builder.endpointOverride(java.net.URI.create(endpoint.trim())).forcePathStyle(true);
+        }
         if (!accessKey.isBlank() && !secretKey.isBlank()) {
             builder.credentialsProvider(StaticCredentialsProvider.create(
                     AwsBasicCredentials.create(accessKey.trim(), secretKey.trim())));

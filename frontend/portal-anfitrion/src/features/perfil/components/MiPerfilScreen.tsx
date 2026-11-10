@@ -43,38 +43,45 @@ export const MiPerfilScreen: React.FC<MiPerfilScreenProps> = ({ onMostrarToast }
   // Estados locales para edición de datos personales
   const [nombre, setNombre] = useState(perfil.nombre || '');
   const [email, setEmail] = useState(perfil.email || '');
-  const [telefono, setTelefono] = useState(perfil.telefono || '+591 77012345');
-  const [ciudad, setCiudad] = useState(perfil.ciudad || 'Santa Cruz');
-  const [departamento, setDepartamento] = useState(perfil.departamento || 'Santa Cruz');
+  const [telefono, setTelefono] = useState(perfil.telefono || '');
+  const [ciudad, setCiudad] = useState(perfil.ciudad || 'La Paz');
+  const [departamento, setDepartamento] = useState(perfil.departamento || 'La Paz');
   const [descripcion, setDescripcion] = useState(perfil.descripcion || '');
   const [avatarUrl, setAvatarUrl] = useState(perfil.avatarUrl || '');
 
   // Campos de verificación oficial boliviana
-  const [ciNumero, setCiNumero] = useState(perfil.ciNumero || '5829104');
-  const [ciExpedido, setCiExpedido] = useState(perfil.ciExpedido || 'SC');
+  const [ciNumero, setCiNumero] = useState(perfil.ciNumero || '');
+  const [ciExpedido, setCiExpedido] = useState(perfil.ciExpedido || 'LP');
   const [ciAnversoUrl, setCiAnversoUrl] = useState(perfil.ciAnversoUrl || '');
   const [ciReversoUrl, setCiReversoUrl] = useState(perfil.ciReversoUrl || '');
-  const [nit, setNit] = useState(perfil.nit || '5829104018');
-  const [licenciaTuristica, setLicenciaTuristica] = useState(perfil.licenciaTuristica || 'LIC-TUR-SCZ-2024-089');
+  const [nit, setNit] = useState(perfil.nit || '');
+  const [licenciaTuristica, setLicenciaTuristica] = useState(perfil.licenciaTuristica || '');
   const [comprobanteDomicilioUrl, setComprobanteDomicilioUrl] = useState(perfil.comprobanteDomicilioUrl || '');
+
+  // Archivos pendientes en caché local para subir solo al hacer clic en Guardar
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [ciAnversoFile, setCiAnversoFile] = useState<File | null>(null);
+  const [ciReversoFile, setCiReversoFile] = useState<File | null>(null);
+  const [domicilioFile, setDomicilioFile] = useState<File | null>(null);
+  const [guardando, setGuardando] = useState(false);
 
   // Sincronizar estados locales cuando cambia el perfil o anfitrión activo
   useEffect(() => {
     setNombre(perfil.nombre || '');
     setEmail(perfil.email || '');
-    setTelefono(perfil.telefono || '+591 77012345');
-    setCiudad(perfil.ciudad || 'Santa Cruz');
-    setDepartamento(perfil.departamento || 'Santa Cruz');
+    setTelefono(perfil.telefono || '');
+    setCiudad(perfil.ciudad || 'La Paz');
+    setDepartamento(perfil.departamento || 'La Paz');
     setDescripcion(perfil.descripcion || '');
     setAvatarUrl(perfil.avatarUrl || '');
     setCiNumero(perfil.ciNumero || '');
-    setCiExpedido(perfil.ciExpedido || 'SC');
+    setCiExpedido(perfil.ciExpedido || 'LP');
     setCiAnversoUrl(perfil.ciAnversoUrl || '');
     setCiReversoUrl(perfil.ciReversoUrl || '');
     setNit(perfil.nit || '');
     setLicenciaTuristica(perfil.licenciaTuristica || '');
     setComprobanteDomicilioUrl(perfil.comprobanteDomicilioUrl || '');
-  }, [perfil.id]);
+  }, [perfil.id, perfil.email, perfil.telefono, perfil.ciNumero, perfil.ciExpedido, perfil.nombre]);
 
   // Cómputo dinámico de requisitos de verificación
   const reqCI = Boolean(ciNumero.trim() && ciExpedido);
@@ -95,74 +102,138 @@ export const MiPerfilScreen: React.FC<MiPerfilScreenProps> = ({ onMostrarToast }
   const porcentaje = Math.round((cumplidosTotal / requisitos.length) * 100);
   const estaCompletamenteVerificado = cumplidosTotal >= 4;
 
-  // Manejo de carga de foto de perfil (Avatar)
+  // 1. Manejo de carga de foto de perfil (Avatar) - Solo vista previa en caché
   const handleSubirAvatar = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        if (event.target?.result) {
-          const nuevaUrl = event.target.result as string;
-          setAvatarUrl(nuevaUrl);
-          actualizarPerfil({ avatarUrl: nuevaUrl });
-          onMostrarToast('Foto de perfil actualizada exitosamente.');
-        }
-      };
-      reader.readAsDataURL(file);
+      setAvatarFile(file);
+      const previewUrl = URL.createObjectURL(file);
+      setAvatarUrl(previewUrl);
+      onMostrarToast('Foto de perfil seleccionada en vista previa.');
     }
   };
 
   const handleEliminarAvatar = () => {
+    setAvatarFile(null);
     setAvatarUrl('');
     actualizarPerfil({ avatarUrl: '' });
     onMostrarToast('Foto de perfil eliminada.');
   };
 
-  // Manejo de carga de documentos fotográficos / PDF
+  // 2. Manejo de carga de documentos (CI Anverso, CI Reverso, Factura Domicilio) - Solo vista previa en caché
   const handleSubirDocumento = (
     tipo: 'ciAnverso' | 'ciReverso' | 'domicilio',
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        if (event.target?.result) {
-          const dataUrl = event.target.result as string;
-          if (tipo === 'ciAnverso') setCiAnversoUrl(dataUrl);
-          if (tipo === 'ciReverso') setCiReversoUrl(dataUrl);
-          if (tipo === 'domicilio') setComprobanteDomicilioUrl(dataUrl);
-          onMostrarToast('Documento cargado correctamente.');
-        }
-      };
-      reader.readAsDataURL(file);
+      const previewUrl = URL.createObjectURL(file);
+      if (tipo === 'ciAnverso') {
+        setCiAnversoFile(file);
+        setCiAnversoUrl(previewUrl);
+      }
+      if (tipo === 'ciReverso') {
+        setCiReversoFile(file);
+        setCiReversoUrl(previewUrl);
+      }
+      if (tipo === 'domicilio') {
+        setDomicilioFile(file);
+        setComprobanteDomicilioUrl(previewUrl);
+      }
+      onMostrarToast('Documento cargado en vista previa.');
     }
   };
 
-  const handleGuardarCambios = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const verif = estaCompletamenteVerificado;
-    actualizarPerfil({
-      nombre,
-      email,
-      telefono,
-      ciudad,
-      departamento,
-      descripcion,
-      avatarUrl,
-      ciNumero,
-      ciExpedido,
-      ciAnversoUrl,
-      ciReversoUrl,
-      nit,
-      licenciaTuristica,
-      comprobanteDomicilioUrl,
-      verificado: verif,
-      estadoVerificacion: verif ? 'VERIFICADO' : 'PENDIENTE_REVISION'
+  // Helper anti-duplicados: sube solo si es un archivo nuevo seleccionado
+  const subirArchivoSiEsNuevo = async (file: File | null, carpeta: string, urlActual: string): Promise<string> => {
+    if (!file) return urlActual;
+    const formData = new FormData();
+    formData.append('archivo', file);
+    const res = await fetch(`http://localhost:8080/api/v1/alojamientos/imagenes?carpeta=${carpeta}`, {
+      method: 'POST',
+      body: formData
     });
+    if (res.ok) {
+      const data = await res.json();
+      return data.url;
+    } else {
+      const errText = await res.text();
+      throw new Error(`Error en el servidor (${res.status}): ${errText}`);
+    }
+  };
 
-    onMostrarToast('¡Perfil y credenciales de verificación guardados con éxito!');
+  // 3. Solo al hacer clic en "Guardar Cambios", se sube lo nuevo al almacenamiento y se guarda
+  const handleGuardarCambios = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setGuardando(true);
+    try {
+      let avatarFinal = avatarUrl;
+      let anversoFinal = ciAnversoUrl;
+      let reversoFinal = ciReversoUrl;
+      let domicilioFinal = comprobanteDomicilioUrl;
+
+      // Subir solo archivos nuevos modificados (evita duplicar fotos existentes)
+      if (avatarFile) {
+        avatarFinal = await subirArchivoSiEsNuevo(avatarFile, 'perfiles', avatarUrl);
+        setAvatarUrl(avatarFinal);
+        setAvatarFile(null);
+      }
+      if (ciAnversoFile) {
+        anversoFinal = await subirArchivoSiEsNuevo(ciAnversoFile, 'carnets', ciAnversoUrl);
+        setCiAnversoUrl(anversoFinal);
+        setCiAnversoFile(null);
+      }
+      if (ciReversoFile) {
+        reversoFinal = await subirArchivoSiEsNuevo(ciReversoFile, 'carnets', ciReversoUrl);
+        setCiReversoUrl(reversoFinal);
+        setCiReversoFile(null);
+      }
+      if (domicilioFile) {
+        domicilioFinal = await subirArchivoSiEsNuevo(domicilioFile, 'documentos', comprobanteDomicilioUrl);
+        setComprobanteDomicilioUrl(domicilioFinal);
+        setDomicilioFile(null);
+      }
+
+      const verif = estaCompletamenteVerificado;
+      actualizarPerfil({
+        nombre,
+        email,
+        telefono,
+        ciudad,
+        departamento,
+        descripcion,
+        avatarUrl: avatarFinal,
+        ciNumero,
+        ciExpedido,
+        ciAnversoUrl: anversoFinal,
+        ciReversoUrl: reversoFinal,
+        nit,
+        licenciaTuristica,
+        comprobanteDomicilioUrl: domicilioFinal,
+        verificado: verif,
+        estadoVerificacion: verif ? 'VERIFICADO' : 'PENDIENTE_REVISION'
+      });
+
+      if (perfil.id) {
+        try {
+          const partes = nombre.trim().split(' ');
+          const nom = partes[0] || nombre;
+          const ape = partes.slice(1).join(' ') || '';
+          await fetch(`http://localhost:8080/api/v1/usuarios/${perfil.id}/perfil`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nombre: nom, apellido: ape, telefono })
+          });
+        } catch {}
+      }
+
+      onMostrarToast('Guardado con éxito.');
+    } catch (err: any) {
+      console.error('Error al guardar cambios:', err);
+      onMostrarToast('Error al guardar los documentos. Intenta nuevamente.');
+    } finally {
+      setGuardando(false);
+    }
   };
 
   return (

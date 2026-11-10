@@ -43,17 +43,21 @@ echo ===========================================================================
 echo 2. LANZANDO MICROFRONTENDS DE USUARIO Y ADMINISTRACION
 echo ===============================================================================
 
-echo [6/7] Frontend Clientes y Anfitriones (React Vite :3000)...
-start "Aloja-Te [6/7] Portal Clientes (:3000)" powershell -NoExit -Command "cd '%~dp0frontend\portal-clientes'; Write-Host '===================================================' -ForegroundColor Blue; Write-Host '  Portal Clientes (:3000)' -ForegroundColor Blue; Write-Host '===================================================' -ForegroundColor Blue; pnpm run dev"
+echo [6/8] Frontend Clientes (React Vite :3000)...
+start "Aloja-Te [6/8] Portal Clientes (:3000)" powershell -NoExit -Command "cd '%~dp0frontend\portal-clientes'; Write-Host '===================================================' -ForegroundColor Blue; Write-Host '  Portal Clientes (:3000)' -ForegroundColor Blue; Write-Host '===================================================' -ForegroundColor Blue; pnpm run dev"
 
-echo [7/7] Frontend Administracion y Gestion (Angular :4200)...
-start "Aloja-Te [7/7] Portal Admin (:4200)" powershell -NoExit -Command "cd '%~dp0frontend\portal-admin'; Write-Host '===================================================' -ForegroundColor DarkCyan; Write-Host '  Portal Admin (:4200)' -ForegroundColor DarkCyan; Write-Host '===================================================' -ForegroundColor DarkCyan; pnpm run start"
+echo [7/8] Frontend Anfitrion (React Vite :3005)...
+start "Aloja-Te [7/8] Portal Anfitrion (:3005)" powershell -NoExit -Command "cd '%~dp0frontend\portal-anfitrion'; Write-Host '===================================================' -ForegroundColor DarkMagenta; Write-Host '  Portal Anfitrion (:3005)' -ForegroundColor DarkMagenta; Write-Host '===================================================' -ForegroundColor DarkMagenta; pnpm run dev"
+
+echo [8/8] Frontend Administracion y Gestion (Angular :4200)...
+start "Aloja-Te [8/8] Portal Admin (:4200)" powershell -NoExit -Command "cd '%~dp0frontend\portal-admin'; Write-Host '===================================================' -ForegroundColor DarkCyan; Write-Host '  Portal Admin (:4200)' -ForegroundColor DarkCyan; Write-Host '===================================================' -ForegroundColor DarkCyan; pnpm run start"
 
 echo.
 echo ===============================================================================
 echo                    ECOSISTEMA ALOJA-TE EN EJECUCION
 echo ===============================================================================
 echo   - Portal Clientes:      http://localhost:3000
+echo   - Portal Anfitrion:     http://localhost:3005
 echo   - Portal Admin:         http://localhost:4200
 echo   - API Gateway:          http://localhost:8080
 echo   - MS-01 (Usuarios/Aloj):http://localhost:3001

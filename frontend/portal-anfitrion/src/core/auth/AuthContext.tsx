@@ -16,7 +16,7 @@ export const PERFILES_ANFITRION: Record<string, PerfilAnfitrion> = {
     bancoNombre: 'Banco Mercantil Santa Cruz S.A.',
     numeroCuentaBancaria: '4010987654321',
     qr: 'https://alojate-bolivia.s3.sa-east-1.amazonaws.com/anfitriones/qr-carlos-mendoza.png',
-    saldoDisponible: 'Bs. 3,420',
+    saldoDisponible: 'Bs. 0',
     verificado: true,
     ciNumero: '5829104',
     ciExpedido: 'SC',
@@ -27,69 +27,9 @@ export const PERFILES_ANFITRION: Record<string, PerfilAnfitrion> = {
     comprobanteDomicilioUrl: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=600&q=80',
     estadoVerificacion: 'VERIFICADO',
     kpis: {
-      ingresosNetos: 'Bs. 14,850',
-      tasaOcupacion: '82.5%',
-      huespedesActivos: '2 Activos',
-      reputacion: '4.96 ★'
-    }
-  },
-  elena: {
-    id: 'a0000000-0000-4000-8000-000000000003',
-    nombre: 'Elena Morales Calbimontes',
-    email: 'elena.calbimontes@alojate.bo',
-    telefono: '+591 71298765',
-    ciudad: 'Tarija',
-    departamento: 'Tarija',
-    descripcion: 'Operadora de turismo vitivinícola en el Valle Central de Tarija y residencias de altura en La Paz. Calificación de excelencia turística.',
-    avatarUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80',
-    cuentaBNB: 'Titular: Elena Morales Calbimontes • Caja de Ahorro: 150-0439120-02',
-    bancoNombre: 'Banco Nacional de Bolivia S.A. (BNB)',
-    numeroCuentaBancaria: '2000492817402',
-    qr: 'https://alojate-bolivia.s3.sa-east-1.amazonaws.com/anfitriones/qr-elena-morales.png',
-    saldoDisponible: 'Bs. 5,180',
-    verificado: true,
-    ciNumero: '4892103',
-    ciExpedido: 'TJ',
-    ciAnversoUrl: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=600&q=80',
-    ciReversoUrl: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=600&q=80',
-    nit: '4892103012',
-    licenciaTuristica: 'LIC-TUR-TRJ-2024-042',
-    comprobanteDomicilioUrl: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=600&q=80',
-    estadoVerificacion: 'VERIFICADO',
-    kpis: {
-      ingresosNetos: 'Bs. 18,200',
-      tasaOcupacion: '88.0%',
-      huespedesActivos: '1 Activo',
-      reputacion: '4.98 ★'
-    }
-  },
-  daniel: {
-    id: 'a0000000-0000-4000-8000-000000000004',
-    nombre: 'Daniel Quispe',
-    email: 'danielqczn@gmail.com',
-    telefono: '63591455',
-    ciudad: 'Santa Cruz',
-    departamento: 'Santa Cruz',
-    descripcion: 'Anfitrión verificado en Santa Cruz de la Sierra y toda Bolivia. Alojamientos residenciales y hoteleros con altos estándares.',
-    avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=400&q=80',
-    cuentaBNB: 'Titular: Daniel Quispe • Cuenta: 4010987654321',
-    bancoNombre: 'Banco Mercantil Santa Cruz S.A.',
-    numeroCuentaBancaria: '4010987654321',
-    qr: 'https://alojate-bolivia.s3.sa-east-1.amazonaws.com/anfitriones/qr-daniel-quispe.png',
-    saldoDisponible: 'Bs. 7,500',
-    verificado: true,
-    ciNumero: '6359145',
-    ciExpedido: 'SC',
-    ciAnversoUrl: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=600&q=80',
-    ciReversoUrl: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=600&q=80',
-    nit: '6359145019',
-    licenciaTuristica: 'LIC-TUR-SCZ-2026-001',
-    comprobanteDomicilioUrl: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=600&q=80',
-    estadoVerificacion: 'VERIFICADO',
-    kpis: {
-      ingresosNetos: 'Bs. 21,400',
-      tasaOcupacion: '92.0%',
-      huespedesActivos: '3 Activos',
+      ingresosNetos: 'Bs. 0',
+      tasaOcupacion: '0%',
+      huespedesActivos: '0 Activos',
       reputacion: '5.0 ★'
     }
   }
@@ -117,12 +57,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const searchStr = window.location.search || (window.location.hash.includes('?') ? window.location.hash.substring(window.location.hash.indexOf('?')) : '');
       const searchParams = new URLSearchParams(searchStr);
       const urlEmail = searchParams.get('sso_email') || searchParams.get('email');
-      const urlNombre = searchParams.get('sso_nombre') || searchParams.get('nombre');
       const em = (urlEmail || '').toLowerCase();
-      const nom = (urlNombre || '').toLowerCase();
-      if (em.includes('daniel') || nom.includes('daniel')) return 'daniel';
-      if (em.includes('elena') || nom.includes('elena')) return 'elena';
-      if (em.includes('carlos') || nom.includes('carlos')) return 'carlos';
+      if (em.includes('anfitrion') || em.includes('carlos')) return 'carlos';
       if (em) return em.split('@')[0];
 
       const ssoRaw = sessionStorage.getItem('alojate_sso_anfitrion');
@@ -133,7 +69,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const saved = localStorage.getItem('alojate_anfitrion_clave');
       if (saved) return saved;
     } catch {}
-    return 'daniel';
+    return 'carlos';
   });
 
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
@@ -178,19 +114,52 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const cargarPerfilDesdeBackend = async (email: string): Promise<Partial<PerfilAnfitrion> | null> => {
+    try {
+      const resp = await fetch(`http://localhost:8080/api/v1/usuarios/por-email?email=${encodeURIComponent(email)}`);
+      if (resp.ok) {
+        const u = await resp.json();
+        return {
+          id: u.idUsuario || u.id,
+          nombre: u.nombre ? `${u.nombre} ${u.apellido || ''}`.trim() : undefined,
+          email: u.email || email,
+          telefono: u.telefono || '',
+          ciNumero: u.ci || u.ciNumero || '',
+          ciExpedido: u.ciExpedido || 'LP',
+          bancoNombre: u.bancoNombre || '',
+          numeroCuentaBancaria: u.numeroCuentaBancaria || '',
+          qr: u.qr || '',
+          ciudad: u.ciudad || 'La Paz',
+          departamento: u.departamento || 'La Paz',
+          cuentaBNB: u.bancoNombre ? `Titular: ${u.nombre} ${u.apellido || ''} • ${u.bancoNombre} Cta: ${u.numeroCuentaBancaria || ''}` : '',
+          estadoVerificacion: u.estado === 'VERIFICADO' ? 'VERIFICADO' : 'PENDIENTE_REVISION',
+          verificado: u.estado === 'VERIFICADO'
+        };
+      }
+    } catch (err) {
+      console.warn('[AuthContext] No se pudo cargar perfil de MS-01:', err);
+    }
+    return null;
+  };
+
   const perfilBase: PerfilAnfitrion = PERFILES_ANFITRION[anfitrionClave] || {
-    id: `anf-${anfitrionClave}`,
-    nombre: perfilPersonalizado.nombre || 'Anfitrión Registrado',
-    email: perfilPersonalizado.email || `${anfitrionClave}@alojate.bo`,
-    telefono: '+591 70000000',
-    ciudad: 'Santa Cruz',
-    departamento: 'Santa Cruz',
-    descripcion: 'Anfitrión verificado en la plataforma oficial de Aloja-Te Bolivia.',
-    avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=400&q=80',
-    cuentaBNB: 'Titular Registrado',
+    id: anfitrionClave.includes('daniel') ? '7c772f61-90f1-474a-8acf-e7ba66e20d40' : `anf-${anfitrionClave}`,
+    nombre: perfilPersonalizado.nombre || (anfitrionClave.includes('daniel') ? 'Daniel Quispe' : 'Anfitrión Registrado'),
+    email: perfilPersonalizado.email || (anfitrionClave.includes('daniel') ? 'danielqc333@gmail.com' : `${anfitrionClave}@alojate.bo`),
+    telefono: perfilPersonalizado.telefono || '',
+    ciudad: perfilPersonalizado.ciudad || 'La Paz',
+    departamento: perfilPersonalizado.departamento || 'La Paz',
+    descripcion: perfilPersonalizado.descripcion || 'Anfitrión registrado en la plataforma oficial de Aloja-Te Bolivia.',
+    avatarUrl: perfilPersonalizado.avatarUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=400&q=80',
+    cuentaBNB: perfilPersonalizado.cuentaBNB || '',
+    bancoNombre: perfilPersonalizado.bancoNombre || '',
+    numeroCuentaBancaria: perfilPersonalizado.numeroCuentaBancaria || '',
+    qr: perfilPersonalizado.qr || '',
+    ciNumero: perfilPersonalizado.ciNumero || '',
+    ciExpedido: perfilPersonalizado.ciExpedido || 'LP',
     saldoDisponible: 'Bs. 0',
-    verificado: true,
-    estadoVerificacion: 'VERIFICADO',
+    verificado: perfilPersonalizado.verificado ?? false,
+    estadoVerificacion: perfilPersonalizado.estadoVerificacion || 'PENDIENTE_REVISION',
     kpis: {
       ingresosNetos: 'Bs. 0',
       tasaOcupacion: '0%',
@@ -224,10 +193,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (urlEmail || urlToken) {
         const em = (urlEmail || '').toLowerCase();
-        const nom = (urlNombre || '').toLowerCase();
-        const clave: 'carlos' | 'elena' | 'daniel' = (em.includes('daniel') || nom.includes('daniel'))
-          ? 'daniel'
-          : ((em.includes('elena') || nom.includes('elena')) ? 'elena' : 'carlos');
+        const clave = (em.includes('anfitrion') || em.includes('carlos')) ? 'carlos' : (em ? em.split('@')[0] : 'carlos');
         
         sessionStorage.setItem('alojate_sso_anfitrion', JSON.stringify({ clave, email: urlEmail, nombre: urlNombre, token: urlToken }));
         localStorage.setItem('alojate_anfitrion_clave', clave);
@@ -236,6 +202,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setIsAuthenticated(true);
         if (urlToken) setSSOToken(urlToken);
         setCargandoSSO(false);
+
+        // Cargar perfil real desde MS-01 para este usuario
+        if (urlEmail) {
+          const perfilBd = await cargarPerfilDesdeBackend(urlEmail);
+          if (perfilBd) {
+            actualizarPerfil(perfilBd);
+          }
+        }
 
         // Limpiar URL preservando el hash de navegación
         const cleanHash = window.location.hash.includes('?') ? window.location.hash.split('?')[0] : window.location.hash;
@@ -247,9 +221,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // 2. Consultar Gateway API Central de SSO
     try {
       let tokenLocal: string | null = null;
+      let emailLocal: string | null = null;
       try {
         const ssoRaw = sessionStorage.getItem('alojate_sso_anfitrion');
-        if (ssoRaw) tokenLocal = JSON.parse(ssoRaw).token;
+        if (ssoRaw) {
+          const parsed = JSON.parse(ssoRaw);
+          tokenLocal = parsed.token;
+          emailLocal = parsed.email;
+        }
       } catch {}
 
       const headers: Record<string, string> = tokenLocal ? { Authorization: `Bearer ${tokenLocal}` } : {};
@@ -258,27 +237,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const data = await resp.json();
         if (data.authenticated && data.usuario) {
           const email = (data.usuario.email || '').toLowerCase();
-          const nombre = (data.usuario.nombre || '').toLowerCase();
-          const clave: 'carlos' | 'elena' | 'daniel' = (email.includes('daniel') || nombre.includes('daniel'))
-            ? 'daniel'
-            : ((email.includes('elena') || nombre.includes('elena')) ? 'elena' : 'carlos');
+          const clave = (email.includes('anfitrion') || email.includes('carlos')) ? 'carlos' : (email ? email.split('@')[0] : 'carlos');
           
           sessionStorage.setItem('alojate_sso_anfitrion', JSON.stringify({ clave, email: data.usuario.email, nombre: data.usuario.nombre, token: data.token }));
           localStorage.setItem('alojate_anfitrion_clave', clave);
 
           setAnfitrionClave(clave);
-          if (data.usuario.id) {
-            actualizarPerfil({
-              id: data.usuario.id,
-              nombre: data.usuario.nombre ? `${data.usuario.nombre} ${data.usuario.apellido || ''}`.trim() : undefined,
-              email: data.usuario.email,
-              bancoNombre: data.usuario.bancoNombre,
-              numeroCuentaBancaria: data.usuario.numeroCuentaBancaria,
-              qr: data.usuario.qr
-            });
-          }
+
+          // Cargar datos completos desde MS-01 para tener teléfono, CI, banco, etc.
+          const perfilBd = await cargarPerfilDesdeBackend(data.usuario.email);
+          const datosCombinados: Partial<PerfilAnfitrion> = {
+            id: data.usuario.id || perfilBd?.id,
+            nombre: data.usuario.nombre ? `${data.usuario.nombre} ${data.usuario.apellido || ''}`.trim() : perfilBd?.nombre,
+            email: data.usuario.email || perfilBd?.email,
+            telefono: data.usuario.telefono || perfilBd?.telefono || '',
+            ciNumero: data.usuario.ci || data.usuario.ciNumero || perfilBd?.ciNumero || '',
+            ciExpedido: data.usuario.ciExpedido || perfilBd?.ciExpedido || 'LP',
+            bancoNombre: data.usuario.bancoNombre || perfilBd?.bancoNombre || '',
+            numeroCuentaBancaria: data.usuario.numeroCuentaBancaria || perfilBd?.numeroCuentaBancaria || '',
+            qr: data.usuario.qr || perfilBd?.qr || '',
+            ciudad: data.usuario.ciudad || perfilBd?.ciudad || 'La Paz',
+            departamento: data.usuario.departamento || perfilBd?.departamento || 'La Paz',
+            verificado: perfilBd?.verificado ?? false,
+            estadoVerificacion: perfilBd?.estadoVerificacion || 'PENDIENTE_REVISION'
+          };
+          actualizarPerfil(datosCombinados);
+
           setIsAuthenticated(true);
           setSSOToken(data.token || null);
+          setCargandoSSO(false);
+          return;
+        }
+      }
+
+      // Si el Gateway devolvió no autenticado pero tenemos emailLocal en sessionStorage
+      if (emailLocal) {
+        const perfilBd = await cargarPerfilDesdeBackend(emailLocal);
+        if (perfilBd) {
+          actualizarPerfil(perfilBd);
+          setIsAuthenticated(true);
           setCargandoSSO(false);
           return;
         }
@@ -292,22 +289,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const demoUserRaw = sessionStorage.getItem('alojate_sso_anfitrion');
       if (demoUserRaw) {
         const demo = JSON.parse(demoUserRaw);
-        setAnfitrionClave(demo.clave || 'daniel');
+        const cl = demo.clave || 'carlos';
+        setAnfitrionClave(cl);
         setIsAuthenticated(true);
         if (demo.token) setSSOToken(demo.token);
+        const em = demo.email || (cl.includes('daniel') ? 'danielqc333@gmail.com' : 'anfitrion@alojate.bo');
+        const perfilBd = await cargarPerfilDesdeBackend(em);
+        if (perfilBd) actualizarPerfil(perfilBd);
         setCargandoSSO(false);
         return;
       }
-      const savedClave = localStorage.getItem('alojate_anfitrion_clave') as 'carlos' | 'elena' | 'daniel' | null;
-      if (savedClave && ['carlos', 'elena', 'daniel'].includes(savedClave)) {
+      const savedClave = localStorage.getItem('alojate_anfitrion_clave');
+      if (savedClave) {
         setAnfitrionClave(savedClave);
         setIsAuthenticated(true);
+        const em = savedClave.includes('daniel') ? 'danielqc333@gmail.com' : 'anfitrion@alojate.bo';
+        const perfilBd = await cargarPerfilDesdeBackend(em);
+        if (perfilBd) actualizarPerfil(perfilBd);
         setCargandoSSO(false);
         return;
       }
     } catch {}
 
-    // En el portal anfitrión dedicado, mantener la sesión activa con acceso verificado
     setIsAuthenticated(true);
     setCargandoSSO(false);
   };
@@ -337,12 +340,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setDarkMode(prev => !prev);
   };
 
-  const loginDemo = (clave: string = 'daniel') => {
-    sessionStorage.setItem('alojate_sso_anfitrion', JSON.stringify({ clave }));
+  const loginDemo = async (clave: string = 'carlos') => {
+    let email = `${clave}@alojate.bo`;
+    if (clave === 'daniel') email = 'danielqc333@gmail.com';
+    else if (clave === 'carlos') email = 'anfitrion@alojate.bo';
+
+    sessionStorage.setItem('alojate_sso_anfitrion', JSON.stringify({ clave, email }));
     localStorage.setItem('alojate_anfitrion_clave', clave);
     setAnfitrionClave(clave);
     setIsAuthenticated(true);
     setCargandoSSO(false);
+
+    const perfilBackend = await cargarPerfilDesdeBackend(email);
+    if (perfilBackend) {
+      actualizarPerfil(perfilBackend);
+    }
   };
 
   const logout = async () => {

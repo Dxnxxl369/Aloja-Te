@@ -129,10 +129,17 @@ public class AlojamientoServiceImpl implements AlojamientoUseCase {
     @Transactional
     public Fotografia agregarFotografia(UUID idAlojamiento, String url, Integer orden) {
         obtenerPorId(idAlojamiento); // valida existencia
+        String urlTrim = url != null ? url.trim() : "";
+        List<Fotografia> existentes = fotografiaRepository.listarPorAlojamiento(idAlojamiento);
+        for (Fotografia f : existentes) {
+            if (f.getUrl() != null && f.getUrl().trim().equalsIgnoreCase(urlTrim)) {
+                return f; // Ya existe en la base de datos, evitar duplicación
+            }
+        }
         Fotografia foto = Fotografia.builder()
                 .idAlojamiento(idAlojamiento)
-                .url(url)
-                .orden(orden != null ? orden : 0)
+                .url(urlTrim)
+                .orden(orden != null ? orden : (existentes.size() + 1))
                 .build();
         return fotografiaRepository.guardar(foto);
     }

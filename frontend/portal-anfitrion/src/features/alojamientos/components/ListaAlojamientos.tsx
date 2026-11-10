@@ -53,6 +53,8 @@ export const ListaAlojamientos: React.FC<ListaAlojamientosProps> = ({
   const [tabFiltro, setTabFiltro] = useState<'TODOS' | 'PUBLICADOS' | 'ATENCION'>('TODOS');
   const [filtroDepto, setFiltroDepto] = useState<string>('TODOS');
   const [filtroModalidad, setFiltroModalidad] = useState<string>('TODOS');
+  const [filtroModeracion, setFiltroModeracion] = useState<string>('TODOS');
+  const [filtroOperativo, setFiltroOperativo] = useState<string>('TODOS');
   const [busquedaTexto, setBusquedaTexto] = useState<string>('');
   const [sincronizando, setSincronizando] = useState<boolean>(false);
 
@@ -123,17 +125,38 @@ export const ListaAlojamientos: React.FC<ListaAlojamientosProps> = ({
       a.ciudad.toLowerCase().includes(busquedaTexto.toLowerCase()) ||
       a.departamento.toLowerCase().includes(busquedaTexto.toLowerCase());
 
-    return cumpleTab && cumpleDepto && cumpleModalidad && cumpleBusqueda;
+    // Filtro por Estado de Moderación
+    let cumpleModeracion = true;
+    if (filtroModeracion !== 'TODOS') {
+      if (filtroModeracion === 'PENDIENTE') {
+        cumpleModeracion = estadoReal === 'PENDIENTE' || estadoReal === 'EN_REVISION';
+      } else {
+        cumpleModeracion = estadoReal === filtroModeracion;
+      }
+    }
+
+    // Filtro por Disponibilidad / Reservas (Estado Operativo)
+    const tieneReservasActivas = (a.reservas && a.reservas.length > 0 && a.reservas.some((r: any) => r.estado === 'CONFIRMADA' || r.estado === 'PENDIENTE')) || a.estadoOperativo === 'EN_USO';
+    let cumpleOperativo = true;
+    if (filtroOperativo === 'LIBRE') {
+      cumpleOperativo = !tieneReservasActivas && a.estadoOperativo !== 'PENDIENTE';
+    } else if (filtroOperativo === 'RESERVAS') {
+      cumpleOperativo = tieneReservasActivas;
+    } else if (filtroOperativo === 'PENDIENTE_PIN') {
+      cumpleOperativo = a.estadoOperativo === 'PENDIENTE';
+    }
+
+    return cumpleTab && cumpleDepto && cumpleModalidad && cumpleBusqueda && cumpleModeracion && cumpleOperativo;
   });
 
   const alojamientoActivoEdicion = alojamientos.find(a => a.idAlojamiento === alojamientoEnEdicionIdLocal) || null;
 
-  const handleGuardarHotel = (actualizado: Alojamiento) => {
+  const handleGuardarHotel = async (actualizado: Alojamiento) => {
     const nuevaLista = alojamientos.map(a =>
       a.idAlojamiento === actualizado.idAlojamiento ? actualizado : a
     );
     onGuardarLista(nuevaLista, true);
-    alojamientoService.guardar(anfitrionClave, nuevaLista);
+    await alojamientoService.actualizar(anfitrionClave, actualizado);
     abrirEdicion(null);
   };
 
@@ -211,64 +234,96 @@ export const ListaAlojamientos: React.FC<ListaAlojamientosProps> = ({
         </div>
       )}
 
-      {/* 3. Fila Única de Filtros: Tabs + Búsqueda + Dropdowns */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
-        {/* Tabs de Filtro */}
-        <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl self-start md:self-auto">
-          <button
-            type="button"
-            onClick={() => setTabFiltro('TODOS')}
-            className={`px-3 py-1.5 rounded-lg font-semibold transition cursor-pointer ${
-              tabFiltro === 'TODOS'
-                ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            Todos ({conteoTodos})
-          </button>
-          <button
-            type="button"
-            onClick={() => setTabFiltro('PUBLICADOS')}
-            className={`px-3 py-1.5 rounded-lg font-semibold transition cursor-pointer ${
-              tabFiltro === 'PUBLICADOS'
-                ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            Publicados ({conteoPublicados})
-          </button>
-          {conteoAtencion > 0 && (
+      {/* 3. Fila de Filtros: Tabs + Combos Verticales [Estados / Disponibilidad] + Controles a la Derecha */}
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 text-xs">
+        {/* Izquierda: Tabs y el bloque vertical [Todos los estados / Toda disponibilidad] */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          {/* Tabs de Filtro */}
+          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl self-start sm:self-auto shrink-0">
             <button
               type="button"
-              onClick={() => setTabFiltro('ATENCION')}
-              className={`px-3 py-1.5 rounded-lg font-semibold transition cursor-pointer ${
-                tabFiltro === 'ATENCION'
-                  ? 'bg-amber-600 text-white shadow-xs'
-                  : 'text-amber-700 dark:text-amber-400 hover:bg-amber-50/50 dark:hover:bg-amber-950/30'
+              onClick={() => setTabFiltro('TODOS')}
+              className={`px-3 py-2 rounded-lg font-semibold transition cursor-pointer ${
+                tabFiltro === 'TODOS'
+                  ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
-              Requieren atención ({conteoAtencion})
+              Todos ({conteoTodos})
             </button>
-          )}
+            <button
+              type="button"
+              onClick={() => setTabFiltro('PUBLICADOS')}
+              className={`px-3 py-2 rounded-lg font-semibold transition cursor-pointer ${
+                tabFiltro === 'PUBLICADOS'
+                  ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              Publicados ({conteoPublicados})
+            </button>
+            {conteoAtencion > 0 && (
+              <button
+                type="button"
+                onClick={() => setTabFiltro('ATENCION')}
+                className={`px-3 py-2 rounded-lg font-semibold transition cursor-pointer ${
+                  tabFiltro === 'ATENCION'
+                    ? 'bg-amber-600 text-white shadow-xs'
+                    : 'text-amber-700 dark:text-amber-400 hover:bg-amber-50/50 dark:hover:bg-amber-950/30'
+                }`}
+              >
+                Requieren atención ({conteoAtencion})
+              </button>
+            )}
+          </div>
+
+          {/* [TODOS LOS ESTADOS, TODA DISPONIBILIDAD] en vertical uno sobre otro con espacio */}
+          <div className="flex flex-col gap-1.5 shrink-0">
+            {/* Combobox Estado de Moderación */}
+            <select
+              value={filtroModeracion}
+              onChange={e => setFiltroModeracion(e.target.value)}
+              className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-medium text-slate-700 dark:text-slate-300 outline-none cursor-pointer hover:border-blue-400 dark:hover:border-blue-500 shadow-xs transition"
+            >
+              <option value="TODOS">Todos los estados</option>
+              <option value="PUBLICADO">Publicados</option>
+              <option value="EN_REVISION">En Revisión</option>
+              <option value="PENDIENTE">Pendientes</option>
+              <option value="OBSERVADO">Observados</option>
+              <option value="RECHAZADO">Rechazados</option>
+              <option value="SUSPENDIDO">Suspendidos</option>
+            </select>
+
+            {/* Combobox Disponibilidad Operativa */}
+            <select
+              value={filtroOperativo}
+              onChange={e => setFiltroOperativo(e.target.value)}
+              className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-medium text-slate-700 dark:text-slate-300 outline-none cursor-pointer hover:border-blue-400 dark:hover:border-blue-500 shadow-xs transition"
+            >
+              <option value="TODOS">Toda disponibilidad</option>
+              <option value="LIBRE">Libre (Disponible)</option>
+              <option value="RESERVAS">En uso / Con reservas</option>
+              <option value="PENDIENTE_PIN">Pendiente de PIN</option>
+            </select>
+          </div>
         </div>
 
-        {/* Búsqueda y Dropdowns en la misma fila */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <div className="relative">
-            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              value={busquedaTexto}
-              onChange={e => setBusquedaTexto(e.target.value)}
-              placeholder="Buscar propiedad..."
-              className="pl-8 pr-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200 outline-none focus:border-blue-500 w-44"
-            />
-          </div>
+        {/* Derecha: Modalidad, Departamentos y Buscador horizontalmente */}
+        <div className="flex items-center gap-2 flex-wrap xl:justify-end">
+          <select
+            value={filtroModalidad}
+            onChange={e => setFiltroModalidad(e.target.value)}
+            className="px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-300 outline-none cursor-pointer hover:border-slate-300 dark:hover:border-slate-700 shadow-xs transition"
+          >
+            <option value="TODOS">Todas las modalidades</option>
+            <option value="HOTEL">Hoteles &amp; Hostales</option>
+            <option value="CASA">Casas &amp; Cabañas</option>
+          </select>
 
           <select
             value={filtroDepto}
             onChange={e => setFiltroDepto(e.target.value)}
-            className="px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-300 outline-none cursor-pointer"
+            className="px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-300 outline-none cursor-pointer hover:border-slate-300 dark:hover:border-slate-700 shadow-xs transition"
           >
             <option value="TODOS">Todos los departamentos</option>
             {departamentosUnicos.map(d => (
@@ -276,15 +331,16 @@ export const ListaAlojamientos: React.FC<ListaAlojamientosProps> = ({
             ))}
           </select>
 
-          <select
-            value={filtroModalidad}
-            onChange={e => setFiltroModalidad(e.target.value)}
-            className="px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-300 outline-none cursor-pointer"
-          >
-            <option value="TODOS">Todas las modalidades</option>
-            <option value="HOTEL">Hoteles &amp; Hostales</option>
-            <option value="CASA">Casas &amp; Cabañas</option>
-          </select>
+          <div className="relative">
+            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={busquedaTexto}
+              onChange={e => setBusquedaTexto(e.target.value)}
+              placeholder="Buscar propiedad..."
+              className="pl-8 pr-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200 outline-none focus:border-blue-500 w-48 shadow-xs transition"
+            />
+          </div>
         </div>
       </div>
 
@@ -319,25 +375,22 @@ export const ListaAlojamientos: React.FC<ListaAlojamientosProps> = ({
             const isEnUso = a.estadoOperativo === 'EN_USO';
             const isPendientePin = a.estadoOperativo === 'PENDIENTE';
 
-            // Excepción de auditoría (solo mostramos badge si NO es PUBLICADO)
-            const esExcepcion = estadoReal !== 'PUBLICADO';
-
             return (
               <div
                 key={a.idAlojamiento}
-                className="bg-white dark:bg-[#0F172A] border border-slate-200/80 dark:border-slate-800 rounded-2xl overflow-hidden hover:border-slate-300 dark:hover:border-slate-700 transition flex flex-col justify-between shadow-xs"
+                className="group bg-white dark:bg-[#0F172A] border border-slate-200/80 dark:border-slate-800 rounded-2xl overflow-hidden hover:border-blue-500/60 dark:hover:border-blue-400/50 hover:-translate-y-1.5 hover:shadow-xl hover:shadow-blue-500/10 transition-all duration-300 ease-out flex flex-col justify-between shadow-xs"
               >
                 <div>
-                  {/* Foto limpia: solo estado operativo y excepción si aplica */}
+                  {/* Foto limpia: con hover dinámico y badges de estado */}
                   <div className="relative h-44 overflow-hidden bg-slate-100 dark:bg-slate-900">
                     <img
                       src={fotoPortada}
                       alt={a.titulo}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                     />
 
-                    {/* Estado operativo sobre la foto */}
-                    <div className="absolute top-3 left-3 flex items-center gap-1.5">
+                    {/* Estado operativo y de moderación sobre la foto */}
+                    <div className="absolute top-3 left-3 flex items-center gap-1.5 flex-wrap">
                       {isEnUso ? (
                         <span className="px-2 py-0.5 rounded-md bg-emerald-500 text-white text-[10px] font-bold shadow-xs">
                           En uso
@@ -352,18 +405,30 @@ export const ListaAlojamientos: React.FC<ListaAlojamientosProps> = ({
                         </span>
                       )}
 
-                      {/* Badge solo si es una excepción administrativa */}
-                      {esExcepcion && (
-                        <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold shadow-xs ${
-                          estadoReal === 'OBSERVADO'
-                            ? 'bg-amber-600 text-white'
-                            : estadoReal === 'PENDIENTE'
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-rose-600 text-white'
-                        }`}>
-                          {estadoReal === 'OBSERVADO' ? 'Observado' : estadoReal === 'PENDIENTE' ? 'En revisión' : estadoReal}
+                      {/* Badge de Estado de Moderación para TODOS los alojamientos */}
+                      <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold shadow-xs flex items-center gap-1 ${
+                        estadoReal === 'PUBLICADO'
+                          ? 'bg-emerald-600 text-white'
+                          : estadoReal === 'OBSERVADO'
+                          ? 'bg-amber-600 text-white'
+                          : estadoReal === 'EN_REVISION'
+                          ? 'bg-purple-600 text-white'
+                          : estadoReal === 'PENDIENTE'
+                          ? 'bg-blue-600 text-white'
+                          : estadoReal === 'SUSPENDIDO'
+                          ? 'bg-slate-700 text-white'
+                          : 'bg-rose-600 text-white'
+                      }`}>
+                        {estadoReal === 'EN_REVISION' && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />}
+                        <span>
+                          {estadoReal === 'PUBLICADO' ? 'Publicado' :
+                           estadoReal === 'OBSERVADO' ? 'Observado' :
+                           estadoReal === 'EN_REVISION' ? '🤖 IA Revisando' :
+                           estadoReal === 'PENDIENTE' ? 'Pendiente' :
+                           estadoReal === 'SUSPENDIDO' ? 'Suspendido' :
+                           estadoReal === 'RECHAZADO' ? 'Rechazado' : estadoReal}
                         </span>
-                      )}
+                      </span>
                     </div>
                   </div>
 
@@ -371,7 +436,7 @@ export const ListaAlojamientos: React.FC<ListaAlojamientosProps> = ({
                   <div className="p-4 space-y-2">
                     {/* Título uniforme + Precio al lado */}
                     <div className="flex items-baseline justify-between gap-2">
-                      <h3 className="font-semibold text-sm text-slate-900 dark:text-white truncate">
+                      <h3 className="font-semibold text-sm text-slate-900 dark:text-white truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                         {a.titulo}
                       </h3>
                       <span className="font-mono text-xs font-bold text-slate-900 dark:text-white shrink-0">
@@ -409,7 +474,7 @@ export const ListaAlojamientos: React.FC<ListaAlojamientosProps> = ({
                   <button
                     type="button"
                     onClick={() => abrirEdicion(a.idAlojamiento)}
-                    className="flex-1 py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-semibold transition text-center cursor-pointer"
+                    className="flex-1 py-2 px-3 rounded-xl bg-slate-100 hover:bg-blue-600 hover:text-white dark:bg-slate-800 dark:hover:bg-blue-600 text-slate-800 dark:text-slate-200 text-xs font-semibold transition text-center cursor-pointer shadow-xs"
                   >
                     {esHotel ? 'Administrar' : 'Editar Propiedad'}
                   </button>

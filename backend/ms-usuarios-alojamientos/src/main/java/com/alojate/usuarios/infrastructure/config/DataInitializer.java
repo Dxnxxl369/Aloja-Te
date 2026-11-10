@@ -103,10 +103,11 @@ public class DataInitializer implements CommandLineRunner {
         // 5. Usuario Administrador por defecto
         if (!usuarioRepo.existsByEmail("admin@alojate.bo")) {
             usuarioRepo.save(UsuarioJpaEntity.builder()
+                    .idUsuario(UUID.fromString("a0000000-0000-4000-8000-000000000001"))
                     .email("admin@alojate.bo")
                     .passwordHash(passwordEncoder.encode("Admin1234!"))
-                    .nombre("Administrador")
-                    .apellido("General")
+                    .nombre("Admin")
+                    .apellido("Aloja-Te")
                     .ci("1234567")
                     .ciExpedido("SCZ")
                     .telefono("+591 70000000")
@@ -119,14 +120,14 @@ public class DataInitializer implements CommandLineRunner {
             log.info("[DataInitializer] Usuario Admin creado: admin@alojate.bo / Admin1234!");
         }
 
-        // 6. Usuarios Anfitriones
-        UsuarioJpaEntity anfitrionDefault = null;
+        // 6. Usuario Anfitrión oficial
         if (!usuarioRepo.existsByEmail("anfitrion@alojate.bo")) {
-            anfitrionDefault = usuarioRepo.save(UsuarioJpaEntity.builder()
+            usuarioRepo.save(UsuarioJpaEntity.builder()
+                    .idUsuario(UUID.fromString("a0000000-0000-4000-8000-000000000002"))
                     .email("anfitrion@alojate.bo")
                     .passwordHash(passwordEncoder.encode("Anfitrion1234!"))
-                    .nombre("Mateo")
-                    .apellido("Justiniano")
+                    .nombre("Carlos")
+                    .apellido("Mendoza")
                     .ci("7654321")
                     .ciExpedido("SCZ")
                     .telefono("+591 71098765")
@@ -140,96 +141,12 @@ public class DataInitializer implements CommandLineRunner {
                     .fechaActualizacion(LocalDateTime.now())
                     .build());
             log.info("[DataInitializer] Usuario Anfitrión creado: anfitrion@alojate.bo / Anfitrion1234!");
-        } else {
-            anfitrionDefault = usuarioRepo.findByEmail("anfitrion@alojate.bo").orElse(null);
         }
 
-        if (!usuarioRepo.existsByEmail("carlos.mendoza@alojate.bo")) {
-            usuarioRepo.save(UsuarioJpaEntity.builder()
-                    .email("carlos.mendoza@alojate.bo")
-                    .passwordHash(passwordEncoder.encode("Bolivia2026!"))
-                    .nombre("Carlos")
-                    .apellido("Mendoza")
-                    .ci("4829103")
-                    .ciExpedido("SCZ")
-                    .telefono("+591 78012345")
-                    .tipoCuenta("ANFITRION_VERIFICADO")
-                    .rol(rolAnfitrion)
-                    .estado(EstadoUsuario.ACTIVO)
-                    .bancoNombre("Banco Mercantil Santa Cruz (BMSC)")
-                    .numeroCuentaBancaria("4010987654321")
-                    .qr("https://alojate-bolivia.s3.sa-east-1.amazonaws.com/anfitriones/qr-carlos-mendoza.png")
-                    .fechaRegistro(LocalDateTime.now())
-                    .fechaActualizacion(LocalDateTime.now())
-                    .build());
-            log.info("[DataInitializer] Usuario Anfitrión creado: carlos.mendoza@alojate.bo / Bolivia2026!");
-        }
-
-        if (!usuarioRepo.existsByEmail("elena.calbimontes@alojate.bo")) {
-            usuarioRepo.save(UsuarioJpaEntity.builder()
-                    .idUsuario(UUID.fromString("a0000000-0000-4000-8000-000000000003"))
-                    .email("elena.calbimontes@alojate.bo")
-                    .passwordHash(passwordEncoder.encode("Anfitrion1234!"))
-                    .nombre("Elena")
-                    .apellido("Morales")
-                    .ci("3928174")
-                    .ciExpedido("TJA")
-                    .telefono("+591 72983741")
-                    .tipoCuenta("ANFITRION_VERIFICADO")
-                    .rol(rolAnfitrion)
-                    .estado(EstadoUsuario.ACTIVO)
-                    .bancoNombre("Banco Mercantil Santa Cruz (BMSC)")
-                    .numeroCuentaBancaria("4010987654321")
-                    .qr("https://alojate-bolivia.s3.sa-east-1.amazonaws.com/anfitriones/qr-carlos-mendoza.png")
-                    .fechaRegistro(LocalDateTime.now())
-                    .fechaActualizacion(LocalDateTime.now())
-                    .build());
-            log.info("[DataInitializer] Usuario Anfitriona creado: elena.calbimontes@alojate.bo / Anfitrion1234!");
-        }
-
-        if (!usuarioRepo.existsByEmail("danielqczn@gmail.com")) {
-            usuarioRepo.save(UsuarioJpaEntity.builder()
-                    .idUsuario(UUID.fromString("a0000000-0000-4000-8000-000000000004"))
-                    .email("danielqczn@gmail.com")
-                    .passwordHash(passwordEncoder.encode("Bolivia2026!"))
-                    .nombre("Daniel")
-                    .apellido("Quispe")
-                    .ci("6359145")
-                    .ciExpedido("SCZ")
-                    .telefono("63591455")
-                    .tipoCuenta("ANFITRION_VERIFICADO")
-                    .rol(rolAnfitrion)
-                    .estado(EstadoUsuario.ACTIVO)
-                    .bancoNombre("Banco Mercantil Santa Cruz S.A.")
-                    .numeroCuentaBancaria("4010987654321")
-                    .qr("https://alojate-bolivia.s3.sa-east-1.amazonaws.com/anfitriones/qr-daniel-quispe.png")
-                    .fechaRegistro(LocalDateTime.now())
-                    .fechaActualizacion(LocalDateTime.now())
-                    .build());
-            log.info("[DataInitializer] Usuario Anfitrión Daniel creado: danielqczn@gmail.com / Bolivia2026!");
-        }
-
-        if (!usuarioRepo.existsByEmail("anfitrion.pendiente@alojate.bo")) {
-            usuarioRepo.save(UsuarioJpaEntity.builder()
-                    .email("anfitrion.pendiente@alojate.bo")
-                    .passwordHash(passwordEncoder.encode("Bolivia2026!"))
-                    .nombre("Roberto")
-                    .apellido("Aguilera")
-                    .ci("6543210")
-                    .ciExpedido("LPZ")
-                    .telefono("+591 76543210")
-                    .tipoCuenta("ANFITRION_PENDIENTE")
-                    .rol(rolAnfitrion)
-                    .estado(EstadoUsuario.PENDIENTE_VERIFICACION)
-                    .fechaRegistro(LocalDateTime.now())
-                    .fechaActualizacion(LocalDateTime.now())
-                    .build());
-            log.info("[DataInitializer] Usuario Anfitrión Pendiente creado: anfitrion.pendiente@alojate.bo / Bolivia2026!");
-        }
-
-        // 7. Usuarios Clientes (Huéspedes / Viajeros)
+        // 7. Usuarios Clientes (2 clientes oficiales)
         if (!usuarioRepo.existsByEmail("cliente@alojate.bo")) {
             usuarioRepo.save(UsuarioJpaEntity.builder()
+                    .idUsuario(UUID.fromString("c0000000-0000-4000-8000-000000000001"))
                     .email("cliente@alojate.bo")
                     .passwordHash(passwordEncoder.encode("Cliente1234!"))
                     .nombre("Lucia")
@@ -246,30 +163,13 @@ public class DataInitializer implements CommandLineRunner {
             log.info("[DataInitializer] Usuario Cliente creado: cliente@alojate.bo / Cliente1234!");
         }
 
-        if (!usuarioRepo.existsByEmail("lucia.suarez@alojate.bo")) {
+        if (!usuarioRepo.existsByEmail("huesped@alojate.bo")) {
             usuarioRepo.save(UsuarioJpaEntity.builder()
-                    .email("lucia.suarez@alojate.bo")
-                    .passwordHash(passwordEncoder.encode("Bolivia2026!"))
-                    .nombre("Lucia")
-                    .apellido("Suarez")
-                    .ci("5432198")
-                    .ciExpedido("SCZ")
-                    .telefono("+591 77012345")
-                    .tipoCuenta("VIAJERO_FRECUENTE")
-                    .rol(rolCliente)
-                    .estado(EstadoUsuario.ACTIVO)
-                    .fechaRegistro(LocalDateTime.now())
-                    .fechaActualizacion(LocalDateTime.now())
-                    .build());
-            log.info("[DataInitializer] Usuario Cliente creado: lucia.suarez@alojate.bo / Bolivia2026!");
-        }
-
-        if (!usuarioRepo.existsByEmail("juan.perez@alojate.bo")) {
-            usuarioRepo.save(UsuarioJpaEntity.builder()
-                    .email("juan.perez@alojate.bo")
+                    .idUsuario(UUID.fromString("c0000000-0000-4000-8000-000000000002"))
+                    .email("huesped@alojate.bo")
                     .passwordHash(passwordEncoder.encode("Cliente1234!"))
-                    .nombre("Juan")
-                    .apellido("Perez")
+                    .nombre("Huesped")
+                    .apellido("Aloja-Te")
                     .ci("6543210")
                     .ciExpedido("LPZ")
                     .telefono("+591 71234567")
@@ -279,398 +179,53 @@ public class DataInitializer implements CommandLineRunner {
                     .fechaRegistro(LocalDateTime.now())
                     .fechaActualizacion(LocalDateTime.now())
                     .build());
-            log.info("[DataInitializer] Usuario Cliente creado: juan.perez@alojate.bo / Cliente1234!");
+            log.info("[DataInitializer] Usuario Huésped creado: huesped@alojate.bo / Cliente1234!");
         }
 
-        // 7. Catálogo de Tipos de Propiedad
-        TipoPropiedadJpaEntity tipoCabana = obtenerOCrearTipoPropiedad("Cabaña Chiquitana");
+        // 7.1 Usuario Anfitrión Daniel Quispe
+        if (!usuarioRepo.existsByEmail("danielqc333@gmail.com")) {
+            usuarioRepo.save(UsuarioJpaEntity.builder()
+                    .idUsuario(UUID.fromString("2bd6c1ff-bca9-4ef8-930e-02330a949616"))
+                    .email("danielqc333@gmail.com")
+                    .passwordHash(passwordEncoder.encode("Daniel1234!"))
+                    .nombre("Daniel")
+                    .apellido("Quispe")
+                    .ci("11107075")
+                    .ciExpedido("LP")
+                    .telefono("63591455")
+                    .tipoCuenta("ANFITRION_VERIFICADO")
+                    .rol(rolAnfitrion)
+                    .estado(EstadoUsuario.ACTIVO)
+                    .bancoNombre("Banco Mercantil Santa Cruz")
+                    .numeroCuentaBancaria("8451487545154")
+                    .qr("https://alojate-bolivia.s3.sa-east-1.amazonaws.com/anfitriones/qr-carlos-mendoza.png")
+                    .fechaRegistro(LocalDateTime.now())
+                    .fechaActualizacion(LocalDateTime.now())
+                    .build());
+            log.info("[DataInitializer] Usuario Anfitrión creado: danielqc333@gmail.com / Daniel1234!");
+        }
+
+        // 8. Catálogo de Tipos de Propiedad
+        obtenerOCrearTipoPropiedad("Cabaña Chiquitana");
         obtenerOCrearTipoPropiedad("Departamento Urbano");
         obtenerOCrearTipoPropiedad("Casa de Campo");
         obtenerOCrearTipoPropiedad("Eco-Lodge");
         obtenerOCrearTipoPropiedad("Hotel Boutique");
 
-        // 8. Catálogo de Tipos de Espacio
-        TipoEspacioJpaEntity espacioEntero = obtenerOCrearTipoEspacio("Lugar entero");
+        // 9. Catálogo de Tipos de Espacio
+        obtenerOCrearTipoEspacio("Lugar entero");
         obtenerOCrearTipoEspacio("Habitación privada");
         obtenerOCrearTipoEspacio("Habitación compartida");
 
-        // 9. Catálogo de Servicios
-        ServicioJpaEntity sWifi = obtenerOCrearServicio("Wifi de Alta Velocidad (Starlink)", "CONECTIVIDAD");
-        ServicioJpaEntity sPiscina = obtenerOCrearServicio("Piscina Privada", "CONFORT");
-        ServicioJpaEntity sAC = obtenerOCrearServicio("Aire Acondicionado", "CONFORT");
-        ServicioJpaEntity sParrilla = obtenerOCrearServicio("Parrillera / Churrasquera", "CONFORT");
-        ServicioJpaEntity sParking = obtenerOCrearServicio("Estacionamiento Gratuito", "ACCESIBILIDAD");
-        ServicioJpaEntity sCocina = obtenerOCrearServicio("Cocina Equipada", "SERVICIOS");
+        // 10. Catálogo de Servicios
+        obtenerOCrearServicio("Wifi de Alta Velocidad (Starlink)", "CONECTIVIDAD");
+        obtenerOCrearServicio("Piscina Privada", "CONFORT");
+        obtenerOCrearServicio("Aire Acondicionado", "CONFORT");
+        obtenerOCrearServicio("Parrillera / Churrasquera", "CONFORT");
+        obtenerOCrearServicio("Estacionamiento Gratuito", "ACCESIBILIDAD");
+        obtenerOCrearServicio("Cocina Equipada", "SERVICIOS");
 
-        // 10. Alojamiento de demostración si la base está vacía
-        if (alojamientoRepo.count() == 0 && anfitrionDefault != null) {
-            Set<ServicioJpaEntity> serviciosSample = new HashSet<>(Arrays.asList(sWifi, sPiscina, sAC, sParrilla, sParking, sCocina));
-
-            AlojamientoJpaEntity alojDemo = AlojamientoJpaEntity.builder()
-                    .idAnfitrion(anfitrionDefault.getIdUsuario())
-                    .tipoPropiedad(tipoCabana)
-                    .modalidad("CASA_DEPARTAMENTO")
-                    .politicas("Prohibido fumar en interiores. Mascotas permitidas en jardín. Check-in 14:00 - Check-out 11:00.")
-                    .horarioEntrada("14:00")
-                    .horarioSalida("11:00")
-                    .titulo("Cabaña Chiquitana El Palmar — Chiquitanía Mágica")
-                    .descripcion("Hermosa cabaña rústica colonial con piscina privada, galería con hamacas y cielo estrellado en el corazón de la Chiquitanía boliviana.")
-                    .direccion("Camino a San José Km 5")
-                    .ciudad("San José de Chiquitos")
-                    .departamento("Santa Cruz")
-                    .latitud(new BigDecimal("-17.8441000"))
-                    .longitud(new BigDecimal("-60.7422000"))
-                    .estadoPublicacion(EstadoPublicacion.PUBLICADO)
-                    .fechaCreacion(LocalDateTime.now())
-                    .servicios(serviciosSample)
-                    .build();
-
-            AlojamientoJpaEntity alojGuardado = alojamientoRepo.save(alojDemo);
-
-            // Unidad Reservable única (Casa completa)
-            unidadRepo.save(UnidadReservableJpaEntity.builder()
-                    .idAlojamiento(alojGuardado.getIdAlojamiento())
-                    .tipoEspacio(espacioEntero)
-                    .nombre("Cabaña Completa (Master Suite + 2 Dormitorios)")
-                    .capacidadHuespedes(8)
-                    .cantidadDormitorios(3)
-                    .cantidadCamas(5)
-                    .cantidadBanos(new BigDecimal("2.5"))
-                    .inventarioTotal(1)
-                    .precioNoche(new BigDecimal("650.00"))
-                    .estado(EstadoUnidad.DISPONIBLE)
-                    .build());
-
-            // Fotografías Cabaña
-            fotoRepo.save(FotografiaJpaEntity.builder()
-                    .idAlojamiento(alojGuardado.getIdAlojamiento())
-                    .url("https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1200&q=80")
-                    .orden(1)
-                    .build());
-            fotoRepo.save(FotografiaJpaEntity.builder()
-                    .idAlojamiento(alojGuardado.getIdAlojamiento())
-                    .url("https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80")
-                    .orden(2)
-                    .build());
-
-            // 11. Sembrar un Hotel con Múltiples Habitaciones e Inventario
-            TipoPropiedadJpaEntity tipoHotel = obtenerOCrearTipoPropiedad("Hotel Boutique");
-            TipoEspacioJpaEntity espacioHabitacion = obtenerOCrearTipoEspacio("Habitación privada");
-
-            AlojamientoJpaEntity hotelDemo = AlojamientoJpaEntity.builder()
-                    .idAnfitrion(anfitrionDefault.getIdUsuario())
-                    .tipoPropiedad(tipoHotel)
-                    .modalidad("HOTEL_HOSTAL")
-                    .politicas("Recepción 24 horas. Desayuno buffet incluido de 07:00 a 10:30. No se admiten fiestas.")
-                    .horarioEntrada("15:00")
-                    .horarioSalida("12:00")
-                    .titulo("Hotel Boutique Los Tajibos Colonial")
-                    .descripcion("Exclusivo hotel boutique con arquitectura chiquitana, restaurante gourmet, spa y áreas verdes tropicales.")
-                    .direccion("Av. San Martín #120, Barrio Equipetrol")
-                    .ciudad("Santa Cruz de la Sierra")
-                    .departamento("Santa Cruz")
-                    .latitud(new BigDecimal("-17.7712000"))
-                    .longitud(new BigDecimal("-63.1956000"))
-                    .estadoPublicacion(EstadoPublicacion.PUBLICADO)
-                    .fechaCreacion(LocalDateTime.now())
-                    .servicios(serviciosSample)
-                    .build();
-
-            AlojamientoJpaEntity hotelGuardado = alojamientoRepo.save(hotelDemo);
-
-            // Habitación 1: Suite Presidencial con Balcón (Inventario: 3)
-            UnidadReservableJpaEntity uSuite = unidadRepo.save(UnidadReservableJpaEntity.builder()
-                    .idAlojamiento(hotelGuardado.getIdAlojamiento())
-                    .tipoEspacio(espacioHabitacion)
-                    .nombre("Suite Presidencial con Balcón & Vista a Jardines")
-                    .capacidadHuespedes(2)
-                    .cantidadDormitorios(1)
-                    .cantidadCamas(1)
-                    .cantidadBanos(new BigDecimal("1.5"))
-                    .inventarioTotal(3) // Múltiples unidades
-                    .precioNoche(new BigDecimal("950.00"))
-                    .estado(EstadoUnidad.DISPONIBLE)
-                    .build());
-
-            // Habitación 2: Habitación Ejecutiva Doble (Inventario: 12)
-            UnidadReservableJpaEntity uDoble = unidadRepo.save(UnidadReservableJpaEntity.builder()
-                    .idAlojamiento(hotelGuardado.getIdAlojamiento())
-                    .tipoEspacio(espacioHabitacion)
-                    .nombre("Habitación Ejecutiva Doble Twin")
-                    .capacidadHuespedes(2)
-                    .cantidadDormitorios(1)
-                    .cantidadCamas(2)
-                    .cantidadBanos(new BigDecimal("1.0"))
-                    .inventarioTotal(12) // Múltiples unidades
-                    .precioNoche(new BigDecimal("480.00"))
-                    .estado(EstadoUnidad.DISPONIBLE)
-                    .build());
-
-            // Fotografías Hotel
-            fotoRepo.save(FotografiaJpaEntity.builder()
-                    .idAlojamiento(hotelGuardado.getIdAlojamiento())
-                    .url("https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80")
-                    .orden(1)
-                    .build());
-            fotoRepo.save(FotografiaJpaEntity.builder()
-                    .idAlojamiento(hotelGuardado.getIdAlojamiento())
-                    .url("https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=1200&q=80")
-                    .orden(2)
-                    .build());
-
-            // 12. Sembrar Propiedad EN REVISIÓN para la Bandeja de Moderación del Administrador
-            TipoPropiedadJpaEntity tipoCasa = obtenerOCrearTipoPropiedad("Casa de Campo");
-            AlojamientoJpaEntity alojEnRevision = AlojamientoJpaEntity.builder()
-                    .idAnfitrion(anfitrionDefault.getIdUsuario())
-                    .tipoPropiedad(tipoCasa)
-                    .modalidad("CASA_DEPARTAMENTO")
-                    .politicas("Ambiente familiar y ecoturismo. Check-in 13:00.")
-                    .horarioEntrada("13:00")
-                    .horarioSalida("11:00")
-                    .titulo("Casa de Campo La Rinconada — Valles Cruceños")
-                    .descripcion("Casa campestre con huerto orgánico, vista panorámica a las colinas de Samaipata y fogatero exterior.")
-                    .direccion("Km 12 Camino a La Pajcha")
-                    .ciudad("Samaipata")
-                    .departamento("Santa Cruz")
-                    .latitud(new BigDecimal("-18.1812000"))
-                    .longitud(new BigDecimal("-63.8765000"))
-                    .estadoPublicacion(EstadoPublicacion.EN_REVISION) // ¡EN REVISIÓN para Moderación!
-                    .fechaCreacion(LocalDateTime.now())
-                    .servicios(serviciosSample)
-                    .build();
-
-            AlojamientoJpaEntity revGuardado = alojamientoRepo.save(alojEnRevision);
-
-            unidadRepo.save(UnidadReservableJpaEntity.builder()
-                    .idAlojamiento(revGuardado.getIdAlojamiento())
-                    .tipoEspacio(espacioEntero)
-                    .nombre("Casa de Campo Completa con Fogata")
-                    .capacidadHuespedes(6)
-                    .cantidadDormitorios(2)
-                    .cantidadCamas(4)
-                    .cantidadBanos(new BigDecimal("2.0"))
-                    .inventarioTotal(1)
-                    .precioNoche(new BigDecimal("520.00"))
-                    .estado(EstadoUnidad.DISPONIBLE)
-                    .build());
-
-            fotoRepo.save(FotografiaJpaEntity.builder()
-                    .idAlojamiento(revGuardado.getIdAlojamiento())
-                    .url("https://images.unsplash.com/photo-1518780664697-55e3ad937233?auto=format&fit=crop&w=1200&q=80")
-                    .orden(1)
-                    .build());
-
-            log.info("[DataInitializer] Alojamiento demo creado: Cabaña Chiquitana El Palmar (CASA_DEPARTAMENTO)");
-            log.info("[DataInitializer] Hotel demo creado: Hotel Boutique Los Tajibos Colonial (HOTEL_HOSTAL)");
-            log.info("[DataInitializer] Alojamiento en moderación creado: Casa de Campo La Rinconada (EN_REVISION)");
-
-            // 13. Sembrar Valoraciones y Reseñas con 5 Atributos y NLP
-            UsuarioJpaEntity clienteDefault = usuarioRepo.findByEmail("cliente@alojate.bo").orElse(null);
-            if (valoracionRepo.count() == 0 && clienteDefault != null) {
-                // Reseña 1 Casa: Pública, 5 estrellas
-                valoracionRepo.save(ValoracionJpaEntity.builder()
-                        .idAlojamiento(alojGuardado.getIdAlojamiento())
-                        .idUsuario(clienteDefault.getIdUsuario())
-                        .puntuacionGeneral(5)
-                        .calificacionLimpieza(5)
-                        .calificacionUbicacion(5)
-                        .calificacionCalidadPrecio(5)
-                        .calificacionServicio(5)
-                        .calificacionComodidad(5)
-                        .esAnonimo(false)
-                        .comentario("La cabaña superó nuestras expectativas. Todo impecable, el entorno natural es bellísimo y la atención del anfitrión fue excelente.")
-                        .sentimientoNlp("POSITIVO")
-                        .confianzaNlp(new BigDecimal("0.9850"))
-                        .topicoPredicho("Comodidad")
-                        .fechaCreacion(LocalDateTime.now().minusDays(10))
-                        .build());
-
-                // Reseña 2 Casa: Anónima, 4 estrellas
-                valoracionRepo.save(ValoracionJpaEntity.builder()
-                        .idAlojamiento(alojGuardado.getIdAlojamiento())
-                        .idUsuario(clienteDefault.getIdUsuario())
-                        .puntuacionGeneral(4)
-                        .calificacionLimpieza(4)
-                        .calificacionUbicacion(5)
-                        .calificacionCalidadPrecio(4)
-                        .calificacionServicio(5)
-                        .calificacionComodidad(4)
-                        .esAnonimo(true)
-                        .comentario("Muy buena ubicación cerca del pueblo y lugar tranquilo. El wifi es un poco inestable por la zona pero desconectar vino bien.")
-                        .sentimientoNlp("POSITIVO")
-                        .confianzaNlp(new BigDecimal("0.8920"))
-                        .topicoPredicho("Ubicación")
-                        .fechaCreacion(LocalDateTime.now().minusDays(3))
-                        .build());
-
-                // Reseña 3 Hotel General (idUnidad == null)
-                valoracionRepo.save(ValoracionJpaEntity.builder()
-                        .idAlojamiento(hotelGuardado.getIdAlojamiento())
-                        .idUnidad(null) // Reseña del Hotel en general
-                        .idUsuario(clienteDefault.getIdUsuario())
-                        .puntuacionGeneral(5)
-                        .calificacionLimpieza(5)
-                        .calificacionUbicacion(5)
-                        .calificacionCalidadPrecio(4)
-                        .calificacionServicio(5)
-                        .calificacionComodidad(5)
-                        .esAnonimo(false)
-                        .comentario("El desayuno buffet del hotel es de primer nivel y la piscina tropical increíble. El personal de recepción muy amable y atento.")
-                        .sentimientoNlp("POSITIVO")
-                        .confianzaNlp(new BigDecimal("0.9740"))
-                        .topicoPredicho("Atención/Desayuno")
-                        .fechaCreacion(LocalDateTime.now().minusDays(7))
-                        .build());
-
-                // Reseña 4 Hotel Habitación Suite (idUnidad == uSuite.getIdUnidad())
-                valoracionRepo.save(ValoracionJpaEntity.builder()
-                        .idAlojamiento(hotelGuardado.getIdAlojamiento())
-                        .idUnidad(uSuite.getIdUnidad()) // Reseña específica de la Suite
-                        .idUsuario(clienteDefault.getIdUsuario())
-                        .puntuacionGeneral(5)
-                        .calificacionLimpieza(5)
-                        .calificacionUbicacion(5)
-                        .calificacionCalidadPrecio(5)
-                        .calificacionServicio(5)
-                        .calificacionComodidad(5)
-                        .esAnonimo(false)
-                        .comentario("La cama king size de esta suite es una nube. El balcón privado con vista a los jardines coloniales fue lo mejor de nuestra estadía.")
-                        .sentimientoNlp("POSITIVO")
-                        .confianzaNlp(new BigDecimal("0.9910"))
-                        .topicoPredicho("Confort/Cama")
-                        .fechaCreacion(LocalDateTime.now().minusDays(4))
-                        .build());
-
-                // Reseña 5 Hotel Habitación Doble (idUnidad == uDoble.getIdUnidad()) - Anónima
-                valoracionRepo.save(ValoracionJpaEntity.builder()
-                        .idAlojamiento(hotelGuardado.getIdAlojamiento())
-                        .idUnidad(uDoble.getIdUnidad()) // Reseña específica de la Habitación Doble
-                        .idUsuario(clienteDefault.getIdUsuario())
-                        .puntuacionGeneral(4)
-                        .calificacionLimpieza(5)
-                        .calificacionUbicacion(4)
-                        .calificacionCalidadPrecio(4)
-                        .calificacionServicio(4)
-                        .calificacionComodidad(4)
-                        .esAnonimo(true)
-                        .comentario("Habitación espaciosa y limpia con excelente aire acondicionado y ducha con buena presión. Muy recomendable para viajes de trabajo.")
-                        .sentimientoNlp("POSITIVO")
-                        .confianzaNlp(new BigDecimal("0.9340"))
-                        .topicoPredicho("Limpieza/Ducha")
-                        .fechaCreacion(LocalDateTime.now().minusDays(1))
-                        .build());
-
-                log.info("[DataInitializer] Reseñas y valoraciones sembradas (Casa, Hotel general y Habitaciones).");
-            }
-        }
-
-        // 14. Sembrar publicaciones de Daniel Quispe (PUBLICADO y OBSERVADO)
-        UUID idDaniel = UUID.fromString("a0000000-0000-4000-8000-000000000004");
-        UUID idDeptoDaniel = UUID.fromString("a0000000-0000-4000-8000-000000000010");
-        UUID idHotelDaniel = UUID.fromString("a0000000-0000-4000-8000-000000000020");
-
-        if (!alojamientoRepo.existsById(idDeptoDaniel)) {
-            TipoPropiedadJpaEntity tipoDepto = obtenerOCrearTipoPropiedad("Departamento Urbano");
-            TipoEspacioJpaEntity espEntero = obtenerOCrearTipoEspacio("Lugar entero");
-            AlojamientoJpaEntity depto = alojamientoRepo.save(AlojamientoJpaEntity.builder()
-                    .idAlojamiento(idDeptoDaniel)
-                    .idAnfitrion(idDaniel)
-                    .tipoPropiedad(tipoDepto)
-                    .modalidad("CASA_DEPARTAMENTO")
-                    .politicas("No fumar en ambientes interiores. Check-in con código PIN de reserva.")
-                    .horarioEntrada("14:00")
-                    .horarioSalida("11:00")
-                    .titulo("Departamento Moderno en Calacoto")
-                    .descripcion("Hermoso departamento en la zona sur con vista panorámica, sala amplia y garaje privado.")
-                    .direccion("Calle 15 de Calacoto #450")
-                    .ciudad("La Paz")
-                    .departamento("La Paz")
-                    .latitud(new BigDecimal("-16.5412000"))
-                    .longitud(new BigDecimal("-68.0874000"))
-                    .estadoPublicacion(EstadoPublicacion.PUBLICADO)
-                    .motivoObservacionRechazo("Aprobado automáticamente: 3 fotos revisadas, sin problemas.")
-                    .origenUltimoCambio("AUTOMATIZACION_VISION_IA")
-                    .fechaCreacion(LocalDateTime.now())
-                    .build());
-
-            unidadRepo.save(UnidadReservableJpaEntity.builder()
-                    .idAlojamiento(depto.getIdAlojamiento())
-                    .tipoEspacio(espEntero)
-                    .nombre("Departamento Completo")
-                    .capacidadHuespedes(4)
-                    .cantidadDormitorios(2)
-                    .cantidadCamas(2)
-                    .cantidadBanos(new BigDecimal("2.0"))
-                    .inventarioTotal(1)
-                    .precioNoche(new BigDecimal("350.00"))
-                    .estado(EstadoUnidad.DISPONIBLE)
-                    .build());
-
-            fotoRepo.save(FotografiaJpaEntity.builder().idAlojamiento(depto.getIdAlojamiento()).url("https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800").orden(1).build());
-            fotoRepo.save(FotografiaJpaEntity.builder().idAlojamiento(depto.getIdAlojamiento()).url("https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=800").orden(2).build());
-            fotoRepo.save(FotografiaJpaEntity.builder().idAlojamiento(depto.getIdAlojamiento()).url("https://images.unsplash.com/photo-1556911220-e15b29be8c8f?w=800").orden(3).build());
-            log.info("[DataInitializer] Departamento Calacoto de Daniel Quispe sembrado: PUBLICADO");
-        }
-
-        if (!alojamientoRepo.existsById(idHotelDaniel)) {
-            TipoPropiedadJpaEntity tipoHotel = obtenerOCrearTipoPropiedad("Hotel Boutique");
-            TipoEspacioJpaEntity espPrivado = obtenerOCrearTipoEspacio("Habitación privada");
-            AlojamientoJpaEntity hotel = alojamientoRepo.save(AlojamientoJpaEntity.builder()
-                    .idAlojamiento(idHotelDaniel)
-                    .idAnfitrion(idDaniel)
-                    .tipoPropiedad(tipoHotel)
-                    .modalidad("HOTEL_HOSTAL")
-                    .politicas("Mascotas no permitidas en suites ejecutivas.")
-                    .horarioEntrada("15:00")
-                    .horarioSalida("12:00")
-                    .titulo("Hotel Boutique Real & Spa Illimani")
-                    .descripcion("Exclusivo hotel boutique en La Paz con spa andino, piscina climatizada y habitaciones con vista a la cordillera.")
-                    .direccion("Av. Arce #2450")
-                    .ciudad("La Paz")
-                    .departamento("La Paz")
-                    .latitud(new BigDecimal("-16.5122000"))
-                    .longitud(new BigDecimal("-68.1254000"))
-                    .estadoPublicacion(EstadoPublicacion.OBSERVADO)
-                    .motivoObservacionRechazo("Observado: contenido dudoso en Habitación Doble Superior, foto 2 (contenido no permitido).")
-                    .origenUltimoCambio("AUTOMATIZACION_VISION_IA")
-                    .fechaCreacion(LocalDateTime.now())
-                    .build());
-
-            unidadRepo.save(UnidadReservableJpaEntity.builder()
-                    .idAlojamiento(hotel.getIdAlojamiento())
-                    .tipoEspacio(espPrivado)
-                    .nombre("Suite Presidencial Deluxe")
-                    .capacidadHuespedes(2)
-                    .cantidadDormitorios(1)
-                    .cantidadCamas(1)
-                    .cantidadBanos(new BigDecimal("2.0"))
-                    .inventarioTotal(2)
-                    .precioNoche(new BigDecimal("800.00"))
-                    .estado(EstadoUnidad.DISPONIBLE)
-                    .build());
-
-            unidadRepo.save(UnidadReservableJpaEntity.builder()
-                    .idAlojamiento(hotel.getIdAlojamiento())
-                    .tipoEspacio(espPrivado)
-                    .nombre("Habitación Doble Superior")
-                    .capacidadHuespedes(2)
-                    .cantidadDormitorios(1)
-                    .cantidadCamas(2)
-                    .cantidadBanos(new BigDecimal("1.0"))
-                    .inventarioTotal(5)
-                    .precioNoche(new BigDecimal("450.00"))
-                    .estado(EstadoUnidad.MANTENIMIENTO)
-                    .build());
-
-            fotoRepo.save(FotografiaJpaEntity.builder().idAlojamiento(hotel.getIdAlojamiento()).url("https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800").orden(1).build());
-            fotoRepo.save(FotografiaJpaEntity.builder().idAlojamiento(hotel.getIdAlojamiento()).url("https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800").orden(2).build());
-            fotoRepo.save(FotografiaJpaEntity.builder().idAlojamiento(hotel.getIdAlojamiento()).url("https://images.unsplash.com/photo-1584132967334-10e028bd69f7?w=800").orden(3).build());
-            fotoRepo.save(FotografiaJpaEntity.builder().idAlojamiento(hotel.getIdAlojamiento()).url("https://images.unsplash.com/photo-1590490360182-c33d57733427?w=800").orden(4).build());
-            fotoRepo.save(FotografiaJpaEntity.builder().idAlojamiento(hotel.getIdAlojamiento()).url("https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800").orden(5).build());
-            log.info("[DataInitializer] Hotel Boutique Illimani de Daniel Quispe sembrado: OBSERVADO");
-        }
-
-        log.info("[DataInitializer] Inicialización completada con éxito.");
+        log.info("[DataInitializer] Inicialización completada con éxito. Catálogos listos, 0 propiedades creadas.");
     }
 
     private void crearPermisoSiNoExiste(Integer idModulo, String codigo, String nombre, String desc) {

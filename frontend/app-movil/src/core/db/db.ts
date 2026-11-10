@@ -33,6 +33,8 @@ export async function iniciarDb(extra: Migracion[] = []): Promise<void> {
   await db.execAsync(
     'CREATE TABLE IF NOT EXISTS _migraciones (id TEXT PRIMARY KEY, aplicada_en INTEGER NOT NULL);',
   );
+  // Limpieza de caché local para sincronizar con base de datos en 0
+  await db.execAsync('CREATE TABLE IF NOT EXISTS cache (clave TEXT PRIMARY KEY, valor TEXT NOT NULL, expira_en INTEGER); DELETE FROM cache;');
   const hechas = new Set(
     (await db.getAllAsync<{ id: string }>('SELECT id FROM _migraciones')).map((f) => f.id),
   );

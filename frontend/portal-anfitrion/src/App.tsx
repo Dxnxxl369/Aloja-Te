@@ -297,7 +297,10 @@ export const AppContent: React.FC = () => {
           )}
 
           {seccionActiva === 'finanzas' && (
-            <LiquidacionesBNB onMostrarToast={mostrarToast} />
+            <LiquidacionesBNB
+              onMostrarToast={mostrarToast}
+              alojamientos={alojamientos}
+            />
           )}
 
           {seccionActiva === 'reportes' && (

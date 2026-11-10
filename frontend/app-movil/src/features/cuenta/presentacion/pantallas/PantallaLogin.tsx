@@ -132,7 +132,7 @@ export function PantallaLogin({ alIniciar }: Props) {
               style={estilosDemo.botonDemo}
               onPress={() => {
                 setEmail('cliente@alojate.bo');
-                setPassword('Password123!');
+                setPassword('Cliente1234!');
               }}
             >
               <Text style={estilosDemo.rolDemo}>Huésped</Text>
@@ -142,23 +142,23 @@ export function PantallaLogin({ alIniciar }: Props) {
             <Pressable
               style={[estilosDemo.botonDemo, estilosDemo.botonDemoAnfitrion]}
               onPress={() => {
-                setEmail('carlos.mendoza@alojate.bo');
-                setPassword('Password123!');
+                setEmail('anfitrion@alojate.bo');
+                setPassword('Anfitrion1234!');
               }}
             >
-              <Text style={[estilosDemo.rolDemo, { color: COLOR.primario }]}>Anfitrión (Carlos BMSC)</Text>
-              <Text style={estilosDemo.emailDemo}>carlos.mendoza@alojate.bo</Text>
+              <Text style={[estilosDemo.rolDemo, { color: COLOR.primario }]}>Anfitrión</Text>
+              <Text style={estilosDemo.emailDemo}>anfitrion@alojate.bo</Text>
             </Pressable>
 
             <Pressable
-              style={[estilosDemo.botonDemo, estilosDemo.botonDemoAnfitrion]}
+              style={estilosDemo.botonDemo}
               onPress={() => {
-                setEmail('danielqczn@gmail.com');
-                setPassword('Password123!');
+                setEmail('admin@alojate.bo');
+                setPassword('Admin1234!');
               }}
             >
-              <Text style={[estilosDemo.rolDemo, { color: COLOR.primario }]}>Anfitrión (Daniel)</Text>
-              <Text style={estilosDemo.emailDemo}>danielqczn@gmail.com</Text>
+              <Text style={estilosDemo.rolDemo}>Administrador</Text>
+              <Text style={estilosDemo.emailDemo}>admin@alojate.bo</Text>
             </Pressable>
           </View>
         </View>
