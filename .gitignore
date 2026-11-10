@@ -1,4 +1,5 @@
 # Exclusiones de carpetas auxiliares (solo backend, frontend y README en el repo)
+/Local/
 /aux-frontendMs1/
 /diagramas/
 /docs/
