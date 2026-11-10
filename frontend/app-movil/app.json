@@ -9,6 +9,8 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.alojate.movil",
+      "usesCleartextTraffic": true,
       "adaptiveIcon": {
         "backgroundColor": "#2563eb"
       }

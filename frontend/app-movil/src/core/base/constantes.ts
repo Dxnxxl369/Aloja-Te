@@ -9,8 +9,8 @@
 // por eso cada variable se escribe completa.
 
 // --- Entorno ----------------------------------------------------------------
-// 10.0.2.2 = localhost de tu PC visto desde el emulador de Android.
-export const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://10.0.2.2:8080';
+// IP del API Gateway en AWS EC2 (Servidor Central Multicloud)
+export const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://54.235.16.166:8080';
 // Ruta real de MS-01 (AuthController: POST /api/v1/auth/login), vía Gateway.
 export const RUTA_LOGIN = process.env.EXPO_PUBLIC_RUTA_LOGIN ?? '/api/v1/auth/login';
 /** Solo demo: permite simular el aviso del banco en la pantalla de pago. */

@@ -11,7 +11,7 @@ import type { Api } from '../../../core';
 import { esSinRed } from '../../../core';
 import { CACHE, MAX_RESUMENES, RUTA_ALOJAMIENTOS, RUTA_TIPOS_PROPIEDAD } from '../constantes';
 import type { RepositorioCatalogo } from '../domain/interfaces';
-import type { AlojamientoCatalogo, DetalleAlojamiento, FiltrosServidor, TipoPropiedad } from '../domain/modelos';
+import type { AlojamientoCatalogo, DetalleAlojamiento, FiltrosServidor, ResenaAlojamiento, TipoPropiedad } from '../domain/modelos';
 import { alojamientoDesdeDto, detalleDesdeDto, tipoDesdeDto } from './mapeadores';
 import type { AlojamientoDto, ResumenValoracionesDto, TipoPropiedadDto, UnidadDto } from './modelos';
 
@@ -94,6 +94,27 @@ export function crearRepositorioCatalogo(deps: DepsRepositorioCatalogo): Reposit
       } catch (e) {
         if (!esSinRed(e)) throw e;
         return (await leerCache<TipoPropiedad[]>(CACHE.TIPOS)) ?? [];
+      }
+    },
+
+    async obtenerValoraciones(id: string): Promise<ResenaAlojamiento[]> {
+      try {
+        const res = await api.get<any[]>(`${RUTA_ALOJAMIENTOS}/${id}/valoraciones`);
+        if (Array.isArray(res)) {
+          return res.map((v) => ({
+            id: v.idValoracion || String(Math.random()),
+            autorNombre: v.esAnonimo ? 'Huésped Anónimo' : v.nombreUsuario || 'Huésped Verificado',
+            calificacionGeneral: Number(v.puntuacionGeneral || 5),
+            limpieza: v.calificacionLimpieza ? Number(v.calificacionLimpieza) : undefined,
+            ubicacion: v.calificacionUbicacion ? Number(v.calificacionUbicacion) : undefined,
+            calidadPrecio: v.calificacionCalidadPrecio ? Number(v.calificacionCalidadPrecio) : undefined,
+            comentario: v.comentario || 'Excelente estadía, muy recomendable.',
+            fecha: v.fechaCreacion ? new Date(v.fechaCreacion).toLocaleDateString('es-BO') : 'Reciente',
+          }));
+        }
+        return [];
+      } catch {
+        return [];
       }
     },
   };

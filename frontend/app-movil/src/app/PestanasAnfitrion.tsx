@@ -1,6 +1,6 @@
 // ======================================================================
 // ARCHIVO: app/PestanasAnfitrion.tsx
-// QUÉ ES: El navegador de pestañas para el Anfitrión (Dashboard, Propiedades, Finanzas, Perfil).
+// QUÉ ES: El navegador de pestañas para el Anfitrión (Dashboard, Propiedades, Recepción, Finanzas, Perfil).
 // ======================================================================
 
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -11,6 +11,7 @@ import { RutaDashboard } from './routes/anfitrion/RutaDashboard';
 import { RutaFinanzas } from './routes/anfitrion/RutaFinanzas';
 import { RutaPerfilAnfitrion } from './routes/anfitrion/RutaPerfilAnfitrion';
 import { RutaPropiedades } from './routes/anfitrion/RutaPropiedades';
+import { RutaRecepcion } from './routes/anfitrion/RutaRecepcion';
 
 const Tab = createBottomTabNavigator<RutasTabsAnfitrion>();
 
@@ -28,6 +29,7 @@ export function PestanasAnfitrion() {
     >
       <Tab.Screen name="Dashboard" component={RutaDashboard} />
       <Tab.Screen name="Propiedades" component={RutaPropiedades} />
+      <Tab.Screen name="Recepcion" component={RutaRecepcion} />
       <Tab.Screen name="Finanzas" component={RutaFinanzas} />
       <Tab.Screen name="Perfil" component={RutaPerfilAnfitrion} />
     </Tab.Navigator>

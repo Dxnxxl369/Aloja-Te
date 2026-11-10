@@ -82,6 +82,17 @@ export interface FiltrosLocales {
   tipoId: number | null;
 }
 
+export interface ResenaAlojamiento {
+  id: string;
+  autorNombre: string;
+  calificacionGeneral: number;
+  limpieza?: number;
+  ubicacion?: number;
+  calidadPrecio?: number;
+  comentario: string;
+  fecha: string;
+}
+
 export interface ResultadoLista {
   alojamientos: AlojamientoCatalogo[];
   /** true si no hubo red y se muestra lo último guardado. */

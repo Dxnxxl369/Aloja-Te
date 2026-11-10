@@ -79,22 +79,22 @@ interface Props {
 
 export function PantallaPerfilAnfitrion({ repo, alCerrarSesion }: Props) {
   const { sesion } = useSesion();
-  const anfitrionId = sesion?.usuarioId || '99501cd9-47ae-4141-8c29-8cb1bb5d7e39';
+  const anfitrionId = sesion?.usuarioId || '';
 
   const [cargando, setCargando] = useState(true);
   const [guardando, setGuardando] = useState(false);
 
-  // Estados editables
-  const [nombre, setNombre] = useState(sesion?.nombre || 'Carlos');
-  const [apellido, setApellido] = useState('Mendoza');
+  // Estados editables (Sin datos inventados / mocks)
+  const [nombre, setNombre] = useState(sesion?.nombre || '');
+  const [apellido, setApellido] = useState('');
   const [email, setEmail] = useState(sesion?.email || '');
-  const [telefono, setTelefono] = useState('+591 77012345');
-  const [ci, setCi] = useState('5829104');
+  const [telefono, setTelefono] = useState('');
+  const [ci, setCi] = useState('');
   const [ciExpedido, setCiExpedido] = useState('SC');
   const [ciAnverso, setCiAnverso] = useState<string | null>(null);
   const [ciReverso, setCiReverso] = useState<string | null>(null);
   const [bancoNombre, setBancoNombre] = useState('Banco Mercantil Santa Cruz (BMSC)');
-  const [numeroCuenta, setNumeroCuenta] = useState('4010987654321');
+  const [numeroCuenta, setNumeroCuenta] = useState('');
   const [qrUri, setQrUri] = useState<string | null>(null);
 
   // Modales selectores

@@ -8,10 +8,11 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import type { CasosCatalogo } from '../domain/interfaces';
-import type { DetalleAlojamiento } from '../domain/modelos';
+import type { DetalleAlojamiento, ResenaAlojamiento } from '../domain/modelos';
 
 export function useDetalle(casos: CasosCatalogo, id: string) {
   const [detalle, setDetalle] = useState<DetalleAlojamiento | null>(null);
+  const [valoraciones, setValoraciones] = useState<ResenaAlojamiento[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [intento, setIntento] = useState(0);
@@ -32,6 +33,16 @@ export function useDetalle(casos: CasosCatalogo, id: string) {
         setCargando(false);
       },
     );
+
+    if (casos.obtenerValoraciones) {
+      casos.obtenerValoraciones(id).then(
+        (v) => {
+          if (vivo) setValoraciones(v);
+        },
+        () => {},
+      );
+    }
+
     return () => {
       vivo = false;
     };
@@ -39,5 +50,5 @@ export function useDetalle(casos: CasosCatalogo, id: string) {
 
   const recargar = useCallback(() => setIntento((n) => n + 1), []);
 
-  return { detalle, cargando, error, recargar };
+  return { detalle, valoraciones, cargando, error, recargar };
 }
