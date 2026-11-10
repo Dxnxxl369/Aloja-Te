@@ -286,11 +286,13 @@ async function obtenerEmailAnfitrion(idAnfitrion?: string, nombreAnfitrion?: str
       const res = await fetch(`${MS_USUARIOS}/api/v1/usuarios/${idAnfitrion}`);
       if (res.ok) {
         const u: any = await res.json();
-        if (u.email) return { email: u.email, nombre: `${u.nombre || ''} ${u.apellido || ''}`.trim() || 'Anfitrión' };
+        if (u.email && !u.email.endsWith('@alojate.bo')) {
+          return { email: u.email, nombre: `${u.nombre || ''} ${u.apellido || ''}`.trim() || 'Anfitrión' };
+        }
       }
     } catch {}
   }
-  if (sesionActivaCentral?.usuario?.email) {
+  if (sesionActivaCentral?.usuario?.email && !sesionActivaCentral.usuario.email.endsWith('@alojate.bo')) {
     return {
       email: sesionActivaCentral.usuario.email,
       nombre: `${sesionActivaCentral.usuario.nombre || ''} ${sesionActivaCentral.usuario.apellido || ''}`.trim() || 'Anfitrión'
@@ -299,7 +301,9 @@ async function obtenerEmailAnfitrion(idAnfitrion?: string, nombreAnfitrion?: str
   for (const key of Object.keys(USUARIOS_SSO)) {
     const u = USUARIOS_SSO[key].usuario;
     if (u.id === idAnfitrion || (nombreAnfitrion && (u.nombre.includes(nombreAnfitrion) || nombreAnfitrion.includes(u.nombre)))) {
-      return { email: u.email, nombre: `${u.nombre} ${u.apellido}` };
+      if (u.email && !u.email.endsWith('@alojate.bo')) {
+        return { email: u.email, nombre: `${u.nombre} ${u.apellido}` };
+      }
     }
   }
   return { email: 'danielqc333@gmail.com', nombre: nombreAnfitrion || 'Daniel Quispe' };
@@ -757,31 +761,34 @@ Responde ÚNICAMENTE en JSON válido:
   }
 
   // 3. FALLBACK HEURÍSTICO OFFLINE
-  const urlLower = urlFoto.toLowerCase();
-  const esArma = ['pistola', 'gun', 'arma', 'weapon', 'revolver', 'rifle', 'fuego', 'droga', 'cuchillo'].some(k => urlLower.includes(k));
-  if (esArma) {
-    const norm = normalizarCategoriaYExplicacion('O6', 'armas', 'Se detectaron indicios de armas o sustancias en el contenido o nombre del archivo.');
-    return {
-      rating: 'Unsafe',
-      codigo: norm.codigo,
-      severidad: norm.severidad,
-      category: norm.categoria,
-      rationale: norm.explicacion,
-      proveedor: 'Heurística Local Offline'
-    };
-  }
+  // Solo aplicar reglas sobre el nombre de archivo o URL cuando NO sean datos crudos Base64
+  if (!urlFoto.startsWith('data:image/')) {
+    const urlLower = urlFoto.toLowerCase();
+    const esArma = ['pistola', 'gun', 'arma', 'weapon', 'revolver', 'rifle', 'fuego', 'droga', 'cuchillo'].some(k => urlLower.includes(k));
+    if (esArma) {
+      const norm = normalizarCategoriaYExplicacion('O6', 'armas', 'Se detectaron indicios de armas o sustancias en el contenido o nombre del archivo.');
+      return {
+        rating: 'Unsafe',
+        codigo: norm.codigo,
+        severidad: norm.severidad,
+        category: norm.categoria,
+        rationale: norm.explicacion,
+        proveedor: 'Heurística Local Offline'
+      };
+    }
 
-  const esDesnudo = ['desnudo', 'nude', 'semi', 'poca-ropa', 'ropa', 'bikini', 'underwear', 'lenceria', 'sexy', 'erot'].some(k => urlLower.includes(k));
-  if (esDesnudo) {
-    const norm = normalizarCategoriaYExplicacion('O4', 'desnudez', 'Se detectaron indicios de ropa interior o semidesnudez no apta para catálogo familiar.');
-    return {
-      rating: 'Unsafe',
-      codigo: norm.codigo,
-      severidad: norm.severidad,
-      category: norm.categoria,
-      rationale: norm.explicacion,
-      proveedor: 'Heurística Local Offline'
-    };
+    const esDesnudo = ['desnudo', 'nude', 'semi', 'poca-ropa', 'ropa', 'bikini', 'underwear', 'lenceria', 'sexy', 'erot'].some(k => urlLower.includes(k));
+    if (esDesnudo) {
+      const norm = normalizarCategoriaYExplicacion('O4', 'desnudez', 'Se detectaron indicios de ropa interior o semidesnudez no apta para catálogo familiar.');
+      return {
+        rating: 'Unsafe',
+        codigo: norm.codigo,
+        severidad: norm.severidad,
+        category: norm.categoria,
+        rationale: norm.explicacion,
+        proveedor: 'Heurística Local Offline'
+      };
+    }
   }
 
   return { rating: 'Safe', codigo: 'NA', category: 'Contenido seguro', rationale: 'Fotografía apropiada para catálogo familiar de alojamientos.', proveedor: 'Filtro Offline' };

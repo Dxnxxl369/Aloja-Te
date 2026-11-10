@@ -16,3 +16,13 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: false
+
+almacenamiento:
+  proveedor: ${ALMACENAMIENTO_PROVEEDOR:s3}
+  s3:
+    bucket: ${S3_BUCKET:alojateimagesv1}
+    region: ${S3_REGION:us-east-1}
+    endpoint: ${S3_ENDPOINT:}
+    access-key: ${AWS_ACCESS_KEY_ID:}
+    secret-key: ${AWS_SECRET_ACCESS_KEY:}
+    public-base-url: ${S3_PUBLIC_BASE_URL:https://alojateimagesv1.s3.us-east-1.amazonaws.com}
