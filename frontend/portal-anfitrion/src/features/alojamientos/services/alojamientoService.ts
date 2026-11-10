@@ -1,4 +1,5 @@
 import { Alojamiento } from '../../../core/types/anfitrion.types';
+import { API_BASE_URL } from '../../../core/api/apiEndpoints';
 
 // Sin alojamientos semilla iniciales (Base limpia para pruebas desde cero)
 export const ALOJAMIENTOS_INICIALES: Record<string, Alojamiento[]> = {};
@@ -59,9 +60,9 @@ export const alojamientoService = {
 
     try {
       const urls = [
-        'http://localhost:8080/api/v1/alojamientos/todos',
-        clave.includes('daniel') ? 'http://localhost:8080/api/v1/alojamientos/anfitrion/7c772f61-90f1-474a-8acf-e7ba66e20d40' : null,
-        `http://localhost:8080/api/v1/alojamientos/anfitrion/${clave}`
+        `${API_BASE_URL}/api/v1/alojamientos/todos`,
+        clave.includes('daniel') ? `${API_BASE_URL}/api/v1/alojamientos/anfitrion/7c772f61-90f1-474a-8acf-e7ba66e20d40` : null,
+        `${API_BASE_URL}/api/v1/alojamientos/anfitrion/${clave}`
       ].filter(Boolean) as string[];
 
       for (const url of urls) {
@@ -150,7 +151,7 @@ export const alojamientoService = {
 
     // Enviar la actualización completa al Gateway central (para que portal-admin y el backend tengan la foto nueva inmediatamente)
     try {
-      await fetch(`http://localhost:8080/api/v1/alojamientos/${id}`, {
+      await fetch(`${API_BASE_URL}/api/v1/alojamientos/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(actualizado)
@@ -178,7 +179,7 @@ export const alojamientoService = {
 
     // Intentar publicar en el Gateway API central y enviar a revisión
     try {
-      const res = await fetch('http://localhost:8080/api/v1/alojamientos', {
+      const res = await fetch(`${API_BASE_URL}/api/v1/alojamientos`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(preparado)
@@ -188,7 +189,7 @@ export const alojamientoService = {
         const idFinal = guardado.idAlojamiento || guardado.id || id;
         preparado.idAlojamiento = idFinal;
         try {
-          await fetch(`http://localhost:8080/api/v1/alojamientos/${idFinal}/enviar-revision`, { method: 'POST' });
+          await fetch(`${API_BASE_URL}/api/v1/alojamientos/${idFinal}/enviar-revision`, { method: 'POST' });
         } catch {}
       }
     } catch {}

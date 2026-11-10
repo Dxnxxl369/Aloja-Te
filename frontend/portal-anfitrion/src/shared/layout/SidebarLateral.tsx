@@ -14,6 +14,7 @@ import {
   CheckCircle2
 } from 'lucide-react';
 import { useAnfitrionAuth } from '../../core/auth/AuthContext';
+import { CLIENTES_URL } from '../../core/api/apiEndpoints';
 
 interface SidebarLateralProps {
   seccionActiva: string;
@@ -230,7 +231,7 @@ export const SidebarLateral: React.FC<SidebarLateralProps> = ({
           </div>
 
           <a
-            href="http://localhost:3000/#/catalogo"
+            href={`${CLIENTES_URL}/#/catalogo`}
             className="flex items-center gap-2 px-2.5 py-1.5 text-slate-500 hover:text-slate-900 dark:hover:text-white rounded-lg transition"
           >
             <ExternalLink className="w-3.5 h-3.5" />

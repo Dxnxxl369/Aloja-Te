@@ -14,6 +14,7 @@ import {
   Server
 } from 'lucide-react';
 import { useAnfitrionAuth } from '../../../core/auth/AuthContext';
+import { API_BASE_URL } from '../../../core/api/apiEndpoints';
 import { Alojamiento } from '../../../core/types/anfitrion.types';
 
 export interface CobroTransaccion {
@@ -129,7 +130,7 @@ export const LiquidacionesBNB: React.FC<LiquidacionesBNBProps> = ({ onMostrarToa
       setCargandoBackend(true);
       try {
         const resp = await fetch(
-          `http://localhost:8080/api/v1/usuarios/por-email?email=${encodeURIComponent(perfil.email)}`
+          `${API_BASE_URL}/api/v1/usuarios/por-email?email=${encodeURIComponent(perfil.email)}`
         );
         if (resp.ok && !cancelado) {
           const data = await resp.json();
@@ -188,7 +189,7 @@ export const LiquidacionesBNB: React.FC<LiquidacionesBNBProps> = ({ onMostrarToa
       if (qrArchivo) {
         const formData = new FormData();
         formData.append('archivo', qrArchivo);
-        const res = await fetch('http://localhost:8080/api/v1/alojamientos/imagenes?carpeta=qr', {
+        const res = await fetch(`${API_BASE_URL}/api/v1/alojamientos/imagenes?carpeta=qr`, {
           method: 'POST',
           body: formData
         });
@@ -331,7 +332,7 @@ export const LiquidacionesBNB: React.FC<LiquidacionesBNBProps> = ({ onMostrarToa
 
       // 3. Consultar Microservicio de Reservas (MS-02) en el Backend
       try {
-        const resResp = await fetch(`http://localhost:8080/api/v1/reservas/anfitrion/${encodeURIComponent(perfil.id)}`, {
+        const resResp = await fetch(`${API_BASE_URL}/api/v1/reservas/anfitrion/${encodeURIComponent(perfil.id)}`, {
           headers: { Accept: 'application/json' }
         });
         if (resResp.ok) {
@@ -363,7 +364,7 @@ export const LiquidacionesBNB: React.FC<LiquidacionesBNBProps> = ({ onMostrarToa
 
       // 4. Consultar Microservicio Comercial y Financiero (MS-03 Liquidaciones) en el Backend
       try {
-        const liqResp = await fetch(`http://localhost:8080/api/v1/finanzas/liquidaciones/${encodeURIComponent(perfil.id)}`, {
+        const liqResp = await fetch(`${API_BASE_URL}/api/v1/finanzas/liquidaciones/${encodeURIComponent(perfil.id)}`, {
           headers: { Accept: 'application/json' }
         });
         if (liqResp.ok) {

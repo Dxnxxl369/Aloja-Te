@@ -11,6 +11,7 @@ import { ListingWizardModal } from './features/alojamientos/modals/ListingWizard
 import { useAnfitrionAuth } from './core/auth/AuthContext';
 import { alojamientoService } from './features/alojamientos/services/alojamientoService';
 import { Alojamiento } from './core/types/anfitrion.types';
+import { CLIENTES_URL } from './core/api/apiEndpoints';
 import { CheckCircle2, Lock, ExternalLink } from 'lucide-react';
 
 // Parser bidireccional de ruta para persistencia absoluta en F5 / recargas
@@ -193,7 +194,7 @@ export const AppContent: React.FC = () => {
           </div>
           <div className="space-y-2 pt-2">
             <a
-              href="http://localhost:3000/#/catalogo"
+              href={`${CLIENTES_URL}/#/catalogo`}
               className="flex items-center justify-center gap-2 w-full py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:opacity-95 text-white font-bold text-xs shadow-lg shadow-blue-500/25 transition cursor-pointer"
             >
               <span>Ir al Portal Principal</span>

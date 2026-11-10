@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { PerfilAnfitrion } from '../types/anfitrion.types';
 import { setSSOToken } from '../api/httpClient';
+import { API_BASE_URL, CLIENTES_URL } from '../api/apiEndpoints';
 
 export const PERFILES_ANFITRION: Record<string, PerfilAnfitrion> = {
   carlos: {
@@ -104,7 +105,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const actualizarDatosBancariosBackend = async (datos: { bancoNombre: string; numeroCuentaBancaria: string; qr: string }) => {
     actualizarPerfil(datos);
     try {
-      await fetch(`http://localhost:8080/api/v1/usuarios/por-email/cuenta-bancaria?email=${encodeURIComponent(perfilFinal.email)}`, {
+      await fetch(`${API_BASE_URL}/api/v1/usuarios/por-email/cuenta-bancaria?email=${encodeURIComponent(perfilFinal.email)}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(datos)
@@ -116,7 +117,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const cargarPerfilDesdeBackend = async (email: string): Promise<Partial<PerfilAnfitrion> | null> => {
     try {
-      const resp = await fetch(`http://localhost:8080/api/v1/usuarios/por-email?email=${encodeURIComponent(email)}`);
+      const resp = await fetch(`${API_BASE_URL}/api/v1/usuarios/por-email?email=${encodeURIComponent(email)}`);
       if (resp.ok) {
         const u = await resp.json();
         return {
@@ -232,7 +233,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } catch {}
 
       const headers: Record<string, string> = tokenLocal ? { Authorization: `Bearer ${tokenLocal}` } : {};
-      const resp = await fetch('http://localhost:8080/api/v1/auth/sso/session', { headers });
+      const resp = await fetch(`${API_BASE_URL}/api/v1/auth/sso/session`, { headers });
       if (resp.ok) {
         const data = await resp.json();
         if (data.authenticated && data.usuario) {
@@ -359,7 +360,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     try {
-      await fetch('http://localhost:8080/api/v1/auth/sso/logout', { method: 'POST' });
+      await fetch(`${API_BASE_URL}/api/v1/auth/sso/logout`, { method: 'POST' });
     } catch {}
 
     sessionStorage.removeItem('alojate_sso_anfitrion');
@@ -367,7 +368,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsAuthenticated(false);
     setSSOToken(null);
 
-    window.location.href = 'http://localhost:3000/#/catalogo';
+    window.location.href = `${CLIENTES_URL}/#/catalogo`;
   };
 
   return (

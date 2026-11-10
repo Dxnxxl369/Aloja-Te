@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { Alojamiento, UnidadReservable, Fotografia } from '../../catalogo/types/catalogo.types';
 import { httpClient } from '../../../core/api/httpClient';
-import { ENDPOINTS } from '../../../core/api/apiEndpoints';
+import { ENDPOINTS, API_BASE_URL } from '../../../core/api/apiEndpoints';
 import { useAuth } from '../../../core/auth/AuthContext';
 
 interface ListingWizardModalProps {
@@ -162,7 +162,7 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
       try {
         const formData = new FormData();
         formData.append('archivo', file);
-        const res = await fetch('http://localhost:8080/api/v1/alojamientos/imagenes?carpeta=alojamientos', {
+        const res = await fetch(`${API_BASE_URL}/api/v1/alojamientos/imagenes?carpeta=alojamientos`, {
           method: 'POST',
           body: formData
         });
@@ -237,7 +237,7 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
       try {
         const formData = new FormData();
         formData.append('archivo', file);
-        const res = await fetch('http://localhost:8080/api/v1/alojamientos/imagenes?carpeta=alojamientos', {
+        const res = await fetch(`${API_BASE_URL}/api/v1/alojamientos/imagenes?carpeta=alojamientos`, {
           method: 'POST',
           body: formData
         });

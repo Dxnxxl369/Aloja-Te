@@ -1,5 +1,14 @@
 import { Injectable } from '@angular/core';
 
+const API_GATEWAY_URL =
+  (typeof window !== 'undefined' &&
+    ((window as any).__ENV__?.API_GATEWAY_URL ||
+      (window as any).VITE_API_GATEWAY_URL ||
+      (window as any).API_GATEWAY_URL)) ||
+  (typeof window !== 'undefined' && window.location.hostname !== 'localhost'
+    ? 'https://aloja-te-admin.duckdns.org'
+    : 'http://localhost:8080');
+
 export interface ReportColumnAdmin {
   key: string;
   label: string;
@@ -438,7 +447,7 @@ Tabla: valoraciones
 
     for (let loop = 0; loop < 2; loop++) {
       try {
-        const resp = await fetch('http://localhost:8080/api/v1/ia/reporte-query', {
+        const resp = await fetch(`${API_GATEWAY_URL}/api/v1/ia/reporte-query`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

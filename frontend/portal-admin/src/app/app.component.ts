@@ -35,7 +35,9 @@ const API_GATEWAY_URL =
     ((window as any).__ENV__?.API_GATEWAY_URL ||
       (window as any).VITE_API_GATEWAY_URL ||
       (window as any).API_GATEWAY_URL)) ||
-  'http://localhost:8080';
+  (typeof window !== 'undefined' && window.location.hostname !== 'localhost'
+    ? 'https://aloja-te-admin.duckdns.org'
+    : 'http://localhost:8080');
 
 @Component({
   selector: 'app-root',
@@ -348,7 +350,7 @@ export class AppComponent implements OnInit {
       localStorage.removeItem('alojate_user');
     } catch {}
     if (typeof window !== 'undefined') {
-      window.location.href = 'http://localhost:3000';
+      window.location.href = window.location.hostname !== 'localhost' ? 'https://aloja-te.duckdns.org' : 'http://localhost:3000';
     }
   }
 

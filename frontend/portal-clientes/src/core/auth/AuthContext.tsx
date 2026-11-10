@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { UsuarioSesion, TokenStorage } from './TokenStorage';
+import { API_BASE_URL } from '../api/apiEndpoints';
 
 interface AuthContextType {
   user: UsuarioSesion | null;
@@ -28,7 +29,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Consulta la sesión activa directamente a la autoridad central de SSO en el Gateway
   const verificarSesionSSO = async () => {
     try {
-      const resp = await fetch('http://localhost:8080/api/v1/auth/sso/session');
+      const resp = await fetch(`${API_BASE_URL}/api/v1/auth/sso/session`);
       if (resp.ok) {
         const data = await resp.json();
         if (data.authenticated && data.usuario) {
@@ -73,7 +74,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
     TokenStorage.clearSession();
     // Revocar sesión global en el API Gateway SSO
-    fetch('http://localhost:8080/api/v1/auth/sso/logout', { method: 'POST' }).catch(() => {});
+    fetch(`${API_BASE_URL}/api/v1/auth/sso/logout`, { method: 'POST' }).catch(() => {});
   };
 
   const openAuthModal = (mode: 'login' | 'register' = 'login') => {

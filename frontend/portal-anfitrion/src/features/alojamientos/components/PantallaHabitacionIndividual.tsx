@@ -21,6 +21,7 @@ import {
   MessageSquare
 } from 'lucide-react';
 import { UnidadReservable, Fotografia, Valoracion } from '../../../core/types/anfitrion.types';
+import { API_BASE_URL } from '../../../core/api/apiEndpoints';
 
 interface PantallaHabitacionIndividualProps {
   habitacion: UnidadReservable;
@@ -78,8 +79,8 @@ export const PantallaHabitacionIndividual: React.FC<PantallaHabitacionIndividual
     setCargandoResenas(true);
     try {
       const urls = [
-        alojamientoId ? `http://localhost:8080/api/v1/alojamientos/${alojamientoId}/unidades/${draft.idUnidad}/valoraciones` : null,
-        `http://localhost:8080/api/v1/unidades/${draft.idUnidad}/valoraciones`
+        alojamientoId ? `${API_BASE_URL}/api/v1/alojamientos/${alojamientoId}/unidades/${draft.idUnidad}/valoraciones` : null,
+        `${API_BASE_URL}/api/v1/unidades/${draft.idUnidad}/valoraciones`
       ].filter(Boolean) as string[];
 
       for (const url of urls) {
@@ -110,7 +111,7 @@ export const PantallaHabitacionIndividual: React.FC<PantallaHabitacionIndividual
       try {
         const formData = new FormData();
         formData.append('archivo', file);
-        const res = await fetch('http://localhost:8080/api/v1/alojamientos/imagenes?carpeta=habitaciones', {
+        const res = await fetch(`${API_BASE_URL}/api/v1/alojamientos/imagenes?carpeta=habitaciones`, {
           method: 'POST',
           body: formData
         });

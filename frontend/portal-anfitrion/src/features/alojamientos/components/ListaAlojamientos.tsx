@@ -8,6 +8,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { Alojamiento } from '../../../core/types/anfitrion.types';
+import { CLIENTES_URL } from '../../../core/api/apiEndpoints';
 import { EditorHotelPantalla } from './EditorHotelPantalla';
 import { ListingWizardModal } from '../modals/ListingWizardModal';
 import { useAnfitrionAuth } from '../../../core/auth/AuthContext';
@@ -480,7 +481,7 @@ export const ListaAlojamientos: React.FC<ListaAlojamientosProps> = ({
                   </button>
 
                   <a
-                    href={`http://localhost:3000/#/alojamientos/${a.idAlojamiento}`}
+                    href={`${CLIENTES_URL}/#/alojamientos/${a.idAlojamiento}`}
                     target="_blank"
                     rel="noreferrer"
                     className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"

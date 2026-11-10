@@ -22,7 +22,7 @@ import { catalogoService } from './features/catalogo/services/catalogoService';
 import { Alojamiento, UnidadReservable } from './features/catalogo/types/catalogo.types';
 import { ReservaResponse } from './features/reservas/types/reserva.types';
 import { httpClient } from './core/api/httpClient';
-import { ENDPOINTS } from './core/api/apiEndpoints';
+import { ENDPOINTS, ANFITRION_URL } from './core/api/apiEndpoints';
 import { Plus, Building2, Home, Hotel, Eye, ShieldCheck, AlertCircle, ArrowLeft, Loader2, Edit3, RefreshCw, ExternalLink } from 'lucide-react';
 
 export const AppContent: React.FC = () => {
@@ -485,7 +485,7 @@ export const AppContent: React.FC = () => {
 
             <div className="pt-2">
               <a
-                href={`http://localhost:3005?sso_token=${encodeURIComponent(token || '')}&sso_email=${encodeURIComponent(user.email || '')}&sso_nombre=${encodeURIComponent(user.nombre || '')}&sso_rol=ANFITRION`}
+                href={`${ANFITRION_URL}?sso_token=${encodeURIComponent(token || '')}&sso_email=${encodeURIComponent(user.email || '')}&sso_nombre=${encodeURIComponent(user.nombre || '')}&sso_rol=ANFITRION`}
                 className="inline-flex items-center gap-2.5 px-8 py-4 rounded-2xl bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-600 hover:opacity-95 text-white font-bold text-sm shadow-xl shadow-blue-500/30 transition transform hover:-translate-y-0.5 cursor-pointer"
               >
                 <span>Ingresar al Panel del Anfitrión</span>

@@ -5,6 +5,7 @@ import {
   ShieldCheck, Clock, Loader2, DollarSign, UploadCloud, Edit3, DoorOpen
 } from 'lucide-react';
 import { Alojamiento, UnidadReservable, Fotografia } from '../../../core/types/anfitrion.types';
+import { API_BASE_URL } from '../../../core/api/apiEndpoints';
 import { useAnfitrionAuth } from '../../../core/auth/AuthContext';
 import { alojamientoService } from '../services/alojamientoService';
 
@@ -159,7 +160,7 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
       try {
         const formData = new FormData();
         formData.append('archivo', file);
-        const res = await fetch('http://localhost:8080/api/v1/alojamientos/imagenes?carpeta=alojamientos', {
+        const res = await fetch(`${API_BASE_URL}/api/v1/alojamientos/imagenes?carpeta=alojamientos`, {
           method: 'POST',
           body: formData
         });
@@ -241,7 +242,7 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
       try {
         const formData = new FormData();
         formData.append('archivo', file);
-        const res = await fetch('http://localhost:8080/api/v1/alojamientos/imagenes?carpeta=habitaciones', {
+        const res = await fetch(`${API_BASE_URL}/api/v1/alojamientos/imagenes?carpeta=habitaciones`, {
           method: 'POST',
           body: formData
         });

@@ -18,6 +18,7 @@ import {
   Receipt
 } from 'lucide-react';
 import { useAnfitrionAuth } from '../../../core/auth/AuthContext';
+import { API_BASE_URL } from '../../../core/api/apiEndpoints';
 
 interface MiPerfilScreenProps {
   onMostrarToast: (msg: string) => void;
@@ -149,7 +150,7 @@ export const MiPerfilScreen: React.FC<MiPerfilScreenProps> = ({ onMostrarToast }
     if (!file) return urlActual;
     const formData = new FormData();
     formData.append('archivo', file);
-    const res = await fetch(`http://localhost:8080/api/v1/alojamientos/imagenes?carpeta=${carpeta}`, {
+    const res = await fetch(`${API_BASE_URL}/api/v1/alojamientos/imagenes?carpeta=${carpeta}`, {
       method: 'POST',
       body: formData
     });
@@ -219,7 +220,7 @@ export const MiPerfilScreen: React.FC<MiPerfilScreenProps> = ({ onMostrarToast }
           const partes = nombre.trim().split(' ');
           const nom = partes[0] || nombre;
           const ape = partes.slice(1).join(' ') || '';
-          await fetch(`http://localhost:8080/api/v1/usuarios/${perfil.id}/perfil`, {
+          await fetch(`${API_BASE_URL}/api/v1/usuarios/${perfil.id}/perfil`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ nombre: nom, apellido: ape, telefono })

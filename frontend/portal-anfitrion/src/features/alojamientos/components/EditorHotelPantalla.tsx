@@ -21,6 +21,7 @@ import {
   MessageSquare
 } from 'lucide-react';
 import { Alojamiento, UnidadReservable, Fotografia, Valoracion, ResumenValoraciones } from '../../../core/types/anfitrion.types';
+import { API_BASE_URL } from '../../../core/api/apiEndpoints';
 import { PantallaHabitacionIndividual } from './PantallaHabitacionIndividual';
 
 interface EditorHotelPantallaProps {
@@ -132,12 +133,12 @@ export const EditorHotelPantalla: React.FC<EditorHotelPantallaProps> = ({
     if (!id) return;
     setCargandoResenas(true);
     try {
-      const resp = await fetch(`http://localhost:8080/api/v1/alojamientos/${id}/valoraciones`);
+      const resp = await fetch(`${API_BASE_URL}/api/v1/alojamientos/${id}/valoraciones`);
       if (resp.ok) {
         const data = await resp.json();
         if (Array.isArray(data)) setResenas(data);
       }
-      const respRes = await fetch(`http://localhost:8080/api/v1/alojamientos/${id}/valoraciones/resumen`);
+      const respRes = await fetch(`${API_BASE_URL}/api/v1/alojamientos/${id}/valoraciones/resumen`);
       if (respRes.ok) {
         const dataRes = await respRes.json();
         setResumenResenas(dataRes);
@@ -185,7 +186,7 @@ export const EditorHotelPantalla: React.FC<EditorHotelPantallaProps> = ({
         formData.append('archivo', file);
         formData.append('file', file);
         try {
-          const res = await fetch('http://localhost:8080/api/v1/alojamientos/imagenes?carpeta=alojamientos', {
+          const res = await fetch(`${API_BASE_URL}/api/v1/alojamientos/imagenes?carpeta=alojamientos`, {
             method: 'POST',
             body: formData
           });
@@ -415,7 +416,7 @@ export const EditorHotelPantalla: React.FC<EditorHotelPantallaProps> = ({
                     setDraft(actualizado);
                     onGuardarHotel(actualizado);
                     try {
-                      await fetch(`http://localhost:8080/api/v1/alojamientos/${draft.idAlojamiento || (draft as any).id}/enviar-revision`, {
+                      await fetch(`${API_BASE_URL}/api/v1/alojamientos/${draft.idAlojamiento || (draft as any).id}/enviar-revision`, {
                         method: 'POST'
                       });
                     } catch (e) {
@@ -458,7 +459,7 @@ export const EditorHotelPantalla: React.FC<EditorHotelPantallaProps> = ({
                     setDraft(actualizado);
                     onGuardarHotel(actualizado);
                     try {
-                      await fetch(`http://localhost:8080/api/v1/alojamientos/${draft.idAlojamiento || (draft as any).id}/enviar-revision`, {
+                      await fetch(`${API_BASE_URL}/api/v1/alojamientos/${draft.idAlojamiento || (draft as any).id}/enviar-revision`, {
                         method: 'POST'
                       });
                     } catch (e) {
@@ -498,7 +499,7 @@ export const EditorHotelPantalla: React.FC<EditorHotelPantallaProps> = ({
                 onClick={async () => {
                   setDraft(prev => ({ ...prev, estado: 'EN_REVISION', estadoPublicacion: 'EN_REVISION' }));
                   try {
-                    await fetch(`http://localhost:8080/api/v1/alojamientos/${draft.idAlojamiento || (draft as any).id}/enviar-revision`, {
+                    await fetch(`${API_BASE_URL}/api/v1/alojamientos/${draft.idAlojamiento || (draft as any).id}/enviar-revision`, {
                       method: 'POST'
                     });
                   } catch (e) {
