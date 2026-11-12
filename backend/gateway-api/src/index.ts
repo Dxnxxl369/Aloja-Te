@@ -3,13 +3,123 @@ import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
 import crypto from 'crypto';
+import fs from 'fs';
+import path from 'path';
 import nodemailer from 'nodemailer';
 import { createProxyMiddleware, fixRequestBody } from 'http-proxy-middleware';
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+let admin: any;
+try {
+  admin = require('firebase-admin');
+} catch {}
 
 dotenv.config({ override: true });
 
 const app = express();
 const PORT = process.env.PORT || 8080;
+
+// ============================================================================
+// SERVICIO CENTRAL DE NOTIFICACIONES PUSH (FCM & EXPO PUSH)
+// ============================================================================
+let firebaseIniciado = false;
+try {
+  const rutaClave = process.env.FIREBASE_CREDENTIALS ||
+    (fs.existsSync(path.join(__dirname, '../firebase-service-account.json'))
+      ? path.join(__dirname, '../firebase-service-account.json')
+      : fs.existsSync(path.join(__dirname, '../../frontend/app-movil/key/aloja-te.json'))
+      ? path.join(__dirname, '../../frontend/app-movil/key/aloja-te.json')
+      : null);
+
+  if (rutaClave && fs.existsSync(rutaClave)) {
+    const serviceAccount = JSON.parse(fs.readFileSync(rutaClave, 'utf8'));
+    if (!admin.apps.length) {
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount)
+      });
+    }
+    firebaseIniciado = true;
+    console.log(`[Push Firebase] Firebase Admin SDK inicializado exitosamente para proyecto: ${serviceAccount.project_id}`);
+  } else {
+    console.log('[Push Firebase] Archivo de credenciales no encontrado aún, modo Expo Push activo.');
+  }
+} catch (e: any) {
+  console.warn('[Push Firebase] Error inicializando Firebase Admin:', e.message);
+}
+
+// Almacén en memoria de tokens de dispositivos móviles
+const tokensPorUsuario = new Map<string, Set<string>>();
+const todosLosTokensPush = new Set<string>();
+
+async function enviarNotificacionPushAnfitrion(params: {
+  idAnfitrion?: string;
+  emailAnfitrion?: string;
+  titulo: string;
+  cuerpo: string;
+  datos?: Record<string, string>;
+}) {
+  const { idAnfitrion, emailAnfitrion, titulo, cuerpo, datos } = params;
+  const tokensDestino = new Set<string>();
+
+  if (idAnfitrion && tokensPorUsuario.has(idAnfitrion)) {
+    tokensPorUsuario.get(idAnfitrion)!.forEach(t => tokensDestino.add(t));
+  }
+  if (emailAnfitrion && tokensPorUsuario.has(emailAnfitrion.toLowerCase())) {
+    tokensPorUsuario.get(emailAnfitrion.toLowerCase())!.forEach(t => tokensDestino.add(t));
+  }
+  // Si no hay un token específico para ese anfitrión, notificar a los dispositivos registrados en la app
+  if (tokensDestino.size === 0) {
+    todosLosTokensPush.forEach(t => tokensDestino.add(t));
+  }
+
+  console.log(`[Push Notificación] Disparando a ${tokensDestino.size} dispositivo(s): "${titulo}" - "${cuerpo}"`);
+
+  for (const token of tokensDestino) {
+    // A) Token Expo Push (ej: ExponentPushToken[...])
+    if (token.startsWith('ExponentPushToken[') || token.startsWith('ExpoPushToken[')) {
+      try {
+        await fetch('https://exp.host/--/api/v2/push/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to: token,
+            sound: 'default',
+            title: titulo,
+            body: cuerpo,
+            data: datos || {},
+            channelId: 'reservas',
+            priority: 'high'
+          })
+        });
+        console.log(`[Push Expo] Enviado exitosamente a token: ${token.slice(0, 25)}...`);
+      } catch (errExpo: any) {
+        console.warn('[Push Expo] Error al enviar notificación:', errExpo.message);
+      }
+    } else if (firebaseIniciado && admin.apps.length > 0) {
+      // B) Token FCM nativo
+      try {
+        await admin.messaging().send({
+          token,
+          notification: {
+            title: titulo,
+            body: cuerpo
+          },
+          data: datos || {},
+          android: {
+            priority: 'high',
+            notification: {
+              channelId: 'reservas',
+              sound: 'default'
+            }
+          }
+        });
+        console.log(`[Push FCM] Enviado exitosamente vía Firebase Admin a: ${token.slice(0, 20)}...`);
+      } catch (errFcm: any) {
+        console.warn('[Push FCM] Error al enviar notificación vía Firebase Admin:', errFcm.message);
+      }
+    }
+  }
+}
 
 export const MS_USUARIOS = process.env.MS_USUARIOS_URL || 'http://localhost:3001';
 export const MS_RESERVAS = process.env.MS_RESERVAS_URL || 'http://localhost:3002';
@@ -2560,6 +2670,84 @@ app.get('/api/v1/reservas', async (req, res, next) => {
     console.warn('[Gateway] Error enriqueciendo reservas:', err);
   }
   return next();
+});
+
+// Registro de token push desde dispositivos móviles
+app.post(['/api/v1/notificaciones/token', '/api/v1/dispositivos/token'], express.json(), (req, res) => {
+  const { usuarioId, email, token, platform } = req.body || {};
+  if (!token) return res.status(400).json({ error: 'Token es requerido' });
+
+  todosLosTokensPush.add(token);
+  if (usuarioId) {
+    if (!tokensPorUsuario.has(usuarioId)) tokensPorUsuario.set(usuarioId, new Set());
+    tokensPorUsuario.get(usuarioId)!.add(token);
+  }
+  if (email) {
+    const em = email.toLowerCase().trim();
+    if (!tokensPorUsuario.has(em)) tokensPorUsuario.set(em, new Set());
+    tokensPorUsuario.get(em)!.add(token);
+  }
+  console.log(`[Push Token] Dispositivo registrado para [${email || usuarioId || 'general'}]: ${token}`);
+  return res.json({ status: 'ok', totalDispositivos: todosLosTokensPush.size });
+});
+
+// Endpoint de prueba directa para notificaciones push
+app.post('/api/v1/notificaciones/test-push', express.json(), async (req, res) => {
+  const { titulo, cuerpo, idAnfitrion, token } = req.body || {};
+  if (token) todosLosTokensPush.add(token);
+  await enviarNotificacionPushAnfitrion({
+    idAnfitrion,
+    titulo: titulo || '¡Nueva Reserva Recibida!',
+    cuerpo: cuerpo || 'Recibiste una reserva en tu propiedad Casa Campestre, pulsa para mas informacion',
+    datos: { tipo: 'RESERVA_ANFITRION', propiedadTitulo: 'Casa Campestre', pin: '123456' }
+  });
+  return res.json({ status: 'ok', message: 'Push de prueba enviado', totalDispositivos: todosLosTokensPush.size });
+});
+
+// Interceptor de creación de reservas: Notifica en tiempo real por push al anfitrión
+app.post('/api/v1/reservas', express.json(), async (req, res) => {
+  try {
+    const msRes = await fetch(`${MS_RESERVAS}/api/v1/reservas`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(req.headers.authorization ? { Authorization: req.headers.authorization } : {})
+      },
+      body: JSON.stringify(req.body)
+    });
+
+    const data = await msRes.json();
+    if (msRes.ok) {
+      const idAnfitrion = data.idAnfitrion || req.body.idAnfitrion;
+      const propTitulo = data.tituloAlojamiento || req.body.tituloAlojamiento || 'tu alojamiento';
+      const huesped = data.nombreCliente || req.body.nombreCliente || 'Un huésped';
+      const pin = data.codigoCheckin || req.body.codigoCheckin || '';
+      const reservaId = data.idReserva || data.id || '';
+
+      console.log(`[Gateway Reservas] Nueva reserva creada (${reservaId}) para anfitrión ${idAnfitrion}. Disparando Push...`);
+
+      void enviarNotificacionPushAnfitrion({
+        idAnfitrion,
+        titulo: 'Nueva Reserva Recibida',
+        cuerpo: `Recibiste una reserva en tu propiedad ${propTitulo}, pulsa para mas informacion`,
+        datos: {
+          tipo: 'RESERVA_ANFITRION',
+          propiedadTitulo: propTitulo,
+          alojamientoId: data.idAlojamiento || req.body.idAlojamiento || '',
+          reservaId,
+          pin,
+          huespedNombre: huesped,
+          checkIn: data.checkIn || req.body.checkIn || '',
+          checkOut: data.checkOut || req.body.checkOut || ''
+        }
+      });
+    }
+
+    return res.status(msRes.status).json(data);
+  } catch (err: any) {
+    console.warn('[Gateway Reservas] Error al procesar reserva:', err.message);
+    return res.status(502).json({ error: 'Error al contactar MS-02 Reservas' });
+  }
 });
 
 // MS-02: Reservas y Estadías

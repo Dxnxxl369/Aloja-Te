@@ -11,7 +11,8 @@
 import type { NavigationContainerRef, ParamListBase } from '@react-navigation/native';
 import { useCallback, useEffect, useRef } from 'react';
 import { AppState } from 'react-native';
-import { notificador, notificarReservaAnfitrion } from '../core';
+import { notificador, notificarReservaAnfitrion, registrarFirebaseToken } from '../core';
+import { API_URL } from '../core/base/constantes';
 import type { CasosReservas } from '../features/reservas';
 import type { RepositorioAnfitrion } from '../features/anfitrion';
 import { PREFIJO_AVISOS_RESERVA, planificarAvisos } from '../features/reservas/presentacion/planificarAvisos';
@@ -77,12 +78,21 @@ export function AvisosReservas({ navegacion, casos, anfitrionRepo, clienteId, ro
     }
   }, [casos, anfitrionRepo, clienteId, rol]);
 
-  // Al abrir la app, al volver a ella y al cambiar de pantalla.
+  // Registro automático de token push contra el API Gateway para el anfitrión
+  useEffect(() => {
+    if (rol === 'ANFITRION') {
+      void registrarFirebaseToken(API_URL, clienteId);
+    }
+  }, [rol, clienteId]);
+
+  // Al abrir la app, al volver a ella, al cambiar de pantalla y por sondeo periódico (cada 7s).
   useEffect(() => {
     void sincronizar();
+    const interval = setInterval(() => void sincronizar(), 7000);
     const alVolver = AppState.addEventListener('change', (e) => e === 'active' && void sincronizar());
     const alNavegar = navegacion.addListener('state', () => void sincronizar());
     return () => {
+      clearInterval(interval);
       alVolver.remove();
       alNavegar();
     };

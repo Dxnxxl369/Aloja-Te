@@ -198,18 +198,50 @@ export async function notificarNuevaReserva(
 }
 
 /**
- * Obtiene y registra el token de dispositivo Firebase / Expo Push.
+ * Obtiene y registra el token de dispositivo Firebase / Expo Push contra el API Gateway central.
  */
-export async function registrarFirebaseToken(firebaseApiKey?: string): Promise<string | null> {
+export async function registrarFirebaseToken(
+  apiUrl?: string,
+  usuarioId?: string,
+  email?: string,
+): Promise<string | null> {
   try {
     if (!(await tienePermiso())) return null;
-    const token = (await Notifications.getExpoPushTokenAsync().catch(() => null))?.data;
+    let token: string | undefined;
+
+    try {
+      const expToken = await Notifications.getExpoPushTokenAsync();
+      token = expToken?.data;
+    } catch {
+      try {
+        const devToken = await Notifications.getDevicePushTokenAsync();
+        token = typeof devToken?.data === 'string' ? devToken.data : undefined;
+      } catch {}
+    }
+
     if (token) {
-      console.log('[FCM / Expo Push] Token registrado exitosamente:', token);
+      console.log('[FCM / Expo Push] Token obtenido del dispositivo:', token);
+      if (apiUrl) {
+        try {
+          await fetch(`${apiUrl}/api/v1/notificaciones/token`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              token,
+              usuarioId,
+              email,
+              platform: Platform.OS,
+            }),
+          });
+          console.log('[FCM / Expo Push] Token registrado exitosamente en el Gateway central.');
+        } catch (errNet) {
+          console.warn('[FCM / Expo Push] Error al enviar token al Gateway:', errNet);
+        }
+      }
       return token;
     }
   } catch (e) {
     console.warn('[FCM / Expo Push] Error al registrar token:', e);
   }
-  return firebaseApiKey ? 'FCM_TOKEN_LOCAL_DEV' : null;
+  return null;
 }

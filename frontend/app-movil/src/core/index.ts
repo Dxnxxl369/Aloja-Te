@@ -26,7 +26,7 @@ export { AGENTE_LLM_HABILITADO, GROQ_API_KEY, MODELO_IA, PAGO_SIMULADO_HABILITAD
 export { SesionProvider, useSesion } from './auth/SesionProvider';
 export { consultar, consultarUno, ejecutar, guardarCache, leerCache, transaccion } from './db/db';
 export { esReintentable, esSinRed } from './base/errores';
-export { notificador, notificarNuevaReserva, notificarReservaAnfitrion } from './notificaciones/notificador';
+export { notificador, notificarNuevaReserva, notificarReservaAnfitrion, registrarFirebaseToken } from './notificaciones/notificador';
 
 // Modelos (objetos con atributos)
 export { AppError } from './base/modelos';

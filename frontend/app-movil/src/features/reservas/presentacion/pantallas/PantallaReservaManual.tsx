@@ -106,7 +106,6 @@ export function PantallaReservaManual({ casos, alojamiento, cliente, alCreada, a
         precioNoche: unidad.precioNoche,
       });
       if (r.tipo === 'CREADA') {
-        void notificarNuevaReserva(alojamiento.titulo, checkIn, checkOut, '14:00', '11:00');
         alCreada(r.reserva.id);
         return;
       }
