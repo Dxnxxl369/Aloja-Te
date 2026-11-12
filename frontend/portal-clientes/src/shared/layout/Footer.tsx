@@ -35,10 +35,10 @@ export const Footer: React.FC = () => {
           <div>
             <h5 className="font-bold text-stone-900 dark:text-white uppercase tracking-wider text-[11px] mb-3">Seguridad &amp; Pagos</h5>
             <ul className="space-y-1.5">
-              <li>QR Simple oficial (Banco BNB)</li>
-              <li>Facturación Computarizada SIN</li>
+              <li>Pagos por QR o transferencias a la Plataforma Aloja-Te</li>              
               <li>PIN confidencial de Check-in</li>
               <li>Garantía de disponibilidad inmediata</li>
+              <li>Garantía de reembolso al no haberse alojado</li>
             </ul>
           </div>
 
@@ -46,11 +46,7 @@ export const Footer: React.FC = () => {
             <h5 className="font-bold text-stone-900 dark:text-white uppercase tracking-wider text-[11px] mb-3">Atención &amp; Confianza</h5>
             <p className="text-xs text-stone-500 dark:text-stone-400 leading-relaxed mb-3">
               Asistencia personalizada a viajeros y anfitriones en todo el territorio boliviano. Transparencia, hospitalidad y protección en cada reserva.
-            </p>
-            <div className="flex items-center gap-1.5 text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">
-              <Shield className="w-3.5 h-3.5" />
-              <span>Plataforma Oficial Verificada</span>
-            </div>
+            </p>            
           </div>
 
         </div>

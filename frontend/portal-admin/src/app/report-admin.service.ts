@@ -1,5 +1,14 @@
 import { Injectable } from '@angular/core';
 
+const API_GATEWAY_URL =
+  (typeof window !== 'undefined' &&
+    ((window as any).__ENV__?.API_GATEWAY_URL ||
+      (window as any).VITE_API_GATEWAY_URL ||
+      (window as any).API_GATEWAY_URL)) ||
+  (typeof window !== 'undefined' && window.location.hostname !== 'localhost'
+    ? 'https://aloja-te-admin.duckdns.org'
+    : 'http://localhost:8080');
+
 export interface ReportColumnAdmin {
   key: string;
   label: string;
@@ -54,120 +63,53 @@ export class ReportAdminService {
       fechaRegistro: a.fechaRegistro
     }));
 
-    const anfitriones = [
-      {
-        nombre: 'Carlos Mendoza Cuéllar',
-        ciudad: 'Santa Cruz',
-        propiedadesActivas: 3,
-        verificacionLegal: 'Verificado (CI & NIT)',
-        cuentaBNB: '150-0892341-01',
-        totalLiquidadoBOB: 14850,
-        estado: 'ACTIVO'
-      },
-      {
-        nombre: 'Elena Morales Calbimontes',
-        ciudad: 'Tarija & La Paz',
-        propiedadesActivas: 2,
-        verificacionLegal: 'En trámite de revisión',
-        cuentaBNB: '150-0439120-02',
-        totalLiquidadoBOB: 18200,
-        estado: 'ACTIVO'
-      },
-      {
-        nombre: 'Rodrigo Arce Villarroel',
-        ciudad: 'Cochabamba',
-        propiedadesActivas: 1,
-        verificacionLegal: 'Pendiente de documentación',
-        cuentaBNB: '150-0982311-03',
-        totalLiquidadoBOB: 4420,
-        estado: 'OBSERVADO'
-      },
-      {
-        nombre: 'Fernando Torrico Vaca',
-        ciudad: 'Santa Cruz',
-        propiedadesActivas: 1,
-        verificacionLegal: 'Verificado (CI & NIT)',
-        cuentaBNB: '150-0771234-04',
-        totalLiquidadoBOB: 7800,
-        estado: 'ACTIVO'
+    // Anfitriones extraídos dinámicamente de alojamientos o usuarios reales
+    const anfitrionesMap = new Map<string, any>();
+    (contexto.alojamientos || []).forEach((a: any) => {
+      const nombre = (a.anfitrion || '').trim();
+      if (nombre && !anfitrionesMap.has(nombre)) {
+        anfitrionesMap.set(nombre, {
+          nombre,
+          ciudad: a.ciudad || a.departamento || 'Bolivia',
+          propiedadesActivas: 1,
+          verificacionLegal: 'Verificado',
+          cuentaBNB: a.numeroCuenta || 'Cuenta Bancaria',
+          totalLiquidadoBOB: 0,
+          estado: 'ACTIVO'
+        });
+      } else if (nombre) {
+        const item = anfitrionesMap.get(nombre);
+        item.propiedadesActivas++;
       }
-    ];
+    });
+    const anfitriones = (contexto.anfitriones && contexto.anfitriones.length > 0)
+      ? contexto.anfitriones
+      : Array.from(anfitrionesMap.values());
 
     const liquidaciones = (contexto.liquidaciones || []).map((l: any) => ({
-      idLiquidacion: l.id,
+      idLiquidacion: l.id || l.liquidacionId,
       anfitrion: l.anfitrion,
       alojamiento: l.alojamiento,
       banco: l.banco,
-      montoBruto: l.montoBruto,
-      comisionPlataforma: l.comisionPlataforma,
-      retencionImpuestos: l.retencionImpuestos,
-      montoNeto: l.montoNeto,
+      montoBruto: Number(l.montoBruto || 0),
+      comisionPlataforma: Number(l.comisionPlataforma || 0),
+      retencionImpuestos: Number(l.retencionImpuestos || 0),
+      montoNeto: Number(l.montoNeto || 0),
       estado: l.estado,
-      fechaLiquidacion: l.fechaLiquidacion
+      fechaLiquidacion: l.fechaLiquidacion || l.createdAt
     }));
 
-    const reservas = [
-      {
-        idReserva: 'RES-SCZ-101',
-        alojamiento: 'Hotel Boutique Los Tajibos Colonial',
-        departamento: 'Santa Cruz',
-        huesped: 'Fernando Torrico Vaca',
-        montoTotalBOB: 3400,
-        comisionAlojaTe: 340,
-        estado: 'CONFIRMADA',
-        pinCheckin: '381920'
-      },
-      {
-        idReserva: 'RES-SCZ-102',
-        alojamiento: 'Hotel Boutique Los Tajibos Colonial',
-        departamento: 'Santa Cruz',
-        huesped: 'Verónica Méndez Suárez',
-        montoTotalBOB: 1920,
-        comisionAlojaTe: 192,
-        estado: 'CONFIRMADA',
-        pinCheckin: '592814'
-      },
-      {
-        idReserva: 'RES-PLM-201',
-        alojamiento: 'Cabaña Chiquitana El Palmar',
-        departamento: 'Santa Cruz',
-        huesped: 'Mariana Suárez Paz',
-        montoTotalBOB: 1950,
-        comisionAlojaTe: 195,
-        estado: 'CONFIRMADA',
-        pinCheckin: '142857'
-      },
-      {
-        idReserva: 'RES-RNC-301',
-        alojamiento: 'Casa de Campo La Rinconada',
-        departamento: 'Santa Cruz',
-        huesped: 'Rodrigo Arce Villarroel',
-        montoTotalBOB: 1560,
-        comisionAlojaTe: 156,
-        estado: 'CONFIRMADA',
-        pinCheckin: '782341'
-      },
-      {
-        idReserva: 'RES-TRJ-401',
-        alojamiento: 'Chalet Boutique Los Viñedos',
-        departamento: 'Tarija',
-        huesped: 'Claudio Peñaranda Durán',
-        montoTotalBOB: 2340,
-        comisionAlojaTe: 234,
-        estado: 'CONFIRMADA',
-        pinCheckin: '492018'
-      },
-      {
-        idReserva: 'RES-LPZ-501',
-        alojamiento: 'Residencial Las Retamas Sopocachi',
-        departamento: 'La Paz',
-        huesped: 'Lucía Suárez Paz',
-        montoTotalBOB: 760,
-        comisionAlojaTe: 76,
-        estado: 'EXPIRADA_15MIN',
-        pinCheckin: '—'
-      }
-    ];
+    // Reservas reales obtenidas del ecosistema
+    const reservas = (contexto.reservas || []).map((r: any) => ({
+      idReserva: r.idReserva || r.id,
+      alojamiento: r.tituloAlojamiento || r.alojamiento || 'Alojamiento',
+      departamento: r.departamento || r.ciudad || 'Bolivia',
+      huesped: r.nombreCliente || r.huesped || 'Huésped',
+      montoTotalBOB: Number(r.importeTotal || r.montoTotal || r.montoTotalBOB || 0),
+      comisionAlojaTe: Number(r.comisionAlojaTe || (Number(r.importeTotal || 0) * 0.1)),
+      estado: r.estado || 'CONFIRMADA',
+      pinCheckin: r.codigoCheckin || r.pinCheckin || '—'
+    }));
 
     const valoraciones = (contexto.valoraciones || []).map((v: any) => ({
       huesped: v.nombreUsuario,
@@ -438,7 +380,7 @@ Tabla: valoraciones
 
     for (let loop = 0; loop < 2; loop++) {
       try {
-        const resp = await fetch('http://localhost:8080/api/v1/ia/reporte-query', {
+        const resp = await fetch(`${API_GATEWAY_URL}/api/v1/ia/reporte-query`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

@@ -1,4 +1,5 @@
 import { Alojamiento } from '../../../core/types/anfitrion.types';
+import { API_BASE_URL } from '../../../core/api/apiEndpoints';
 
 // Sin alojamientos semilla iniciales (Base limpia para pruebas desde cero)
 export const ALOJAMIENTOS_INICIALES: Record<string, Alojamiento[]> = {};
@@ -59,9 +60,9 @@ export const alojamientoService = {
 
     try {
       const urls = [
-        'http://localhost:8080/api/v1/alojamientos/todos',
-        clave.includes('daniel') ? 'http://localhost:8080/api/v1/alojamientos/anfitrion/7c772f61-90f1-474a-8acf-e7ba66e20d40' : null,
-        `http://localhost:8080/api/v1/alojamientos/anfitrion/${clave}`
+        `${API_BASE_URL}/api/v1/alojamientos/todos`,
+        clave.includes('daniel') ? `${API_BASE_URL}/api/v1/alojamientos/anfitrion/7c772f61-90f1-474a-8acf-e7ba66e20d40` : null,
+        `${API_BASE_URL}/api/v1/alojamientos/anfitrion/${clave}`
       ].filter(Boolean) as string[];
 
       for (const url of urls) {
@@ -76,7 +77,12 @@ export const alojamientoService = {
                   (r.idAnfitrion && (
                     r.idAnfitrion === clave ||
                     r.idAnfitrion.toLowerCase().includes(clave.toLowerCase()) ||
-                    (clave.includes('daniel') && (r.idAnfitrion === '7c772f61-90f1-474a-8acf-e7ba66e20d40' || r.idAnfitrion === '2bd6c1ff-bca9-4ef8-930e-02330a949616'))
+                    (clave.includes('daniel') && (
+                      r.idAnfitrion === '7c772f61-90f1-474a-8acf-e7ba66e20d40' ||
+                      r.idAnfitrion === '2bd6c1ff-bca9-4ef8-930e-02330a949616' ||
+                      r.idAnfitrion === 'a2105381-7824-4dd4-9a28-f335a1b97bd9' ||
+                      r.idAnfitrion === '5ca26631-e4d6-4f28-a085-72ad70c4b322'
+                    ))
                   )) ||
                   (r.nombreAnfitrion && (
                     r.nombreAnfitrion.toLowerCase().includes(clave.toLowerCase()) ||
@@ -119,6 +125,49 @@ export const alojamientoService = {
         } catch {}
       }
 
+      // Consultar y enlazar las reservas activas desde el backend (MS-02 vía Gateway)
+      try {
+        const respRes = await fetch(`${API_BASE_URL}/api/v1/reservas`, { headers: { 'Accept': 'application/json' } });
+        if (respRes.ok) {
+          const todasReservas: any[] = await respRes.json();
+          if (Array.isArray(todasReservas) && todasReservas.length > 0) {
+            map.forEach((aloj, alojId) => {
+              const reservasDelAloj = todasReservas.filter((res: any) =>
+                res.estado !== 'CANCELADA' &&
+                (
+                  res.idAlojamiento === alojId ||
+                  res.alojamientoId === alojId ||
+                  (res.tituloAlojamiento && aloj.titulo && res.tituloAlojamiento.trim().toLowerCase() === aloj.titulo.trim().toLowerCase())
+                )
+              );
+
+              if (reservasDelAloj.length > 0) {
+                const itemsMapeados: any[] = reservasDelAloj.map((res: any) => ({
+                  idReserva: res.idReserva || res.id,
+                  huespedNombre: res.nombreCliente || res.huespedNombre || res.cliente || 'Huésped',
+                  huespedTelefono: res.telefono || '+591 77012345',
+                  desde: res.checkIn || res.fechaInicio || new Date().toISOString().split('T')[0],
+                  hasta: res.checkOut || res.fechaFin || new Date().toISOString().split('T')[0],
+                  pinSecreto: res.codigoCheckin || res.pin || '574034',
+                  montoTotal: Number(res.importeTotal ?? res.montoTotal ?? 0),
+                  estado: (res.estado === 'EN_USO' || res.estado === 'CHECKIN_COMPLETADO') ? 'EN_USO' : 'PENDIENTE'
+                }));
+
+                aloj.reservas = itemsMapeados;
+                const tieneEnUso = itemsMapeados.some(r => r.estado === 'EN_USO');
+                if (tieneEnUso) {
+                  aloj.estadoOperativo = 'EN_USO';
+                } else {
+                  aloj.estadoOperativo = 'PENDIENTE';
+                }
+              }
+            });
+          }
+        }
+      } catch (errRes) {
+        console.warn('[AlojamientoService] Error al sincronizar reservas:', errRes);
+      }
+
       listaActual = Array.from(map.values());
       this.guardar(clave, listaActual);
     } catch (e) {
@@ -150,7 +199,7 @@ export const alojamientoService = {
 
     // Enviar la actualización completa al Gateway central (para que portal-admin y el backend tengan la foto nueva inmediatamente)
     try {
-      await fetch(`http://localhost:8080/api/v1/alojamientos/${id}`, {
+      await fetch(`${API_BASE_URL}/api/v1/alojamientos/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(actualizado)
@@ -178,7 +227,7 @@ export const alojamientoService = {
 
     // Intentar publicar en el Gateway API central y enviar a revisión
     try {
-      const res = await fetch('http://localhost:8080/api/v1/alojamientos', {
+      const res = await fetch(`${API_BASE_URL}/api/v1/alojamientos`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(preparado)
@@ -188,7 +237,7 @@ export const alojamientoService = {
         const idFinal = guardado.idAlojamiento || guardado.id || id;
         preparado.idAlojamiento = idFinal;
         try {
-          await fetch(`http://localhost:8080/api/v1/alojamientos/${idFinal}/enviar-revision`, { method: 'POST' });
+          await fetch(`${API_BASE_URL}/api/v1/alojamientos/${idFinal}/enviar-revision`, { method: 'POST' });
         } catch {}
       }
     } catch {}

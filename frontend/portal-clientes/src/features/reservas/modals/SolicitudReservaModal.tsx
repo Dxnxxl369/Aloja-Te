@@ -100,7 +100,7 @@ export const SolicitudReservaModal: React.FC<SolicitudReservaModalProps> = ({
         idCliente: user.id,
         nombreCliente: `${user.nombre} ${user.apellido}`.trim() || user.nombre || 'Huésped Registrado',
         idAnfitrion: alojamiento.idAnfitrion,
-        nombreAnfitrion: alojamiento.nombreAnfitrion || 'Carlos Mendoza',
+        nombreAnfitrion: (alojamiento.nombreAnfitrion && alojamiento.nombreAnfitrion !== 'Anfitrión Verificado') ? alojamiento.nombreAnfitrion : 'Daniel Quispe',
         idAlojamiento: alojamiento.idAlojamiento,
         tituloAlojamiento: alojamiento.titulo,
         idUnidad: unidad.idUnidad,
@@ -176,24 +176,12 @@ export const SolicitudReservaModal: React.FC<SolicitudReservaModalProps> = ({
 
           {/* Identidad del Huésped (Sesión Verificada) */}
           {user ? (
-            <div className="p-3.5 rounded-2xl bg-blue-50/60 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/50 text-xs flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2.5">
-                <CheckCircle2 className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
-                <div>
-                  <span className="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400 block">Huésped Autenticado</span>
-                  <span className="font-semibold text-slate-900 dark:text-white">{user.nombre} {user.apellido}</span>
-                  <span className="text-slate-500 dark:text-slate-400 text-[11px] ml-1.5">({user.email})</span>
-                </div>
-              </div>
-              <span className="text-[10px] px-2.5 py-1 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-bold shrink-0">
-                Verificado
-              </span>
-            </div>
+          <></> 
           ) : (
             <div className="p-3.5 rounded-2xl bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/40 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
               <div className="flex items-center gap-2">
                 <ShieldCheck className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
-                <span className="text-slate-700 dark:text-slate-300">Inicia sesión para vincular tu reserva y recibir tu PIN de Check-in.</span>
+                <span className="text-slate-700 dark:text-slate-300">Inicia sesión para vincular tu reserva.</span>
               </div>
               <button
                 type="button"
@@ -335,7 +323,7 @@ export const SolicitudReservaModal: React.FC<SolicitudReservaModalProps> = ({
 
             <div className="flex items-center gap-2.5 p-3 rounded-2xl bg-blue-50/60 dark:bg-blue-950/30 border border-blue-200/70 dark:border-blue-900/50 text-[11px] text-blue-800 dark:text-blue-300">
               <ShieldCheck className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
-              <span>Al continuar, tus fechas quedan reservadas temporalmente (15 min) mientras realizas el pago por QR.</span>
+              <span>Al continuar, tus fechas quedan reservadas temporalmente (15 min) mientras realizas el pago.</span>
             </div>
 
             {!user ? (
@@ -368,7 +356,7 @@ export const SolicitudReservaModal: React.FC<SolicitudReservaModalProps> = ({
                   </>
                 ) : (
                   <>
-                    <span>Continuar al Pago con QR Simple</span>
+                    <span>Continuar al Pago</span>
                     <ArrowRight className="w-4 h-4" />
                   </>
                 )}

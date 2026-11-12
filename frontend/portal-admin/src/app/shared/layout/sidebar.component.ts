@@ -110,11 +110,34 @@ import { AdminTab } from '../../core/types/admin.types';
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
             <div class="flex-1 flex items-center justify-between">
-              <span>Reportes IA & SQL</span>
-              <span class="px-2 py-0.5 rounded-full bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 text-[10px] font-bold border border-indigo-500/30">
-                Copilot
-              </span>
+              <span>Reportes IA</span>              
             </div>
+          </button>
+
+          <!-- Tab 6: Gestión de Usuarios -->
+          <button
+            type="button"
+            (click)="seleccionar('usuarios')"
+            [class]="activeTab === 'usuarios' ? 'w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold text-xs shadow-lg shadow-blue-500/25 scale-[1.01] transition-all cursor-pointer' : 'w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-600 dark:text-stone-400 hover:text-blue-600 dark:hover:text-white hover:bg-blue-50 dark:hover:bg-stone-800/50 font-medium text-xs transition-all cursor-pointer'"
+          >
+            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+            <div class="flex-1 flex items-center justify-between">
+              <span>Gestión de Usuarios</span>              
+            </div>
+          </button>
+
+          <!-- Tab 7: Mi Perfil -->
+          <button
+            type="button"
+            (click)="seleccionar('perfil')"
+            [class]="activeTab === 'perfil' ? 'w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold text-xs shadow-lg shadow-blue-500/25 scale-[1.01] transition-all cursor-pointer' : 'w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-600 dark:text-stone-400 hover:text-blue-600 dark:hover:text-white hover:bg-blue-50 dark:hover:bg-stone-800/50 font-medium text-xs transition-all cursor-pointer'"
+          >
+            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+            <span>Mi Perfil Administrador</span>
           </button>
         </div>
       </div>
@@ -136,16 +159,16 @@ import { AdminTab } from '../../core/types/admin.types';
 
         <!-- Ficha de Perfil del Administrador & Toggle de Tema -->
         <div class="p-3 rounded-2xl bg-white dark:bg-stone-900 border border-slate-200 dark:border-stone-800 flex items-center justify-between shadow-sm">
-          <div class="flex items-center gap-2.5 overflow-hidden">
+          <div (click)="seleccionar('perfil')" class="flex items-center gap-2.5 overflow-hidden cursor-pointer hover:opacity-85 transition" title="Ir a Mi Perfil">
             <div class="relative shrink-0">
               <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-700 to-indigo-600 text-white font-bold text-xs flex items-center justify-center shadow-md">
-                AQ
+                AA
               </div>
               <span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-white dark:border-stone-900 animate-pulse"></span>
             </div>
             <div class="overflow-hidden">
-              <div class="text-xs font-bold text-slate-900 dark:text-white truncate">Lic. Andrea Quiroga</div>
-              <div class="text-[10px] text-blue-600 dark:text-blue-400 font-mono truncate">Auditora General</div>
+              <div class="text-xs font-bold text-slate-900 dark:text-white truncate">Admin Aloja-Te</div>
+              <div class="text-[10px] text-blue-600 dark:text-blue-400 font-mono truncate">Auditoría Global</div>
             </div>
           </div>
 

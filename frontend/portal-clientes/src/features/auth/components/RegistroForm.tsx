@@ -54,6 +54,10 @@ export const RegistroForm: React.FC = () => {
         apellido: data.usuario.apellido,
         rol: data.usuario.rol,
       });
+
+      if (data.usuario.rol === 'ANFITRION') {
+        window.location.href = `http://localhost:3005?sso_token=${encodeURIComponent(data.token)}&sso_email=${encodeURIComponent(data.usuario.email)}&sso_nombre=${encodeURIComponent(data.usuario.nombre)}&sso_rol=ANFITRION`;
+      }
     } catch (err: any) {
       console.error('Error al registrar usuario:', err);
       const serverMsg = err.response?.data?.mensaje || err.response?.data?.error || err.message;

@@ -505,9 +505,9 @@ export const DetalleAlojamientoView: React.FC<DetalleAlojamientoViewProps> = ({
                 <div>
                   <div className="flex items-center gap-2 flex-wrap">
                     <h3 className="font-bold text-base text-slate-900 dark:text-white">
-                      {alojamiento.nombreAnfitrion || 'Carlos Mendoza'}
+                      {(alojamiento.nombreAnfitrion && alojamiento.nombreAnfitrion !== 'Anfitrión Verificado') ? alojamiento.nombreAnfitrion : 'Daniel Quispe'}
                     </h3>
-                    <AnfitrionVerificadoBadge nombre={alojamiento.nombreAnfitrion || 'Carlos Mendoza'} tamano="md" />
+                    <AnfitrionVerificadoBadge nombre={alojamiento.nombreAnfitrion} tamano="md" />
                   </div>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                     Hospitalidad y calidad garantizada • Respuesta habitual en menos de 15 minutos
@@ -1196,9 +1196,9 @@ export const DetalleAlojamientoView: React.FC<DetalleAlojamientoViewProps> = ({
                 <div>
                   <div className="flex items-center gap-2 flex-wrap">
                     <h3 className="font-serif text-xl font-bold text-slate-900 dark:text-white">
-                      {alojamiento.nombreAnfitrion || 'Carlos Mendoza'}
+                      {(alojamiento.nombreAnfitrion && alojamiento.nombreAnfitrion !== 'Anfitrión Verificado') ? alojamiento.nombreAnfitrion : 'Daniel Quispe'}
                     </h3>
-                    <AnfitrionVerificadoBadge nombre={alojamiento.nombreAnfitrion || 'Carlos Mendoza'} tamano="md" />
+                    <AnfitrionVerificadoBadge nombre={alojamiento.nombreAnfitrion} tamano="md" />
                   </div>
                   <span className="text-xs text-blue-600 dark:text-blue-400 font-semibold block mt-0.5">
                     Anfitrión Verificado Oficial en Aloja-Te Bolivia

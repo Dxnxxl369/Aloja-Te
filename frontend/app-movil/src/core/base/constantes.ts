@@ -9,12 +9,12 @@
 // por eso cada variable se escribe completa.
 
 // --- Entorno ----------------------------------------------------------------
-// IP del API Gateway en AWS EC2 (Servidor Central Multicloud)
-export const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://54.235.16.166:8080';
+// IP del API Gateway Local (PC en red WiFi)
+export const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://192.168.75.122:8080';
 // Ruta real de MS-01 (AuthController: POST /api/v1/auth/login), vía Gateway.
 export const RUTA_LOGIN = process.env.EXPO_PUBLIC_RUTA_LOGIN ?? '/api/v1/auth/login';
 /** Solo demo: permite simular el aviso del banco en la pantalla de pago. */
-export const PAGO_SIMULADO_HABILITADO = process.env.EXPO_PUBLIC_PAGO_SIMULADO === '1';
+export const PAGO_SIMULADO_HABILITADO = true;
 
 export const IA_LOCAL_HABILITADA = (process.env.EXPO_PUBLIC_IA_LOCAL ?? 'true') === 'true';
 

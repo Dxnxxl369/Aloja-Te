@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { UsuarioSesion, TokenStorage } from './TokenStorage';
+import { API_BASE_URL } from '../api/apiEndpoints';
 
 interface AuthContextType {
   user: UsuarioSesion | null;
@@ -25,39 +26,58 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
 
-  // Consulta la sesión activa directamente a la autoridad central de SSO en el Gateway
+  // Sincroniza la sesión aislada por navegador desde TokenStorage y valida con el Gateway
   const verificarSesionSSO = async () => {
-    try {
-      const resp = await fetch('http://localhost:8080/api/v1/auth/sso/session');
-      if (resp.ok) {
-        const data = await resp.json();
-        if (data.authenticated && data.usuario) {
-          setToken(data.token);
-          setUser(data.usuario);
-          setActiveRole(data.usuario.rol);
-          TokenStorage.saveSession(data.token, data.usuario);
-          return;
-        }
-      }
-    } catch (err) {
-      console.warn('[SSO Clientes] Error al conectar con Gateway central:', err);
-    }
+    const savedToken = TokenStorage.getToken();
+    const savedUser = TokenStorage.getUser();
 
-    setToken(null);
-    setUser(null);
-    TokenStorage.clearSession();
+    if (savedToken && savedUser) {
+      setToken(savedToken);
+      setUser(savedUser);
+      setActiveRole(savedUser.rol);
+
+      try {
+        const resp = await fetch(`${API_BASE_URL}/api/v1/auth/sso/session`, {
+          headers: { Authorization: `Bearer ${savedToken}` }
+        });
+        if (resp.ok) {
+          const data = await resp.json();
+          if (data.authenticated && data.usuario) {
+            setToken(data.token || savedToken);
+            setUser(data.usuario);
+            setActiveRole(data.usuario.rol);
+            TokenStorage.saveSession(data.token || savedToken, data.usuario);
+            return;
+          }
+        }
+      } catch (err) {
+        // En caso de caída transitoria de red, mantener sesión local
+        return;
+      }
+    } else {
+      setToken(null);
+      setUser(null);
+    }
   };
 
   useEffect(() => {
     verificarSesionSSO();
 
-    // Revalidación reactiva de sesión central al enfocar la pestaña (evita desincronizaciones entre ventanas)
-    const handleFocus = () => {
-      verificarSesionSSO();
+    const syncFromStorage = () => {
+      const savedToken = TokenStorage.getToken();
+      const savedUser = TokenStorage.getUser();
+      if (savedToken && savedUser) {
+        setToken(savedToken);
+        setUser(savedUser);
+        setActiveRole(savedUser.rol);
+      } else {
+        setToken(null);
+        setUser(null);
+      }
     };
 
-    window.addEventListener('focus', handleFocus);
-    return () => window.removeEventListener('focus', handleFocus);
+    window.addEventListener('storage', syncFromStorage);
+    return () => window.removeEventListener('storage', syncFromStorage);
   }, []);
 
   const loginSuccess = (newToken: string, newUser: UsuarioSesion) => {
@@ -73,7 +93,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
     TokenStorage.clearSession();
     // Revocar sesión global en el API Gateway SSO
-    fetch('http://localhost:8080/api/v1/auth/sso/logout', { method: 'POST' }).catch(() => {});
+    fetch(`${API_BASE_URL}/api/v1/auth/sso/logout`, { method: 'POST' }).catch(() => {});
   };
 
   const openAuthModal = (mode: 'login' | 'register' = 'login') => {

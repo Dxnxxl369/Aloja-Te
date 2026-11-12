@@ -1,5 +1,6 @@
 import React from 'react';
 import { useAuth } from '../../core/auth/AuthContext';
+import { ANFITRION_URL, ADMIN_URL } from '../../core/api/apiEndpoints';
 import { Sun, Moon, Sparkles, User, LogOut, Compass, KeyRound, DollarSign, ExternalLink, Building2, ShieldCheck } from 'lucide-react';
 
 interface NavbarProps {
@@ -75,7 +76,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Panel Anfitrión Oficial: Exclusivo para usuarios con rol ANFITRION */}
           {user?.rol === 'ANFITRION' && (
             <a
-              href={`http://localhost:3005?sso_token=${encodeURIComponent(token || '')}&sso_email=${encodeURIComponent(user.email || '')}&sso_nombre=${encodeURIComponent(user.nombre || '')}&sso_rol=ANFITRION`}
+              href={`${ANFITRION_URL}?sso_token=${encodeURIComponent(token || '')}&sso_email=${encodeURIComponent(user.email || '')}&sso_nombre=${encodeURIComponent(user.nombre || '')}&sso_rol=ANFITRION`}
               className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:opacity-95 text-white transition flex items-center gap-1.5 font-bold text-xs shadow-md shadow-blue-500/25"
               title="Abrir Panel Oficial de Gestión del Anfitrión"
             >
@@ -88,9 +89,9 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Panel Admin Oficial: Exclusivo para administradores o correos de administración */}
           {(user?.rol === 'ADMINISTRADOR' || (user?.rol as string) === 'ADMIN' || user?.email?.toLowerCase().includes('admin')) && (
             <a
-              href="http://localhost:4200"
+              href={ADMIN_URL}
               className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-600 hover:opacity-95 text-white transition flex items-center gap-1.5 font-bold text-xs shadow-md shadow-blue-500/25"
-              title="Abrir Panel Oficial de Administración (4200)"
+              title="Abrir Panel de Administración"
             >
               <ShieldCheck className="w-3.5 h-3.5" />
               <span>Panel Admin</span>

@@ -100,109 +100,22 @@ public class DataInitializer implements CommandLineRunner {
         rolAnfitrion.setPermisos(permisosAnfitrion);
         rolRepo.save(rolAnfitrion);
 
-        // 5. Usuario Administrador por defecto
-        if (!usuarioRepo.existsByEmail("admin@alojate.bo")) {
+        // 5. Usuario Administrador Único Oficial (Daniel Quispe Choque)
+        if (!usuarioRepo.existsByEmail("danielqczn@gmail.com")) {
             usuarioRepo.save(UsuarioJpaEntity.builder()
                     .idUsuario(UUID.fromString("a0000000-0000-4000-8000-000000000001"))
-                    .email("admin@alojate.bo")
+                    .email("danielqczn@gmail.com")
                     .passwordHash(passwordEncoder.encode("Admin1234!"))
-                    .nombre("Admin")
-                    .apellido("Aloja-Te")
-                    .ci("1234567")
-                    .ciExpedido("SCZ")
-                    .telefono("+591 70000000")
-                    .tipoCuenta("ADMIN_GLOBAL")
+                    .nombre("Daniel")
+                    .apellido("Quispe Choque")
+                    .telefono("63591455")
+                    .tipoCuenta("SUPER_ADMIN")
                     .rol(rolAdmin)
                     .estado(EstadoUsuario.ACTIVO)
                     .fechaRegistro(LocalDateTime.now())
                     .fechaActualizacion(LocalDateTime.now())
                     .build());
-            log.info("[DataInitializer] Usuario Admin creado: admin@alojate.bo / Admin1234!");
-        }
-
-        // 6. Usuario Anfitrión oficial
-        if (!usuarioRepo.existsByEmail("anfitrion@alojate.bo")) {
-            usuarioRepo.save(UsuarioJpaEntity.builder()
-                    .idUsuario(UUID.fromString("a0000000-0000-4000-8000-000000000002"))
-                    .email("anfitrion@alojate.bo")
-                    .passwordHash(passwordEncoder.encode("Anfitrion1234!"))
-                    .nombre("Carlos")
-                    .apellido("Mendoza")
-                    .ci("7654321")
-                    .ciExpedido("SCZ")
-                    .telefono("+591 71098765")
-                    .tipoCuenta("ANFITRION_VERIFICADO")
-                    .rol(rolAnfitrion)
-                    .estado(EstadoUsuario.ACTIVO)
-                    .bancoNombre("Banco Mercantil Santa Cruz (BMSC)")
-                    .numeroCuentaBancaria("4010987654321")
-                    .qr("https://alojate-bolivia.s3.sa-east-1.amazonaws.com/anfitriones/qr-carlos-mendoza.png")
-                    .fechaRegistro(LocalDateTime.now())
-                    .fechaActualizacion(LocalDateTime.now())
-                    .build());
-            log.info("[DataInitializer] Usuario Anfitrión creado: anfitrion@alojate.bo / Anfitrion1234!");
-        }
-
-        // 7. Usuarios Clientes (2 clientes oficiales)
-        if (!usuarioRepo.existsByEmail("cliente@alojate.bo")) {
-            usuarioRepo.save(UsuarioJpaEntity.builder()
-                    .idUsuario(UUID.fromString("c0000000-0000-4000-8000-000000000001"))
-                    .email("cliente@alojate.bo")
-                    .passwordHash(passwordEncoder.encode("Cliente1234!"))
-                    .nombre("Lucia")
-                    .apellido("Suarez")
-                    .ci("5432198")
-                    .ciExpedido("SCZ")
-                    .telefono("+591 77012345")
-                    .tipoCuenta("VIAJERO_FRECUENTE")
-                    .rol(rolCliente)
-                    .estado(EstadoUsuario.ACTIVO)
-                    .fechaRegistro(LocalDateTime.now())
-                    .fechaActualizacion(LocalDateTime.now())
-                    .build());
-            log.info("[DataInitializer] Usuario Cliente creado: cliente@alojate.bo / Cliente1234!");
-        }
-
-        if (!usuarioRepo.existsByEmail("huesped@alojate.bo")) {
-            usuarioRepo.save(UsuarioJpaEntity.builder()
-                    .idUsuario(UUID.fromString("c0000000-0000-4000-8000-000000000002"))
-                    .email("huesped@alojate.bo")
-                    .passwordHash(passwordEncoder.encode("Cliente1234!"))
-                    .nombre("Huesped")
-                    .apellido("Aloja-Te")
-                    .ci("6543210")
-                    .ciExpedido("LPZ")
-                    .telefono("+591 71234567")
-                    .tipoCuenta("VIAJERO_FRECUENTE")
-                    .rol(rolCliente)
-                    .estado(EstadoUsuario.ACTIVO)
-                    .fechaRegistro(LocalDateTime.now())
-                    .fechaActualizacion(LocalDateTime.now())
-                    .build());
-            log.info("[DataInitializer] Usuario Huésped creado: huesped@alojate.bo / Cliente1234!");
-        }
-
-        // 7.1 Usuario Anfitrión Daniel Quispe
-        if (!usuarioRepo.existsByEmail("danielqc333@gmail.com")) {
-            usuarioRepo.save(UsuarioJpaEntity.builder()
-                    .idUsuario(UUID.fromString("2bd6c1ff-bca9-4ef8-930e-02330a949616"))
-                    .email("danielqc333@gmail.com")
-                    .passwordHash(passwordEncoder.encode("Daniel1234!"))
-                    .nombre("Daniel")
-                    .apellido("Quispe")
-                    .ci("11107075")
-                    .ciExpedido("LP")
-                    .telefono("63591455")
-                    .tipoCuenta("ANFITRION_VERIFICADO")
-                    .rol(rolAnfitrion)
-                    .estado(EstadoUsuario.ACTIVO)
-                    .bancoNombre("Banco Mercantil Santa Cruz")
-                    .numeroCuentaBancaria("8451487545154")
-                    .qr("https://alojate-bolivia.s3.sa-east-1.amazonaws.com/anfitriones/qr-carlos-mendoza.png")
-                    .fechaRegistro(LocalDateTime.now())
-                    .fechaActualizacion(LocalDateTime.now())
-                    .build());
-            log.info("[DataInitializer] Usuario Anfitrión creado: danielqc333@gmail.com / Daniel1234!");
+            log.info("[DataInitializer] Usuario Admin creado: danielqczn@gmail.com / Admin1234!");
         }
 
         // 8. Catálogo de Tipos de Propiedad

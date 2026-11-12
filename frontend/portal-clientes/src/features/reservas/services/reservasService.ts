@@ -258,7 +258,7 @@ export const reservasService = {
       idCliente: payload.idCliente,
       nombreCliente: payload.nombreCliente,
       idAnfitrion: payload.idAnfitrion,
-      nombreAnfitrion: payload.nombreAnfitrion || 'Carlos Mendoza',
+      nombreAnfitrion: payload.nombreAnfitrion || 'Anfitrión Verificado',
       idAlojamiento: payload.idAlojamiento,
       tituloAlojamiento: payload.tituloAlojamiento,
       idUnidad: payload.idUnidad,

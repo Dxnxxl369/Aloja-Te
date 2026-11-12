@@ -56,7 +56,7 @@ export const PagoExitosoModal: React.FC<PagoExitosoModalProps> = ({
           ¡Reserva y Pago Exitosos!
         </h3>
         <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto mb-5">
-          Tu estancia ha sido confirmada en tiempo real. Se ha emitido tu factura oficial y tu código de acceso seguro.
+          Tu estancia ha sido confirmada. Se ha emitido tu factura oficial y tu código de acceso seguro.
         </p>
 
         {/* PIN Check-in Highlight Box */}
@@ -106,7 +106,7 @@ export const PagoExitosoModal: React.FC<PagoExitosoModalProps> = ({
               <span>Comprobante de Pago:</span>
             </span>
             <span className="font-mono text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">
-              {pagoResultado?.asientoContableId ? `Ref: ${pagoResultado.asientoContableId.substring(0, 10).toUpperCase()}` : 'Acreditado vía QR BNB'}
+              {pagoResultado?.asientoContableId ? `Ref: ${pagoResultado.asientoContableId.substring(0, 10).toUpperCase()}` : 'Acreditado vía QR'}
             </span>
           </div>
 

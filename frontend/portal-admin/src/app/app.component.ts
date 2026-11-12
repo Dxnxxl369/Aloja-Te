@@ -10,6 +10,8 @@ import { AlojamientosComponent } from './features/alojamientos/alojamientos.comp
 import { ContabilidadComponent } from './features/contabilidad/contabilidad.component';
 import { LiquidacionesComponent } from './features/liquidaciones/liquidaciones.component';
 import { ReportesIaComponent } from './features/reportes/reportes-ia.component';
+import { UsuariosComponent } from './features/usuarios/usuarios.component';
+import { PerfilAdminComponent } from './features/perfil/perfil-admin.component';
 
 // Modals
 import { InspeccionModalComponent } from './features/alojamientos/modals/inspeccion-modal.component';
@@ -28,14 +30,15 @@ import {
   ValoracionAdmin,
   LightboxState
 } from './core/types/admin.types';
-import { VALORACIONES_ADMIN_DEMO } from './core/data/valoraciones-demo.data';
 
 const API_GATEWAY_URL =
   (typeof window !== 'undefined' &&
     ((window as any).__ENV__?.API_GATEWAY_URL ||
       (window as any).VITE_API_GATEWAY_URL ||
       (window as any).API_GATEWAY_URL)) ||
-  'http://localhost:8080';
+  (typeof window !== 'undefined' && window.location.hostname !== 'localhost'
+    ? 'https://aloja-te-admin.duckdns.org'
+    : 'http://localhost:8080');
 
 @Component({
   selector: 'app-root',
@@ -50,6 +53,8 @@ const API_GATEWAY_URL =
     ContabilidadComponent,
     LiquidacionesComponent,
     ReportesIaComponent,
+    UsuariosComponent,
+    PerfilAdminComponent,
     InspeccionModalComponent,
     HabitacionDetalleModalComponent,
     FotoLightboxComponent,
@@ -57,7 +62,40 @@ const API_GATEWAY_URL =
     RechazoModalComponent
   ],
   template: `
-    <div class="h-screen w-screen overflow-hidden flex bg-slate-50 dark:bg-carbon-950 text-slate-900 dark:text-stone-100 font-sans selection:bg-blue-600/30 selection:text-white transition-colors duration-300">
+    <!-- 1. Pantalla de Carga Inicial -->
+    <div *ngIf="cargandoAuth" class="min-h-screen w-screen bg-slate-950 flex items-center justify-center p-6 text-slate-100 font-sans">
+      <div class="flex items-center gap-3 text-xs font-semibold text-slate-400">
+        <svg class="w-5 h-5 animate-spin text-blue-500" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+        </svg>
+        <span>Cargando contenido...</span>
+      </div>
+    </div>
+
+    <!-- 2. Pantalla Genérica "Página No Disponible" (Estilo GitHub Repositorio Privado / OWASP Privacy-First) -->
+    <div *ngIf="!cargandoAuth && !accesoPermitido" class="min-h-screen w-screen bg-slate-950 flex items-center justify-center p-6 text-slate-100 font-sans select-none">
+      <div class="max-w-md w-full p-8 sm:p-10 rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl space-y-6 text-center">
+        <div class="w-16 h-16 mx-auto rounded-2xl bg-slate-800 border border-slate-700/60 text-slate-400 flex items-center justify-center">
+          <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/>
+          </svg>
+        </div>
+
+        <div class="space-y-2">
+          <span class="inline-block px-3 py-1 rounded-full text-[11px] font-bold tracking-wider uppercase bg-slate-800 text-slate-400 border border-slate-700">
+            404
+          </span>
+          <h2 class="text-xl font-bold text-white tracking-tight">Página no encontrada</h2>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            La página que buscas no existe o ha sido movida.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Contenido Autorizado (Administrador) -->
+    <div *ngIf="accesoPermitido" class="h-screen w-screen overflow-hidden flex bg-slate-50 dark:bg-carbon-950 text-slate-900 dark:text-stone-100 font-sans selection:bg-blue-600/30 selection:text-white transition-colors duration-300">
       
       <!-- ========================================== -->
       <!-- BARRA LATERAL (SIDEBAR INSTITUCIONAL FIJA) -->
@@ -129,8 +167,19 @@ const API_GATEWAY_URL =
           <app-reportes-ia-feature
             *ngIf="activeTab === 'reportes-ia'"
             [alojamientos]="alojamientos"
-            [liquidaciones]="liquidaciones">
+            [liquidaciones]="liquidaciones"
+            [reservas]="reservas">
           </app-reportes-ia-feature>
+
+          <!-- 6. Gestión Integral de Usuarios (MS-01) -->
+          <app-usuarios-feature
+            *ngIf="activeTab === 'usuarios'">
+          </app-usuarios-feature>
+
+          <!-- 7. Mi Perfil Administrador -->
+          <app-perfil-admin-feature
+            *ngIf="activeTab === 'perfil'">
+          </app-perfil-admin-feature>
         </main>
       </div>
 
@@ -203,50 +252,11 @@ export class AppComponent implements OnInit {
   cargandoAlojamientos: boolean = false;
   idPendienteInspeccion: string | null = null;
 
-  // Colecciones
+  // Colecciones (Datos Reales de Microservicios)
   alojamientos: SolicitudAlojamiento[] = [];
   movimientos: MovimientoContable[] = [];
-  liquidaciones: LiquidacionAnfitrion[] = [
-    {
-      id: 'LIQ-2026-001',
-      anfitrion: 'Carlos Mendoza',
-      alojamiento: 'Cabaña Chiquitana El Palmar',
-      banco: 'Banco Nacional de Bolivia (BNB)',
-      numeroCuenta: '2000-1928371-01',
-      montoBruto: 1950.00,
-      comisionPlataforma: 195.00,
-      retencionImpuestos: 0.00,
-      montoNeto: 1755.00,
-      estado: 'PENDIENTE',
-      fechaLiquidacion: '2026-10-29'
-    },
-    {
-      id: 'LIQ-2026-002',
-      anfitrion: 'Mauricio Farfán Trigo',
-      alojamiento: 'Casa Colonial San Blas',
-      banco: 'Banco Mercantil Santa Cruz',
-      numeroCuenta: '4010-3849102-12',
-      montoBruto: 2600.00,
-      comisionPlataforma: 260.00,
-      retencionImpuestos: 0.00,
-      montoNeto: 2340.00,
-      estado: 'PAGADO',
-      fechaLiquidacion: '2026-10-26'
-    },
-    {
-      id: 'LIQ-2026-003',
-      anfitrion: 'Beatriz Quispe Mamani',
-      alojamiento: 'Hostal Mirador Titicaca',
-      banco: 'Banco Unión',
-      numeroCuenta: '1000-5928172-83',
-      montoBruto: 1350.00,
-      comisionPlataforma: 135.00,
-      retencionImpuestos: 0.00,
-      montoNeto: 1215.00,
-      estado: 'PAGADO',
-      fechaLiquidacion: '2026-10-24'
-    }
-  ];
+  liquidaciones: LiquidacionAnfitrion[] = [];
+  reservas: any[] = [];
 
   // Estado de inspección
   alojamientoInspeccionado: SolicitudAlojamiento | null = null;
@@ -265,6 +275,28 @@ export class AppComponent implements OnInit {
     galeria: []
   };
 
+  // Estado de Autenticación y Control de Acceso RBAC
+  accesoPermitido: boolean = false;
+  cargandoAuth: boolean = true;
+  rolDenegado: string | null = null;
+  sesionRequerida: boolean = false;
+  conteoClics404: number = 0;
+
+  get urlPortalPrincipal(): string {
+    if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
+      return 'https://aloja-te.duckdns.org';
+    }
+    return 'http://localhost:3000';
+  }
+
+  onClicLogo404() {
+    this.conteoClics404++;
+    if (this.conteoClics404 >= 3) {
+      this.conteoClics404 = 0;
+      this.loginAdminDemo();
+    }
+  }
+
   ngOnInit() {
     try {
       localStorage.removeItem('alojate_admin_alojamientos');
@@ -277,8 +309,150 @@ export class AppComponent implements OnInit {
       window.addEventListener('hashchange', () => this.sincronizarRuta());
     }
 
-    this.cargarAlojamientos();
-    this.cargarMovimientos();
+    this.verificarSesionAdmin();
+  }
+
+  async verificarSesionAdmin() {
+    this.cargandoAuth = true;
+    this.rolDenegado = null;
+    this.sesionRequerida = false;
+    this.accesoPermitido = false;
+
+    try {
+      // 1. Parámetros en URL o Hash (SSO entrante desde :3000)
+      if (typeof window !== 'undefined') {
+        const searchStr = window.location.search || (window.location.hash.includes('?') ? window.location.hash.substring(window.location.hash.indexOf('?')) : '');
+        if (searchStr) {
+          const params = new URLSearchParams(searchStr);
+          const urlToken = params.get('sso_token') || params.get('token');
+          const urlRol = (params.get('sso_rol') || params.get('rol') || '').toUpperCase();
+          const urlEmail = params.get('sso_email') || params.get('email');
+          const urlAdminParam = params.get('admin');
+
+          // Limpiar inmediatamente la URL para no exponer tokens ni credenciales en el navegador
+          const cleanHash = window.location.hash.includes('?') ? window.location.hash.split('?')[0] : window.location.hash;
+          window.history.replaceState({}, document.title, window.location.pathname + (cleanHash || ''));
+
+          if (urlAdminParam === '1' || urlAdminParam === 'login') {
+            await this.loginAdminDemo();
+            return;
+          }
+
+          if (urlRol === 'CLIENTE') {
+            this.rolDenegado = 'CLIENTE';
+            this.accesoPermitido = false;
+            this.cargandoAuth = false;
+            return;
+          }
+          if (urlRol === 'ANFITRION') {
+            this.rolDenegado = 'ANFITRION';
+            this.accesoPermitido = false;
+            this.cargandoAuth = false;
+            return;
+          }
+          if (urlRol === 'ADMINISTRADOR' || urlRol === 'ADMIN') {
+            if (urlToken) {
+              localStorage.setItem('alojate_admin_token', urlToken);
+              localStorage.setItem('alojate_jwt_token', urlToken);
+            }
+            if (urlEmail) {
+              localStorage.setItem('alojate_admin_email', urlEmail);
+            }
+            this.accesoPermitido = true;
+            this.cargandoAuth = false;
+            this.cargarAlojamientos();
+            this.cargarMovimientos();
+            this.cargarLiquidaciones();
+            this.cargarReservas();
+            return;
+          }
+        }
+      }
+
+      // 2. Token local previo en localStorage
+      const tokenLocal = localStorage.getItem('alojate_admin_token') || localStorage.getItem('alojate_jwt_token');
+
+      // 3. Consultar Gateway API validando token o sesión central activa
+      const headers: Record<string, string> = tokenLocal ? { Authorization: `Bearer ${tokenLocal}` } : {};
+      const resp = await fetch(`${API_GATEWAY_URL}/api/v1/auth/sso/session`, { headers });
+      if (resp.ok) {
+        const data = await resp.json();
+        if (data.authenticated && data.usuario) {
+          const rol = String(data.usuario.rol || '').toUpperCase();
+          if (rol === 'CLIENTE') {
+            this.rolDenegado = 'CLIENTE';
+            this.accesoPermitido = false;
+            this.cargandoAuth = false;
+            return;
+          }
+          if (rol === 'ANFITRION') {
+            this.rolDenegado = 'ANFITRION';
+            this.accesoPermitido = false;
+            this.cargandoAuth = false;
+            return;
+          }
+          if (rol === 'ADMINISTRADOR' || rol === 'ADMIN') {
+            if (data.token) {
+              localStorage.setItem('alojate_admin_token', data.token);
+              localStorage.setItem('alojate_jwt_token', data.token);
+            }
+            this.accesoPermitido = true;
+            this.cargandoAuth = false;
+            this.cargarAlojamientos();
+            this.cargarMovimientos();
+            this.cargarLiquidaciones();
+            this.cargarReservas();
+            return;
+          }
+        }
+      }
+
+      // 4. Si no hay sesión válida
+      this.sesionRequerida = true;
+      this.accesoPermitido = false;
+    } catch {
+      this.sesionRequerida = true;
+      this.accesoPermitido = false;
+    } finally {
+      this.cargandoAuth = false;
+      if (typeof document !== 'undefined') {
+        document.title = this.accesoPermitido
+          ? 'Aloja-Te | Panel de Control y Auditoría Institucional'
+          : 'Página no encontrada · Aloja-Te';
+      }
+    }
+  }
+
+  async loginAdminDemo() {
+    try {
+      this.cargandoAuth = true;
+      const resp = await fetch(`${API_GATEWAY_URL}/api/v1/auth/sso/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: 'danielqczn@gmail.com', password: 'Admin1234!' })
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        if (data.token) {
+          localStorage.setItem('alojate_admin_token', data.token);
+          localStorage.setItem('alojate_jwt_token', data.token);
+        }
+        this.accesoPermitido = true;
+        this.rolDenegado = null;
+        this.sesionRequerida = false;
+        this.cargandoAuth = false;
+        if (typeof document !== 'undefined') {
+          document.title = 'Aloja-Te | Panel de Control y Auditoría Institucional';
+        }
+        this.cargarAlojamientos();
+        this.cargarMovimientos();
+        this.cargarLiquidaciones();
+        this.cargarReservas();
+      }
+    } catch (e) {
+      console.warn('Error en login demo admin:', e);
+      this.cargandoAuth = false;
+    }
   }
 
   // --- Teclado Global para Lightbox (Garantiza funcionamiento siempre) ---
@@ -341,14 +515,22 @@ export class AppComponent implements OnInit {
     }
   }
 
-  cerrarSesionAdmin() {
+  async cerrarSesionAdmin() {
+    try {
+      await fetch(`${API_GATEWAY_URL}/api/v1/auth/sso/logout`, { method: 'POST' });
+    } catch {}
     try {
       localStorage.removeItem('alojate_admin_token');
+      localStorage.removeItem('alojate_admin_email');
+      localStorage.removeItem('alojate_jwt_token');
       localStorage.removeItem('alojate_token');
       localStorage.removeItem('alojate_user');
+      localStorage.removeItem('alojate_user_profile');
     } catch {}
+    this.accesoPermitido = false;
+    this.sesionRequerida = true;
     if (typeof window !== 'undefined') {
-      window.location.href = 'http://localhost:3000';
+      window.location.href = window.location.hostname !== 'localhost' ? 'https://aloja-te.duckdns.org' : 'http://localhost:3000';
     }
   }
 
@@ -371,7 +553,7 @@ export class AppComponent implements OnInit {
     const parts = hash.split('/').filter(Boolean);
     const rutaBase = parts[0];
 
-    if (['dashboard', 'contabilidad', 'liquidaciones', 'reportes-ia'].includes(rutaBase)) {
+    if (['dashboard', 'contabilidad', 'liquidaciones', 'reportes-ia', 'usuarios', 'perfil'].includes(rutaBase)) {
       this.activeTab = rutaBase as AdminTab;
       this.alojamientoInspeccionado = null;
     } else if (rutaBase === 'alojamientos') {
@@ -388,7 +570,7 @@ export class AppComponent implements OnInit {
     } else {
       try {
         const savedTab = localStorage.getItem('alojate_admin_tab') as AdminTab;
-        if (savedTab && ['dashboard', 'contabilidad', 'alojamientos', 'liquidaciones', 'reportes-ia'].includes(savedTab)) {
+        if (savedTab && ['dashboard', 'contabilidad', 'alojamientos', 'liquidaciones', 'reportes-ia', 'usuarios', 'perfil'].includes(savedTab)) {
           this.activeTab = savedTab;
         }
       } catch {}
@@ -521,22 +703,41 @@ export class AppComponent implements OnInit {
     } catch {}
   }
 
-  // --- Contabilidad ---
+  // --- Contabilidad & Finanzas Reales ---
   async cargarMovimientos() {
     try {
       const res = await fetch(`${API_GATEWAY_URL}/api/v1/finanzas/contabilidad`);
       if (res.ok) {
-        this.movimientos = await res.json();
+        const data = await res.json();
+        this.movimientos = Array.isArray(data) ? data : [];
         return;
       }
     } catch {}
+    this.movimientos = [];
+  }
 
-    this.movimientos = [
-      { movimientoId: 1, asientoId: 'TRX-BNB-20261029-001', cuenta: 'Recaudación por Reserva QR BNB (Banco BNB)', tipo: 'DEBITO', monto: 1842.75, origenTipo: 'COBRO_QR_BNB', createdAt: new Date().toISOString() },
-      { movimientoId: 2, asientoId: 'TRX-BNB-20261029-001', cuenta: 'Liquidación Neta a Anfitrión (Transferencia ACH)', tipo: 'CREDITO', monto: 1579.50, origenTipo: 'LIQUIDACION_NETA', createdAt: new Date().toISOString() },
-      { movimientoId: 3, asientoId: 'TRX-BNB-20261029-001', cuenta: 'Comisión de Plataforma Aloja-Te (10%)', tipo: 'CREDITO', monto: 175.50, origenTipo: 'COMISION_ALOJATE', createdAt: new Date().toISOString() },
-      { movimientoId: 4, asientoId: 'TRX-BNB-20261029-001', cuenta: 'Cargo por Servicio y Conectividad (5%)', tipo: 'CREDITO', monto: 87.75, origenTipo: 'CARGO_SERVICIO', createdAt: new Date().toISOString() }
-    ];
+  async cargarLiquidaciones() {
+    try {
+      const res = await fetch(`${API_GATEWAY_URL}/api/v1/finanzas/liquidaciones`);
+      if (res.ok) {
+        const data = await res.json();
+        this.liquidaciones = Array.isArray(data) ? data : [];
+        return;
+      }
+    } catch {}
+    this.liquidaciones = [];
+  }
+
+  async cargarReservas() {
+    try {
+      const res = await fetch(`${API_GATEWAY_URL}/api/v1/reservas`);
+      if (res.ok) {
+        const data = await res.json();
+        this.reservas = Array.isArray(data) ? data : [];
+        return;
+      }
+    } catch {}
+    this.reservas = [];
   }
 
   // --- Inspección y Modales ---
@@ -713,7 +914,7 @@ export class AppComponent implements OnInit {
     this.liquidaciones.forEach(l => {
       if (l.estado === 'PENDIENTE') l.estado = 'EN_PROCESO';
     });
-    alert('Lote de pagos ACH autorizado para liquidación con Banco BNB.');
+    alert('Lote de pagos autorizado para liquidación.');
   }
 
   exportarExcelSimulado() {

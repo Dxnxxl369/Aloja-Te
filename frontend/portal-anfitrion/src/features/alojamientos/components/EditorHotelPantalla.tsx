@@ -185,10 +185,16 @@ export const EditorHotelPantalla: React.FC<EditorHotelPantallaProps> = ({
         formData.append('archivo', file);
         formData.append('file', file);
         try {
-          const res = await fetch('http://localhost:8080/api/v1/alojamientos/imagenes?carpeta=alojamientos', {
+          let res = await fetch('http://localhost:8080/api/v1/alojamientos/imagenes?carpeta=alojamientos', {
             method: 'POST',
             body: formData
           });
+          if (!res.ok) {
+            res = await fetch('http://localhost:3001/api/v1/alojamientos/imagenes?carpeta=alojamientos', {
+              method: 'POST',
+              body: formData
+            });
+          }
           if (res.ok) {
             const data = await res.json();
             const urlFinal = data.url || data.secure_url || data.imagenUrl;

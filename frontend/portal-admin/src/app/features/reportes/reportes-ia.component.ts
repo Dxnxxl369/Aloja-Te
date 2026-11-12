@@ -140,7 +140,10 @@ import { VALORACIONES_ADMIN_DEMO } from '../../core/data/valoraciones-demo.data'
 
         <!-- 1. TAB: TABLA -->
         <div *ngIf="tabReporte === 'tabla'" class="space-y-4">
-          <div class="overflow-x-auto rounded-2xl border border-slate-200 dark:border-stone-800">
+          <div *ngIf="resultado.filas.length === 0" class="py-12 text-center text-slate-400 text-xs liquid-card rounded-2xl border border-slate-200 dark:border-stone-800">
+            No se encontraron registros en el sistema para esta consulta.
+          </div>
+          <div *ngIf="resultado.filas.length > 0" class="overflow-x-auto rounded-2xl border border-slate-200 dark:border-stone-800">
             <table class="w-full text-left text-xs">
               <thead class="bg-slate-100 dark:bg-carbon-950/80 text-slate-600 dark:text-stone-400 uppercase text-[10px] tracking-wider border-b border-slate-200 dark:border-stone-800">
                 <tr>
@@ -253,6 +256,8 @@ import { VALORACIONES_ADMIN_DEMO } from '../../core/data/valoraciones-demo.data'
 export class ReportesIaComponent implements OnInit {
   @Input() alojamientos: SolicitudAlojamiento[] = [];
   @Input() liquidaciones: LiquidacionAnfitrion[] = [];
+  @Input() reservas: any[] = [];
+  @Input() valoraciones: any[] = [];
 
   private reportService = new ReportAdminService();
   query: string = 'Comisiones y facturación consolidada por departamento';
@@ -268,7 +273,7 @@ export class ReportesIaComponent implements OnInit {
     'Comisiones y facturación consolidada por departamento',
     'Ocupación y demanda turística',
     'Auditoría de alojamientos observados',
-    'Liquidaciones bancarias pendientes BNB'
+    'Liquidaciones bancarias pendientes'
   ];
 
   ngOnInit() {
@@ -286,7 +291,8 @@ export class ReportesIaComponent implements OnInit {
       const res = await this.reportService.resolverReporteAdmin(q, {
         alojamientos: this.alojamientos,
         liquidaciones: this.liquidaciones,
-        valoraciones: VALORACIONES_ADMIN_DEMO
+        reservas: this.reservas,
+        valoraciones: this.valoraciones
       });
       this.resultado = res;
       this.columnasVisibles = [...res.columnas];
@@ -341,66 +347,85 @@ export class ReportesIaComponent implements OnInit {
 
   seleccionarInforme(tipo: number) {
     this.tipoInforme = tipo;
+    const totalLiquidado = this.liquidaciones.reduce((acc, l) => acc + (l.montoNeto || 0), 0);
+    const totalComisiones = this.liquidaciones.reduce((acc, l) => acc + (l.comisionPlataforma || 0), 0);
+    const totalPropiedades = this.alojamientos.length;
+    const totalReservas = this.reservas.length;
+
     if (tipo === 1) {
       this.informeGenerativo = {
         titulo: 'Informe de Cierre Fiscal & Rentabilidad Operativa',
         categoria: 'Finanzas',
-        periodo: 'Mensual Consolidado 2026',
+        periodo: 'Consolidado Tiempo Real',
         fechaEmision: new Date().toLocaleDateString('es-BO', { day: '2-digit', month: 'long', year: 'numeric' }),
-        resumenEjecutivo: 'Volumen transaccional consolidado en crecimiento continuo con liquidación ágil vía QR Simple BNB. Retención neta de comisiones al 10% cumplida sin discrepancias contables.',
+        resumenEjecutivo: totalPropiedades > 0 || totalReservas > 0
+          ? `Operaciones consolidadas con ${totalPropiedades} alojamientos habilitados y ${totalReservas} reservas registradas. Liquidaciones procesadas por Bs. ${totalLiquidado.toFixed(2)}.`
+          : 'Sistema recién inicializado con base de datos limpia. No existen reservas ni transacciones registradas hasta el momento.',
         kpis: [
-          { etiqueta: 'Volumen Bruto', valor: '184,250 BOB', variacion: '+14.2% mes anterior', esPositivo: true },
-          { etiqueta: 'Comisión Aloja-Te (10%)', valor: '18,425 BOB', variacion: '100% verificado', esPositivo: true },
-          { etiqueta: 'Tasa Cancelación', valor: '2.1%', variacion: '-0.8% mejora', esPositivo: true }
+          { etiqueta: 'Volumen Liquidado', valor: `${totalLiquidado.toFixed(2)} BOB`, variacion: totalLiquidado > 0 ? 'Activo' : '0.00 BOB', esPositivo: true },
+          { etiqueta: 'Comisión Aloja-Te (10%)', valor: `${totalComisiones.toFixed(2)} BOB`, variacion: '10% retenido', esPositivo: true },
+          { etiqueta: 'Alojamientos Registrados', valor: `${totalPropiedades}`, variacion: `${totalPropiedades} activos`, esPositivo: true }
         ],
-        puntosClave: [
-          '82% de las transacciones se pagaron con QR Simple BNB.',
-          'Cero desvíos contables entre Total Débito y Total Crédito.',
-          'Desembolsos bancarios procesados con éxito.'
-        ],
+        puntosClave: totalPropiedades > 0
+          ? [
+              `${totalPropiedades} propiedades en catálogo nacional.`,
+              `${totalReservas} reservas gestionadas en total.`,
+              `Liquidaciones netas procesadas: Bs. ${totalLiquidado.toFixed(2)}.`
+            ]
+          : [
+              'Base de datos limpia y lista para nuevas publicaciones.',
+              'No existen desvíos contables pendientes.',
+              'Canales de pago y cobro QR configurados.'
+            ],
         recomendacionesEstrategicas: [
-          'Mantener incentivos en destinos emergentes.',
-          'Consolidar la auditoría automatizada en tiempo real.'
+          'Habilitar nuevos alojamientos en las regiones turísticas.',
+          'Monitorear pagos y comisiones en tiempo real.'
         ]
       };
     } else if (tipo === 2) {
       this.informeGenerativo = {
         titulo: 'Proyección de Demanda para Temporadas Festivas',
         categoria: 'Mercado',
-        periodo: 'Proyección Q1 2027',
+        periodo: 'Proyección Próxima Temporada',
         fechaEmision: new Date().toLocaleDateString('es-BO', { day: '2-digit', month: 'long', year: 'numeric' }),
-        resumenEjecutivo: 'Alta concentración de búsquedas anticipadas para el Carnaval de Oruro y la Vendimia Chapaca en Tarija con ocupaciones estimadas sobre el 95%.',
+        resumenEjecutivo: totalPropiedades > 0
+          ? `Capacidad operativa actual de ${totalPropiedades} propiedades distribuidas a nivel nacional.`
+          : 'Sistema preparado para el registro de nuevos alojamientos turísticos previo a temporadas festivas.',
         kpis: [
-          { etiqueta: 'Ocupación Oruro', valor: '96.4%', variacion: '+18.0%', esPositivo: true },
-          { etiqueta: 'Tarifa Media', valor: '820 BOB', variacion: '+25.0%', esPositivo: true },
-          { etiqueta: 'Déficit Estimado', valor: '~450 camas', variacion: 'Oportunidad', esPositivo: false }
+          { etiqueta: 'Propiedades Disponibles', valor: `${totalPropiedades}`, variacion: 'En línea', esPositivo: true },
+          { etiqueta: 'Reservas Registradas', valor: `${totalReservas}`, variacion: 'Histórico', esPositivo: true },
+          { etiqueta: 'Liquidaciones Pendientes', valor: `${this.liquidaciones.filter(l => l.estado === 'PENDIENTE').length}`, variacion: 'Por procesar', esPositivo: true }
         ],
         puntosClave: [
-          'Incremento del 64% en consultas para fechas de feriado.',
-          'Los alojamientos verificados capturan el 85% de las reservas tempranas.'
+          'Monitoreo continuo de disponibilidad por departamento.',
+          'Políticas de cobro transparentes sin cargos ficticios.'
         ],
         recomendacionesEstrategicas: [
-          'Campaña de afiliación rápida de anfitriones en Oruro y Tarija.'
+          'Incentivar a los anfitriones a publicar sus calendarios de disponibilidad.'
         ]
       };
     } else {
+      const observados = this.alojamientos.filter(a => a.estado === 'OBSERVADO').length;
+      const pendientes = this.alojamientos.filter(a => a.estado === 'PENDIENTE' || a.estado === 'EN_REVISION').length;
+      const publicados = this.alojamientos.filter(a => a.estado === 'PUBLICADO').length;
+
       this.informeGenerativo = {
         titulo: 'Auditoría Preventiva de Calidad & Moderación IA',
         categoria: 'Seguridad',
-        periodo: 'Semanal 2026',
+        periodo: 'Auditoría Continua',
         fechaEmision: new Date().toLocaleDateString('es-BO', { day: '2-digit', month: 'long', year: 'numeric' }),
-        resumenEjecutivo: 'El motor de Vision IA y NLP procesó las solicitudes y reseñas detectando incidencias con precisión inmediata, protegiendo los estándares de habitabilidad.',
+        resumenEjecutivo: `Auditoría automatizada de calidad: ${publicados} alojamientos verificados y publicados, ${pendientes} en revisión y ${observados} observados con solicitud de subsanación.`,
         kpis: [
-          { etiqueta: 'Índice Calidad', valor: '99.4%', variacion: 'Óptimo', esPositivo: true },
-          { etiqueta: 'Detección IA', valor: '100%', variacion: 'Sin falsos positivos', esPositivo: true },
-          { etiqueta: 'En Observación', valor: '2 casos', variacion: 'Atendidos', esPositivo: true }
+          { etiqueta: 'Publicados Seguros', valor: `${publicados}`, variacion: '100% habitables', esPositivo: true },
+          { etiqueta: 'Pendientes Revisión', valor: `${pendientes}`, variacion: 'En cola', esPositivo: true },
+          { etiqueta: 'Observados por IA', valor: `${observados}`, variacion: 'Requieren corrección', esPositivo: observados === 0 }
         ],
         puntosClave: [
-          'Detección automática de fotografías observadas en habitaciones de hotel.',
-          'Auditoría preventiva de confort térmico y ruido en reseñas de huéspedes.'
+          'Inspección multimodal de fotografías con detección de imágenes no permitidas.',
+          'Notificación automática inmediata por correo a los anfitriones al auditar.'
         ],
         recomendacionesEstrategicas: [
-          'Exigir reemplazo fotográfico en resoluciones superiores a 1080p.'
+          'Mantener la moderación en tiempo real para agilizar la publicación.'
         ]
       };
     }

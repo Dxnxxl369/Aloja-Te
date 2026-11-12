@@ -149,10 +149,17 @@ export const MiPerfilScreen: React.FC<MiPerfilScreenProps> = ({ onMostrarToast }
     if (!file) return urlActual;
     const formData = new FormData();
     formData.append('archivo', file);
-    const res = await fetch(`http://localhost:8080/api/v1/alojamientos/imagenes?carpeta=${carpeta}`, {
+    formData.append('file', file);
+    let res = await fetch(`http://localhost:8080/api/v1/alojamientos/imagenes?carpeta=${carpeta}`, {
       method: 'POST',
       body: formData
     });
+    if (!res.ok) {
+      res = await fetch(`http://localhost:3001/api/v1/alojamientos/imagenes?carpeta=${carpeta}`, {
+        method: 'POST',
+        body: formData
+      });
+    }
     if (res.ok) {
       const data = await res.json();
       return data.url;

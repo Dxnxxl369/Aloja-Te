@@ -110,10 +110,17 @@ export const PantallaHabitacionIndividual: React.FC<PantallaHabitacionIndividual
       try {
         const formData = new FormData();
         formData.append('archivo', file);
-        const res = await fetch('http://localhost:8080/api/v1/alojamientos/imagenes?carpeta=habitaciones', {
+        formData.append('file', file);
+        let res = await fetch('http://localhost:8080/api/v1/alojamientos/imagenes?carpeta=habitaciones', {
           method: 'POST',
           body: formData
         });
+        if (!res.ok) {
+          res = await fetch('http://localhost:3001/api/v1/alojamientos/imagenes?carpeta=habitaciones', {
+            method: 'POST',
+            body: formData
+          });
+        }
         if (res.ok) {
           const data = await res.json();
           if (data.url) {

@@ -3,59 +3,8 @@ import { useAuth } from '../../../core/auth/AuthContext';
 import { authService } from '../services/authService';
 import { Mail, Lock, AlertCircle, ArrowRight, Loader2, Check } from 'lucide-react';
 
-interface PerfilDemo {
-  id: string;
-  nombre: string;
-  email: string;
-  pass: string;
-  rol: 'ANFITRION' | 'CLIENTE' | 'ADMINISTRADOR';
-  rolTexto: string;
-  descripcion: string;
-  icono: string;
-}
 
-const PERFILES_DEMO: PerfilDemo[] = [
-  {
-    id: 'adm-andrea',
-    nombre: 'Lic. Andrea Quiroga',
-    email: 'admin@alojate.bo',
-    pass: 'Admin1234!',
-    rol: 'ADMINISTRADOR',
-    rolTexto: 'Administrador General',
-    descripcion: 'Panel de Control y Verificación',
-    icono: '🛡️',
-  },
-  {
-    id: 'anf-carlos',
-    nombre: 'Carlos Mendoza Cuéllar',
-    email: 'anfitrion@alojate.bo',
-    pass: 'Anfitrion1234!',
-    rol: 'ANFITRION',
-    rolTexto: 'Anfitrión Verificado',
-    descripcion: 'Portal Anfitrión y Gestión',
-    icono: '🏨',
-  },
-  {
-    id: 'cli-lucia',
-    nombre: 'Lucía Suárez',
-    email: 'cliente@alojate.bo',
-    pass: 'Cliente1234!',
-    rol: 'CLIENTE',
-    rolTexto: 'Cliente Registrado',
-    descripcion: 'Reservas y Catálogo',
-    icono: '🧳',
-  },
-  {
-    id: 'cli-huesped',
-    nombre: 'Huésped Aloja-te',
-    email: 'huesped@alojate.bo',
-    pass: 'Cliente1234!',
-    rol: 'CLIENTE',
-    rolTexto: 'Huésped Frecuente',
-    descripcion: 'Reservas y Experiencias',
-    icono: '🎒',
-  },
-];
+
 
 export const LoginForm: React.FC = () => {
   const { loginSuccess } = useAuth();
@@ -64,13 +13,7 @@ export const LoginForm: React.FC = () => {
   const [perfilSeleccionado, setPerfilSeleccionado] = useState<string>('cli-lucia');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-
-  const seleccionarPerfil = (p: PerfilDemo) => {
-    setEmail(p.email);
-    setPassword(p.pass);
-    setPerfilSeleccionado(p.id);
-    setError(null);
-  };
+ 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,6 +29,13 @@ export const LoginForm: React.FC = () => {
         apellido: data.usuario.apellido,
         rol: data.usuario.rol,
       });
+
+      // Redirección inteligente según rol
+      if (data.usuario.rol === 'ANFITRION') {
+        window.location.href = `http://localhost:3005?sso_token=${encodeURIComponent(data.token)}&sso_email=${encodeURIComponent(data.usuario.email)}&sso_nombre=${encodeURIComponent(data.usuario.nombre)}&sso_rol=ANFITRION`;
+      } else if (data.usuario.rol === 'ADMINISTRADOR') {
+        window.location.href = `http://localhost:4200?sso_token=${encodeURIComponent(data.token)}&sso_email=${encodeURIComponent(data.usuario.email)}&sso_rol=ADMINISTRADOR`;
+      }
     } catch (err: any) {
       console.error('Error al iniciar sesión:', err);
       const serverMsg = err.response?.data?.mensaje || err.response?.data?.error || err.message;
@@ -105,54 +55,7 @@ export const LoginForm: React.FC = () => {
       )}
 
       {/* 4 Perfiles Rápidos para Acceso Inmediato */}
-      <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200/90 dark:border-slate-800 text-xs space-y-2">
-        <div className="flex items-center justify-between">
-          <span className="font-bold text-slate-800 dark:text-slate-200 text-[11px] uppercase tracking-wider">
-            Acceso Rápido • 4 Perfiles Demo:
-          </span>
-          <span className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold">
-            Clic para autorellenar
-          </span>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
-          {PERFILES_DEMO.map((p) => {
-            const activo = email.toLowerCase() === p.email.toLowerCase() || perfilSeleccionado === p.id;
-            return (
-              <button
-                key={p.id}
-                type="button"
-                onClick={() => seleccionarPerfil(p)}
-                className={`p-2.5 rounded-xl border text-left transition flex items-start justify-between cursor-pointer ${
-                  activo
-                    ? 'bg-blue-50/90 dark:bg-blue-950/60 border-blue-500 shadow-sm ring-1 ring-blue-500/30'
-                    : 'bg-white dark:bg-slate-800/70 border-slate-200 dark:border-slate-700 hover:border-blue-400'
-                }`}
-              >
-                <div>
-                  <div className="flex items-center gap-1.5 font-bold text-slate-900 dark:text-white">
-                    <span>{p.icono}</span>
-                    <span>{p.nombre}</span>
-                  </div>
-                  <span
-                    className={`inline-block mt-0.5 px-1.5 py-0.2 rounded text-[9px] font-bold ${
-                      p.rol === 'ANFITRION'
-                        ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
-                        : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300'
-                    }`}
-                  >
-                    {p.rolTexto}
-                  </span>
-                  <span className="text-[10px] text-slate-400 font-mono block mt-0.5 truncate">
-                    {p.email}
-                  </span>
-                </div>
-                {activo && <Check className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />}
-              </button>
-            );
-          })}
-        </div>
-      </div>
+      
 
       <div>
         <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">

@@ -191,17 +191,17 @@ export function QrPaymentCard({
         <ShieldCheck color={COLOR.primario} size={20} />
         <Text style={estilos.bannerInfoTexto}>
           {tab === 'QR'
-            ? 'Escanea el código QR del anfitrión desde la app de tu banco y luego presiona el botón para confirmar.'
+            ? 'Escanea el código QR del anfitrión o presiona Pagar para confirmar tu estadía al instante.'
             : PAYMENT_TEXT.DIRECT_TRANSFER_INFO}
         </Text>
       </View>
 
-      {/* Botón principal de confirmación */}
+      {/* Botón principal de pago */}
       {onConfirmar ? (
         <View style={estilos.ancho}>
           <Boton
             variante="primario"
-            titulo={confirmando ? PAYMENT_TEXT.CONFIRMING_PAYMENT : PAYMENT_TEXT.CONFIRM_PAYMENT_BTN}
+            titulo={confirmando ? 'Procesando pago…' : 'Pagar'}
             deshabilitado={confirmando}
             onPress={() => void onConfirmar()}
           />

@@ -12,22 +12,13 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onSearch }) => {
       <div className="absolute top-0 right-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 left-1/4 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">       
         
-        {/* Subtitle Badge - Royal Blue */}
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-50 dark:bg-blue-950/70 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 text-xs font-bold mb-6 tracking-wide shadow-sm animate-fade-in">
-          <Sparkles className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-          <span>HOSPITALIDAD &amp; PATRIMONIO DE BOLIVIA</span>
-        </div>
 
         {/* Playfair Display Title */}
         <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-slate-900 dark:text-white leading-[1.15] max-w-4xl mx-auto mb-6">
           Descubre el encanto de alojarte en los rincones más <span className="italic font-normal text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500">auténticos</span> de nuestro país
-        </h1>
-
-        <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 max-w-2xl mx-auto mb-10 leading-relaxed font-normal">
-          Desde cabañas rústicas en la Chiquitanía y viñedos en Tarija, hasta refugios andinos con vistas al Illimani. Reservas protegidas y pagos seguros con QR Simple.
-        </p>
+        </h1>        
 
         {/* Liquid Glass Search Bar */}
         <div className="max-w-4xl mx-auto p-3 sm:p-4 rounded-3xl liquid-glass shadow-2xl border border-slate-200/80 dark:border-slate-800 text-left">
