@@ -914,24 +914,35 @@ Responde ÚNICAMENTE en JSON válido:
   "rationale": "Explicación breve y cordial en español para el anfitrión"
 }`;
 
-      const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${GEMINI_API_KEY_MODERACION}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-goog-api-key': GEMINI_API_KEY_MODERACION
-        },
-        body: JSON.stringify({
-          contents: [{
-            parts: [
-              { text: prompt },
-              { inline_data: { mime_type: mimeType, data: b64 } }
-            ]
-          }]
-        }),
-        signal: AbortSignal.timeout(15000)
-      });
+      const modelosVision = ['gemini-flash-lite-latest', 'gemini-3-flash-preview', 'gemini-2.5-flash-lite'];
+      let geminiRes: any = null;
 
-      if (geminiRes.ok) {
+      for (const mod of modelosVision) {
+        try {
+          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${mod}:generateContent?key=${GEMINI_API_KEY_MODERACION}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-goog-api-key': GEMINI_API_KEY_MODERACION
+            },
+            body: JSON.stringify({
+              contents: [{
+                parts: [
+                  { text: prompt },
+                  { inline_data: { mime_type: mimeType, data: b64 } }
+                ]
+              }]
+            }),
+            signal: AbortSignal.timeout(15000)
+          });
+          if (res.ok) {
+            geminiRes = res;
+            break;
+          }
+        } catch {}
+      }
+
+      if (geminiRes && geminiRes.ok) {
         const data = await geminiRes.json();
         const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
         const match = text.match(/\{[\s\S]*\}/);
