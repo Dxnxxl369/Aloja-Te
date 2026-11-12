@@ -105,7 +105,7 @@ public class DataInitializer implements CommandLineRunner {
             usuarioRepo.save(UsuarioJpaEntity.builder()
                     .idUsuario(UUID.fromString("a0000000-0000-4000-8000-000000000001"))
                     .email("danielqczn@gmail.com")
-                    .passwordHash(passwordEncoder.encode("Admin1234!"))
+                    .passwordHash(passwordEncoder.encode("admin123"))
                     .nombre("Daniel")
                     .apellido("Quispe Choque")
                     .telefono("63591455")
@@ -115,7 +115,7 @@ public class DataInitializer implements CommandLineRunner {
                     .fechaRegistro(LocalDateTime.now())
                     .fechaActualizacion(LocalDateTime.now())
                     .build());
-            log.info("[DataInitializer] Usuario Admin creado: danielqczn@gmail.com / Admin1234!");
+            log.info("[DataInitializer] Usuario Admin creado: danielqczn@gmail.com / admin123");
         }
 
         // 8. Catálogo de Tipos de Propiedad

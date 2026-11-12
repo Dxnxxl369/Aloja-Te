@@ -56,7 +56,7 @@ interface SSOSession {
 // Catálogo canónico de usuarios oficiales para SSO
 const USUARIOS_SSO: Record<string, { pass: string; usuario: SSOUsuario }> = {
   'danielqczn@gmail.com': {
-    pass: 'Admin1234!',
+    pass: 'admin123',
     usuario: {
       id: 'a0000000-0000-4000-8000-000000000001',
       email: 'danielqczn@gmail.com',

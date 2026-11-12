@@ -1,68 +1,17 @@
 {
-  "admin@alojate.bo": {
-    "pass": "Admin1234!",
+  "danielqczn@gmail.com": {
+    "pass": "admin123",
     "usuario": {
       "id": "a0000000-0000-4000-8000-000000000001",
-      "email": "admin@alojate.bo",
-      "nombre": "Admin",
-      "apellido": "Aloja-Te",
-      "rol": "ADMINISTRADOR",
-      "tipoCuenta": "SUPER_ADMIN"
-    }
-  },
-  "anfitrion@alojate.bo": {
-    "pass": "Anfitrion1234!",
-    "usuario": {
-      "id": "a0000000-0000-4000-8000-000000000002",
-      "email": "anfitrion@alojate.bo",
-      "nombre": "Carlos",
-      "apellido": "Mendoza",
-      "rol": "ANFITRION",
-      "tipoCuenta": "ANFITRION_VERIFICADO",
-      "bancoNombre": "Banco Mercantil Santa Cruz S.A.",
-      "numeroCuentaBancaria": "4010987654321",
-      "qr": "https://alojate-bolivia.s3.sa-east-1.amazonaws.com/anfitriones/qr-carlos-mendoza.png"
-    }
-  },
-  "cliente@alojate.bo": {
-    "pass": "Cliente1234!",
-    "usuario": {
-      "id": "c0000000-0000-4000-8000-000000000001",
-      "email": "cliente@alojate.bo",
-      "nombre": "Lucia",
-      "apellido": "Suarez",
-      "rol": "CLIENTE",
-      "tipoCuenta": "VIAJERO_FRECUENTE"
-    }
-  },
-  "huesped@alojate.bo": {
-    "pass": "Cliente1234!",
-    "usuario": {
-      "id": "c0000000-0000-4000-8000-000000000002",
-      "email": "huesped@alojate.bo",
-      "nombre": "Huesped",
-      "apellido": "Aloja-Te",
-      "rol": "CLIENTE",
-      "tipoCuenta": "VIAJERO_FRECUENTE"
-    }
-  },
-  "danielqch333@gmail.com": {
-    "pass": "daniel123",
-    "usuario": {
-      "id": "5ca26631-e4d6-4f28-a085-72ad70c4b322",
-      "email": "danielqch333@gmail.com",
+      "email": "danielqczn@gmail.com",
       "nombre": "Daniel",
       "apellido": "Quispe Choque",
-      "rol": "ANFITRION",
-      "tipoCuenta": "ANFITRION_VERIFICADO",
-      "bancoNombre": "Banco Nacional de Bolivia (BNB)",
-      "numeroCuentaBancaria": "",
-      "qr": "",
       "telefono": "63591455",
-      "ci": "11107075",
-      "ciExpedido": "SC",
-      "ciudad": "Santa Cruz",
-      "departamento": "Santa Cruz"
+      "rol": "ADMINISTRADOR",
+      "tipoCuenta": "SUPER_ADMIN",
+      "bancoNombre": "Banco Mercantil Santa Cruz",
+      "numeroCuentaBancaria": "1000123456",
+      "qr": "https://alojate-bolivia.s3.sa-east-1.amazonaws.com/admin/qr-oficial.png"
     }
   }
 }

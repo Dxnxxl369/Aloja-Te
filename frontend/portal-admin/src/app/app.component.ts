@@ -429,7 +429,7 @@ export class AppComponent implements OnInit {
       const resp = await fetch(`${API_GATEWAY_URL}/api/v1/auth/sso/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: 'danielqczn@gmail.com', password: 'Admin1234!' })
+        body: JSON.stringify({ email: 'danielqczn@gmail.com', password: 'admin123' })
       });
       if (resp.ok) {
         const data = await resp.json();
