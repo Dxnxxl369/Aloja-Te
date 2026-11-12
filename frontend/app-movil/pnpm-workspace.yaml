@@ -1,5 +1,0 @@
-nodeLinker: hoisted
-ignoredBuiltDependencies:
-  - llama.rn
-allowBuilds:
-  llama.rn: set this to true or false
