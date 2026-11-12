@@ -8,22 +8,18 @@ import path from 'path';
 import nodemailer from 'nodemailer';
 import { createProxyMiddleware, fixRequestBody } from 'http-proxy-middleware';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-let admin: any;
-try {
-  admin = require('firebase-admin');
-} catch {}
-
 dotenv.config({ override: true });
 
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-// ============================================================================
-// SERVICIO CENTRAL DE NOTIFICACIONES PUSH (FCM & EXPO PUSH)
-// ============================================================================
-let firebaseIniciado = false;
+let messagingService: any = null;
 try {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { initializeApp, cert, getApps } = require('firebase-admin/app');
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { getMessaging } = require('firebase-admin/messaging');
+
   const rutaClave = process.env.FIREBASE_CREDENTIALS ||
     (fs.existsSync(path.join(__dirname, '../firebase-service-account.json'))
       ? path.join(__dirname, '../firebase-service-account.json')
@@ -33,12 +29,8 @@ try {
 
   if (rutaClave && fs.existsSync(rutaClave)) {
     const serviceAccount = JSON.parse(fs.readFileSync(rutaClave, 'utf8'));
-    if (!admin.apps.length) {
-      admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount)
-      });
-    }
-    firebaseIniciado = true;
+    const firebaseApp = getApps().length ? getApps()[0] : initializeApp({ credential: cert(serviceAccount) });
+    messagingService = getMessaging(firebaseApp);
     console.log(`[Push Firebase] Firebase Admin SDK inicializado exitosamente para proyecto: ${serviceAccount.project_id}`);
   } else {
     console.log('[Push Firebase] Archivo de credenciales no encontrado aún, modo Expo Push activo.');
@@ -95,10 +87,10 @@ async function enviarNotificacionPushAnfitrion(params: {
       } catch (errExpo: any) {
         console.warn('[Push Expo] Error al enviar notificación:', errExpo.message);
       }
-    } else if (firebaseIniciado && admin.apps.length > 0) {
+    } else if (messagingService) {
       // B) Token FCM nativo
       try {
-        await admin.messaging().send({
+        await messagingService.send({
           token,
           notification: {
             title: titulo,
