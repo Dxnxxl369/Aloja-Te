@@ -122,7 +122,7 @@ def obtener_imagen_bytes(url: str) -> tuple[bytes, str]:
 
 def evaluar_con_gemini_vision(img_bytes: bytes, mime_type: str) -> dict:
     b64 = base64.b64encode(img_bytes).decode("utf-8")
-    api_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent"
+    api_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent"
     headers = {
         "Content-Type": "application/json",
         "x-goog-api-key": GEMINI_API_KEY

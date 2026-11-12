@@ -52,4 +52,8 @@ Thumbs.db
 *.env
 .expo/
 .expo-home/
+key/
+**/key/
+aloja-te.json
+
 

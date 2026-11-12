@@ -53,10 +53,8 @@ export const alojamientoService = {
   },
 
   async sincronizarConServidor(clave: string): Promise<Alojamiento[]> {
-    let listaActual = this.obtenerPorAnfitrion(clave);
     const map = new Map<string, Alojamiento>();
-    // Pre-cargar con los alojamientos locales para que NUNCA desaparezcan
-    listaActual.forEach(a => map.set(a.idAlojamiento, a));
+    let servidorRespondio = false;
 
     try {
       const urls = [
@@ -71,6 +69,7 @@ export const alojamientoService = {
           if (resp.ok) {
             const remotos: any[] = await resp.json();
             if (Array.isArray(remotos)) {
+              servidorRespondio = true;
               remotos.forEach(r => {
                 const id = r.idAlojamiento || r.id;
                 const matchAnf = 
@@ -168,13 +167,17 @@ export const alojamientoService = {
         console.warn('[AlojamientoService] Error al sincronizar reservas:', errRes);
       }
 
-      listaActual = Array.from(map.values());
-      this.guardar(clave, listaActual);
+      if (servidorRespondio) {
+        const listaFinal = Array.from(map.values());
+        this.guardar(clave, listaFinal);
+        return sincronizarConDecisionesAdmin(listaFinal);
+      }
     } catch (e) {
       // Si el backend no responde, la sincronización local funciona de forma transparente
     }
 
-    return sincronizarConDecisionesAdmin(listaActual);
+    const listaFallback = this.obtenerPorAnfitrion(clave);
+    return sincronizarConDecisionesAdmin(listaFallback);
   },
 
   guardar(clave: string, lista: Alojamiento[]): void {

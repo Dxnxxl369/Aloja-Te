@@ -320,3 +320,6 @@ export function crearRepositorioAnfitrion(deps: { api: Api }) {
     },
   };
 }
+
+export type RepositorioAnfitrion = ReturnType<typeof crearRepositorioAnfitrion>;
+

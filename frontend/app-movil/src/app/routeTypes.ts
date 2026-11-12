@@ -24,7 +24,7 @@ export type RutasTabs = {
 export type RutasTabsAnfitrion = {
   Dashboard: undefined;
   Propiedades: undefined;
-  Recepcion: undefined;
+  Recepcion: { alojamientoId?: string; propiedadTitulo?: string; reservaId?: string; pin?: string } | undefined;
   Finanzas: undefined;
   Perfil: undefined;
 };

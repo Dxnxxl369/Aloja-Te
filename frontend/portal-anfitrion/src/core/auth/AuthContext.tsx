@@ -388,6 +388,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('alojate_jwt_token');
     localStorage.removeItem('alojate_anfitrion_email');
     localStorage.removeItem('alojate_anfitrion_perfil_custom');
+    localStorage.removeItem('alojate_alojamientos_custom');
     setRolNoPermitido(null);
     setIsAuthenticated(false);
     setSSOToken(null);

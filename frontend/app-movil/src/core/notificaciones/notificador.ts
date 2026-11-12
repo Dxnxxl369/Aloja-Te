@@ -153,7 +153,34 @@ export function crearNotificador(): Notificador {
 export const notificador: Notificador = crearNotificador();
 
 /**
- * Notifica al anfitrión cuando se genera una nueva reserva:
+ * Notificación Push para el anfitrión cuando recibe una reserva en su propiedad:
+ * "Recibiste una reserva en tu propiedad X, pulsa para mas informacion"
+ */
+export async function notificarReservaAnfitrion(params: {
+  propiedadTitulo: string;
+  alojamientoId?: string;
+  reservaId?: string;
+  huespedNombre?: string;
+  checkIn?: string;
+  checkOut?: string;
+  pin?: string;
+}): Promise<void> {
+  const titulo = 'Nueva Reserva Recibida';
+  const cuerpo = `Recibiste una reserva en tu propiedad ${params.propiedadTitulo}, pulsa para mas informacion`;
+  await notificador.enviarInmediato(titulo, cuerpo, {
+    tipo: 'RESERVA_ANFITRION',
+    propiedadTitulo: params.propiedadTitulo,
+    alojamientoId: params.alojamientoId || '',
+    reservaId: params.reservaId || '',
+    huespedNombre: params.huespedNombre || '',
+    checkIn: params.checkIn || '',
+    checkOut: params.checkOut || '',
+    pin: params.pin || '',
+  });
+}
+
+/**
+ * Notifica al anfitrión cuando se genera una nueva reserva (compatibilidad):
  * "Nueva Reserva \n (nombre de alojamiento) recibió una reserva fechaInicio-fechaFin HoraInicio-HoraFin"
  */
 export async function notificarNuevaReserva(
@@ -163,21 +190,26 @@ export async function notificarNuevaReserva(
   horaInicio = '14:00',
   horaFin = '11:00'
 ): Promise<void> {
-  const titulo = 'Nueva Reserva';
-  const cuerpo = `${alojamientoTitulo} recibió una reserva\n${fechaInicio}-${fechaFin} ${horaInicio}-${horaFin}`;
-  await notificador.enviarInmediato(titulo, cuerpo, {
-    tipo: 'NUEVA_RESERVA',
-    alojamiento: alojamientoTitulo,
-    rango: `${fechaInicio}-${fechaFin}`,
+  await notificarReservaAnfitrion({
+    propiedadTitulo: alojamientoTitulo,
+    checkIn: fechaInicio,
+    checkOut: fechaFin,
   });
 }
 
 /**
- * Punto de enganche para Firebase Cloud Messaging (FCM).
- * Cuando pases tu llave de Firebase, se inyecta aquí directamente.
+ * Obtiene y registra el token de dispositivo Firebase / Expo Push.
  */
 export async function registrarFirebaseToken(firebaseApiKey?: string): Promise<string | null> {
-  if (!firebaseApiKey) return null;
-  // Listo para vincular el token de dispositivo con FCM
-  return 'FCM_TOKEN_PENDIENTE_CONFIGURACION';
+  try {
+    if (!(await tienePermiso())) return null;
+    const token = (await Notifications.getExpoPushTokenAsync().catch(() => null))?.data;
+    if (token) {
+      console.log('[FCM / Expo Push] Token registrado exitosamente:', token);
+      return token;
+    }
+  } catch (e) {
+    console.warn('[FCM / Expo Push] Error al registrar token:', e);
+  }
+  return firebaseApiKey ? 'FCM_TOKEN_LOCAL_DEV' : null;
 }

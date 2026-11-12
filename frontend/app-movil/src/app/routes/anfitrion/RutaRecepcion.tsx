@@ -9,12 +9,19 @@ import { useFeatures } from '../../features';
 import { Marco } from '../../Marco';
 import type { PropsTabAnfitrion } from '../../routeTypes';
 
-export function RutaRecepcion({}: PropsTabAnfitrion<'Recepcion'>) {
+export function RutaRecepcion({ route }: PropsTabAnfitrion<'Recepcion'>) {
   const { anfitrion } = useFeatures();
+  const params = route?.params;
 
   return (
     <Marco titulo="Recepción & PIN">
-      <PantallaRecepcion repo={anfitrion} />
+      <PantallaRecepcion
+        repo={anfitrion}
+        filtroPropiedad={params?.propiedadTitulo}
+        filtroAlojamientoId={params?.alojamientoId}
+        reservaIdDestacada={params?.reservaId}
+        pinInicial={params?.pin}
+      />
     </Marco>
   );
 }

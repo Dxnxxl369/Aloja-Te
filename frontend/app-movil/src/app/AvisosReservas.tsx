@@ -11,34 +11,71 @@
 import type { NavigationContainerRef, ParamListBase } from '@react-navigation/native';
 import { useCallback, useEffect, useRef } from 'react';
 import { AppState } from 'react-native';
-import { notificador } from '../core';
+import { notificador, notificarReservaAnfitrion } from '../core';
 import type { CasosReservas } from '../features/reservas';
+import type { RepositorioAnfitrion } from '../features/anfitrion';
 import { PREFIJO_AVISOS_RESERVA, planificarAvisos } from '../features/reservas/presentacion/planificarAvisos';
 
 interface Props {
   navegacion: NavigationContainerRef<ParamListBase>;
   casos: CasosReservas;
+  anfitrionRepo?: RepositorioAnfitrion;
   clienteId: string;
+  rol?: string;
 }
 
 const ENTRE_SINCRONIZACIONES_MS = 5000;
 /** Cuánto se espera a que la navegación esté lista si la app se abrió tocando un aviso. */
 const ESPERA_NAVEGACION_MS = 5000;
 
-export function AvisosReservas({ navegacion, casos, clienteId }: Props) {
+export function AvisosReservas({ navegacion, casos, anfitrionRepo, clienteId, rol }: Props) {
   const ultima = useRef(0);
+  const reservasVistasRef = useRef<Set<string>>(new Set());
+  const inicioCompletadoRef = useRef(false);
 
   const sincronizar = useCallback(async () => {
     const ahora = Date.now();
     if (ahora - ultima.current < ENTRE_SINCRONIZACIONES_MS) return;
     ultima.current = ahora;
+
+    // 1. Si el usuario actual es ANFITRIÓN: monitorear reservas de sus propiedades
+    if (rol === 'ANFITRION' && anfitrionRepo) {
+      try {
+        const dashboard = await anfitrionRepo.obtenerDashboard(clienteId);
+        const recientes = dashboard.reservasRecientes || [];
+
+        for (const r of recientes) {
+          if (!reservasVistasRef.current.has(r.id)) {
+            reservasVistasRef.current.add(r.id);
+            // Si ya pasó la primera carga inicial del arranque y entra una reserva:
+            if (inicioCompletadoRef.current) {
+              await notificarReservaAnfitrion({
+                propiedadTitulo: r.alojamientoTitulo,
+                alojamientoId: r.alojamientoId,
+                reservaId: r.id,
+                huespedNombre: r.huespedNombre,
+                checkIn: r.checkIn,
+                checkOut: r.checkOut,
+                pin: r.codigoCheckin,
+              });
+            }
+          }
+        }
+        inicioCompletadoRef.current = true;
+      } catch {
+        // En caso de fallo de red
+      }
+      return;
+    }
+
+    // 2. Si el usuario actual es CLIENTE: programar avisos locales de vencimiento de pago
     try {
       const reservas = await casos.listarReservasDeCliente(clienteId);
       await notificador.sincronizar(PREFIJO_AVISOS_RESERVA, planificarAvisos(reservas, Date.now(), casos.segundosRestantes));
     } catch {
       // Sin red o con error: quedan los avisos que ya había.
     }
-  }, [casos, clienteId]);
+  }, [casos, anfitrionRepo, clienteId, rol]);
 
   // Al abrir la app, al volver a ella y al cambiar de pantalla.
   useEffect(() => {
@@ -51,17 +88,38 @@ export function AvisosReservas({ navegacion, casos, clienteId }: Props) {
     };
   }, [navegacion, sincronizar]);
 
-  // Al tocar un aviso se abre esa reserva.
+  // Al tocar un aviso (notificación push o local):
   useEffect(() => {
     let vivo = true;
-    const abrir = async (reservaId: string | undefined) => {
-      if (!reservaId) return;
+    const abrir = async (datos: Record<string, string> | null | undefined) => {
+      if (!datos) return;
       const limite = Date.now() + ESPERA_NAVEGACION_MS;
       while (vivo && !navegacion.isReady() && Date.now() < limite) await new Promise((r) => setTimeout(r, 200));
-      if (vivo && navegacion.isReady()) navegacion.navigate('Reserva', { reservaId });
+      if (!vivo || !navegacion.isReady()) return;
+
+      // A) Notificación para el ANFITRIÓN:
+      // Redirige a la pantalla de Recepción & PIN con la información de la propiedad y cola de reservas
+      if (datos.tipo === 'RESERVA_ANFITRION' || datos.propiedadTitulo) {
+        (navegacion as any).navigate('Tabs', {
+          screen: 'Recepcion',
+          params: {
+            propiedadTitulo: datos.propiedadTitulo,
+            alojamientoId: datos.alojamientoId,
+            reservaId: datos.reservaId,
+            pin: datos.pin,
+          },
+        });
+        return;
+      }
+
+      // B) Notificación para el CLIENTE:
+      if (datos.reservaId) {
+        (navegacion as any).navigate('Reserva', { reservaId: datos.reservaId });
+      }
     };
-    const dejarDeEscuchar = notificador.alTocar((datos) => void abrir(datos.reservaId));
-    void notificador.avisoQueAbrioLaApp().then((datos) => void abrir(datos?.reservaId)); // la app estaba cerrada
+
+    const dejarDeEscuchar = notificador.alTocar((datos) => void abrir(datos));
+    void notificador.avisoQueAbrioLaApp().then((datos) => void abrir(datos)); // Si la app estaba cerrada
     return () => {
       vivo = false;
       dejarDeEscuchar();

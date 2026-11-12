@@ -103,7 +103,7 @@ async function enviarNotificacionModeracion(params: {
   emailDestino: string;
   nombreAnfitrion: string;
   tituloAlojamiento: string;
-  estado: 'PUBLICADO' | 'OBSERVADO' | 'RECHAZADO';
+  estado: 'PUBLICADO' | 'OBSERVADO' | 'RECHAZADO' | 'PENDIENTE';
   motivo?: string;
   detalleFotos?: DetalleFotoModeracion[];
 }) {
@@ -137,6 +137,14 @@ async function enviarNotificacionModeracion(params: {
       cuerpo: 'La publicación de tu alojamiento fue rechazada debido a que se detectó contenido no permitido en las imágenes según nuestras políticas de seguridad.',
       color: '#b91c1c',
       fondo: '#fee2e2'
+    },
+    PENDIENTE: {
+      asunto: `Tu alojamiento "${tituloAlojamiento}" está en proceso de revisión`,
+      insignia: 'EN REVISIÓN',
+      encabezado: 'Tu alojamiento está en revisión',
+      cuerpo: 'Hemos recibido tu publicación y las fotografías. El equipo de auditoría está realizando la verificación correspondiente.',
+      color: '#2563eb',
+      fondo: '#dbeafe'
     }
   };
 
@@ -189,6 +197,10 @@ async function enviarNotificacionModeracion(params: {
       'Revisa las fotografías marcadas como rechazadas en la tabla anterior.',
       'Asegúrate de no incluir armas, imágenes de adultos, poca ropa ni contenido prohibido.',
       'Vuelve a registrar o editar tu propiedad con fotografías que muestren exclusivamente los ambientes habitables.'
+    ],
+    PENDIENTE: [
+      'Tu alojamiento se encuentra en revisión manual o pendiente de validación.',
+      'Un administrador o el sistema automático actualizará el estado a la brevedad.'
     ]
   };
 
@@ -902,7 +914,7 @@ Responde ÚNICAMENTE en JSON válido:
   "rationale": "Explicación breve y cordial en español para el anfitrión"
 }`;
 
-      const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${GEMINI_API_KEY_MODERACION}`, {
+      const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${GEMINI_API_KEY_MODERACION}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1135,7 +1147,7 @@ async function procesarModeracionAutomatica(idAlojamiento: string) {
       const palabrasProhibidas = ['estafa', 'fraude', 'armas', 'drogas', 'prostitucion', 'ilegal'];
       const tieneProhibidas = palabrasProhibidas.some(p => titulo.toLowerCase().includes(p) || desc.toLowerCase().includes(p));
 
-      let nuevoEstado: 'PUBLICADO' | 'OBSERVADO' | 'RECHAZADO' = 'PUBLICADO';
+      let nuevoEstado: 'PUBLICADO' | 'OBSERVADO' | 'RECHAZADO' | 'PENDIENTE' = 'PUBLICADO';
       let motivo = 'Aprobado automáticamente: la auditoría técnica y revisión fotográfica cumplen plenamente con los estándares de Aloja-Te Bolivia.';
       const detalleFotos: DetalleFotoModeracion[] = [];
 
@@ -1178,8 +1190,9 @@ async function procesarModeracionAutomatica(idAlojamiento: string) {
             etiqueta: f.etiqueta,
             tipo: tipoFoto,
             categoria: categoriaLimpia,
-            explicacion: explicacionLimpia
-          });
+            explicacion: explicacionLimpia,
+            proveedor: resFoto.proveedor
+          } as any);
         }
 
         if (fotosProblematicasGrave.length > 0) {
@@ -1189,8 +1202,14 @@ async function procesarModeracionAutomatica(idAlojamiento: string) {
           nuevoEstado = 'OBSERVADO';
           motivo = `Observado automáticamente por IA de Calidad: se detectó contenido no apto para catálogo familiar en ${fotosProblematicasLeve.join(', ')}. Por favor reemplaza o elimina estas fotografías en tu portal de anfitrión.`;
         } else {
-          nuevoEstado = 'PUBLICADO';
-          motivo = `Aprobado automáticamente: ${todasLasFotos.length} fotografía(s) revisadas por IA de Visión sin observaciones.`;
+          const evaluadasConIA = detalleFotos.some(f => (f as any).proveedor && (f as any).proveedor !== 'Filtro Offline');
+          if (!evaluadasConIA && detalleFotos.length > 0) {
+            nuevoEstado = 'PENDIENTE';
+            motivo = 'En revisión: Las fotografías han sido recibidas y están a la espera de auditoría técnica por el equipo de moderación.';
+          } else {
+            nuevoEstado = 'PUBLICADO';
+            motivo = `Aprobado automáticamente: ${todasLasFotos.length} fotografía(s) revisadas por IA de Visión sin observaciones.`;
+          }
         }
       }
 

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1057305968051",
+    "project_id": "aloja-te-e7e89",
+    "storage_bucket": "aloja-te-e7e89.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1057305968051:android:c6d33642980ca025131fc6",
+        "android_client_info": {
+          "package_name": "com.alojate.movil"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDMHHy7deHXus2kANg9ZW2NYGjKn7kN-0g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

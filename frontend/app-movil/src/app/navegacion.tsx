@@ -41,7 +41,15 @@ export function NavegacionApp({ features }: { features: Features }) {
     <ContextoFeatures.Provider value={features}>
       <NavigationContainer theme={TEMA} ref={navegacion}>
         {/* Notificaciones de las reservas: no dibuja nada. */}
-        {sesion ? <AvisosReservas navegacion={navegacion} casos={features.reservas.casos} clienteId={sesion.usuarioId} /> : null}
+        {sesion ? (
+          <AvisosReservas
+            navegacion={navegacion}
+            casos={features.reservas.casos}
+            anfitrionRepo={features.anfitrion}
+            clienteId={sesion.usuarioId}
+            rol={sesion.rol}
+          />
+        ) : null}
         {/* Todas las pantallas que se abren encima entran deslizando desde la derecha, igual en cualquier versión de Android. */}
         <Stack.Navigator initialRouteName="Tabs" screenOptions={{ headerShown: false, animation: 'slide_from_right' }}>
           <Stack.Screen name="Tabs" component={PestanasContenedor} />

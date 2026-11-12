@@ -5,6 +5,7 @@
 // ======================================================================
 
 import {
+  Bell,
   Calendar,
   CheckCircle2,
   Clock,
@@ -29,7 +30,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useSesion } from '../../../../core';
+import { useSesion, notificarReservaAnfitrion } from '../../../../core';
 import { Boton } from '../../../../shared/ui/Boton';
 import { COLOR, ESPACIO, FUENTE, RADIO, TAMANO } from '../../../../shared/ui/tema';
 import type { ReservaRecienteAnfitrion } from '../../domain/modelos';
@@ -42,9 +43,19 @@ interface Props {
     validarCheckInPin: (reservaId: string, codigoCheckin: string) => Promise<any>;
     realizarCheckOut: (reservaId: string) => Promise<any>;
   };
+  filtroPropiedad?: string;
+  filtroAlojamientoId?: string;
+  reservaIdDestacada?: string;
+  pinInicial?: string;
 }
 
-export function PantallaRecepcion({ repo }: Props) {
+export function PantallaRecepcion({
+  repo,
+  filtroPropiedad,
+  filtroAlojamientoId,
+  reservaIdDestacada,
+  pinInicial,
+}: Props) {
   const insets = useSafeAreaInsets();
   const { sesion } = useSesion();
   const anfitrionId = sesion?.usuarioId || '7c772f61-90f1-474a-8acf-e7ba66e20d40';
@@ -52,6 +63,7 @@ export function PantallaRecepcion({ repo }: Props) {
   const [cargando, setCargando] = useState(true);
   const [refrescando, setRefrescando] = useState(false);
   const [reservas, setReservas] = useState<ReservaRecienteAnfitrion[]>([]);
+  const [filtroPropiedadActivo, setFiltroPropiedadActivo] = useState<string | undefined>(filtroPropiedad);
 
   // Modal de Validar PIN
   const [modalPinVisible, setModalPinVisible] = useState(false);
@@ -61,6 +73,16 @@ export function PantallaRecepcion({ repo }: Props) {
 
   // Procesando Check-Out
   const [procesandoId, setProcesandoId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (filtroPropiedad) {
+      setFiltroPropiedadActivo(filtroPropiedad);
+    }
+    if (pinInicial) {
+      setPinInput(pinInicial);
+      setModalPinVisible(true);
+    }
+  }, [filtroPropiedad, pinInicial]);
 
   const cargarReservas = useCallback(async () => {
     if (!anfitrionId) return;
@@ -185,8 +207,12 @@ export function PantallaRecepcion({ repo }: Props) {
     );
   };
 
-  const reservasEnUso = reservas.filter((r) => r.estado === 'EN_USO' || r.estado === 'CHECKIN_REALIZADO');
-  const reservasPendientesLlegada = reservas.filter(
+  const reservasVisibles = filtroPropiedadActivo
+    ? reservas.filter((r) => r.alojamientoTitulo.toLowerCase().includes(filtroPropiedadActivo.toLowerCase()))
+    : reservas;
+
+  const reservasEnUso = reservasVisibles.filter((r) => r.estado === 'EN_USO' || r.estado === 'CHECKIN_REALIZADO');
+  const reservasPendientesLlegada = reservasVisibles.filter(
     (r) => r.estado === 'CONFIRMADA' || r.estado === 'PENDIENTE_PAGO',
   );
 
@@ -200,6 +226,42 @@ export function PantallaRecepcion({ repo }: Props) {
         <Text style={estilos.titulo}>Recepción & Control PIN</Text>
         <Text style={estilos.subtitulo}>Gestión de llegadas, check-in con PIN y check-out</Text>
       </View>
+
+      {/* Banner de Notificación de Reserva en Propiedad */}
+      {filtroPropiedadActivo ? (
+        <View style={estilos.bannerPropiedadNotif}>
+          <View style={estilos.bannerIconoNotif}>
+            <Bell color={COLOR.primario} size={20} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={estilos.subtituloNotif}>Notificación de reserva en propiedad:</Text>
+            <Text style={estilos.tituloPropiedadNotif}>{filtroPropiedadActivo}</Text>
+          </View>
+          <Pressable onPress={() => setFiltroPropiedadActivo(undefined)} style={estilos.btnVerTodas}>
+            <Text style={estilos.btnVerTodasTexto}>Ver todas</Text>
+          </Pressable>
+        </View>
+      ) : null}
+
+      {/* Botón de Simulación de Notificación Push */}
+      <Pressable
+        onPress={() => {
+          const prop = reservas[0]?.alojamientoTitulo || 'Cabaña Chiquitana El Palmar';
+          const pinDemo = reservas[0]?.codigoCheckin || '574034';
+          void notificarReservaAnfitrion({
+            propiedadTitulo: prop,
+            pin: pinDemo,
+            huespedNombre: 'Lucía Fernández',
+            checkIn: '2026-12-10',
+            checkOut: '2026-12-12',
+          });
+          Alert.alert('Notificación Push Enviada', `Se envió la notificación para ${prop}. Pulsa sobre ella para probar el flujo.`);
+        }}
+        style={estilos.bannerSimularPush}
+      >
+        <Bell color="#2563eb" size={16} />
+        <Text style={estilos.textoSimularPush}>Probar Notificación Push (Simular Reserva)</Text>
+      </Pressable>
 
       {/* Botón Destacado de Validar PIN */}
       <Pressable onPress={() => setModalPinVisible(true)} style={estilos.bannerPin}>
@@ -626,5 +688,61 @@ const estilos = StyleSheet.create({
     ...FUENTE.normal,
     fontSize: TAMANO.pequeno,
     color: COLOR.textoSuave,
+  },
+  bannerPropiedadNotif: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(37, 99, 235, 0.08)',
+    borderWidth: 1,
+    borderColor: '#93c5fd',
+    borderRadius: RADIO.control,
+    padding: ESPACIO.m,
+    gap: ESPACIO.s,
+    marginBottom: ESPACIO.s,
+  },
+  bannerIconoNotif: {
+    backgroundColor: '#dbeafe',
+    padding: 8,
+    borderRadius: RADIO.pildora,
+  },
+  subtituloNotif: {
+    ...FUENTE.normal,
+    fontSize: TAMANO.micro,
+    color: COLOR.primario,
+    textTransform: 'uppercase',
+  },
+  tituloPropiedadNotif: {
+    ...FUENTE.tituloFuerte,
+    fontSize: TAMANO.pequeno + 1,
+    color: COLOR.texto,
+  },
+  btnVerTodas: {
+    backgroundColor: COLOR.primario,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: RADIO.pildora,
+  },
+  btnVerTodasTexto: {
+    ...FUENTE.semi,
+    fontSize: TAMANO.micro,
+    color: '#ffffff',
+  },
+  bannerSimularPush: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#eff6ff',
+    borderWidth: 1,
+    borderColor: '#bfdbfe',
+    borderRadius: RADIO.control,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginBottom: ESPACIO.m,
+  },
+  textoSimularPush: {
+    ...FUENTE.semi,
+    fontSize: TAMANO.pequeno,
+    color: '#1d4ed8',
   },
 });
