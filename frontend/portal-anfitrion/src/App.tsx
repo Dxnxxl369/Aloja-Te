@@ -11,13 +11,7 @@ import { ListingWizardModal } from './features/alojamientos/modals/ListingWizard
 import { useAnfitrionAuth } from './core/auth/AuthContext';
 import { alojamientoService } from './features/alojamientos/services/alojamientoService';
 import { Alojamiento } from './core/types/anfitrion.types';
-<<<<<<< HEAD
-import { CLIENTES_URL } from './core/api/apiEndpoints';
-import { CheckCircle2, Lock, ExternalLink } from 'lucide-react';
-=======
-import * as apiEndpoints from './core/api/apiEndpoints';
 import { CheckCircle2 } from 'lucide-react';
->>>>>>> Daniel
 
 // Parser bidireccional de ruta para persistencia absoluta en F5 / recargas
 const parseRouteFromLocation = (): {

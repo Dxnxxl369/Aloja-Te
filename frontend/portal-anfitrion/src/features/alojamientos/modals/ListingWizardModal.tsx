@@ -161,7 +161,7 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
         const formData = new FormData();
         formData.append('archivo', file);
         formData.append('file', file);
-        const res = await fetch(`${API_BASE_URL}/api/v1/alojamientos/imagenes?carpeta=alojamientos`, {
+        let res = await fetch(`${API_BASE_URL}/api/v1/alojamientos/imagenes?carpeta=alojamientos`, {
           method: 'POST',
           body: formData
         });
@@ -250,7 +250,7 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
         const formData = new FormData();
         formData.append('archivo', file);
         formData.append('file', file);
-        const res = await fetch(`${API_BASE_URL}/api/v1/alojamientos/imagenes?carpeta=habitaciones`, {
+        let res = await fetch(`${API_BASE_URL}/api/v1/alojamientos/imagenes?carpeta=habitaciones`, {
           method: 'POST',
           body: formData
         });
