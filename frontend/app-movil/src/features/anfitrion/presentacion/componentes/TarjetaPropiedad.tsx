@@ -1,18 +1,19 @@
 // ======================================================================
 // ARCHIVO: anfitrion/presentacion/componentes/TarjetaPropiedad.tsx
-// QUÉ ES: Tarjeta visual de propiedad para la lista del anfitrión.
+// QUÉ ES: Tarjeta visual de propiedad para la lista del anfitrión (con soporte táctil para edición).
 // ======================================================================
 
-import { AlertTriangle, BedDouble, CheckCircle2, Clock, MapPin, XCircle } from 'lucide-react-native';
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { AlertTriangle, BedDouble, CheckCircle2, ChevronRight, Clock, MapPin, XCircle } from 'lucide-react-native';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { COLOR, ESPACIO, FUENTE, RADIO, TAMANO } from '../../../../shared/ui/tema';
 import type { PropiedadAnfitrion } from '../../domain/modelos';
 
 interface Props {
   propiedad: PropiedadAnfitrion;
+  onPress?: () => void;
 }
 
-export function TarjetaPropiedad({ propiedad }: Props) {
+export function TarjetaPropiedad({ propiedad, onPress }: Props) {
   const { estadoPublicacion, motivoObservacion } = propiedad;
 
   const configEstado = () => {
@@ -64,7 +65,12 @@ export function TarjetaPropiedad({ propiedad }: Props) {
   const IconoEstado = est.Icono;
 
   return (
-    <View style={estilos.tarjeta}>
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [estilos.tarjeta, pressed && estilos.tarjetaPresionada]}
+      accessibilityRole="button"
+      accessibilityLabel={`Propiedad ${propiedad.titulo}, estado ${est.texto}`}
+    >
       {propiedad.fotoPrincipal ? (
         <Image source={{ uri: propiedad.fotoPrincipal }} style={estilos.foto} resizeMode="cover" />
       ) : (
@@ -107,15 +113,18 @@ export function TarjetaPropiedad({ propiedad }: Props) {
           <Text style={estilos.precio}>
             Bs. {propiedad.precioNoche} <Text style={estilos.noche}>/ noche</Text>
           </Text>
-          <View style={estilos.habitacionesPildora}>
-            <BedDouble color={COLOR.primario} size={13} />
-            <Text style={estilos.habitacionesTexto}>
-              {propiedad.unidadesCount} {propiedad.unidadesCount === 1 ? 'unidad' : 'unidades'}
-            </Text>
+          <View style={estilos.filaDerecha}>
+            <View style={estilos.habitacionesPildora}>
+              <BedDouble color={COLOR.primario} size={13} />
+              <Text style={estilos.habitacionesTexto}>
+                {propiedad.unidadesCount} {propiedad.unidadesCount === 1 ? 'unidad' : 'unidades'}
+              </Text>
+            </View>
+            {onPress && <ChevronRight color={COLOR.textoSuave} size={18} />}
           </View>
         </View>
       </View>
-    </View>
+    </Pressable>
   );
 }
 
@@ -127,6 +136,10 @@ const estilos = StyleSheet.create({
     borderColor: COLOR.borde,
     overflow: 'hidden',
     marginBottom: ESPACIO.m,
+  },
+  tarjetaPresionada: {
+    opacity: 0.9,
+    transform: [{ scale: 0.995 }],
   },
   foto: {
     width: '100%',
@@ -167,9 +180,10 @@ const estilos = StyleSheet.create({
     textTransform: 'uppercase',
   },
   titulo: {
-    ...FUENTE.semi,
-    fontSize: TAMANO.cuerpo,
+    ...FUENTE.tituloFuerte,
+    fontSize: 16,
     color: COLOR.texto,
+    lineHeight: 22,
   },
   filaUbicacion: {
     flexDirection: 'row',
@@ -186,37 +200,41 @@ const estilos = StyleSheet.create({
     alignItems: 'flex-start',
     gap: 6,
     backgroundColor: COLOR.avisoFondo,
+    borderColor: COLOR.avisoBorde,
+    borderWidth: 1,
     borderRadius: RADIO.control,
     padding: ESPACIO.s,
-    borderWidth: 1,
-    borderColor: COLOR.avisoBorde,
     marginTop: 4,
   },
   textoObservacion: {
-    flex: 1,
     ...FUENTE.normal,
-    fontSize: TAMANO.pequeno,
+    fontSize: TAMANO.micro,
     color: COLOR.avisoOscuro,
-    lineHeight: 16,
+    flex: 1,
   },
   pie: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: ESPACIO.s,
+    marginTop: ESPACIO.xs,
     paddingTop: ESPACIO.s,
     borderTopWidth: 1,
     borderTopColor: COLOR.borde,
   },
   precio: {
-    ...FUENTE.fuerte,
+    ...FUENTE.tituloFuerte,
     fontSize: 16,
     color: COLOR.texto,
   },
   noche: {
     ...FUENTE.normal,
-    fontSize: TAMANO.pequeno,
+    fontSize: TAMANO.micro,
     color: COLOR.textoSuave,
+  },
+  filaDerecha: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   habitacionesPildora: {
     flexDirection: 'row',
@@ -228,7 +246,7 @@ const estilos = StyleSheet.create({
     borderRadius: RADIO.pildora,
   },
   habitacionesTexto: {
-    ...FUENTE.medio,
+    ...FUENTE.semi,
     fontSize: TAMANO.micro,
     color: COLOR.primario,
   },

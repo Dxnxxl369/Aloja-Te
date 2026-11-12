@@ -11,8 +11,13 @@ import { ListingWizardModal } from './features/alojamientos/modals/ListingWizard
 import { useAnfitrionAuth } from './core/auth/AuthContext';
 import { alojamientoService } from './features/alojamientos/services/alojamientoService';
 import { Alojamiento } from './core/types/anfitrion.types';
+<<<<<<< HEAD
 import { CLIENTES_URL } from './core/api/apiEndpoints';
 import { CheckCircle2, Lock, ExternalLink } from 'lucide-react';
+=======
+import * as apiEndpoints from './core/api/apiEndpoints';
+import { CheckCircle2 } from 'lucide-react';
+>>>>>>> Daniel
 
 // Parser bidireccional de ruta para persistencia absoluta en F5 / recargas
 const parseRouteFromLocation = (): {
@@ -43,7 +48,7 @@ const parseRouteFromLocation = (): {
 };
 
 export const AppContent: React.FC = () => {
-  const { anfitrionClave, isAuthenticated, cargandoSSO, loginDemo } = useAnfitrionAuth();
+  const { anfitrionClave, isAuthenticated, cargandoSSO, rolNoPermitido, logout } = useAnfitrionAuth();
   
   // Estado de ruta sincronizado con Hash URL y LocalStorage
   const rutaInicial = parseRouteFromLocation();
@@ -115,10 +120,14 @@ export const AppContent: React.FC = () => {
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
-  // Recargar alojamientos cuando el anfitrión cambia (Carlos vs Elena)
+  // Recargar alojamientos y sincronizar reservas con el servidor
   useEffect(() => {
+    if (!isAuthenticated || rolNoPermitido) return;
     setAlojamientos(alojamientoService.obtenerPorAnfitrion(anfitrionClave));
-  }, [anfitrionClave]);
+    alojamientoService.sincronizarConServidor(anfitrionClave).then((sincronizados) => {
+      setAlojamientos(sincronizados);
+    });
+  }, [anfitrionClave, seccionActiva, isAuthenticated, rolNoPermitido]);
 
   const handleGuardarAlojamientos = (nuevaLista: Alojamiento[]) => {
     setAlojamientos(nuevaLista);
@@ -179,51 +188,23 @@ export const AppContent: React.FC = () => {
     );
   }
 
-  if (!isAuthenticated) {
+  if (rolNoPermitido || !isAuthenticated) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6 text-slate-100 font-sans">
-        <div className="max-w-md w-full p-8 rounded-3xl bg-slate-800/90 border border-slate-700/80 shadow-2xl space-y-6 text-center animate-fade-in">
-          <div className="w-16 h-16 mx-auto rounded-3xl bg-blue-600/20 border border-blue-500/30 text-blue-400 flex items-center justify-center">
-            <Lock className="w-8 h-8" />
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6 text-slate-100 font-sans select-none">
+        <div className="max-w-md w-full p-8 sm:p-10 rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl space-y-6 text-center">
+          <div className="w-16 h-16 mx-auto rounded-2xl bg-slate-800 border border-slate-700/60 text-slate-400 flex items-center justify-center">
+            <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+            </svg>
           </div>
           <div className="space-y-2">
-            <h2 className="font-serif text-2xl font-bold text-white">Sesión Requerida</h2>
+            <span className="inline-block px-3 py-1 rounded-full text-[11px] font-bold tracking-wider uppercase bg-slate-800 text-slate-400 border border-slate-700">
+              404
+            </span>
+            <h2 className="text-xl font-bold text-white tracking-tight">Página no encontrada</h2>
             <p className="text-xs text-slate-400 leading-relaxed">
-              Para ingresar al Panel de Control del Anfitrión debes iniciar sesión con tu cuenta desde la plataforma principal de Aloja-Te Bolivia.
+              La página que buscas no existe o ha sido movida.
             </p>
-          </div>
-          <div className="space-y-2 pt-2">
-            <a
-              href={`${CLIENTES_URL}/#/catalogo`}
-              className="flex items-center justify-center gap-2 w-full py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:opacity-95 text-white font-bold text-xs shadow-lg shadow-blue-500/25 transition cursor-pointer"
-            >
-              <span>Ir al Portal Principal</span>
-              <ExternalLink className="w-3.5 h-3.5" />
-            </a>
-
-            <div className="grid grid-cols-3 gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => loginDemo('daniel')}
-                className="py-2.5 px-2 rounded-xl border border-blue-500/50 bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 font-bold text-xs transition cursor-pointer"
-              >
-                Daniel Quispe
-              </button>
-              <button
-                type="button"
-                onClick={() => loginDemo('carlos')}
-                className="py-2.5 px-2 rounded-xl border border-slate-700 hover:border-slate-600 hover:bg-slate-700/50 text-slate-300 font-semibold text-xs transition cursor-pointer"
-              >
-                Carlos (SCZ)
-              </button>
-              <button
-                type="button"
-                onClick={() => loginDemo('elena')}
-                className="py-2.5 px-2 rounded-xl border border-slate-700 hover:border-slate-600 hover:bg-slate-700/50 text-slate-300 font-semibold text-xs transition cursor-pointer"
-              >
-                Elena (TJA)
-              </button>
-            </div>
           </div>
         </div>
       </div>

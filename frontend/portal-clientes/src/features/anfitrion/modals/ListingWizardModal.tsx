@@ -499,7 +499,7 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
 
     const payloadBackend = {
       idAnfitrion: anfitrionId,
-      nombreAnfitrion: user ? `${user.nombre} ${user.apellido || ''}`.trim() : 'Carlos Mendoza',
+      nombreAnfitrion: user ? `${user.nombre} ${user.apellido || ''}`.trim() : 'Daniel Quispe',
       idTipoPropiedad: modalidad === 'HOTEL_HOSTAL' ? 5 : 3,
       titulo,
       descripcion: descripcion || `Hermoso alojamiento ubicado en ${ciudad}, ${departamento}.`,
@@ -573,7 +573,7 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
         nuevoAlojamiento = {
           idAlojamiento: createdId || `aloj-${Date.now()}`,
           idAnfitrion: anfitrionId,
-          nombreAnfitrion: user ? `${user.nombre} ${user.apellido || ''}`.trim() : 'Carlos Mendoza',
+          nombreAnfitrion: user ? `${user.nombre} ${user.apellido || ''}`.trim() : 'Daniel Quispe',
           titulo,
           descripcion: payloadBackend.descripcion,
           tipoPropiedad: tipoPropiedadNombre,
@@ -604,7 +604,7 @@ export const ListingWizardModal: React.FC<ListingWizardModalProps> = ({
         nuevoAlojamiento = {
           idAlojamiento: `aloj-${Date.now()}`,
           idAnfitrion: anfitrionId,
-          nombreAnfitrion: user ? `${user.nombre} ${user.apellido || ''}`.trim() : 'Carlos Mendoza',
+          nombreAnfitrion: user ? `${user.nombre} ${user.apellido || ''}`.trim() : 'Daniel Quispe',
           titulo,
           descripcion: payloadBackend.descripcion,
           tipoPropiedad: tipoPropiedadNombre,

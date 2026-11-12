@@ -1,4 +1,27 @@
-export type AdminTab = 'dashboard' | 'contabilidad' | 'alojamientos' | 'liquidaciones' | 'reportes-ia';
+export type AdminTab = 'dashboard' | 'contabilidad' | 'alojamientos' | 'liquidaciones' | 'reportes-ia' | 'usuarios' | 'perfil';
+
+export interface UsuarioAdmin {
+  idUsuario: string;
+  idRol?: number;
+  rolNombre?: string;
+  tipoCuenta?: string;
+  nombre: string;
+  apellido: string;
+  email: string;
+  telefono?: string;
+  ci?: string;
+  ciComplemento?: string;
+  ciExpedido?: string;
+  telefonoEmergencia?: string;
+  direccionDomicilio?: string;
+  departamentoRadicatoria?: string;
+  bancoNombre?: string;
+  numeroCuentaBancaria?: string;
+  qr?: string;
+  estado?: string;
+  fechaRegistro?: string;
+  fechaActualizacion?: string;
+}
 
 export type FiltroAlojamientos =
   | 'TODOS'

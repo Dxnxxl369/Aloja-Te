@@ -25,6 +25,7 @@ export function crearCasosCatalogo(deps: { repo: RepositorioCatalogo }): CasosCa
     listarAlojamientos: (filtros) => repo.listar(filtros),
     listarTipos: () => repo.tipos(),
     obtenerDetalle: (id) => repo.detalle(id),
+    obtenerValoraciones: (id) => (repo.obtenerValoraciones ? repo.obtenerValoraciones(id) : Promise.resolve([])),
 
     destacados(lista) {
       return lista

@@ -91,7 +91,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <a
               href={ADMIN_URL}
               className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-600 hover:opacity-95 text-white transition flex items-center gap-1.5 font-bold text-xs shadow-md shadow-blue-500/25"
-              title="Abrir Panel Oficial de Administración (4200)"
+              title="Abrir Panel de Administración"
             >
               <ShieldCheck className="w-3.5 h-3.5" />
               <span>Panel Admin</span>

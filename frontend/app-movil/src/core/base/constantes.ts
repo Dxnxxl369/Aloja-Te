@@ -9,12 +9,12 @@
 // por eso cada variable se escribe completa.
 
 // --- Entorno ----------------------------------------------------------------
-// 10.0.2.2 = localhost de tu PC visto desde el emulador de Android.
-export const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://10.0.2.2:8080';
+// IP del API Gateway Local (PC en red WiFi)
+export const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://192.168.75.122:8080';
 // Ruta real de MS-01 (AuthController: POST /api/v1/auth/login), vía Gateway.
 export const RUTA_LOGIN = process.env.EXPO_PUBLIC_RUTA_LOGIN ?? '/api/v1/auth/login';
 /** Solo demo: permite simular el aviso del banco en la pantalla de pago. */
-export const PAGO_SIMULADO_HABILITADO = process.env.EXPO_PUBLIC_PAGO_SIMULADO === '1';
+export const PAGO_SIMULADO_HABILITADO = true;
 
 export const IA_LOCAL_HABILITADA = (process.env.EXPO_PUBLIC_IA_LOCAL ?? 'true') === 'true';
 

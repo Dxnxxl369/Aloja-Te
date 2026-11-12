@@ -23,7 +23,7 @@ import { MovimientoContable } from '../../core/types/admin.types';
           <div class="text-2xl font-black font-sans text-emerald-600 dark:text-emerald-400">
             {{ totalDebito | number:'1.2-2' }} <span class="text-xs font-semibold text-slate-500">BOB</span>
           </div>
-          <p class="text-[10px] text-slate-400 font-mono">Cobros QR Simple BNB procesados</p>
+          <p class="text-[10px] text-slate-400 font-mono">Cobros QR/Transferencias Procesados</p>
         </div>
 
         <div class="p-5 rounded-2xl liquid-card liquid-card-hover space-y-2">
@@ -38,7 +38,7 @@ import { MovimientoContable } from '../../core/types/admin.types';
           <div class="text-2xl font-black font-sans text-blue-600 dark:text-blue-400">
             {{ totalCredito | number:'1.2-2' }} <span class="text-xs font-semibold text-slate-500">BOB</span>
           </div>
-          <p class="text-[10px] text-slate-400 font-mono">Liquidación Neta + Comisión 10%</p>
+          <p class="text-[10px] text-slate-400 font-mono">Liquidación Neta + Comisión</p>
         </div>
 
         <div class="p-5 rounded-2xl liquid-card liquid-card-hover flex flex-col justify-between space-y-2">

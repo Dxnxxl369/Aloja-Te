@@ -49,10 +49,9 @@ class ProcesarPagoUseCase
             }
         }
 
-        // 4. Calcular cargo de servicio para el huésped (ej. 5% tasa de servicio plataforma Aloja-Te)
+        // 4. Calcular cargo de servicio para el huésped (0% para respetar el subtotal exacto de la reserva)
         $subtotalConDescuento = max(0.0, $dto->subtotal - $descuento);
-        $reglaServicio = $this->reglaRepository->buscarVigentePorCategoria('CARGO_SERVICIO');
-        $cargoServicio = $reglaServicio ? $reglaServicio->calcularMonto($subtotalConDescuento) : round($subtotalConDescuento * 0.05, 2);
+        $cargoServicio = 0.0;
 
         $pagoId = Uuid::uuid4()->toString();
         $sagaId = $dto->sagaId ?? Uuid::uuid4()->toString();

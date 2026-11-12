@@ -150,10 +150,17 @@ export const MiPerfilScreen: React.FC<MiPerfilScreenProps> = ({ onMostrarToast }
     if (!file) return urlActual;
     const formData = new FormData();
     formData.append('archivo', file);
+    formData.append('file', file);
     const res = await fetch(`${API_BASE_URL}/api/v1/alojamientos/imagenes?carpeta=${carpeta}`, {
       method: 'POST',
       body: formData
     });
+    if (!res.ok) {
+      res = await fetch(`${API_BASE_URL}/api/v1/alojamientos/imagenes?carpeta=${carpeta}`, {
+        method: 'POST',
+        body: formData
+      });
+    }
     if (res.ok) {
       const data = await res.json();
       return data.url;

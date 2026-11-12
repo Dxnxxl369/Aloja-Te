@@ -269,9 +269,9 @@ class PdoDatabase
             $pdo->exec("INSERT INTO reglas_monetizacion (regla_id, concepto, tipo_calculo, porcentaje, categoria_alojamiento, vigente_desde)
                 VALUES ('11111111-1111-1111-1111-111111111111', 'COMISION', 'PORCENTAJE', 10.0, 'ESTANDAR', CURRENT_TIMESTAMP)");
 
-            // Regla de Cargo por Servicio Huésped: 5%
+            // Regla de Cargo por Servicio Huésped: 0% (sin sobrecostos de plataforma)
             $pdo->exec("INSERT INTO reglas_monetizacion (regla_id, concepto, tipo_calculo, porcentaje, categoria_alojamiento, vigente_desde)
-                VALUES ('22222222-2222-2222-2222-222222222222', 'CARGO_SERVICIO', 'PORCENTAJE', 5.0, 'ESTANDAR', CURRENT_TIMESTAMP)");
+                VALUES ('22222222-2222-2222-2222-222222222222', 'CARGO_SERVICIO', 'PORCENTAJE', 0.0, 'ESTANDAR', CURRENT_TIMESTAMP)");
 
             // Promoción de Bienvenida: BIENVENIDO2026 (10% descuento)
             $pdo->exec("INSERT INTO promociones (promocion_id, codigo, tipo, tipo_descuento, valor, vigente_desde, vigente_hasta, estado)

@@ -136,20 +136,10 @@ export const authService = {
     try {
       const response = await httpClient.post<any>(ENDPOINTS.AUTH.REGISTER, data);
       return normalizarAuthResponse(response.data);
-    } catch {
-      // Fallback de registro
-      const tokenLocal = `demo-token-${data.rol.toLowerCase()}-${Date.now()}`;
-      return {
-        token: tokenLocal,
-        usuario: {
-          id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : ('a0000000-0000-4000-8000-' + Math.random().toString(16).substring(2, 14).padEnd(12, '0')),
-          email: data.email,
-          nombre: data.nombre,
-          apellido: data.apellido,
-          rol: data.rol,
-          tipoCuenta: 'ACTIVO',
-        }
-      };
+    } catch (err: any) {
+      const msg = err.response?.data?.mensaje || err.response?.data?.message || err.message || 'Error al registrar usuario';
+      console.error('[AuthService] Error en registro:', msg);
+      throw new Error(msg);
     }
   }
 };

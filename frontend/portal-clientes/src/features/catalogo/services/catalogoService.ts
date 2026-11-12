@@ -11,7 +11,7 @@ function normalizarAlojamiento(raw: any): Alojamiento {
   const precioCalculado = raw.precioBaseNoche ?? raw.precioNoche ?? unidadPrincipal?.precioNoche ?? 650;
   const canonicalId = raw.idAlojamiento || raw.id || `aloj-${Date.now()}`;
   const canonicalAnfitrionId = raw.idAnfitrion || raw.anfitrionId || 'a0000000-0000-4000-8000-000000000002';
-  const canonicalNombreAnfitrion = raw.nombreAnfitrion || raw.anfitrion || 'Carlos Mendoza';
+  const canonicalNombreAnfitrion = raw.nombreAnfitrion || raw.anfitrion || raw.nombreCompletoAnfitrion || 'Anfitrión Verificado';
 
   return {
     idAlojamiento: canonicalId,

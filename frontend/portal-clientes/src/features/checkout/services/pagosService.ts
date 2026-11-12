@@ -8,11 +8,12 @@ export const pagosService = {
     return response.data;
   },
 
-  async confirmarPagoWebhook(pagoId: string, transaccionBancariaRef?: string): Promise<any> {
+  async confirmarPagoWebhook(pagoId: string, transaccionBancariaRef?: string, datosFactura?: any): Promise<any> {
     const response = await httpClient.post(ENDPOINTS.FINANZAS.WEBHOOK_BNB, {
       pagoId,
-      transaccionBancariaRef: transaccionBancariaRef || `BNB-QR-${Date.now()}`,
-      metodoPago: 'QR_SIMPLE_BNB',
+      transaccionBancariaRef: transaccionBancariaRef || `TRX-${Date.now()}`,
+      metodoPago: datosFactura?.metodoPago || 'QR_SIMPLE_BNB',
+      ...datosFactura
     });
     return response.data;
   },

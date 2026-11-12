@@ -17,12 +17,7 @@ import { AdminTab } from '../../core/types/admin.types';
         </p>
       </div>
 
-      <div class="flex items-center gap-3">
-        <!-- Indicador de Red / Conexión -->
-        <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-semibold">
-          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span>Red Nacional En Línea</span>
-        </div>
+      <div class="flex items-center gap-3">                
 
         <!-- Botón Modo Claro / Oscuro -->
         <button
@@ -54,6 +49,8 @@ export class TopHeaderComponent {
       case 'contabilidad': return 'Registro de Transacciones & Liquidaciones';
       case 'liquidaciones': return 'Liquidaciones y Desembolsos a Anfitriones';
       case 'reportes-ia': return 'Analítica Estratégica & Reportes Inteligentes';
+      case 'usuarios': return 'Gestión Integral de Usuarios';
+      case 'perfil': return 'Mi Perfil de Administrador';
     }
   }
 
@@ -61,9 +58,11 @@ export class TopHeaderComponent {
     switch (this.activeTab) {
       case 'dashboard': return 'Métricas consolidadas de transacciones, liquidaciones y demanda turística nacional';
       case 'alojamientos': return 'Inspección de estándares de habitabilidad y aprobación de anfitriones bolivianos';
-      case 'contabilidad': return 'Auditoría de cobros QR Simple BNB, comisiones del 10% y transferencias bancarias';
+      case 'contabilidad': return 'Auditoría de cobros QR y transferencias bancarias';
       case 'liquidaciones': return 'Desembolsos periódicos a cuentas bancarias acreditadas en el sistema financiero';
       case 'reportes-ia': return 'Modelos predictivos de demanda, recomendaciones ejecutivas y proyecciones fiscales';
+      case 'usuarios': return 'Directorio oficial de Clientes, Anfitriones y Administradores registrados';
+      case 'perfil': return 'Información institucional, credenciales de auditoría y cuenta bancaria de la plataforma';
     }
   }
 }

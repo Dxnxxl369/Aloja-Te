@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../../core/auth/AuthContext';
 import { authService } from '../services/authService';
+import { ANFITRION_URL } from '../../../core/api/apiEndpoints';
 import { User, Mail, Lock, Phone, AlertCircle, ArrowRight, Loader2, Home, Compass, ShieldCheck, ChevronDown, ChevronUp, Building2, CreditCard } from 'lucide-react';
 
 export const RegistroForm: React.FC = () => {
@@ -54,6 +55,10 @@ export const RegistroForm: React.FC = () => {
         apellido: data.usuario.apellido,
         rol: data.usuario.rol,
       });
+
+      if (data.usuario.rol === 'ANFITRION') {
+        window.location.href = `${ANFITRION_URL}?sso_token=${encodeURIComponent(data.token)}&sso_email=${encodeURIComponent(data.usuario.email)}&sso_nombre=${encodeURIComponent(data.usuario.nombre)}&sso_rol=ANFITRION`;
+      }
     } catch (err: any) {
       console.error('Error al registrar usuario:', err);
       const serverMsg = err.response?.data?.mensaje || err.response?.data?.error || err.message;

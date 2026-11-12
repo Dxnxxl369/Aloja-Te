@@ -8,28 +8,7 @@ import { SolicitudAlojamiento, FiltroAlojamientos } from '../../core/types/admin
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div class="space-y-6 animate-fade-in">
-      
-      <!-- Subheader con Sincronizador -->
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h3 class="font-serif text-2xl font-bold text-slate-900 dark:text-white">Bandeja de Aprobación & Moderación</h3>
-          <p class="text-xs text-slate-500 dark:text-stone-400 mt-0.5">Control de calidad técnica, validación de licencias y moderación de ofertas únicas vs. establecimientos hoteleros</p>
-        </div>
-
-        <div class="flex items-center gap-2">
-          <button
-            type="button"
-            (click)="onSincronizar.emit()"
-            class="px-4 py-2 rounded-xl bg-slate-100 dark:bg-stone-900 border border-slate-200 dark:border-stone-800 hover:bg-slate-200 dark:hover:bg-stone-800 hover:border-blue-500/30 text-slate-700 dark:text-stone-300 hover:text-slate-900 dark:hover:text-white text-xs font-medium transition flex items-center gap-2 shadow-sm cursor-pointer"
-          >
-            <svg class="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            <span>Sincronizar MS-01</span>
-          </button>
-        </div>
-      </div>
+    <div class="space-y-6 animate-fade-in">                
 
       <!-- Barra de Filtros y Búsqueda -->
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl liquid-card">

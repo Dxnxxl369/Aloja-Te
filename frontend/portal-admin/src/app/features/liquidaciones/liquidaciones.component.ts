@@ -15,7 +15,9 @@ import { LiquidacionAnfitrion } from '../../core/types/admin.types';
           <div class="text-2xl font-black font-sans text-slate-900 dark:text-white">
             {{ totalNetoPagado | number:'1.2-2' }} <span class="text-xs font-semibold text-slate-500">BOB</span>
           </div>
-          <p class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">98.4% de desembolsos exitosos</p>
+          <p class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
+            {{ liquidaciones.length > 0 ? (totalNetoPagado > 0 ? 'Desembolsos confirmados' : 'Sin desembolsos previos') : 'Sin operaciones' }}
+          </p>
         </div>
 
         <div class="p-5 rounded-2xl liquid-card liquid-card-hover space-y-2">
@@ -23,7 +25,7 @@ import { LiquidacionAnfitrion } from '../../core/types/admin.types';
           <div class="text-2xl font-black font-sans text-emerald-600 dark:text-emerald-400">
             {{ totalComisiones | number:'1.2-2' }} <span class="text-xs font-semibold text-emerald-500">BOB</span>
           </div>
-          <p class="text-[10px] text-slate-400 font-mono">Retención directa en origen QR BNB</p>
+          <p class="text-[10px] text-slate-400 font-mono">Retención directa sobre cobros de reserva</p>
         </div>
 
         <div class="p-5 rounded-2xl liquid-card liquid-card-hover flex flex-col justify-between space-y-2">
@@ -43,7 +45,7 @@ import { LiquidacionAnfitrion } from '../../core/types/admin.types';
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
             </svg>
-            <span>Autorizar Lote BNB (ACH)</span>
+            <span>Autorizar Lote de Liquidaciones</span>
           </button>
         </div>
       </div>
@@ -63,6 +65,11 @@ import { LiquidacionAnfitrion } from '../../core/types/admin.types';
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-200 dark:divide-stone-800/60 text-slate-700 dark:text-stone-300">
+            <tr *ngIf="liquidaciones.length === 0">
+              <td colspan="7" class="py-12 text-center text-slate-400 text-xs">
+                No hay liquidaciones a anfitriones registradas en el sistema.
+              </td>
+            </tr>
             <tr *ngFor="let l of liquidaciones" class="hover:bg-blue-50/50 dark:hover:bg-blue-950/20 transition">
               <td class="py-3.5 px-5">
                 <div class="font-bold text-slate-900 dark:text-white">{{ l.anfitrion }}</div>

@@ -318,7 +318,7 @@ export const AppContent: React.FC = () => {
         darkMode={darkMode}
         onToggleDarkMode={() => setDarkMode(!darkMode)}
         onLogout={handleLogout}
-      />
+      />    
 
       {/* 2. Contenido Dinámico según la Ruta */}
       <main className="flex-1">

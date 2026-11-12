@@ -41,6 +41,7 @@ interface AuthContextType {
   anfitrionClave: string;
   isAuthenticated: boolean;
   cargandoSSO: boolean;
+  rolNoPermitido: 'CLIENTE' | 'ADMINISTRADOR' | null;
   logout: () => void;
   darkMode: boolean;
   toggleDarkMode: () => void;
@@ -73,9 +74,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return 'carlos';
   });
 
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
-
-  const [cargandoSSO, setCargandoSSO] = useState<boolean>(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [cargandoSSO, setCargandoSSO] = useState<boolean>(true);
+  const [rolNoPermitido, setRolNoPermitido] = useState<'CLIENTE' | 'ADMINISTRADOR' | null>(null);
 
   const [perfilPersonalizado, setPerfilPersonalizado] = useState<Partial<PerfilAnfitrion>>(() => {
     try {
@@ -174,16 +175,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     ...perfilPersonalizado
   };
 
-  // Limpieza defensiva de cualquier residuo previo en localStorage
-  useEffect(() => {
-    try {
-      localStorage.removeItem('alojate_jwt_token');
-      localStorage.removeItem('alojate_user_profile');
-      sessionStorage.removeItem('alojate_sso_session');
-    } catch {}
-  }, []);
-
   const consultarSesionCentralSSO = async () => {
+    setCargandoSSO(true);
+    setRolNoPermitido(null);
+
     // 1. Verificar si viene con parámetros SSO en la URL o Hash
     try {
       const searchStr = window.location.search || (window.location.hash.includes('?') ? window.location.hash.substring(window.location.hash.indexOf('?')) : '');
@@ -191,15 +186,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const urlEmail = searchParams.get('sso_email') || searchParams.get('email');
       const urlToken = searchParams.get('sso_token') || searchParams.get('token');
       const urlNombre = searchParams.get('sso_nombre') || searchParams.get('nombre');
+      const urlRol = (searchParams.get('sso_rol') || searchParams.get('rol') || '').toUpperCase();
+
+      // Limpiar URL de inmediato para jamás dejar tokens ni roles expuestos en la barra de direcciones
+      if (searchStr && (urlEmail || urlToken || urlRol || urlNombre)) {
+        const cleanHash = window.location.hash.includes('?') ? window.location.hash.split('?')[0] : window.location.hash;
+        window.history.replaceState({}, document.title, window.location.pathname + (cleanHash || '#/dashboard'));
+      }
+
+      if (urlRol === 'CLIENTE') {
+        setIsAuthenticated(false);
+        setRolNoPermitido('CLIENTE');
+        setCargandoSSO(false);
+        return;
+      }
+      if (urlRol === 'ADMINISTRADOR' || urlRol === 'ADMIN') {
+        setIsAuthenticated(false);
+        setRolNoPermitido('ADMINISTRADOR');
+        setCargandoSSO(false);
+        return;
+      }
 
       if (urlEmail || urlToken) {
         const em = (urlEmail || '').toLowerCase();
         const clave = (em.includes('anfitrion') || em.includes('carlos')) ? 'carlos' : (em ? em.split('@')[0] : 'carlos');
         
-        sessionStorage.setItem('alojate_sso_anfitrion', JSON.stringify({ clave, email: urlEmail, nombre: urlNombre, token: urlToken }));
+        sessionStorage.setItem('alojate_sso_anfitrion', JSON.stringify({ clave, email: urlEmail, nombre: urlNombre, token: urlToken, rol: 'ANFITRION' }));
         localStorage.setItem('alojate_anfitrion_clave', clave);
+        if (urlToken) {
+          localStorage.setItem('alojate_anfitrion_token', urlToken);
+          localStorage.setItem('alojate_jwt_token', urlToken);
+        }
+        if (urlEmail) {
+          localStorage.setItem('alojate_anfitrion_email', urlEmail);
+        }
 
         setAnfitrionClave(clave);
+        setRolNoPermitido(null);
         setIsAuthenticated(true);
         if (urlToken) setSSOToken(urlToken);
         setCargandoSSO(false);
@@ -211,15 +234,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             actualizarPerfil(perfilBd);
           }
         }
-
-        // Limpiar URL preservando el hash de navegación
-        const cleanHash = window.location.hash.includes('?') ? window.location.hash.split('?')[0] : window.location.hash;
-        window.history.replaceState({}, document.title, window.location.pathname + (cleanHash || '#/dashboard'));
         return;
       }
     } catch {}
 
-    // 2. Consultar Gateway API Central de SSO
+    // 2. Consultar Gateway API validando el token persistente del navegador o sesión central
     try {
       let tokenLocal: string | null = null;
       let emailLocal: string | null = null;
@@ -232,50 +251,82 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       } catch {}
 
+      if (!tokenLocal) {
+        tokenLocal = localStorage.getItem('alojate_anfitrion_token') || localStorage.getItem('alojate_jwt_token');
+      }
+      if (!emailLocal) {
+        emailLocal = localStorage.getItem('alojate_anfitrion_email');
+      }
+
       const headers: Record<string, string> = tokenLocal ? { Authorization: `Bearer ${tokenLocal}` } : {};
       const resp = await fetch(`${API_BASE_URL}/api/v1/auth/sso/session`, { headers });
       if (resp.ok) {
         const data = await resp.json();
         if (data.authenticated && data.usuario) {
-          const email = (data.usuario.email || '').toLowerCase();
-          const clave = (email.includes('anfitrion') || email.includes('carlos')) ? 'carlos' : (email ? email.split('@')[0] : 'carlos');
-          
-          sessionStorage.setItem('alojate_sso_anfitrion', JSON.stringify({ clave, email: data.usuario.email, nombre: data.usuario.nombre, token: data.token }));
-          localStorage.setItem('alojate_anfitrion_clave', clave);
+          const rol = String(data.usuario.rol || '').toUpperCase();
+          if (rol === 'CLIENTE') {
+            setIsAuthenticated(false);
+            setRolNoPermitido('CLIENTE');
+            setCargandoSSO(false);
+            return;
+          }
+          if (rol === 'ADMINISTRADOR' || rol === 'ADMIN') {
+            setIsAuthenticated(false);
+            setRolNoPermitido('ADMINISTRADOR');
+            setCargandoSSO(false);
+            return;
+          }
 
-          setAnfitrionClave(clave);
+          if (rol === 'ANFITRION') {
+            const email = (data.usuario.email || '').toLowerCase();
+            const clave = (email.includes('anfitrion') || email.includes('carlos')) ? 'carlos' : (email ? email.split('@')[0] : 'carlos');
+            
+            sessionStorage.setItem('alojate_sso_anfitrion', JSON.stringify({ clave, email: data.usuario.email, nombre: data.usuario.nombre, token: data.token, rol: 'ANFITRION' }));
+            localStorage.setItem('alojate_anfitrion_clave', clave);
+            if (data.token) {
+              localStorage.setItem('alojate_anfitrion_token', data.token);
+              localStorage.setItem('alojate_jwt_token', data.token);
+            }
+            if (data.usuario.email) {
+              localStorage.setItem('alojate_anfitrion_email', data.usuario.email);
+            }
 
-          // Cargar datos completos desde MS-01 para tener teléfono, CI, banco, etc.
-          const perfilBd = await cargarPerfilDesdeBackend(data.usuario.email);
-          const datosCombinados: Partial<PerfilAnfitrion> = {
-            id: data.usuario.id || perfilBd?.id,
-            nombre: data.usuario.nombre ? `${data.usuario.nombre} ${data.usuario.apellido || ''}`.trim() : perfilBd?.nombre,
-            email: data.usuario.email || perfilBd?.email,
-            telefono: data.usuario.telefono || perfilBd?.telefono || '',
-            ciNumero: data.usuario.ci || data.usuario.ciNumero || perfilBd?.ciNumero || '',
-            ciExpedido: data.usuario.ciExpedido || perfilBd?.ciExpedido || 'LP',
-            bancoNombre: data.usuario.bancoNombre || perfilBd?.bancoNombre || '',
-            numeroCuentaBancaria: data.usuario.numeroCuentaBancaria || perfilBd?.numeroCuentaBancaria || '',
-            qr: data.usuario.qr || perfilBd?.qr || '',
-            ciudad: data.usuario.ciudad || perfilBd?.ciudad || 'La Paz',
-            departamento: data.usuario.departamento || perfilBd?.departamento || 'La Paz',
-            verificado: perfilBd?.verificado ?? false,
-            estadoVerificacion: perfilBd?.estadoVerificacion || 'PENDIENTE_REVISION'
-          };
-          actualizarPerfil(datosCombinados);
+            setAnfitrionClave(clave);
 
-          setIsAuthenticated(true);
-          setSSOToken(data.token || null);
-          setCargandoSSO(false);
-          return;
+            // Cargar datos completos desde MS-01 para tener teléfono, CI, banco, etc.
+            const perfilBd = await cargarPerfilDesdeBackend(data.usuario.email);
+            const datosCombinados: Partial<PerfilAnfitrion> = {
+              id: data.usuario.id || perfilBd?.id,
+              nombre: data.usuario.nombre ? `${data.usuario.nombre} ${data.usuario.apellido || ''}`.trim() : perfilBd?.nombre,
+              email: data.usuario.email || perfilBd?.email,
+              telefono: data.usuario.telefono || perfilBd?.telefono || '',
+              ciNumero: data.usuario.ci || data.usuario.ciNumero || perfilBd?.ciNumero || '',
+              ciExpedido: data.usuario.ciExpedido || perfilBd?.ciExpedido || 'LP',
+              bancoNombre: data.usuario.bancoNombre || perfilBd?.bancoNombre || '',
+              numeroCuentaBancaria: data.usuario.numeroCuentaBancaria || perfilBd?.numeroCuentaBancaria || '',
+              qr: data.usuario.qr || perfilBd?.qr || '',
+              ciudad: data.usuario.ciudad || perfilBd?.ciudad || 'La Paz',
+              departamento: data.usuario.departamento || perfilBd?.departamento || 'La Paz',
+              verificado: perfilBd?.verificado ?? false,
+              estadoVerificacion: perfilBd?.estadoVerificacion || 'PENDIENTE_REVISION'
+            };
+            actualizarPerfil(datosCombinados);
+
+            setRolNoPermitido(null);
+            setIsAuthenticated(true);
+            setSSOToken(data.token || null);
+            setCargandoSSO(false);
+            return;
+          }
         }
       }
 
-      // Si el Gateway devolvió no autenticado pero tenemos emailLocal en sessionStorage
-      if (emailLocal) {
+      // Si el Gateway devolvió no autenticado pero tenemos anfitrión guardado en localStorage
+      if (emailLocal && (emailLocal.includes('anfitrion') || emailLocal.includes('carlos') || emailLocal.includes('daniel'))) {
         const perfilBd = await cargarPerfilDesdeBackend(emailLocal);
         if (perfilBd) {
           actualizarPerfil(perfilBd);
+          setRolNoPermitido(null);
           setIsAuthenticated(true);
           setCargandoSSO(false);
           return;
@@ -285,46 +336,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.warn('[SSO Anfitrión] Error al conectar con Gateway central:', err);
     }
 
-    // 3. Fallback en caso de prueba directa local o recarga de pestaña
-    try {
-      const demoUserRaw = sessionStorage.getItem('alojate_sso_anfitrion');
-      if (demoUserRaw) {
-        const demo = JSON.parse(demoUserRaw);
-        const cl = demo.clave || 'carlos';
-        setAnfitrionClave(cl);
-        setIsAuthenticated(true);
-        if (demo.token) setSSOToken(demo.token);
-        const em = demo.email || (cl.includes('daniel') ? 'danielqc333@gmail.com' : 'anfitrion@alojate.bo');
-        const perfilBd = await cargarPerfilDesdeBackend(em);
-        if (perfilBd) actualizarPerfil(perfilBd);
-        setCargandoSSO(false);
-        return;
-      }
-      const savedClave = localStorage.getItem('alojate_anfitrion_clave');
-      if (savedClave) {
-        setAnfitrionClave(savedClave);
-        setIsAuthenticated(true);
-        const em = savedClave.includes('daniel') ? 'danielqc333@gmail.com' : 'anfitrion@alojate.bo';
-        const perfilBd = await cargarPerfilDesdeBackend(em);
-        if (perfilBd) actualizarPerfil(perfilBd);
-        setCargandoSSO(false);
-        return;
-      }
-    } catch {}
-
-    setIsAuthenticated(true);
+    setRolNoPermitido(null);
+    setIsAuthenticated(false);
     setCargandoSSO(false);
   };
 
   useEffect(() => {
     consultarSesionCentralSSO();
-
-    const handleFocus = () => {
-      consultarSesionCentralSSO();
-    };
-
-    window.addEventListener('focus', handleFocus);
-    return () => window.removeEventListener('focus', handleFocus);
   }, []);
 
   useEffect(() => {
@@ -346,9 +364,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (clave === 'daniel') email = 'danielqc333@gmail.com';
     else if (clave === 'carlos') email = 'anfitrion@alojate.bo';
 
-    sessionStorage.setItem('alojate_sso_anfitrion', JSON.stringify({ clave, email }));
+    sessionStorage.setItem('alojate_sso_anfitrion', JSON.stringify({ clave, email, rol: 'ANFITRION' }));
     localStorage.setItem('alojate_anfitrion_clave', clave);
     setAnfitrionClave(clave);
+    setRolNoPermitido(null);
     setIsAuthenticated(true);
     setCargandoSSO(false);
 
@@ -365,6 +384,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     sessionStorage.removeItem('alojate_sso_anfitrion');
     localStorage.removeItem('alojate_anfitrion_clave');
+    localStorage.removeItem('alojate_anfitrion_token');
+    localStorage.removeItem('alojate_jwt_token');
+    localStorage.removeItem('alojate_anfitrion_email');
+    localStorage.removeItem('alojate_anfitrion_perfil_custom');
+    setRolNoPermitido(null);
     setIsAuthenticated(false);
     setSSOToken(null);
 
@@ -378,6 +402,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         anfitrionClave,
         isAuthenticated,
         cargandoSSO,
+        rolNoPermitido,
         logout,
         darkMode,
         toggleDarkMode,

@@ -65,11 +65,13 @@ import { SolicitudAlojamiento, LiquidacionAnfitrion, MovimientoContable, AdminTa
           </div>
           <div>
             <div class="text-3xl font-black text-indigo-600 dark:text-indigo-300 font-sans tracking-tight">
-              157,950.00 <span class="text-sm font-semibold text-indigo-400">BOB</span>
+              {{ totalLiquidado | number:'1.2-2' }} <span class="text-sm font-semibold text-indigo-400">BOB</span>
             </div>
             <div class="flex items-center gap-1.5 mt-1.5 text-[11px] text-slate-600 dark:text-stone-400 font-semibold">
-              <span class="px-1.5 py-0.5 rounded-md bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border border-indigo-500/30">98.4%</span>
-              <span class="text-slate-500 dark:text-stone-500 font-normal">pagado a tiempo</span>
+              <span class="px-1.5 py-0.5 rounded-md bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border border-indigo-500/30">
+                {{ porcentajeLiquidado }}
+              </span>
+              <span class="text-slate-500 dark:text-stone-500 font-normal">desembolsado</span>
             </div>
           </div>
         </div>
@@ -112,44 +114,18 @@ import { SolicitudAlojamiento, LiquidacionAnfitrion, MovimientoContable, AdminTa
             </span>
           </div>
 
-          <div class="space-y-4 pt-2">
-            <div>
-              <div class="flex justify-between text-xs font-semibold mb-1.5">
-                <span class="text-slate-700 dark:text-stone-200">Santa Cruz (Chiquitanía, Metrópolis y Valles)</span>
-                <span class="text-blue-600 dark:text-blue-400 font-mono font-bold">38% (69,800 BOB)</span>
-              </div>
-              <div class="w-full h-2.5 rounded-full bg-slate-100 dark:bg-stone-800/80 overflow-hidden">
-                <div class="h-full rounded-full bg-gradient-to-r from-blue-600 to-indigo-500 transition-all duration-500" style="width: 38%"></div>
-              </div>
-            </div>
+          <div *ngIf="departamentosEstadistica.length === 0" class="py-12 text-center text-xs text-slate-400">
+            Aún no hay reservas ni alojamientos registrados para calcular la distribución departamental.
+          </div>
 
-            <div>
+          <div *ngIf="departamentosEstadistica.length > 0" class="space-y-4 pt-2">
+            <div *ngFor="let d of departamentosEstadistica">
               <div class="flex justify-between text-xs font-semibold mb-1.5">
-                <span class="text-slate-700 dark:text-stone-200">La Paz (Lago Titicaca, Ciudad y Yungas)</span>
-                <span class="text-sky-600 dark:text-sky-400 font-mono font-bold">26% (48,100 BOB)</span>
+                <span class="text-slate-700 dark:text-stone-200">{{ d.nombre }}</span>
+                <span class="text-blue-600 dark:text-blue-400 font-mono font-bold">{{ d.porcentaje }}% ({{ d.monto | number:'1.2-2' }} BOB)</span>
               </div>
               <div class="w-full h-2.5 rounded-full bg-slate-100 dark:bg-stone-800/80 overflow-hidden">
-                <div class="h-full rounded-full bg-gradient-to-r from-sky-500 to-blue-500 transition-all duration-500" style="width: 26%"></div>
-              </div>
-            </div>
-
-            <div>
-              <div class="flex justify-between text-xs font-semibold mb-1.5">
-                <span class="text-slate-700 dark:text-stone-200">Cochabamba (Valle Alto, Chapare y Gastronomía)</span>
-                <span class="text-indigo-600 dark:text-indigo-400 font-mono font-bold">18% (33,165 BOB)</span>
-              </div>
-              <div class="w-full h-2.5 rounded-full bg-slate-100 dark:bg-stone-800/80 overflow-hidden">
-                <div class="h-full rounded-full bg-gradient-to-r from-indigo-500 to-blue-600 transition-all duration-500" style="width: 18%"></div>
-              </div>
-            </div>
-
-            <div>
-              <div class="flex justify-between text-xs font-semibold mb-1.5">
-                <span class="text-slate-700 dark:text-stone-200">Tarija (Ruta del Vino y Valle de la Concepción)</span>
-                <span class="text-teal-600 dark:text-teal-400 font-mono font-bold">12% (22,110 BOB)</span>
-              </div>
-              <div class="w-full h-2.5 rounded-full bg-slate-100 dark:bg-stone-800/80 overflow-hidden">
-                <div class="h-full rounded-full bg-gradient-to-r from-teal-500 to-emerald-500 transition-all duration-500" style="width: 12%"></div>
+                <div class="h-full rounded-full bg-gradient-to-r {{ d.colorClass }} transition-all duration-500" [style.width.%]="d.porcentaje"></div>
               </div>
             </div>
           </div>
@@ -210,7 +186,58 @@ export class DashboardComponent {
   get totalTransaccionado(): number {
     return this.movimientos
       .filter(m => m.tipo === 'DEBITO')
-      .reduce((acc, curr) => acc + curr.monto, 0) || 184250.00;
+      .reduce((acc, curr) => acc + (Number(curr.monto) || 0), 0);
+  }
+
+  get totalLiquidado(): number {
+    return this.liquidaciones
+      .filter(l => l.estado === 'PAGADO')
+      .reduce((acc, curr) => acc + (Number(curr.montoNeto) || 0), 0);
+  }
+
+  get porcentajeLiquidado(): string {
+    const total = this.liquidaciones.reduce((acc, curr) => acc + (Number(curr.montoNeto) || 0), 0);
+    if (total === 0) return '0.0%';
+    return `${((this.totalLiquidado / total) * 100).toFixed(1)}%`;
+  }
+
+  get departamentosEstadistica(): { nombre: string; porcentaje: number; monto: number; colorClass: string }[] {
+    const map = new Map<string, number>();
+    let total = 0;
+
+    for (const l of this.liquidaciones) {
+      const monto = Number(l.montoBruto || 0);
+      const dep = (l.alojamiento || '').split('-')[0].trim() || 'General';
+      map.set(dep, (map.get(dep) || 0) + monto);
+      total += monto;
+    }
+
+    if (total === 0) {
+      for (const a of this.alojamientos) {
+        const dep = a.departamento || a.ciudad || 'Sin Departamento';
+        map.set(dep, (map.get(dep) || 0) + 1);
+        total += 1;
+      }
+    }
+
+    if (total === 0) return [];
+
+    const colors = [
+      'from-blue-600 to-indigo-500',
+      'from-sky-500 to-blue-500',
+      'from-indigo-500 to-blue-600',
+      'from-teal-500 to-emerald-500',
+      'from-amber-500 to-orange-500'
+    ];
+
+    return Array.from(map.entries())
+      .map(([nombre, val], idx) => ({
+        nombre,
+        monto: val,
+        porcentaje: Math.round((val / total) * 100),
+        colorClass: colors[idx % colors.length]
+      }))
+      .sort((a, b) => b.porcentaje - a.porcentaje);
   }
 
   get alojamientosAtencion(): SolicitudAlojamiento[] {

@@ -73,14 +73,16 @@ export function usePago(casos: CasosPagos, solicitud: SolicitudPago) {
 
   const confirmarSimulado = casos.confirmarSimulado;
   const confirmarPago = useCallback(async () => {
-    if (!pagoId || !confirmarSimulado) return;
+    if (!pagoId) return;
     setConfirmando(true);
     setError(null);
     try {
-      const pagoConfirmado = await confirmarSimulado(pagoId, solicitudRef.current.reservaId);
-      setPago(pagoConfirmado);
+      if (confirmarSimulado) {
+        const pagoConfirmado = await confirmarSimulado(pagoId, solicitudRef.current.reservaId);
+        setPago(pagoConfirmado);
+      }
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'No se pudo confirmar el pago.');
+      setError(e instanceof Error ? e.message : 'No se pudo procesar el pago.');
     } finally {
       setConfirmando(false);
     }
@@ -100,6 +102,6 @@ export function usePago(casos: CasosPagos, solicitud: SolicitudPago) {
     confirmando,
     segundosQr,
     reintentar: iniciar,
-    confirmarPago: confirmarSimulado ? confirmarPago : null,
+    confirmarPago,
   };
 }

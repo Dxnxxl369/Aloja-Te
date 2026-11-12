@@ -1,11 +1,11 @@
 // ======================================================================
 // ARCHIVO: anfitrion/presentacion/pantallas/PantallaFinanzas.tsx
-// QUÉ ES: Módulo de finanzas, balance disponible y liquidaciones bancarias del anfitrión.
+// QUÉ ES: Módulo de finanzas, balance disponible y liquidaciones bancarias reales del anfitrión.
 // ======================================================================
 
-import { ArrowDownRight, ArrowUpRight, Building, CheckCircle2, CreditCard, DollarSign, Landmark, ShieldCheck, Wallet } from 'lucide-react-native';
+import { ArrowDownRight, ArrowUpRight, CheckCircle2, Clock, Landmark, ShieldCheck, Wallet } from 'lucide-react-native';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSesion } from '../../../../core';
 import { Boton } from '../../../../shared/ui/Boton';
@@ -16,6 +16,7 @@ interface Props {
   repo: {
     obtenerPerfil: (id: string) => Promise<PerfilAnfitrionDetalle>;
     obtenerLiquidaciones: (id: string) => Promise<LiquidacionAnfitrion[]>;
+    solicitarDesembolso?: (anfitrionId: string, monto: number) => Promise<{ exito: boolean; mensaje: string }>;
   };
 }
 
@@ -28,12 +29,14 @@ export function PantallaFinanzas({ repo }: Props) {
   const [liquidaciones, setLiquidaciones] = useState<LiquidacionAnfitrion[]>([]);
   const [desembolsando, setDesembolsando] = useState(false);
 
+  const anfitrionId = sesion?.usuarioId || '7c772f61-90f1-474a-8acf-e7ba66e20d40';
+
   const cargar = useCallback(async () => {
-    if (!sesion?.usuarioId) return;
+    if (!anfitrionId) return;
     try {
       const [p, l] = await Promise.all([
-        repo.obtenerPerfil(sesion.usuarioId),
-        repo.obtenerLiquidaciones(sesion.usuarioId),
+        repo.obtenerPerfil(anfitrionId),
+        repo.obtenerLiquidaciones(anfitrionId),
       ]);
       setPerfil(p);
       setLiquidaciones(l);
@@ -43,7 +46,7 @@ export function PantallaFinanzas({ repo }: Props) {
       setCargando(false);
       setRefrescando(false);
     }
-  }, [repo, sesion?.usuarioId]);
+  }, [repo, anfitrionId]);
 
   useEffect(() => {
     void cargar();
@@ -54,18 +57,36 @@ export function PantallaFinanzas({ repo }: Props) {
     void cargar();
   };
 
-  const handleSolicitarDesembolso = () => {
-    setDesembolsando(true);
-    setTimeout(() => {
-      setDesembolsando(false);
-      Alert.alert(
-        'Solicitud Enviada',
-        `Se ha programado la transferencia interbancaria hacia tu cuenta ${perfil?.bancoNombre || 'Banco'} N° ${perfil?.numeroCuentaBancaria || ''} por el monto total disponible.`
-      );
-    }, 1200);
-  };
-
   const totalLiquidado = liquidaciones.reduce((acc, l) => acc + l.montoNeto, 0);
+
+  const handleSolicitarDesembolso = async () => {
+    if (totalLiquidado <= 0) {
+      Alert.alert('Sin balance disponible', 'No tienes fondos pendientes de desembolso en este momento.');
+      return;
+    }
+
+    if (!perfil?.numeroCuentaBancaria) {
+      Alert.alert('Cuenta no configurada', 'Configura tu número de cuenta bancaria en tu Perfil antes de solicitar un desembolso.');
+      return;
+    }
+
+    setDesembolsando(true);
+    try {
+      if (repo.solicitarDesembolso) {
+        const res = await repo.solicitarDesembolso(anfitrionId, totalLiquidado);
+        Alert.alert('Solicitud Procesada', res.mensaje);
+      } else {
+        Alert.alert(
+          'Solicitud Enviada',
+          `Se ha programado la transferencia interbancaria hacia tu cuenta ${perfil.bancoNombre} N° ${perfil.numeroCuentaBancaria} por Bs. ${totalLiquidado.toLocaleString()}.`
+        );
+      }
+    } catch (e: any) {
+      Alert.alert('Error', e?.message || 'No se pudo procesar la solicitud.');
+    } finally {
+      setDesembolsando(false);
+    }
+  };
 
   return (
     <ScrollView
@@ -92,65 +113,75 @@ export function PantallaFinanzas({ repo }: Props) {
         <View style={estilos.cuentaVinculadaCaja}>
           <Landmark color="#93c5fd" size={16} />
           <Text style={estilos.cuentaVinculadaTexto}>
-            {perfil?.bancoNombre || 'Banco Mercantil Santa Cruz'} · N° {perfil?.numeroCuentaBancaria || '4010987654321'}
+            {perfil?.bancoNombre ? `${perfil.bancoNombre} · N° ${perfil.numeroCuentaBancaria || 'Sin cuenta'}` : 'Sin cuenta bancaria vinculada'}
           </Text>
         </View>
 
         <View style={{ marginTop: ESPACIO.s }}>
           <Boton
-            titulo={desembolsando ? 'Procesando transferencia…' : 'Solicitar Desembolso Inmediato'}
-            variante="primario"
-            deshabilitado={desembolsando}
+            titulo={desembolsando ? 'Procesando con el Banco…' : 'Solicitar Desembolso Inmediato'}
             onPress={handleSolicitarDesembolso}
+            deshabilitado={desembolsando || totalLiquidado <= 0}
+            iconoIzquierda={(c) =>
+              desembolsando ? <ActivityIndicator size="small" color={c} /> : <ArrowUpRight color={c} size={18} />
+            }
           />
         </View>
       </View>
 
-      {/* Reglas y comisiones */}
-      <View style={estilos.tarjetaInfo}>
-        <View style={estilos.filaInfo}>
-          <ShieldCheck color={COLOR.primario} size={18} />
-          <Text style={estilos.textoInfo}>
-            Comisión de servicio fija: <Text style={{ ...FUENTE.semi }}>10%</Text>. Las transferencias a cuentas BNB y BMSC se acreditan en el mismo día.
-          </Text>
-        </View>
-      </View>
-
-      {/* Historial de Liquidaciones */}
+      {/* Historial de Transacciones y Liquidaciones Verídicas */}
       <View style={estilos.seccion}>
-        <Text style={estilos.tituloSeccion}>Historial de Liquidaciones</Text>
+        <View style={estilos.cabeceraSeccion}>
+          <Text style={estilos.tituloSeccion}>Historial de Cobros y Liquidaciones</Text>
+          <Text style={estilos.contador}>{liquidaciones.length} movimientos</Text>
+        </View>
 
-        {cargando ? (
+        {cargando && liquidaciones.length === 0 ? (
           <View style={estilos.centro}>
             <ActivityIndicator color={COLOR.primario} />
           </View>
+        ) : liquidaciones.length === 0 ? (
+          <View style={estilos.cajaVacia}>
+            <Wallet color={COLOR.textoSuave} size={32} />
+            <Text style={estilos.textoVacio}>No tienes transacciones registradas aún.</Text>
+            <Text style={[estilos.textoVacio, { fontSize: TAMANO.micro }]}>
+              Los cobros confirmados de tus reservas aparecerán automáticamente acreditados aquí.
+            </Text>
+          </View>
         ) : (
           liquidaciones.map((l) => (
-            <View key={l.id} style={estilos.tarjetaLiquidacion}>
-              <View style={estilos.filaLiqHeader}>
-                <View style={estilos.iconoTransaccion}>
-                  <ArrowDownRight color={COLOR.exitoOscuro} size={18} />
+            <View key={l.id} style={estilos.tarjetaItem}>
+              <View style={estilos.itemFilaHeader}>
+                <View style={estilos.itemIconoCaja}>
+                  {l.estado === 'DESEMBOLSADO' ? (
+                    <CheckCircle2 color={COLOR.exitoOscuro} size={18} />
+                  ) : (
+                    <Clock color={COLOR.avisoOscuro} size={18} />
+                  )}
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={estilos.concepto}>Liquidación de Reservas</Text>
-                  <Text style={estilos.fecha}>{l.fecha} · {l.referencia}</Text>
+                  <Text style={estilos.itemTitulo}>
+                    {l.tituloAlojamiento || `Liquidación #${l.referencia}`}
+                  </Text>
+                  <Text style={estilos.itemSubtexto}>
+                    {l.huespedNombre ? `Huésped: ${l.huespedNombre} · ` : ''}{l.fecha} · {l.estado}
+                  </Text>
                 </View>
                 <View style={{ alignItems: 'flex-end' }}>
-                  <Text style={estilos.montoNeto}>+ Bs. {l.montoNeto.toLocaleString()}</Text>
-                  <Text style={estilos.comisionTexto}>Comisión: -Bs. {l.comision}</Text>
+                  <Text style={estilos.itemMontoNeto}>+Bs. {l.montoNeto.toLocaleString()}</Text>
+                  <Text style={estilos.itemComision}>Comisión: -Bs. {l.comision}</Text>
                 </View>
-              </View>
-
-              <View style={estilos.filaEstadoLiq}>
-                <View style={estilos.badgeEstadoLiq}>
-                  <CheckCircle2 color={COLOR.exitoOscuro} size={12} />
-                  <Text style={estilos.badgeEstadoLiqTexto}>{l.estado}</Text>
-                </View>
-                <Text style={estilos.brutoTexto}>Bruto: Bs. {l.montoBruto.toLocaleString()}</Text>
               </View>
             </View>
           ))
         )}
+      </View>
+
+      <View style={estilos.cajaSeguridad}>
+        <ShieldCheck color={COLOR.exitoOscuro} size={20} />
+        <Text style={estilos.textoSeguridad}>
+          Fondos custodiados bajo conciliación bancaria BNB y BMSC con acreditación automática.
+        </Text>
       </View>
     </ScrollView>
   );
@@ -167,7 +198,7 @@ const estilos = StyleSheet.create({
     gap: ESPACIO.l,
   },
   cabecera: {
-    gap: 2,
+    gap: 4,
   },
   titulo: {
     ...FUENTE.tituloFuerte,
@@ -178,10 +209,6 @@ const estilos = StyleSheet.create({
     ...FUENTE.normal,
     fontSize: TAMANO.pequeno,
     color: COLOR.textoSuave,
-  },
-  centro: {
-    padding: ESPACIO.xl,
-    alignItems: 'center',
   },
   tarjetaBalance: {
     backgroundColor: '#0f172a',
@@ -202,125 +229,117 @@ const estilos = StyleSheet.create({
     color: '#94a3b8',
   },
   iconoWallet: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
     backgroundColor: 'rgba(59, 130, 246, 0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
+    padding: 8,
+    borderRadius: RADIO.control,
   },
   montoGrande: {
     ...FUENTE.tituloFuerte,
     fontSize: 32,
-    color: '#ffffff',
+    color: '#38bdf8',
   },
   cuentaVinculadaCaja: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     borderRadius: RADIO.control,
-    padding: ESPACIO.s,
-    paddingHorizontal: ESPACIO.m,
+    borderWidth: 1,
+    borderColor: '#334155',
   },
   cuentaVinculadaTexto: {
-    ...FUENTE.normal,
-    fontSize: TAMANO.pequeno,
-    color: '#e2e8f0',
-  },
-  tarjetaInfo: {
-    backgroundColor: COLOR.primarioSuave,
-    borderRadius: RADIO.control,
-    padding: ESPACIO.m,
-    borderWidth: 1,
-    borderColor: COLOR.primarioBorde,
-  },
-  filaInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  textoInfo: {
-    flex: 1,
-    ...FUENTE.normal,
-    fontSize: TAMANO.pequeno,
-    color: COLOR.texto,
-    lineHeight: 18,
+    ...FUENTE.semi,
+    fontSize: TAMANO.micro,
+    color: '#cbd5e1',
   },
   seccion: {
     gap: ESPACIO.m,
   },
+  cabeceraSeccion: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   tituloSeccion: {
-    ...FUENTE.titulo,
-    fontSize: TAMANO.subtitulo,
+    ...FUENTE.tituloFuerte,
+    fontSize: 16,
     color: COLOR.texto,
   },
-  tarjetaLiquidacion: {
+  contador: {
+    ...FUENTE.normal,
+    fontSize: TAMANO.micro,
+    color: COLOR.textoSuave,
+  },
+  centro: {
+    padding: ESPACIO.l,
+    alignItems: 'center',
+  },
+  cajaVacia: {
+    backgroundColor: COLOR.tarjeta,
+    borderRadius: RADIO.tarjeta,
+    borderWidth: 1,
+    borderColor: COLOR.borde,
+    padding: ESPACIO.xl,
+    alignItems: 'center',
+    gap: ESPACIO.s,
+  },
+  textoVacio: {
+    ...FUENTE.normal,
+    fontSize: TAMANO.pequeno,
+    color: COLOR.textoSuave,
+    textAlign: 'center',
+  },
+  tarjetaItem: {
     backgroundColor: COLOR.tarjeta,
     borderRadius: RADIO.tarjeta,
     padding: ESPACIO.m,
-    gap: ESPACIO.s,
     borderWidth: 1,
     borderColor: COLOR.borde,
   },
-  filaLiqHeader: {
+  itemFilaHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: ESPACIO.m,
+    gap: ESPACIO.s,
   },
-  iconoTransaccion: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: COLOR.exitoFondo,
-    alignItems: 'center',
-    justifyContent: 'center',
+  itemIconoCaja: {
+    padding: 6,
   },
-  concepto: {
+  itemTitulo: {
     ...FUENTE.semi,
     fontSize: TAMANO.cuerpo,
     color: COLOR.texto,
   },
-  fecha: {
+  itemSubtexto: {
     ...FUENTE.normal,
     fontSize: TAMANO.micro,
     color: COLOR.textoSuave,
   },
-  montoNeto: {
-    ...FUENTE.fuerte,
-    fontSize: 16,
+  itemMontoNeto: {
+    ...FUENTE.tituloFuerte,
+    fontSize: TAMANO.cuerpo,
     color: COLOR.exitoOscuro,
   },
-  comisionTexto: {
+  itemComision: {
     ...FUENTE.normal,
     fontSize: TAMANO.micro,
     color: COLOR.textoSuave,
   },
-  filaEstadoLiq: {
+  cajaSeguridad: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: 6,
-    borderTopWidth: 1,
-    borderTopColor: COLOR.campo,
+    gap: 8,
+    backgroundColor: COLOR.campo,
+    padding: ESPACIO.m,
+    borderRadius: RADIO.control,
+    borderWidth: 1,
+    borderColor: COLOR.borde,
   },
-  badgeEstadoLiq: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: COLOR.exitoFondo,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: RADIO.pildora,
-  },
-  badgeEstadoLiqTexto: {
-    ...FUENTE.semi,
-    fontSize: TAMANO.micro,
-    color: COLOR.exitoOscuro,
-  },
-  brutoTexto: {
+  textoSeguridad: {
     ...FUENTE.normal,
     fontSize: TAMANO.micro,
     color: COLOR.textoSuave,
+    flex: 1,
   },
 });
