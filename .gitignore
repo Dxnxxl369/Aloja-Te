@@ -55,5 +55,7 @@ Thumbs.db
 key/
 **/key/
 aloja-te.json
+google-services.json
+**/google-services.json
 
 
