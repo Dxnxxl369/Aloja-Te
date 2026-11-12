@@ -67,6 +67,7 @@ export interface ValoracionCliente {
   idValoracion: string;
   idAlojamiento: string;
   idUnidad?: string;
+  nombreUnidad?: string;
   idUsuario: string;
   nombreUsuario?: string;
   puntuacionGeneral: number;

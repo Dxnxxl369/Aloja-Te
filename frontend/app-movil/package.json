@@ -31,7 +31,6 @@
     "expo-splash-screen": "~58.0.13",
     "expo-sqlite": "~58.0.15",
     "expo-status-bar": "~58.0.4",
-    "llama.rn": "0.13.0-rc.9",
     "lucide-react-native": "^1.70.0",
     "react": "19.3.0",
     "react-native": "0.88.1",
@@ -42,7 +41,7 @@
   },
   "devDependencies": {
     "@types/react": "~19.3.0",
-    "typescript": "^6.0.3"
+    "typescript": "^5.3.3"
   },
   "private": true
 }

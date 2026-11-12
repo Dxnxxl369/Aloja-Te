@@ -107,7 +107,29 @@ public class AlojamientoController {
                 .collect(Collectors.toList()));
     }
 
-    // Publicar, observar y rechazar son decisiones de la IA: solo entran por PATCH /{id}/estado con el token de moderación.
+    @PostMapping("/{id}/aceptar")
+    public ResponseEntity<AlojamientoDto> aceptarAlojamiento(@PathVariable UUID id) {
+        return ResponseEntity.ok(toDto(
+                alojamientoUseCase.cambiarEstado(id, EstadoPublicacion.PUBLICADO, null, "ADMIN_MANUAL", ActorPublicacion.ADMIN, null)));
+    }
+
+    @PostMapping("/{id}/observar")
+    public ResponseEntity<AlojamientoDto> observarAlojamiento(
+            @PathVariable UUID id,
+            @RequestBody(required = false) DecisionModeracionRequest request) {
+        String motivo = request != null && request.getMotivo() != null ? request.getMotivo() : "Observado por administración";
+        return ResponseEntity.ok(toDto(
+                alojamientoUseCase.cambiarEstado(id, EstadoPublicacion.OBSERVADO, motivo, "ADMIN_MANUAL", ActorPublicacion.ADMIN, null)));
+    }
+
+    @PostMapping("/{id}/rechazar")
+    public ResponseEntity<AlojamientoDto> rechazarAlojamiento(
+            @PathVariable UUID id,
+            @RequestBody(required = false) DecisionModeracionRequest request) {
+        String motivo = request != null && request.getMotivo() != null ? request.getMotivo() : "Rechazado por administración";
+        return ResponseEntity.ok(toDto(
+                alojamientoUseCase.cambiarEstado(id, EstadoPublicacion.RECHAZADO, motivo, "ADMIN_MANUAL", ActorPublicacion.ADMIN, null)));
+    }
 
     @PostMapping("/{id}/suspender")
     public ResponseEntity<AlojamientoDto> suspenderAlojamiento(

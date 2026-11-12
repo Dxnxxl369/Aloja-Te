@@ -89,7 +89,11 @@ export const DetalleAlojamientoView: React.FC<DetalleAlojamientoViewProps> = ({
   const [enviando, setEnviando] = useState(false);
   const [mensajeExito, setMensajeExito] = useState<string | null>(null);
 
-  const esHotel = alojamiento.modalidad === 'HOTEL_HOSTAL';
+  const esHotel = alojamiento.modalidad === 'HOTEL_HOSTAL'
+    || alojamiento.tipoPropiedad?.toUpperCase() === 'HOTEL'
+    || alojamiento.tipoPropiedad?.toUpperCase() === 'HOSTAL'
+    || (Array.isArray(alojamiento.unidades) && alojamiento.unidades.length > 1);
+
   const unidadActiva = habitacionEnDetalle || alojamiento.unidades?.find(u => u.idUnidad === selectedUnidadId) || alojamiento.unidades?.[0] || {
     idUnidad: '00547b62-d2f5-4aa8-80a5-8662b2e028ec',
     nombre: 'Alojamiento Completo',
@@ -101,6 +105,15 @@ export const DetalleAlojamientoView: React.FC<DetalleAlojamientoViewProps> = ({
     moneda: 'BOB',
     activo: true,
   };
+
+  const totalOpiniones = (resumen?.totalResenas !== undefined && resumen?.totalResenas !== null)
+    ? resumen.totalResenas
+    : (resenasHotel.length + resenasHabitacion.length);
+  const tieneResenas = totalOpiniones > 0 && typeof resumen?.calificacionPromedio === 'number' && resumen.calificacionPromedio > 0;
+  const notaPromedio = tieneResenas ? (resumen?.calificacionPromedio ?? 0).toFixed(1) : '0.0';
+  const porcentajeRecomendado = (tieneResenas && resumen?.conteoPositivos !== undefined)
+    ? Math.round((resumen.conteoPositivos / totalOpiniones) * 100)
+    : 100;
 
   // Cargar ocupación previa de la unidad seleccionada
   useEffect(() => {
@@ -176,7 +189,9 @@ export const DetalleAlojamientoView: React.FC<DetalleAlojamientoViewProps> = ({
   const cargarResenas = async () => {
     setCargandoResenas(true);
     try {
-      const dataHotel = await catalogoService.listarValoracionesGeneralesHotel(alojamiento.idAlojamiento);
+      const dataHotel = esHotel
+        ? await catalogoService.listarValoracionesGeneralesHotel(alojamiento.idAlojamiento)
+        : await catalogoService.listarValoraciones(alojamiento.idAlojamiento);
       setResenasHotel(dataHotel || []);
 
       const resumenData = await catalogoService.obtenerResumenValoraciones(alojamiento.idAlojamiento);
@@ -211,6 +226,12 @@ export const DetalleAlojamientoView: React.FC<DetalleAlojamientoViewProps> = ({
     }
   }, [selectedUnidadId]);
 
+  useEffect(() => {
+    if (unidadActiva?.idUnidad) {
+      cargarResenasHabitacion(unidadActiva.idUnidad);
+    }
+  }, [unidadActiva?.idUnidad]);
+
   const abrirLightbox = (index: number) => {
     setLightboxIndex(index);
     setLightboxOpen(true);
@@ -222,11 +243,15 @@ export const DetalleAlojamientoView: React.FC<DetalleAlojamientoViewProps> = ({
     setEnviando(true);
     try {
       const idUsuarioActual = user?.id || '075eabd5-7aca-4ec2-a00d-67064b8eccdf';
-      const targetUnidad = (esHotel && activeReviewTab === 'HABITACION') ? unidadActiva?.idUnidad : undefined;
+      const isHabitacion = esHotel && activeReviewTab === 'HABITACION';
+      const targetUnidad = isHabitacion ? unidadActiva?.idUnidad : undefined;
+      const targetNombreUnidad = isHabitacion ? (unidadActiva?.nombre || 'Habitación') : undefined;
 
-      await catalogoService.crearValoracion(alojamiento.idAlojamiento, {
+      const creada = await catalogoService.crearValoracion(alojamiento.idAlojamiento, {
         idUnidad: targetUnidad,
+        nombreUnidad: targetNombreUnidad,
         idUsuario: idUsuarioActual,
+        nombreUsuario: user?.nombre ? `${user.nombre} ${user.apellido || ''}`.trim() : 'Huésped Verificado',
         puntuacionGeneral,
         calificacionLimpieza: limpieza ?? puntuacionGeneral,
         calificacionUbicacion: ubicacion ?? puntuacionGeneral,
@@ -236,6 +261,13 @@ export const DetalleAlojamientoView: React.FC<DetalleAlojamientoViewProps> = ({
         esAnonimo,
         comentario: comentario.trim()
       });
+
+      // Reflejo instantáneo en el estado React para que se vea inmediatamente
+      if (targetUnidad) {
+        setResenasHabitacion(prev => [creada, ...prev.filter(r => r.idValoracion !== creada.idValoracion)]);
+      } else {
+        setResenasHotel(prev => [creada, ...prev.filter(r => r.idValoracion !== creada.idValoracion)]);
+      }
 
       setMensajeExito(esAnonimo 
         ? '¡Tu reseña fue publicada anónimamente como "Huésped Verificado"!'
@@ -252,7 +284,7 @@ export const DetalleAlojamientoView: React.FC<DetalleAlojamientoViewProps> = ({
       setTimeout(() => {
         setModalNuevaResena(false);
         setMensajeExito(null);
-      }, 1500);
+      }, 1200);
     } catch (err: any) {
       console.error('Error al registrar valoración:', err);
       alert('No se pudo enviar la reseña. Inténtalo nuevamente.');
@@ -418,10 +450,10 @@ export const DetalleAlojamientoView: React.FC<DetalleAlojamientoViewProps> = ({
               href="#seccion-resenas"
               className="flex items-center gap-1 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-blue-600 transition"
             >
-              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-              <span>{resumen?.calificacionPromedio ? resumen.calificacionPromedio.toFixed(2) : (alojamiento.calificacionPromedio ? alojamiento.calificacionPromedio.toFixed(2) : '4.85')}</span>
+              <Star className={`w-4 h-4 ${tieneResenas ? 'fill-yellow-400 text-yellow-400' : 'text-slate-400'}`} />
+              <span>{notaPromedio}</span>
               <span className="text-slate-400 font-normal underline">
-                ({resumen?.totalResenas || resenasHotel.length || 3} reseñas verificadas)
+                ({tieneResenas ? `${totalOpiniones} reseñas verificadas` : 'Sin reseñas aún'})
               </span>
             </a>
           </div>
@@ -792,19 +824,32 @@ export const DetalleAlojamientoView: React.FC<DetalleAlojamientoViewProps> = ({
                 {/* Nota Global */}
                 <div className="flex flex-col items-center justify-center text-center border-b md:border-b-0 md:border-r border-slate-200 dark:border-slate-800 pb-4 md:pb-0 md:pr-4">
                   <span className="font-serif text-5xl font-black text-slate-900 dark:text-white">
-                    {resumen?.calificacionPromedio ? resumen.calificacionPromedio.toFixed(2) : '4.85'}
+                    {notaPromedio}
                   </span>
                   <div className="flex items-center gap-1 my-2">
                     {[1, 2, 3, 4, 5].map((s) => (
-                      <Star key={s} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                      <Star
+                        key={s}
+                        className={`w-4 h-4 ${
+                          tieneResenas && s <= Math.round(resumen?.calificacionPromedio || 0)
+                            ? 'fill-yellow-400 text-yellow-400'
+                            : 'text-slate-300 dark:text-slate-700'
+                        }`}
+                      />
                     ))}
                   </div>
                   <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                    Basado en {resumen?.totalResenas || resenasHotel.length || 3} opiniones
+                    {tieneResenas ? `Basado en ${totalOpiniones} opiniones` : 'Sin opiniones registradas aún'}
                   </span>
-                  <span className="mt-2 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300 text-[10px] font-bold border border-emerald-200 dark:border-emerald-800">
-                    ✓ 100% de huéspedes lo recomiendan
-                  </span>
+                  {tieneResenas ? (
+                    <span className="mt-2 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300 text-[10px] font-bold border border-emerald-200 dark:border-emerald-800">
+                      ✓ {porcentajeRecomendado}% de huéspedes lo recomiendan
+                    </span>
+                  ) : (
+                    <span className="mt-2 px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 text-[10px] font-bold border border-slate-200 dark:border-slate-700">
+                      ⭐ Alojamiento nuevo sin calificaciones
+                    </span>
+                  )}
                 </div>
 
                 {/* Barras de los 5 Atributos */}
@@ -812,50 +857,50 @@ export const DetalleAlojamientoView: React.FC<DetalleAlojamientoViewProps> = ({
                   <div className="flex items-center justify-between gap-3">
                     <span className="font-medium text-slate-600 dark:text-slate-300 w-28">Limpieza</span>
                     <div className="flex-1 h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
-                      <div className="h-full bg-blue-600 rounded-full" style={{ width: `${((resumen?.promedioLimpieza || 5) / 5) * 100}%` }} />
+                      <div className="h-full bg-blue-600 rounded-full" style={{ width: tieneResenas ? `${((resumen?.promedioLimpieza || 0) / 5) * 100}%` : '0%' }} />
                     </div>
                     <span className="font-mono font-bold text-slate-900 dark:text-white w-8 text-right">
-                      {resumen?.promedioLimpieza ? resumen.promedioLimpieza.toFixed(1) : '5.0'}
+                      {tieneResenas && resumen?.promedioLimpieza ? resumen.promedioLimpieza.toFixed(1) : '0.0'}
                     </span>
                   </div>
 
                   <div className="flex items-center justify-between gap-3">
                     <span className="font-medium text-slate-600 dark:text-slate-300 w-28">Ubicación</span>
                     <div className="flex-1 h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
-                      <div className="h-full bg-blue-600 rounded-full" style={{ width: `${((resumen?.promedioUbicacion || 4.7) / 5) * 100}%` }} />
+                      <div className="h-full bg-blue-600 rounded-full" style={{ width: tieneResenas ? `${((resumen?.promedioUbicacion || 0) / 5) * 100}%` : '0%' }} />
                     </div>
                     <span className="font-mono font-bold text-slate-900 dark:text-white w-8 text-right">
-                      {resumen?.promedioUbicacion ? resumen.promedioUbicacion.toFixed(1) : '4.7'}
+                      {tieneResenas && resumen?.promedioUbicacion ? resumen.promedioUbicacion.toFixed(1) : '0.0'}
                     </span>
                   </div>
 
                   <div className="flex items-center justify-between gap-3">
                     <span className="font-medium text-slate-600 dark:text-slate-300 w-28">Calidad/Precio</span>
                     <div className="flex-1 h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
-                      <div className="h-full bg-blue-600 rounded-full" style={{ width: `${((resumen?.promedioCalidadPrecio || 4.5) / 5) * 100}%` }} />
+                      <div className="h-full bg-blue-600 rounded-full" style={{ width: tieneResenas ? `${((resumen?.promedioCalidadPrecio || 0) / 5) * 100}%` : '0%' }} />
                     </div>
                     <span className="font-mono font-bold text-slate-900 dark:text-white w-8 text-right">
-                      {resumen?.promedioCalidadPrecio ? resumen.promedioCalidadPrecio.toFixed(1) : '4.5'}
+                      {tieneResenas && resumen?.promedioCalidadPrecio ? resumen.promedioCalidadPrecio.toFixed(1) : '0.0'}
                     </span>
                   </div>
 
                   <div className="flex items-center justify-between gap-3">
                     <span className="font-medium text-slate-600 dark:text-slate-300 w-28">Servicio</span>
                     <div className="flex-1 h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
-                      <div className="h-full bg-blue-600 rounded-full" style={{ width: `${((resumen?.promedioServicio || 4.8) / 5) * 100}%` }} />
+                      <div className="h-full bg-blue-600 rounded-full" style={{ width: tieneResenas ? `${((resumen?.promedioServicio || 0) / 5) * 100}%` : '0%' }} />
                     </div>
                     <span className="font-mono font-bold text-slate-900 dark:text-white w-8 text-right">
-                      {resumen?.promedioServicio ? resumen.promedioServicio.toFixed(1) : '4.8'}
+                      {tieneResenas && resumen?.promedioServicio ? resumen.promedioServicio.toFixed(1) : '0.0'}
                     </span>
                   </div>
 
                   <div className="flex items-center justify-between gap-3">
                     <span className="font-medium text-slate-600 dark:text-slate-300 w-28">Comodidad</span>
                     <div className="flex-1 h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
-                      <div className="h-full bg-blue-600 rounded-full" style={{ width: `${((resumen?.promedioComodidad || 4.7) / 5) * 100}%` }} />
+                      <div className="h-full bg-blue-600 rounded-full" style={{ width: tieneResenas ? `${((resumen?.promedioComodidad || 0) / 5) * 100}%` : '0%' }} />
                     </div>
                     <span className="font-mono font-bold text-slate-900 dark:text-white w-8 text-right">
-                      {resumen?.promedioComodidad ? resumen.promedioComodidad.toFixed(1) : '4.7'}
+                      {tieneResenas && resumen?.promedioComodidad ? resumen.promedioComodidad.toFixed(1) : '0.0'}
                     </span>
                   </div>
                 </div>
@@ -873,7 +918,7 @@ export const DetalleAlojamientoView: React.FC<DetalleAlojamientoViewProps> = ({
                         : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                     }`}
                   >
-                    <span>🏨 Reseñas del Hotel en General</span>
+                    <span>🏡 Reseñas de Propiedad Completa</span>
                     <span className="px-2 py-0.5 rounded-full text-[10px] bg-black/20 text-white">
                       {resenasHotel.length}
                     </span>
@@ -888,7 +933,7 @@ export const DetalleAlojamientoView: React.FC<DetalleAlojamientoViewProps> = ({
                         : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                     }`}
                   >
-                    <span>🛏️ Reseñas de {unidadActiva.nombre}</span>
+                    <span>🏨 Reseñas de Habitación: {unidadActiva.nombre}</span>
                     <span className="px-2 py-0.5 rounded-full text-[10px] bg-black/20 text-white">
                       {resenasHabitacion.length}
                     </span>
@@ -935,14 +980,34 @@ export const DetalleAlojamientoView: React.FC<DetalleAlojamientoViewProps> = ({
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            {resena.nombreUnidad && (
+                              <span className="px-2.5 py-1 rounded-xl bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 text-[10px] font-bold border border-purple-200 dark:border-purple-800 flex items-center gap-1">
+                                🛏️ {resena.nombreUnidad}
+                              </span>
+                            )}
+                            {resena.sentimientoNlp && (
+                              <span
+                                className={`px-2.5 py-1 rounded-xl text-[10px] font-bold border flex items-center gap-1 ${
+                                  resena.sentimientoNlp.toUpperCase() === 'POSITIVO'
+                                    ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
+                                    : resena.sentimientoNlp.toUpperCase() === 'NEGATIVO'
+                                    ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border-rose-200 dark:border-rose-800'
+                                    : 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border-amber-200 dark:border-amber-800'
+                                }`}
+                              >
+                                {resena.sentimientoNlp.toUpperCase() === 'POSITIVO' && '😊 Positivo'}
+                                {resena.sentimientoNlp.toUpperCase() === 'NEGATIVO' && '🙁 Negativo'}
+                                {resena.sentimientoNlp.toUpperCase() === 'NEUTRO' && '😐 Neutro'}
+                              </span>
+                            )}
                             {resena.topicoPredicho && (
                               <span className="px-2.5 py-1 rounded-xl bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 text-[10px] font-bold border border-blue-200 dark:border-blue-800">
                                 #{resena.topicoPredicho}
                               </span>
                             )}
-                            <div className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 font-bold text-xs border border-blue-200 dark:border-blue-800">
-                              <Star className="w-3.5 h-3.5 fill-blue-500 text-blue-500" />
+                            <div className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 font-bold text-xs border border-amber-200 dark:border-amber-800">
+                              <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
                               <span>{resena.puntuacionGeneral}.0</span>
                             </div>
                           </div>
@@ -1318,6 +1383,39 @@ export const DetalleAlojamientoView: React.FC<DetalleAlojamientoViewProps> = ({
               </div>
             ) : (
               <form onSubmit={enviarResena} className="space-y-4">
+
+                {/* Selector Hotel vs Habitación (Solo si es Hotel) */}
+                {esHotel && (
+                  <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 space-y-1.5">
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block">
+                      ¿Qué estás calificando?
+                    </span>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setActiveReviewTab('HOTEL')}
+                        className={`px-3 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                          activeReviewTab === 'HOTEL'
+                            ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
+                            : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:bg-slate-100'
+                        }`}
+                      >
+                        <span>🏡 Propiedad Completa</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setActiveReviewTab('HABITACION')}
+                        className={`px-3 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                          activeReviewTab === 'HABITACION'
+                            ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
+                            : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:bg-slate-100'
+                        }`}
+                      >
+                        <span className="truncate">🏨 Habitación: {unidadActiva.nombre}</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
                 
                 {/* Calificación Rápida en 1 Clic */}
                 <div className="text-center p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 space-y-2">

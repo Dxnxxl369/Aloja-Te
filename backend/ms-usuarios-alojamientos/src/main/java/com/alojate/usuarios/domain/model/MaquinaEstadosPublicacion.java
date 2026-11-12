@@ -42,14 +42,20 @@ public final class MaquinaEstadosPublicacion {
     static {
         regla(PENDIENTE,   DISPARAR_REVISION,   EN_REVISION, SISTEMA);
         regla(PENDIENTE,   REINTENTAR_ADMIN,    EN_REVISION, ADMIN);
+        regla(PENDIENTE,   IA_PUBLICA,          PUBLICADO,   ADMIN, IA, SISTEMA);
+        regla(PENDIENTE,   IA_OBSERVA,          OBSERVADO,   ADMIN, IA, SISTEMA);
+        regla(PENDIENTE,   IA_RECHAZA,          RECHAZADO,   ADMIN, IA, SISTEMA);
 
-        regla(EN_REVISION, IA_PUBLICA,          PUBLICADO,   IA);
-        regla(EN_REVISION, IA_OBSERVA,          OBSERVADO,   IA);
-        regla(EN_REVISION, IA_RECHAZA,          RECHAZADO,   IA);
+        regla(EN_REVISION, IA_PUBLICA,          PUBLICADO,   IA, ADMIN, SISTEMA);
+        regla(EN_REVISION, IA_OBSERVA,          OBSERVADO,   IA, ADMIN, SISTEMA);
+        regla(EN_REVISION, IA_RECHAZA,          RECHAZADO,   IA, ADMIN, SISTEMA);
         regla(EN_REVISION, ERROR_TECNICO,       PENDIENTE,   SISTEMA, IA);
 
         regla(OBSERVADO,   REENVIAR_ANFITRION,  EN_REVISION, ANFITRION);
+        regla(OBSERVADO,   IA_PUBLICA,          PUBLICADO,   ADMIN, IA, SISTEMA);
+        regla(OBSERVADO,   IA_RECHAZA,          RECHAZADO,   ADMIN, IA, SISTEMA);
 
+        regla(PUBLICADO,   IA_OBSERVA,          OBSERVADO,   ADMIN, IA, SISTEMA);
         regla(PUBLICADO,   NLP_OBSERVA,         OBSERVADO,   NLP);
         regla(PUBLICADO,   SUSPENDER,           SUSPENDIDO,  ADMIN);
         regla(OBSERVADO,   SUSPENDER,           SUSPENDIDO,  ADMIN);

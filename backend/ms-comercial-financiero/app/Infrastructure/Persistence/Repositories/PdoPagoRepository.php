@@ -69,46 +69,71 @@ class PdoPagoRepository implements PagoRepositoryInterface
 
         // Guardar transacciones
         foreach ($pago->getTransacciones() as $tx) {
-            $stmtTx = $this->db->prepare("INSERT OR IGNORE INTO transacciones_pago 
-                (transaccion_id, pago_id, tipo, monto, referencia_pasarela, created_at)
-                VALUES (:id, :pago, :tipo, :monto, :ref, :created)");
-            $stmtTx->execute([
-                'id' => $tx->getTransaccionId(),
-                'pago' => $tx->getPagoId(),
-                'tipo' => $tx->getTipo()->value,
-                'monto' => $tx->getMonto(),
-                'ref' => $tx->getReferenciaPasarela(),
-                'created' => $tx->getCreatedAt()->format('Y-m-d H:i:s')
-            ]);
+            $stmtTxCheck = $this->db->prepare("SELECT COUNT(*) FROM transacciones_pago WHERE transaccion_id = :id");
+            $stmtTxCheck->execute(['id' => $tx->getTransaccionId()]);
+            if ((int) $stmtTxCheck->fetchColumn() === 0) {
+                $stmtTx = $this->db->prepare("INSERT INTO transacciones_pago 
+                    (transaccion_id, pago_id, tipo, monto, referencia_pasarela, created_at)
+                    VALUES (:id, :pago, :tipo, :monto, :ref, :created)");
+                $stmtTx->execute([
+                    'id' => $tx->getTransaccionId(),
+                    'pago' => $tx->getPagoId(),
+                    'tipo' => $tx->getTipo()->value,
+                    'monto' => $tx->getMonto(),
+                    'ref' => $tx->getReferenciaPasarela(),
+                    'created' => $tx->getCreatedAt()->format('Y-m-d H:i:s')
+                ]);
+            }
         }
 
         // Guardar comprobantes
         foreach ($pago->getComprobantes() as $comp) {
-            $stmtComp = $this->db->prepare("INSERT OR IGNORE INTO comprobantes 
-                (comprobante_id, pago_id, tipo, numero, created_at)
-                VALUES (:id, :pago, :tipo, :numero, :created)");
-            $stmtComp->execute([
-                'id' => $comp->getComprobanteId(),
-                'pago' => $comp->getPagoId(),
-                'tipo' => $comp->getTipo()->value,
-                'numero' => $comp->getNumero(),
-                'created' => $comp->getCreatedAt()->format('Y-m-d H:i:s')
-            ]);
+            $stmtCompCheck = $this->db->prepare("SELECT COUNT(*) FROM comprobantes WHERE comprobante_id = :id");
+            $stmtCompCheck->execute(['id' => $comp->getComprobanteId()]);
+            if ((int) $stmtCompCheck->fetchColumn() === 0) {
+                $stmtComp = $this->db->prepare("INSERT INTO comprobantes 
+                    (comprobante_id, pago_id, tipo, numero, created_at)
+                    VALUES (:id, :pago, :tipo, :numero, :created)");
+                $stmtComp->execute([
+                    'id' => $comp->getComprobanteId(),
+                    'pago' => $comp->getPagoId(),
+                    'tipo' => $comp->getTipo()->value,
+                    'numero' => $comp->getNumero(),
+                    'created' => $comp->getCreatedAt()->format('Y-m-d H:i:s')
+                ]);
+            }
         }
 
         // Guardar reembolsos
         foreach ($pago->getReembolsos() as $reemb) {
-            $stmtReemb = $this->db->prepare("INSERT OR REPLACE INTO reembolsos 
-                (reembolso_id, pago_id, monto, motivo, estado, created_at)
-                VALUES (:id, :pago, :monto, :motivo, :estado, :created)");
-            $stmtReemb->execute([
-                'id' => $reemb->getReembolsoId(),
-                'pago' => $reemb->getPagoId(),
-                'monto' => $reemb->getMonto(),
-                'motivo' => $reemb->getMotivo(),
-                'estado' => $reemb->getEstado()->value,
-                'created' => $reemb->getCreatedAt()->format('Y-m-d H:i:s')
-            ]);
+            $stmtReembCheck = $this->db->prepare("SELECT COUNT(*) FROM reembolsos WHERE reembolso_id = :id");
+            $stmtReembCheck->execute(['id' => $reemb->getReembolsoId()]);
+            $existeReemb = (int) $stmtReembCheck->fetchColumn() > 0;
+            if ($existeReemb) {
+                $stmtReemb = $this->db->prepare("UPDATE reembolsos SET
+                    monto = :monto,
+                    motivo = :motivo,
+                    estado = :estado
+                    WHERE reembolso_id = :id");
+                $stmtReemb->execute([
+                    'id' => $reemb->getReembolsoId(),
+                    'monto' => $reemb->getMonto(),
+                    'motivo' => $reemb->getMotivo(),
+                    'estado' => $reemb->getEstado()->value
+                ]);
+            } else {
+                $stmtReemb = $this->db->prepare("INSERT INTO reembolsos 
+                    (reembolso_id, pago_id, monto, motivo, estado, created_at)
+                    VALUES (:id, :pago, :monto, :motivo, :estado, :created)");
+                $stmtReemb->execute([
+                    'id' => $reemb->getReembolsoId(),
+                    'pago' => $reemb->getPagoId(),
+                    'monto' => $reemb->getMonto(),
+                    'motivo' => $reemb->getMotivo(),
+                    'estado' => $reemb->getEstado()->value,
+                    'created' => $reemb->getCreatedAt()->format('Y-m-d H:i:s')
+                ]);
+            }
         }
     }
 

@@ -21,19 +21,42 @@ class PdoReglaMonetizacionRepository implements ReglaMonetizacionRepositoryInter
 
     public function guardar(ReglaMonetizacion $regla): void
     {
-        $stmt = $this->db->prepare("INSERT OR REPLACE INTO reglas_monetizacion 
-            (regla_id, concepto, tipo_calculo, porcentaje, categoria_alojamiento, vigente_desde, vigente_hasta)
-            VALUES (:id, :concepto, :tipo, :porc, :cat, :desde, :hasta)");
-        
-        $stmt->execute([
-            'id' => $regla->getReglaId(),
-            'concepto' => $regla->getConcepto()->value,
-            'tipo' => $regla->getTipoCalculo()->value,
-            'porc' => $regla->getPorcentaje(),
-            'cat' => $regla->getCategoriaAlojamiento(),
-            'desde' => $regla->getVigenteDesde()?->format('Y-m-d H:i:s'),
-            'hasta' => $regla->getVigenteHasta()?->format('Y-m-d H:i:s')
-        ]);
+        $stmtCheck = $this->db->prepare("SELECT COUNT(*) FROM reglas_monetizacion WHERE regla_id = :id");
+        $stmtCheck->execute(['id' => $regla->getReglaId()]);
+        $existe = (int) $stmtCheck->fetchColumn() > 0;
+
+        if ($existe) {
+            $stmt = $this->db->prepare("UPDATE reglas_monetizacion SET 
+                concepto = :concepto,
+                tipo_calculo = :tipo,
+                porcentaje = :porc,
+                categoria_alojamiento = :cat,
+                vigente_desde = :desde,
+                vigente_hasta = :hasta
+                WHERE regla_id = :id");
+            $stmt->execute([
+                'id' => $regla->getReglaId(),
+                'concepto' => $regla->getConcepto()->value,
+                'tipo' => $regla->getTipoCalculo()->value,
+                'porc' => $regla->getPorcentaje(),
+                'cat' => $regla->getCategoriaAlojamiento(),
+                'desde' => $regla->getVigenteDesde()?->format('Y-m-d H:i:s'),
+                'hasta' => $regla->getVigenteHasta()?->format('Y-m-d H:i:s')
+            ]);
+        } else {
+            $stmt = $this->db->prepare("INSERT INTO reglas_monetizacion 
+                (regla_id, concepto, tipo_calculo, porcentaje, categoria_alojamiento, vigente_desde, vigente_hasta)
+                VALUES (:id, :concepto, :tipo, :porc, :cat, :desde, :hasta)");
+            $stmt->execute([
+                'id' => $regla->getReglaId(),
+                'concepto' => $regla->getConcepto()->value,
+                'tipo' => $regla->getTipoCalculo()->value,
+                'porc' => $regla->getPorcentaje(),
+                'cat' => $regla->getCategoriaAlojamiento(),
+                'desde' => $regla->getVigenteDesde()?->format('Y-m-d H:i:s'),
+                'hasta' => $regla->getVigenteHasta()?->format('Y-m-d H:i:s')
+            ]);
+        }
     }
 
     public function buscarPorId(string $reglaId): ?ReglaMonetizacion

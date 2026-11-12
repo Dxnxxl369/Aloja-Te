@@ -1887,8 +1887,28 @@ app.get('/api/v1/alojamientos/todos', async (req, res, next) => {
 // 6. Decisiones de Moderación: Aprobar / Publicar
 app.post('/api/v1/alojamientos/:id/aceptar', express.json(), async (req, res, next) => {
   const alojId = req.params.id;
+  const tokenMod = process.env.MODERACION_TOKEN || 'alojate-moderacion-dev';
+
+  // Persistir en base de datos PostgreSQL de MS-01
   try {
-    await fetch(`${MS_USUARIOS}/api/v1/alojamientos/${alojId}/aceptar`, { method: 'POST' });
+    await fetch(`${MS_USUARIOS}/api/v1/alojamientos/${alojId}/aceptar`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Moderacion-Token': tokenMod
+      }
+    });
+  } catch {}
+
+  try {
+    await fetch(`${MS_USUARIOS}/api/v1/alojamientos/${alojId}/estado?estado=PUBLICADO&origen=ADMIN_MANUAL`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Moderacion-Token': tokenMod
+      },
+      body: JSON.stringify({ nuevoEstado: 'PUBLICADO', origen: 'ADMIN_MANUAL' })
+    });
   } catch {}
 
   let item = alojamientosCentralesMap.get(alojId);
@@ -1927,11 +1947,27 @@ app.post('/api/v1/alojamientos/:id/observar', express.json(), async (req, res, n
   const alojId = req.params.id;
   const motivo = req.body?.motivo || 'Observación por auditoría de calidad';
   const origen = req.body?.origen || 'ADMIN_MANUAL';
+  const tokenMod = process.env.MODERACION_TOKEN || 'alojate-moderacion-dev';
+
   try {
     await fetch(`${MS_USUARIOS}/api/v1/alojamientos/${alojId}/observar`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Moderacion-Token': tokenMod
+      },
       body: JSON.stringify({ motivo, origen })
+    });
+  } catch {}
+
+  try {
+    await fetch(`${MS_USUARIOS}/api/v1/alojamientos/${alojId}/estado?estado=OBSERVADO&origen=ADMIN_MANUAL`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Moderacion-Token': tokenMod
+      },
+      body: JSON.stringify({ nuevoEstado: 'OBSERVADO', motivo, origen })
     });
   } catch {}
 
@@ -1973,11 +2009,27 @@ app.post('/api/v1/alojamientos/:id/observar', express.json(), async (req, res, n
 app.post('/api/v1/alojamientos/:id/rechazar', express.json(), async (req, res, next) => {
   const alojId = req.params.id;
   const motivo = req.body?.motivo || 'Rechazado por incumplimiento de requisitos';
+  const tokenMod = process.env.MODERACION_TOKEN || 'alojate-moderacion-dev';
+
   try {
     await fetch(`${MS_USUARIOS}/api/v1/alojamientos/${alojId}/rechazar`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Moderacion-Token': tokenMod
+      },
       body: JSON.stringify({ motivo })
+    });
+  } catch {}
+
+  try {
+    await fetch(`${MS_USUARIOS}/api/v1/alojamientos/${alojId}/estado?estado=RECHAZADO&origen=ADMIN_MANUAL`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Moderacion-Token': tokenMod
+      },
+      body: JSON.stringify({ nuevoEstado: 'RECHAZADO', motivo, origen: 'ADMIN_MANUAL' })
     });
   } catch {}
 
@@ -2017,10 +2069,15 @@ app.post('/api/v1/alojamientos/:id/rechazar', express.json(), async (req, res, n
 app.post('/api/v1/alojamientos/:id/suspender', express.json(), async (req, res, next) => {
   const alojId = req.params.id;
   const motivo = req.body?.motivo || 'Suspensión preventiva por auditoría de calidad';
+  const tokenMod = process.env.MODERACION_TOKEN || 'alojate-moderacion-dev';
+
   try {
     await fetch(`${MS_USUARIOS}/api/v1/alojamientos/${alojId}/suspender`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Moderacion-Token': tokenMod
+      },
       body: JSON.stringify({ motivo })
     });
   } catch {}
@@ -2051,10 +2108,16 @@ app.patch('/api/v1/alojamientos/:id/estado', express.json(), async (req, res, ne
   const nuevoEstado = (req.query.estado as string) || req.body?.nuevoEstado || req.body?.estado || 'EN_REVISION';
   const motivo = (req.query.motivo as string) || req.body?.motivo;
   const origen = (req.query.origen as string) || req.body?.origen || 'ADMIN_MANUAL';
+  const tokenMod = process.env.MODERACION_TOKEN || 'alojate-moderacion-dev';
 
   try {
     await fetch(`${MS_USUARIOS}/api/v1/alojamientos/${alojId}/estado?estado=${nuevoEstado}&origen=${origen}`, {
-      method: 'PATCH'
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Moderacion-Token': tokenMod
+      },
+      body: JSON.stringify({ nuevoEstado, motivo, origen })
     });
   } catch {}
 
@@ -2189,6 +2252,23 @@ app.get('/api/v1/alojamientos/:id', async (req, res, next) => {
 
 const valoracionesCentralesMap = new Map<string, any[]>();
 
+app.get('/api/v1/alojamientos/:id/valoraciones/hotel', async (req, res) => {
+  const alojId = req.params.id;
+  try {
+    const backendRes = await fetch(`${MS_USUARIOS}/api/v1/alojamientos/${alojId}/valoraciones/hotel`);
+    if (backendRes.ok) {
+      const data = await backendRes.json();
+      if (Array.isArray(data) && data.length > 0) {
+        return res.json(data);
+      }
+    }
+  } catch {}
+
+  const todas = valoracionesCentralesMap.get(alojId) || [];
+  const soloHotel = todas.filter((v: any) => !v.idUnidad);
+  return res.json(soloHotel);
+});
+
 app.get('/api/v1/alojamientos/:id/valoraciones', async (req, res) => {
   const alojId = req.params.id;
   try {
@@ -2250,13 +2330,13 @@ app.get('/api/v1/alojamientos/:id/valoraciones/resumen', async (req, res) => {
       const data = await backendRes.json();
       if (data.totalResenas === 0) {
         return res.json({
-          calificacionPromedio: null,
+          calificacionPromedio: 0,
           totalResenas: 0,
-          promedioLimpieza: null,
-          promedioUbicacion: null,
-          promedioCalidadPrecio: null,
-          promedioServicio: null,
-          promedioComodidad: null,
+          promedioLimpieza: 0,
+          promedioUbicacion: 0,
+          promedioCalidadPrecio: 0,
+          promedioServicio: 0,
+          promedioComodidad: 0,
           conteoPositivos: 0,
           conteoNeutros: 0,
           conteoNegativos: 0
@@ -2269,13 +2349,13 @@ app.get('/api/v1/alojamientos/:id/valoraciones/resumen', async (req, res) => {
   const lista = valoracionesCentralesMap.get(alojId) || [];
   if (lista.length === 0) {
     return res.json({
-      calificacionPromedio: null,
+      calificacionPromedio: 0,
       totalResenas: 0,
-      promedioLimpieza: null,
-      promedioUbicacion: null,
-      promedioCalidadPrecio: null,
-      promedioServicio: null,
-      promedioComodidad: null,
+      promedioLimpieza: 0,
+      promedioUbicacion: 0,
+      promedioCalidadPrecio: 0,
+      promedioServicio: 0,
+      promedioComodidad: 0,
       conteoPositivos: 0,
       conteoNeutros: 0,
       conteoNegativos: 0
@@ -2311,24 +2391,107 @@ app.get('/api/v1/alojamientos/:id/valoraciones/resumen', async (req, res) => {
   });
 });
 
+// Proxy explícito para clasificación NLP en MS-04 IA
+app.post('/api/v1/ia/clasificar-resena', express.json(), async (req, res) => {
+  try {
+    const iaRes = await fetch(`${MS_IA}/api/v1/ia/clasificar-resena`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(req.body)
+    });
+    if (iaRes.ok) {
+      const data = await iaRes.json();
+      return res.json(data);
+    }
+    const errText = await iaRes.text();
+    return res.status(iaRes.status).send(errText);
+  } catch (err: any) {
+    console.warn('[Gateway] Fallback o error contactando MS-04 IA:', err);
+    return res.status(502).json({ error: 'Error contactando Microservicio de IA' });
+  }
+});
+
+app.post('/api/v1/ia/predict', express.json(), async (req, res) => {
+  try {
+    const iaRes = await fetch(`${MS_IA}/api/v1/ia/predict`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(req.body)
+    });
+    if (iaRes.ok) {
+      const data = await iaRes.json();
+      return res.json(data);
+    }
+    const errText = await iaRes.text();
+    return res.status(iaRes.status).send(errText);
+  } catch (err: any) {
+    return res.status(502).json({ error: 'Error contactando Microservicio de IA' });
+  }
+});
+
 app.post('/api/v1/alojamientos/:id/valoraciones', express.json(), async (req, res) => {
   const alojId = req.params.id;
-  const payload = req.body;
+  const payload = req.body || {};
+
+  let sentimientoFinal = payload.sentimientoNlp;
+  let confianzaFinal = payload.confianzaNlp;
+  let topicoFinal = payload.topicoPredicho;
+
+  // Invocar al Microservicio de IA Supervisado (MS-04) para clasificar el texto de la reseña
+  if (payload.comentario && String(payload.comentario).trim().length >= 3) {
+    try {
+      const iaRes = await fetch(`${MS_IA}/api/v1/ia/clasificar-resena`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          texto: String(payload.comentario).trim(),
+          idAlojamiento: alojId,
+          idUnidad: payload.idUnidad || null,
+          puntuacionGeneral: Number(payload.puntuacionGeneral || 5)
+        })
+      });
+      if (iaRes.ok) {
+        const iaData = await iaRes.json();
+        if (iaData.sentimiento) {
+          sentimientoFinal = String(iaData.sentimiento).toUpperCase();
+          confianzaFinal = iaData.confianza || iaData.probabilidad;
+          topicoFinal = iaData.topico || iaData.topico_nombre;
+        }
+      }
+    } catch (err) {
+      console.warn('[Gateway] Fallback interno para clasificador IA:', err);
+    }
+  }
+
+  // Normalización estricta a POSITIVO, NEUTRO, NEGATIVO (solo si IA no respondió)
+  if (!sentimientoFinal) {
+    const pts = Number(payload.puntuacionGeneral || 5);
+    sentimientoFinal = pts >= 4 ? 'POSITIVO' : (pts === 3 ? 'NEUTRO' : 'NEGATIVO');
+  } else {
+    sentimientoFinal = String(sentimientoFinal).toUpperCase();
+    if (!['POSITIVO', 'NEUTRO', 'NEGATIVO'].includes(sentimientoFinal)) {
+      sentimientoFinal = Number(payload.puntuacionGeneral || 5) >= 4 ? 'POSITIVO' : 'NEUTRO';
+    }
+  }
+
   const nuevaValoracion = {
     idValoracion: payload.idValoracion || `val-${Date.now()}`,
     idAlojamiento: alojId,
     idUnidad: payload.idUnidad || null,
     nombreUnidad: payload.nombreUnidad || null,
     idUsuario: payload.idUsuario || 'usr-anonimo',
-    nombreUsuario: payload.nombreUsuario || 'Huésped Verificado',
+    nombreUsuario: payload.esAnonimo ? 'Huésped Anónimo' : (payload.nombreUsuario || 'Huésped Verificado'),
     puntuacionGeneral: Number(payload.puntuacionGeneral || 5),
     calificacionLimpieza: Number(payload.calificacionLimpieza || payload.puntuacionGeneral || 5),
     calificacionUbicacion: Number(payload.calificacionUbicacion || payload.puntuacionGeneral || 5),
     calificacionCalidadPrecio: Number(payload.calificacionCalidadPrecio || payload.puntuacionGeneral || 5),
     calificacionServicio: Number(payload.calificacionServicio || payload.puntuacionGeneral || 5),
     calificacionComodidad: Number(payload.calificacionComodidad || payload.puntuacionGeneral || 5),
+    esAnonimo: Boolean(payload.esAnonimo),
     comentario: String(payload.comentario || ''),
-    sentimientoNlp: payload.sentimientoNlp || (payload.puntuacionGeneral >= 4 ? 'POSITIVO' : payload.puntuacionGeneral === 3 ? 'NEUTRO' : 'NEGATIVO'),
+    sentimientoNlp: sentimientoFinal,
+    confianzaNlp: Number(confianzaFinal || 0.93),
+    topicoPredicho: topicoFinal || 'EXPERIENCIA_GENERAL',
     fechaCreacion: new Date().toISOString()
   };
 
@@ -2340,7 +2503,12 @@ app.post('/api/v1/alojamientos/:id/valoraciones', express.json(), async (req, re
     await fetch(`${MS_USUARIOS}/api/v1/alojamientos/${alojId}/valoraciones`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+      body: JSON.stringify({
+        ...payload,
+        sentimientoNlp: sentimientoFinal,
+        confianzaNlp: nuevaValoracion.confianzaNlp,
+        topicoPredicho: nuevaValoracion.topicoPredicho
+      })
     });
   } catch {}
 

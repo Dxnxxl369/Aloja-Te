@@ -30,11 +30,11 @@ export const AlojamientoCard: React.FC<AlojamientoCardProps> = ({
     alojamiento.fotografias?.[0]?.url ||
     'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=800&q=80';
 
-  const calificacion = typeof alojamiento.calificacionPromedio === 'number'
-    ? alojamiento.calificacionPromedio.toFixed(2)
-    : '4.95';
-
-  const resenas = alojamiento.totalResenas ?? 24;
+  const resenas = typeof alojamiento.totalResenas === 'number' ? alojamiento.totalResenas : 0;
+  const tieneCalificacion = typeof alojamiento.calificacionPromedio === 'number' && alojamiento.calificacionPromedio > 0;
+  const calificacion = tieneCalificacion
+    ? alojamiento.calificacionPromedio.toFixed(1)
+    : '0.0';
   const precio = alojamiento.precioBaseNoche ?? alojamiento.unidades?.[0]?.precioNoche ?? 650;
   const moneda = alojamiento.moneda || 'BOB';
   const tipoProp = (alojamiento.tipoPropiedad || 'Alojamiento').replace('_', ' ');
@@ -54,7 +54,7 @@ export const AlojamientoCard: React.FC<AlojamientoCardProps> = ({
 
         {/* Rating Badge */}
         <div className="absolute top-3.5 right-3.5 px-2.5 py-1 rounded-xl bg-black/60 backdrop-blur-md border border-white/20 text-white text-xs font-bold flex items-center gap-1 shadow-md">
-          <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
+          <Star className={`w-3.5 h-3.5 ${tieneCalificacion ? 'fill-yellow-400 text-yellow-400' : 'text-slate-400'}`} />
           <span>{calificacion}</span>
           <span className="text-[10px] text-slate-300 font-normal">({resenas})</span>
         </div>

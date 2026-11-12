@@ -20,22 +20,49 @@ class PdoLiquidacionRepository implements LiquidacionRepositoryInterface
 
     public function guardar(Liquidacion $liquidacion): void
     {
-        $stmt = $this->db->prepare("INSERT OR REPLACE INTO liquidaciones 
-            (liquidacion_id, anfitrion_id, metodo_id, periodo_desde, periodo_hasta, total_bruto, total_comisiones, total_neto, estado, created_at)
-            VALUES (:id, :anfitrion, :metodo, :desde, :hasta, :bruto, :comisiones, :neto, :estado, :created)");
-        
-        $stmt->execute([
-            'id' => $liquidacion->getLiquidacionId(),
-            'anfitrion' => $liquidacion->getAnfitrionId(),
-            'metodo' => $liquidacion->getMetodoId(),
-            'desde' => $liquidacion->getPeriodoDesde()->format('Y-m-d H:i:s'),
-            'hasta' => $liquidacion->getPeriodoHasta()->format('Y-m-d H:i:s'),
-            'bruto' => $liquidacion->getTotalBruto(),
-            'comisiones' => $liquidacion->getTotalComisiones(),
-            'neto' => $liquidacion->getTotalNeto(),
-            'estado' => $liquidacion->getEstado()->value,
-            'created' => $liquidacion->getCreatedAt()->format('Y-m-d H:i:s')
-        ]);
+        $stmtCheck = $this->db->prepare("SELECT COUNT(*) FROM liquidaciones WHERE liquidacion_id = :id");
+        $stmtCheck->execute(['id' => $liquidacion->getLiquidacionId()]);
+        $existe = (int) $stmtCheck->fetchColumn() > 0;
+
+        if ($existe) {
+            $stmt = $this->db->prepare("UPDATE liquidaciones SET 
+                anfitrion_id = :anfitrion,
+                metodo_id = :metodo,
+                periodo_desde = :desde,
+                periodo_hasta = :hasta,
+                total_bruto = :bruto,
+                total_comisiones = :comisiones,
+                total_neto = :neto,
+                estado = :estado
+                WHERE liquidacion_id = :id");
+            $stmt->execute([
+                'id' => $liquidacion->getLiquidacionId(),
+                'anfitrion' => $liquidacion->getAnfitrionId(),
+                'metodo' => $liquidacion->getMetodoId(),
+                'desde' => $liquidacion->getPeriodoDesde()->format('Y-m-d H:i:s'),
+                'hasta' => $liquidacion->getPeriodoHasta()->format('Y-m-d H:i:s'),
+                'bruto' => $liquidacion->getTotalBruto(),
+                'comisiones' => $liquidacion->getTotalComisiones(),
+                'neto' => $liquidacion->getTotalNeto(),
+                'estado' => $liquidacion->getEstado()->value
+            ]);
+        } else {
+            $stmt = $this->db->prepare("INSERT INTO liquidaciones 
+                (liquidacion_id, anfitrion_id, metodo_id, periodo_desde, periodo_hasta, total_bruto, total_comisiones, total_neto, estado, created_at)
+                VALUES (:id, :anfitrion, :metodo, :desde, :hasta, :bruto, :comisiones, :neto, :estado, :created)");
+            $stmt->execute([
+                'id' => $liquidacion->getLiquidacionId(),
+                'anfitrion' => $liquidacion->getAnfitrionId(),
+                'metodo' => $liquidacion->getMetodoId(),
+                'desde' => $liquidacion->getPeriodoDesde()->format('Y-m-d H:i:s'),
+                'hasta' => $liquidacion->getPeriodoHasta()->format('Y-m-d H:i:s'),
+                'bruto' => $liquidacion->getTotalBruto(),
+                'comisiones' => $liquidacion->getTotalComisiones(),
+                'neto' => $liquidacion->getTotalNeto(),
+                'estado' => $liquidacion->getEstado()->value,
+                'created' => $liquidacion->getCreatedAt()->format('Y-m-d H:i:s')
+            ]);
+        }
     }
 
     public function buscarPorId(string $liquidacionId): ?Liquidacion

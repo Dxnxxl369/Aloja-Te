@@ -20,20 +20,45 @@ class PdoPromocionRepository implements PromocionRepositoryInterface
 
     public function guardar(Promocion $promocion): void
     {
-        $stmt = $this->db->prepare("INSERT OR REPLACE INTO promociones 
-            (promocion_id, codigo, tipo, tipo_descuento, valor, vigente_desde, vigente_hasta, estado)
-            VALUES (:id, :codigo, :tipo, :tipo_desc, :valor, :desde, :hasta, :estado)");
-        
-        $stmt->execute([
-            'id' => $promocion->getPromocionId(),
-            'codigo' => $promocion->getCodigo(),
-            'tipo' => $promocion->getTipo(),
-            'tipo_desc' => $promocion->getTipoDescuento()->value,
-            'valor' => $promocion->getValor(),
-            'desde' => $promocion->getVigenteDesde()->format('Y-m-d H:i:s'),
-            'hasta' => $promocion->getVigenteHasta()->format('Y-m-d H:i:s'),
-            'estado' => $promocion->getEstado()
-        ]);
+        $stmtCheck = $this->db->prepare("SELECT COUNT(*) FROM promociones WHERE promocion_id = :id");
+        $stmtCheck->execute(['id' => $promocion->getPromocionId()]);
+        $existe = (int) $stmtCheck->fetchColumn() > 0;
+
+        if ($existe) {
+            $stmt = $this->db->prepare("UPDATE promociones SET 
+                codigo = :codigo,
+                tipo = :tipo,
+                tipo_descuento = :tipo_desc,
+                valor = :valor,
+                vigente_desde = :desde,
+                vigente_hasta = :hasta,
+                estado = :estado
+                WHERE promocion_id = :id");
+            $stmt->execute([
+                'id' => $promocion->getPromocionId(),
+                'codigo' => $promocion->getCodigo(),
+                'tipo' => $promocion->getTipo(),
+                'tipo_desc' => $promocion->getTipoDescuento()->value,
+                'valor' => $promocion->getValor(),
+                'desde' => $promocion->getVigenteDesde()->format('Y-m-d H:i:s'),
+                'hasta' => $promocion->getVigenteHasta()->format('Y-m-d H:i:s'),
+                'estado' => $promocion->getEstado()
+            ]);
+        } else {
+            $stmt = $this->db->prepare("INSERT INTO promociones 
+                (promocion_id, codigo, tipo, tipo_descuento, valor, vigente_desde, vigente_hasta, estado)
+                VALUES (:id, :codigo, :tipo, :tipo_desc, :valor, :desde, :hasta, :estado)");
+            $stmt->execute([
+                'id' => $promocion->getPromocionId(),
+                'codigo' => $promocion->getCodigo(),
+                'tipo' => $promocion->getTipo(),
+                'tipo_desc' => $promocion->getTipoDescuento()->value,
+                'valor' => $promocion->getValor(),
+                'desde' => $promocion->getVigenteDesde()->format('Y-m-d H:i:s'),
+                'hasta' => $promocion->getVigenteHasta()->format('Y-m-d H:i:s'),
+                'estado' => $promocion->getEstado()
+            ]);
+        }
     }
 
     public function buscarPorCodigo(string $codigo): ?Promocion

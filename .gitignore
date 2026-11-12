@@ -6,7 +6,6 @@
 /flujos-n8n/
 /nada/
 /scripts/
-/.github/
 
 # Dependencias y entornos
 node_modules/

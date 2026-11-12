@@ -19,22 +19,49 @@ class PdoComisionRepository implements ComisionRepositoryInterface
 
     public function guardar(Comision $comision): void
     {
-        $stmt = $this->db->prepare("INSERT OR REPLACE INTO comisiones 
-            (comision_id, pago_id, regla_id, liquidacion_id, base_comisionable, porcentaje_aplicado, monto_comision, monto_neto_anfitrion, estado, created_at)
-            VALUES (:id, :pago, :regla, :liq, :base, :porc, :monto_com, :monto_neto, :estado, :created)");
-        
-        $stmt->execute([
-            'id' => $comision->getComisionId(),
-            'pago' => $comision->getPagoId(),
-            'regla' => $comision->getReglaId(),
-            'liq' => $comision->getLiquidacionId(),
-            'base' => $comision->getBaseComisionable(),
-            'porc' => $comision->getPorcentajeAplicado(),
-            'monto_com' => $comision->getMontoComision(),
-            'monto_neto' => $comision->getMontoNetoAnfitrion(),
-            'estado' => $comision->getEstado(),
-            'created' => $comision->getCreatedAt()->format('Y-m-d H:i:s')
-        ]);
+        $stmtCheck = $this->db->prepare("SELECT COUNT(*) FROM comisiones WHERE comision_id = :id");
+        $stmtCheck->execute(['id' => $comision->getComisionId()]);
+        $existe = (int) $stmtCheck->fetchColumn() > 0;
+
+        if ($existe) {
+            $stmt = $this->db->prepare("UPDATE comisiones SET 
+                pago_id = :pago,
+                regla_id = :regla,
+                liquidacion_id = :liq,
+                base_comisionable = :base,
+                porcentaje_aplicado = :porc,
+                monto_comision = :monto_com,
+                monto_neto_anfitrion = :monto_neto,
+                estado = :estado
+                WHERE comision_id = :id");
+            $stmt->execute([
+                'id' => $comision->getComisionId(),
+                'pago' => $comision->getPagoId(),
+                'regla' => $comision->getReglaId(),
+                'liq' => $comision->getLiquidacionId(),
+                'base' => $comision->getBaseComisionable(),
+                'porc' => $comision->getPorcentajeAplicado(),
+                'monto_com' => $comision->getMontoComision(),
+                'monto_neto' => $comision->getMontoNetoAnfitrion(),
+                'estado' => $comision->getEstado()
+            ]);
+        } else {
+            $stmt = $this->db->prepare("INSERT INTO comisiones 
+                (comision_id, pago_id, regla_id, liquidacion_id, base_comisionable, porcentaje_aplicado, monto_comision, monto_neto_anfitrion, estado, created_at)
+                VALUES (:id, :pago, :regla, :liq, :base, :porc, :monto_com, :monto_neto, :estado, :created)");
+            $stmt->execute([
+                'id' => $comision->getComisionId(),
+                'pago' => $comision->getPagoId(),
+                'regla' => $comision->getReglaId(),
+                'liq' => $comision->getLiquidacionId(),
+                'base' => $comision->getBaseComisionable(),
+                'porc' => $comision->getPorcentajeAplicado(),
+                'monto_com' => $comision->getMontoComision(),
+                'monto_neto' => $comision->getMontoNetoAnfitrion(),
+                'estado' => $comision->getEstado(),
+                'created' => $comision->getCreatedAt()->format('Y-m-d H:i:s')
+            ]);
+        }
     }
 
     public function buscarPorId(string $comisionId): ?Comision

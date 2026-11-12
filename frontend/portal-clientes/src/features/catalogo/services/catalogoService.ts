@@ -24,15 +24,22 @@ function normalizarAlojamiento(raw: any): Alojamiento {
     direccion: raw.direccion || 'Ubicación céntrica',
     tipoPropiedad: raw.tipoPropiedadNombre || raw.tipoPropiedad || 'CABAÑA',
     tipoEspacio: raw.tipoEspacioNombre || raw.tipoEspacio || 'ALOJAMIENTO_ENTERO',
-    modalidad: raw.modalidad || 'CASA_DEPARTAMENTO',
+    modalidad: raw.modalidad || (
+      raw.tipoPropiedad?.toUpperCase() === 'HOTEL' ||
+      raw.tipoPropiedad?.toUpperCase() === 'HOSTAL' ||
+      raw.tipoPropiedadNombre?.toUpperCase() === 'HOTEL' ||
+      (Array.isArray(raw.unidades) && raw.unidades.length > 1)
+        ? 'HOTEL_HOSTAL'
+        : 'CASA_DEPARTAMENTO'
+    ),
     politicas: raw.politicas || 'Ambiente respetuoso y familiar. Cumplimiento de horarios de check-in.',
     horarioEntrada: raw.horarioEntrada || '14:00',
     horarioSalida: raw.horarioSalida || '11:00',
     motivoRechazo: raw.motivoRechazo || undefined,
     precioBaseNoche: Number(precioCalculado),
     moneda: raw.moneda || 'BOB',
-    calificacionPromedio: Number(raw.calificacionPromedio ?? 4.92),
-    totalResenas: Number(raw.totalResenas ?? 32),
+    calificacionPromedio: typeof raw.calificacionPromedio === 'number' ? Number(raw.calificacionPromedio) : 0,
+    totalResenas: typeof raw.totalResenas === 'number' ? Number(raw.totalResenas) : 0,
     estado: raw.estadoPublicacion || raw.estado || 'PUBLICADO',
     estadoPublicacion: raw.estadoPublicacion || raw.estado || 'PUBLICADO',
     motivoObservacionRechazo: raw.motivoObservacionRechazo || raw.motivoRechazo,
@@ -162,13 +169,13 @@ function obtenerValoracionesLocales(): ValoracionCliente[] {
 function calcularResumenLocal(lista: ValoracionCliente[]): ResumenValoraciones {
   if (!lista || lista.length === 0) {
     return {
-      calificacionPromedio: 5.0,
+      calificacionPromedio: 0,
       totalResenas: 0,
-      promedioLimpieza: 5.0,
-      promedioUbicacion: 5.0,
-      promedioCalidadPrecio: 5.0,
-      promedioServicio: 5.0,
-      promedioComodidad: 5.0,
+      promedioLimpieza: 0,
+      promedioUbicacion: 0,
+      promedioCalidadPrecio: 0,
+      promedioServicio: 0,
+      promedioComodidad: 0,
       conteoPositivos: 0,
       conteoNeutros: 0,
       conteoNegativos: 0
@@ -470,30 +477,45 @@ export const catalogoService = {
   },
 
   async listarValoraciones(idAlojamiento: string): Promise<ValoracionCliente[]> {
+    let remotas: ValoracionCliente[] = [];
     try {
       const res = await httpClient.get<ValoracionCliente[]>(ENDPOINTS.ALOJAMIENTOS.VALORACIONES(idAlojamiento));
-      if (res.data && res.data.length > 0) return res.data;
+      if (res.data && Array.isArray(res.data)) remotas = res.data;
     } catch (e) {}
-    const locales = obtenerValoracionesLocales();
-    return locales.filter(v => v.idAlojamiento === idAlojamiento);
+    const locales = obtenerValoracionesLocales().filter(v => v.idAlojamiento === idAlojamiento);
+    const mapa = new Map<string, ValoracionCliente>();
+    for (const v of [...remotas, ...locales]) {
+      if (v.idValoracion) mapa.set(v.idValoracion, v);
+    }
+    return Array.from(mapa.values());
   },
 
   async listarValoracionesGeneralesHotel(idAlojamiento: string): Promise<ValoracionCliente[]> {
+    let remotas: ValoracionCliente[] = [];
     try {
       const res = await httpClient.get<ValoracionCliente[]>(ENDPOINTS.ALOJAMIENTOS.VALORACIONES_HOTEL(idAlojamiento));
-      if (res.data && res.data.length > 0) return res.data;
+      if (res.data && Array.isArray(res.data)) remotas = res.data;
     } catch (e) {}
-    const locales = obtenerValoracionesLocales();
-    return locales.filter(v => v.idAlojamiento === idAlojamiento && !v.idUnidad);
+    const locales = obtenerValoracionesLocales().filter(v => v.idAlojamiento === idAlojamiento && !v.idUnidad);
+    const mapa = new Map<string, ValoracionCliente>();
+    for (const v of [...remotas, ...locales]) {
+      if (v.idValoracion) mapa.set(v.idValoracion, v);
+    }
+    return Array.from(mapa.values());
   },
 
   async listarValoracionesUnidad(idUnidad: string): Promise<ValoracionCliente[]> {
+    let remotas: ValoracionCliente[] = [];
     try {
       const res = await httpClient.get<ValoracionCliente[]>(ENDPOINTS.ALOJAMIENTOS.VALORACIONES_UNIDAD(idUnidad));
-      if (res.data && res.data.length > 0) return res.data;
+      if (res.data && Array.isArray(res.data)) remotas = res.data;
     } catch (e) {}
-    const locales = obtenerValoracionesLocales();
-    return locales.filter(v => v.idUnidad === idUnidad);
+    const locales = obtenerValoracionesLocales().filter(v => v.idUnidad === idUnidad);
+    const mapa = new Map<string, ValoracionCliente>();
+    for (const v of [...remotas, ...locales]) {
+      if (v.idValoracion) mapa.set(v.idValoracion, v);
+    }
+    return Array.from(mapa.values());
   },
 
   async clasificarResenaNLP(texto: string, idAlojamiento?: string, idUnidad?: string, puntuacion?: number) {
@@ -556,6 +578,7 @@ export const catalogoService = {
       idValoracion: `val-${Date.now()}`,
       idAlojamiento,
       idUnidad: req.idUnidad,
+      nombreUnidad: req.nombreUnidad,
       idUsuario: req.idUsuario,
       nombreUsuario: req.esAnonimo ? 'Huésped Anónimo' : (req.nombreUsuario || 'Viajero Aloja-Te'),
       puntuacionGeneral: req.puntuacionGeneral || 5,

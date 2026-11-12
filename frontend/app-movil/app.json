@@ -12,6 +12,9 @@
       "package": "com.alojate.movil",
       "googleServicesFile": "./google-services.json",
       "usesCleartextTraffic": true,
+      "buildArchs": [
+        "arm64-v8a"
+      ],
       "adaptiveIcon": {
         "backgroundColor": "#2563eb"
       }
@@ -31,6 +34,12 @@
           "color": "#2563eb"
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "076d13ac-b356-4d67-9d6b-ae8d61db1a1c"
+      }
+    },
+    "owner": "danielqc"
   }
 }

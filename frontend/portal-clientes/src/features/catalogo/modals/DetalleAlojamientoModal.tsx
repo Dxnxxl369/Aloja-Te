@@ -59,7 +59,16 @@ export const DetalleAlojamientoModal: React.FC<DetalleAlojamientoModalProps> = (
   const fotosSecundarias = fotosUrls.slice(1, 4);
 
   const unidadActiva = alojamiento.unidades.find(u => u.idUnidad === selectedUnidadId) || alojamiento.unidades[0];
-  const esHotel = alojamiento.modalidad === 'HOTEL_HOSTAL';
+  const esHotel = alojamiento.modalidad === 'HOTEL_HOSTAL'
+    || alojamiento.tipoPropiedad?.toUpperCase() === 'HOTEL'
+    || alojamiento.tipoPropiedad?.toUpperCase() === 'HOSTAL'
+    || (Array.isArray(alojamiento.unidades) && alojamiento.unidades.length > 1);
+
+  const totalOpiniones = (resumen?.totalResenas !== undefined && resumen?.totalResenas !== null)
+    ? resumen.totalResenas
+    : (resenasHotel.length + resenasHabitacion.length);
+  const tieneResenas = totalOpiniones > 0 && typeof resumen?.calificacionPromedio === 'number' && resumen.calificacionPromedio > 0;
+  const notaPromedio = tieneResenas ? (resumen?.calificacionPromedio ?? 0).toFixed(1) : '0.0';
 
   // Cargar reseñas generales del hotel o casa
   const cargarResenas = async () => {
@@ -202,12 +211,8 @@ export const DetalleAlojamientoModal: React.FC<DetalleAlojamientoModalProps> = (
               </div>
 
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-black/70 backdrop-blur-md border border-white/20 text-white text-xs font-bold shrink-0">
-                <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                <span>
-                  {typeof alojamiento.calificacionPromedio === 'number'
-                    ? alojamiento.calificacionPromedio.toFixed(2)
-                    : '4.95'}
-                </span>
+                <Star className={`w-4 h-4 ${tieneResenas ? 'fill-yellow-400 text-yellow-400' : 'text-slate-400'}`} />
+                <span>{notaPromedio}</span>
               </div>
             </div>
 
@@ -427,9 +432,9 @@ export const DetalleAlojamientoModal: React.FC<DetalleAlojamientoModalProps> = (
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <div className="flex items-center gap-2">
-                <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+                <Star className={`w-5 h-5 ${tieneResenas ? 'fill-yellow-400 text-yellow-400' : 'text-slate-400'}`} />
                 <h3 className="font-serif text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
-                  {resumen?.calificacionPromedio || '4.95'} • {resumen?.totalResenas || resenasHotel.length || 2} Reseñas de Viajeros
+                  {notaPromedio} • {tieneResenas ? `${totalOpiniones} Reseñas de Viajeros` : 'Sin reseñas aún'}
                 </h3>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -451,7 +456,7 @@ export const DetalleAlojamientoModal: React.FC<DetalleAlojamientoModalProps> = (
             <div>
               <span className="text-slate-400 text-[10px] uppercase font-bold block mb-1">🧹 Limpieza</span>
               <div className="flex items-center gap-1.5 font-bold text-slate-900 dark:text-white">
-                <span className="text-sm">{resumen?.promedioLimpieza || '4.9'}</span>
+                <span className="text-sm">{tieneResenas && resumen?.promedioLimpieza ? resumen.promedioLimpieza.toFixed(1) : '0.0'}</span>
                 <span className="text-[10px] text-slate-400">/ 5.0</span>
               </div>
             </div>
@@ -459,7 +464,7 @@ export const DetalleAlojamientoModal: React.FC<DetalleAlojamientoModalProps> = (
             <div>
               <span className="text-slate-400 text-[10px] uppercase font-bold block mb-1">📍 Ubicación</span>
               <div className="flex items-center gap-1.5 font-bold text-slate-900 dark:text-white">
-                <span className="text-sm">{resumen?.promedioUbicacion || '4.8'}</span>
+                <span className="text-sm">{tieneResenas && resumen?.promedioUbicacion ? resumen.promedioUbicacion.toFixed(1) : '0.0'}</span>
                 <span className="text-[10px] text-slate-400">/ 5.0</span>
               </div>
             </div>
@@ -467,7 +472,7 @@ export const DetalleAlojamientoModal: React.FC<DetalleAlojamientoModalProps> = (
             <div>
               <span className="text-slate-400 text-[10px] uppercase font-bold block mb-1">💰 Calidad / Precio</span>
               <div className="flex items-center gap-1.5 font-bold text-slate-900 dark:text-white">
-                <span className="text-sm">{resumen?.promedioCalidadPrecio || '4.7'}</span>
+                <span className="text-sm">{tieneResenas && resumen?.promedioCalidadPrecio ? resumen.promedioCalidadPrecio.toFixed(1) : '0.0'}</span>
                 <span className="text-[10px] text-slate-400">/ 5.0</span>
               </div>
             </div>
@@ -475,7 +480,7 @@ export const DetalleAlojamientoModal: React.FC<DetalleAlojamientoModalProps> = (
             <div>
               <span className="text-slate-400 text-[10px] uppercase font-bold block mb-1">🛎️ Servicio</span>
               <div className="flex items-center gap-1.5 font-bold text-slate-900 dark:text-white">
-                <span className="text-sm">{resumen?.promedioServicio || '5.0'}</span>
+                <span className="text-sm">{tieneResenas && resumen?.promedioServicio ? resumen.promedioServicio.toFixed(1) : '0.0'}</span>
                 <span className="text-[10px] text-slate-400">/ 5.0</span>
               </div>
             </div>
@@ -483,7 +488,7 @@ export const DetalleAlojamientoModal: React.FC<DetalleAlojamientoModalProps> = (
             <div>
               <span className="text-slate-400 text-[10px] uppercase font-bold block mb-1">🛏️ Comodidad</span>
               <div className="flex items-center gap-1.5 font-bold text-slate-900 dark:text-white">
-                <span className="text-sm">{resumen?.promedioComodidad || '4.9'}</span>
+                <span className="text-sm">{tieneResenas && resumen?.promedioComodidad ? resumen.promedioComodidad.toFixed(1) : '0.0'}</span>
                 <span className="text-[10px] text-slate-400">/ 5.0</span>
               </div>
             </div>
@@ -500,7 +505,7 @@ export const DetalleAlojamientoModal: React.FC<DetalleAlojamientoModalProps> = (
                     : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
               >
-                🏨 Reseñas Generales del Hotel ({resenasHotel.length})
+                🏡 Reseñas de Propiedad Completa ({resenasHotel.length})
               </button>
 
               <button
@@ -511,7 +516,7 @@ export const DetalleAlojamientoModal: React.FC<DetalleAlojamientoModalProps> = (
                     : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
               >
-                🛏️ Reseñas de la Habitación: {unidadActiva?.nombre || 'Habitación'} ({resenasHabitacion.length})
+                🏨 Reseñas de Habitación: {unidadActiva?.nombre || 'Habitación'} ({resenasHabitacion.length})
               </button>
             </div>
           )}
@@ -605,6 +610,39 @@ export const DetalleAlojamientoModal: React.FC<DetalleAlojamientoModalProps> = (
               </div>
             ) : (
               <form onSubmit={enviarResena} className="space-y-4 text-xs">
+                {/* Selector Hotel vs Habitación (Solo si es Hotel) */}
+                {esHotel && (
+                  <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 space-y-1.5">
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block">
+                      ¿Qué estás calificando?
+                    </span>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setActiveReviewTab('HOTEL')}
+                        className={`px-3 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                          activeReviewTab === 'HOTEL'
+                            ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
+                            : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:bg-slate-100'
+                        }`}
+                      >
+                        <span>🏡 Propiedad Completa</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setActiveReviewTab('HABITACION')}
+                        className={`px-3 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                          activeReviewTab === 'HABITACION'
+                            ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
+                            : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:bg-slate-100'
+                        }`}
+                      >
+                        <span className="truncate">🏨 Habitación: {unidadActiva?.nombre || 'Habitación'}</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {/* 1-Click Rating: Puntuación General */}
                 <div>
                   <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
