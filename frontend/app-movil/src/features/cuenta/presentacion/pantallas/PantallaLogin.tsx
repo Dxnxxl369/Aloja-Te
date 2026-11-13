@@ -124,45 +124,6 @@ export function PantallaLogin({ alIniciar }: Props) {
           </View>
         </View>
 
-        {/* Acceso Rápido para Pruebas de Roles */}
-        <View style={estilosDemo.contenedorDemo}>
-          <Text style={estilosDemo.tituloDemo}>ACCESO RÁPIDO PARA EVALUACIÓN</Text>
-          <View style={estilosDemo.filaDemo}>
-            <Pressable
-              style={estilosDemo.botonDemo}
-              onPress={() => {
-                setEmail('cliente@alojate.bo');
-                setPassword('Cliente1234!');
-              }}
-            >
-              <Text style={estilosDemo.rolDemo}>Huésped</Text>
-              <Text style={estilosDemo.emailDemo}>cliente@alojate.bo</Text>
-            </Pressable>
-
-            <Pressable
-              style={[estilosDemo.botonDemo, estilosDemo.botonDemoAnfitrion]}
-              onPress={() => {
-                setEmail('anfitrion@alojate.bo');
-                setPassword('Anfitrion1234!');
-              }}
-            >
-              <Text style={[estilosDemo.rolDemo, { color: COLOR.primario }]}>Anfitrión</Text>
-              <Text style={estilosDemo.emailDemo}>anfitrion@alojate.bo</Text>
-            </Pressable>
-
-            <Pressable
-              style={estilosDemo.botonDemo}
-              onPress={() => {
-                setEmail('admin@alojate.bo');
-                setPassword('Admin1234!');
-              }}
-            >
-              <Text style={estilosDemo.rolDemo}>Administrador</Text>
-              <Text style={estilosDemo.emailDemo}>admin@alojate.bo</Text>
-            </Pressable>
-          </View>
-        </View>
-
         <View style={estilos.seguro}>
           <ShieldCheck color={COLOR.textoSuave} size={16} />
           <Text style={estilos.seguroTexto}>Conexión cifrada de alta seguridad</Text>
@@ -171,48 +132,3 @@ export function PantallaLogin({ alIniciar }: Props) {
     </KeyboardAvoidingView>
   );
 }
-
-const estilosDemo = StyleSheet.create({
-  contenedorDemo: {
-    padding: ESPACIO.m,
-    backgroundColor: 'rgba(255, 255, 255, 0.85)',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: COLOR.borde,
-    gap: 8,
-  },
-  tituloDemo: {
-    fontSize: 10,
-    color: COLOR.textoSuave,
-    letterSpacing: 0.8,
-    textAlign: 'center',
-    fontWeight: '700',
-  },
-  filaDemo: {
-    gap: 6,
-  },
-  botonDemo: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 10,
-    backgroundColor: COLOR.tarjeta,
-    borderWidth: 1,
-    borderColor: COLOR.borde,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  botonDemoAnfitrion: {
-    borderColor: '#BFDBFE',
-    backgroundColor: '#EFF6FF',
-  },
-  rolDemo: {
-    fontSize: 12,
-    color: COLOR.texto,
-    fontWeight: '600',
-  },
-  emailDemo: {
-    fontSize: 11,
-    color: COLOR.textoSuave,
-  },
-});

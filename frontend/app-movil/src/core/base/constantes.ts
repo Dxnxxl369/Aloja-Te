@@ -9,8 +9,8 @@
 // por eso cada variable se escribe completa.
 
 // --- Entorno ----------------------------------------------------------------
-// IP del API Gateway Central en AWS EC2 (Pública y accesible desde cualquier red móvil/WiFi)
-export const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://54.235.16.166:8080';
+// URL del API Gateway Central en AWS EC2 con SSL HTTPS certificado y seguro
+export const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'https://aloja-te-admin.duckdns.org';
 // Ruta real de MS-01 (AuthController: POST /api/v1/auth/login), vía Gateway.
 export const RUTA_LOGIN = process.env.EXPO_PUBLIC_RUTA_LOGIN ?? '/api/v1/auth/login';
 /** Solo demo: permite simular el aviso del banco en la pantalla de pago. */
