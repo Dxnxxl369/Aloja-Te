@@ -28,6 +28,9 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Setup Gradle Cache
+        uses: gradle/actions/setup-gradle@v3
+
       - name: Restore google-services.json
         run: |
           echo "ewogICJwcm9qZWN0X2luZm8iOiB7CiAgICAicHJvamVjdF9udW1iZXIiOiAiMTA1NzMwNTk2ODA1MSIsCiAgICAicHJvamVjdF9pZCI6ICJhbG9qYS10ZS1lN2U4OSIsCiAgICAic3RvcmFnZV9idWNrZXQiOiAiYWxvamEtdGUtZTdlODkuZmlyZWJhc2VzdG9yYWdlLmFwcCIKICB9LAogICJjbGllbnQiOiBbCiAgICB7CiAgICAgICJjbGllbnRfaW5mbyI6IHsKICAgICAgICAibW9iaWxlc2RrX2FwcF9pZCI6ICIxOjEwNTczMDU5NjgwNTE6YW5kcm9pZDpjNmQzMzY0Mjk4MGNhMDI1MTMxZmM2IiwKICAgICAgICAiYW5kcm9pZF9jbGllbnRfaW5mbyI6IHsKICAgICAgICAgICJwYWNrYWdlX25hbWUiOiAiY29tLmFsb2phdGUubW92aWwiCiAgICAgICAgfQogICAgICB9LAogICAgICAib2F1dGhfY2xpZW50IjogW10sCiAgICAgICJhcGlfa2V5IjogWwogICAgICAgIHsKICAgICAgICAgICJjdXJyZW50X2tleSI6ICJBSXphU3lETUhIeTdkZUhYdXMya0FOZzlaVzJOWUdqS243a04tMGciCiAgICAgICAgfQogICAgICBdLAogICAgICAic2VydmljZXMiOiB7CiAgICAgICAgImFwcGludml0ZV9zZXJ2aWNlIjogewogICAgICAgICAgIm90aGVyX3BsYXRmb3JtX29hdXRoX2NsaWVudCI6IFtdCiAgICAgICAgfQogICAgICB9CiAgICB9CiAgXSwKICAiY29uZmlndXJhdGlvbl92ZXJzaW9uIjogIjEiCn0=" | base64 --decode > google-services.json

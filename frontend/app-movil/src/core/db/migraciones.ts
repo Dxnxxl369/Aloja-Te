@@ -12,7 +12,7 @@ import type { Migracion } from './modelos';
 export const MIGRACIONES_CORE: Migracion[] = [
   {
     id: 'core-001-operacion_pendiente',
-    sql: `CREATE TABLE operacion_pendiente (
+    sql: `CREATE TABLE IF NOT EXISTS operacion_pendiente (
             id               TEXT PRIMARY KEY,
             tipo             TEXT NOT NULL,
             payload          TEXT NOT NULL,
@@ -23,12 +23,12 @@ export const MIGRACIONES_CORE: Migracion[] = [
             ultimo_error     TEXT,
             creado_en        INTEGER NOT NULL
           );
-          CREATE INDEX idx_op_estado ON operacion_pendiente (estado, proximo_intento);`,
+          CREATE INDEX IF NOT EXISTS idx_op_estado ON operacion_pendiente (estado, proximo_intento);`,
   },
   {
     // Caché de lectura: reservas, comprobantes… para verlos sin red.
     id: 'core-002-cache',
-    sql: `CREATE TABLE cache (
+    sql: `CREATE TABLE IF NOT EXISTS cache (
             clave      TEXT PRIMARY KEY,
             valor      TEXT NOT NULL,
             expira_en  INTEGER
