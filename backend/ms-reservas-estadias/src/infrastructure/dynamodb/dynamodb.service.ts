@@ -21,7 +21,11 @@ export class DynamoDBService implements OnModuleInit {
         secretAccessKey: this.config.secretAccessKey,
       },
     });
-    this.docClient = DynamoDBDocumentClient.from(this.rawClient);
+    this.docClient = DynamoDBDocumentClient.from(this.rawClient, {
+      marshallOptions: {
+        removeUndefinedValues: true,
+      },
+    });
   }
 
   async onModuleInit() {

@@ -20,10 +20,11 @@ export class DynamoDBReservasRepository implements IReservasRepository {
 
     if (this.dynamoService.isAvailable()) {
       try {
+        const itemLimpio = JSON.parse(JSON.stringify(reserva));
         await this.dynamoService.getDocClient().send(
           new PutCommand({
             TableName: this.dynamoService.getTableName(),
-            Item: { ...reserva },
+            Item: itemLimpio,
           }),
         );
         return reserva;
