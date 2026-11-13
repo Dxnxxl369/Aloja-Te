@@ -17,16 +17,18 @@ import { AppError } from '../base/modelos';
 import type { RuntimeIA } from './interfaces';
 import type { ConfigRuntime, OpcionesGeneracion } from './modelos';
 
-type Libreria = typeof import('llama.rn');
-type Contexto = Awaited<ReturnType<Libreria['initLlama']>>;
+type Libreria = any;
+type Contexto = any;
 
 export function crearRuntimeLlama(deps: {
   config: ConfigRuntime;
-  /** Solo para pruebas: entregar una librería simulada. Por defecto se importa llama.rn. */
+  /** Solo para pruebas: entregar una librería simulada. */
   cargarLibreria?: () => Promise<Libreria>;
 }): RuntimeIA {
   const { config } = deps;
-  const cargarLibreria = deps.cargarLibreria ?? (() => import('llama.rn'));
+  const cargarLibreria = deps.cargarLibreria ?? (() => {
+    throw new AppError('DESCONOCIDO', 'llama.rn no disponible en este build');
+  });
 
   let contexto: Contexto | null = null;
   let fila: Promise<unknown> = Promise.resolve(); // cola de peticiones
