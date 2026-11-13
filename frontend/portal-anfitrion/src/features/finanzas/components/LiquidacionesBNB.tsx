@@ -49,6 +49,21 @@ const formatearCodigoReserva = (id: string): string => {
   return `RES-${limpio.toUpperCase()}`;
 };
 
+const normalizarMetodoPago = (raw?: string): string => {
+  if (!raw) return 'Código QR Oficial';
+  const val = raw.toUpperCase();
+  if (val.includes('TRANSFERENCIA') || val.includes('CUENTA') || val.includes('BANCO') || val.includes('BANCO_NACIONAL')) {
+    return 'Transferencia Bancaria';
+  }
+  if (val.includes('QR') || val.includes('SIMPLE') || val.includes('BNB')) {
+    return 'Código QR Oficial';
+  }
+  if (val.includes('TARJETA') || val.includes('CARD') || val.includes('CREDITO') || val.includes('DEBITO')) {
+    return 'Tarjeta de Débito/Crédito';
+  }
+  return raw;
+};
+
 const formatearFechaCobro = (raw?: string): { texto: string; timestamp: number } => {
   if (!raw) {
     const hoy = new Date();
@@ -274,7 +289,7 @@ export const LiquidacionesBNB: React.FC<LiquidacionesBNBProps> = ({ onMostrarToa
                 id: r.idReserva,
                 tituloAlojamiento: a.titulo,
                 nombreHuesped: r.huespedNombre || 'Huésped Verificado',
-                metodoPago: 'Transferencia QR Simple BNB',
+                metodoPago: normalizarMetodoPago(r.metodoPago),
                 monto: Number(r.montoTotal) || 0,
                 moneda: a.moneda || 'BOB',
                 fecha: f.texto,
@@ -315,7 +330,7 @@ export const LiquidacionesBNB: React.FC<LiquidacionesBNBProps> = ({ onMostrarToa
                   id: r.idReserva,
                   tituloAlojamiento: tituloAloj,
                   nombreHuesped: r.nombreCliente || 'Huésped Verificado',
-                  metodoPago: r.metodoPago === 'CUENTA_BANCARIA' ? 'Transferencia Bancaria' : 'Transferencia QR Simple BNB',
+                  metodoPago: normalizarMetodoPago(r.metodoPago),
                   monto: Number(r.importeTotal) || 0,
                   moneda: r.moneda || 'BOB',
                   fecha: f.texto,
@@ -345,11 +360,12 @@ export const LiquidacionesBNB: React.FC<LiquidacionesBNBProps> = ({ onMostrarToa
                   ? 'Acreditado'
                   : 'Pendiente';
                 const tituloAloj = r.tituloAlojamiento || titulosAlojamientos.get(r.idAlojamiento);
+                const met = r.metodoPago || r.historialEventos?.find((e: any) => e.payload?.metodoPago)?.payload?.metodoPago;
                 mapa.set(r.idReserva, {
                   id: r.idReserva,
                   tituloAlojamiento: tituloAloj,
                   nombreHuesped: r.nombreCliente || 'Huésped Verificado',
-                  metodoPago: 'Transferencia QR Simple BNB',
+                  metodoPago: normalizarMetodoPago(met),
                   monto: Number(r.importeTotal) || 0,
                   moneda: r.moneda || 'BOB',
                   fecha: f.texto,
@@ -361,6 +377,22 @@ export const LiquidacionesBNB: React.FC<LiquidacionesBNBProps> = ({ onMostrarToa
           }
         }
       } catch (err) {}
+
+      // 3.1 Consultar Microservicio Comercial/Pagos (MS-03) para vincular método de pago exacto
+      try {
+        const pagosResp = await fetch(`${API_BASE_URL}/api/v1/pagos`, { headers: { Accept: 'application/json' } });
+        if (pagosResp.ok) {
+          const pagosData = await pagosResp.json();
+          if (Array.isArray(pagosData)) {
+            pagosData.forEach((p: any) => {
+              if (p.reservaId && mapa.has(p.reservaId) && p.metodoPago) {
+                const exist = mapa.get(p.reservaId)!;
+                exist.metodoPago = normalizarMetodoPago(p.metodoPago);
+              }
+            });
+          }
+        }
+      } catch {}
 
       // 4. Consultar Microservicio Comercial y Financiero (MS-03 Liquidaciones) en el Backend
       try {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { AuthProvider, useAuth } from './core/auth/AuthContext';
 import { TokenStorage } from './core/auth/TokenStorage';
 import { useAppRouter } from './core/router/useAppRouter';
@@ -79,7 +79,7 @@ export const AppContent: React.FC = () => {
       const token = TokenStorage.getToken();
       const savedUser = TokenStorage.getUser();
       if (!token || !savedUser) return [];
-      const saved = sessionStorage.getItem('alojate_mis_reservas');
+      const saved = localStorage.getItem('alojate_mis_reservas') || sessionStorage.getItem('alojate_mis_reservas');
       return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
@@ -91,6 +91,7 @@ export const AppContent: React.FC = () => {
     setTimeout(() => {
       logout();
       setMisReservas([]);
+      localStorage.removeItem('alojate_mis_reservas');
       sessionStorage.removeItem('alojate_mis_reservas');
       setCerrandoSesion(false);
       navigate.catalogo();
@@ -227,55 +228,67 @@ export const AppContent: React.FC = () => {
   }, [user, currentView]);
 
   // Sincronizar Reservas del Cliente (MS-02 y LocalStorage)
-  useEffect(() => {
+  const cargarReservas = useCallback(async () => {
     if (!user) {
       setMisReservas([]);
       return;
     }
 
-    const cargarReservas = async () => {
+    try {
+      const clienteId = user.id;
+      let reservasServidor: ReservaResponse[] = [];
+      
       try {
-        const clienteId = user.id;
-        let reservasServidor: ReservaResponse[] = [];
-        
+        const resp = await httpClient.get<ReservaResponse[]>(ENDPOINTS.RESERVAS.CLIENTE_HISTORIAL(clienteId));
+        if (Array.isArray(resp.data)) {
+          reservasServidor = resp.data;
+        }
+      } catch (e) {
+        console.warn('Fallo al obtener historial por cliente, consultando endpoint general', e);
+      }
+
+      if (reservasServidor.length === 0) {
         try {
-          const resp = await httpClient.get<ReservaResponse[]>(ENDPOINTS.RESERVAS.CLIENTE_HISTORIAL(clienteId));
-          if (Array.isArray(resp.data)) {
-            reservasServidor = resp.data;
+          const respGeneral = await httpClient.get<ReservaResponse[]>(ENDPOINTS.RESERVAS.CREAR);
+          if (Array.isArray(respGeneral.data)) {
+            reservasServidor = respGeneral.data.filter(
+              (r: any) => r.idCliente === clienteId || (user && r.nombreCliente?.toLowerCase().includes(user.nombre.toLowerCase()))
+            );
           }
         } catch (e) {
-          console.warn('Fallo al obtener historial por cliente, consultando endpoint general', e);
+          console.warn('Error al consultar reservas generales', e);
         }
-
-        if (reservasServidor.length === 0) {
-          try {
-            const respGeneral = await httpClient.get<ReservaResponse[]>(ENDPOINTS.RESERVAS.CREAR);
-            if (Array.isArray(respGeneral.data)) {
-              reservasServidor = respGeneral.data.filter(
-                (r: any) => r.idCliente === clienteId || (user && r.nombreCliente?.toLowerCase().includes(user.nombre.toLowerCase()))
-              );
-            }
-          } catch (e) {
-            console.warn('Error al consultar reservas generales', e);
-          }
-        }
-
-        // Combinar con localStorage
-        setMisReservas((prev) => {
-          const map = new Map<string, ReservaResponse>();
-          prev.forEach((r) => map.set(r.idReserva, r));
-          reservasServidor.forEach((r) => map.set(r.idReserva, r));
-          const combinadas = Array.from(map.values());
-          localStorage.setItem('alojate_mis_reservas', JSON.stringify(combinadas));
-          return combinadas;
-        });
-      } catch (err) {
-        console.error('Error al sincronizar reservas:', err);
       }
-    };
 
-    cargarReservas();
+      // Combinar con localStorage
+      setMisReservas((prev) => {
+        const map = new Map<string, ReservaResponse>();
+        prev.forEach((r) => map.set(r.idReserva, r));
+        reservasServidor.forEach((r) => map.set(r.idReserva, r));
+        const combinadas = Array.from(map.values());
+        localStorage.setItem('alojate_mis_reservas', JSON.stringify(combinadas));
+        return combinadas;
+      });
+    } catch (err) {
+      console.error('Error al sincronizar reservas:', err);
+    }
   }, [user]);
+
+  useEffect(() => {
+    cargarReservas();
+
+    // Si está viendo sus viajes, sondear periódicamente cambios en recepción (Check-in/Check-out)
+    let pollInterval: any = null;
+    if (user && currentView === 'mis-viajes') {
+      pollInterval = setInterval(() => {
+        cargarReservas();
+      }, 6000);
+    }
+
+    return () => {
+      if (pollInterval) clearInterval(pollInterval);
+    };
+  }, [user, currentView, cargarReservas]);
 
   // Manejador de flujo de Reserva -> Checkout
   const handleReservaCreada = (reserva: ReservaResponse) => {
@@ -438,6 +451,7 @@ export const AppContent: React.FC = () => {
           <MisViajesView
             reservas={misReservas}
             onNuevaReserva={() => navigate.catalogo()}
+            onRecargarReservas={cargarReservas}
             onActualizarReservas={(nuevas) => {
               setMisReservas(nuevas);
               localStorage.setItem('alojate_mis_reservas', JSON.stringify(nuevas));

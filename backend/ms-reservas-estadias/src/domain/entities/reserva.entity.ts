@@ -51,6 +51,9 @@ export class ReservaEntity {
   codigoCheckin: string; // PIN de 6 dígitos para ingreso
   sagaId: string;
   idempotencyKey?: string;
+  metodoPago?: string;
+  pagoId?: string;
+  transaccionBancariaRef?: string;
 
   version: number;
   ttl?: number; // Epoch timestamp para expiración automática en DynamoDB

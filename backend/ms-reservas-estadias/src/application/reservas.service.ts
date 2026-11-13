@@ -134,6 +134,9 @@ export class ReservasService {
     reserva.estado = EstadoReserva.CONFIRMADA;
     reserva.ttl = undefined; // Se cancela la autoexpiración porque ya pagó
     reserva.fechaActualizacion = new Date().toISOString();
+    reserva.metodoPago = dto.metodoPago;
+    reserva.pagoId = dto.pagoId;
+    reserva.transaccionBancariaRef = dto.transaccionBancariaRef;
 
     if (!reserva.historialEventos) reserva.historialEventos = [];
     reserva.historialEventos.push({
@@ -191,7 +194,7 @@ export class ReservasService {
       throw new BadRequestException('Para hacer check-in la reserva debe estar en estado CONFIRMADA.');
     }
 
-    if (reserva.codigoCheckin !== dto.codigoCheckin.trim()) {
+    if (!reserva.codigoCheckin || reserva.codigoCheckin.trim() !== (dto.codigoCheckin || '').trim()) {
       throw new BadRequestException('El código PIN de check-in ingresado es incorrecto.');
     }
 

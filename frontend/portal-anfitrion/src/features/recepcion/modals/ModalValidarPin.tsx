@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { KeyRound, X, Check } from 'lucide-react';
+import { KeyRound, X, Check, Loader2, AlertCircle } from 'lucide-react';
 import { Alojamiento } from '../../../core/types/anfitrion.types';
 
 interface ModalValidarPinProps {
   isOpen: boolean;
   onClose: () => void;
   alojamiento: Alojamiento | null;
-  onConfirmarIngreso: (idAlojamiento: string, pin: string) => void;
+  onConfirmarIngreso: (idAlojamiento: string, pin: string) => Promise<boolean> | void;
 }
 
 export const ModalValidarPin: React.FC<ModalValidarPinProps> = ({
@@ -19,14 +19,31 @@ export const ModalValidarPin: React.FC<ModalValidarPinProps> = ({
 
   const reserva = alojamiento.reservas?.[0];
   const [pinInput, setPinInput] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [validando, setValidando] = useState(false);
 
-  const handleValidar = () => {
-    if (!pinInput.trim() || pinInput.trim().length < 4) {
-      alert('Por favor introduce el código de 6 dígitos.');
+  const handleValidar = async () => {
+    setError(null);
+    const pinLimpio = pinInput.trim();
+    if (!pinLimpio || pinLimpio.length !== 6) {
+      setError('Por favor introduce el código PIN exacto de 6 dígitos.');
       return;
     }
-    onConfirmarIngreso(alojamiento.idAlojamiento, pinInput.trim());
-    setPinInput('');
+
+    setValidando(true);
+    try {
+      const res = await onConfirmarIngreso(alojamiento.idAlojamiento, pinLimpio);
+      if (res === false) {
+        setError('El código PIN ingresado es incorrecto.');
+      } else {
+        setPinInput('');
+        setError(null);
+      }
+    } catch (err: any) {
+      setError('Error al validar el PIN. Inténtalo de nuevo.');
+    } finally {
+      setValidando(false);
+    }
   };
 
   return (
@@ -90,12 +107,23 @@ export const ModalValidarPin: React.FC<ModalValidarPinProps> = ({
               type="text"
               maxLength={6}
               value={pinInput}
-              onChange={e => setPinInput(e.target.value)}
+              onChange={e => {
+                setPinInput(e.target.value.replace(/\D/g, ''));
+                if (error) setError(null);
+              }}
               placeholder="839102"
               autoFocus
-              className="w-full max-w-[260px] text-center font-mono text-2xl font-bold tracking-[0.35em] py-3 rounded-2xl border-2 border-amber-400 dark:border-amber-500 bg-amber-50/50 dark:bg-amber-950/30 text-slate-900 dark:text-white focus:outline-none focus:ring-4 focus:ring-amber-400/25 transition shadow-inner"
+              disabled={validando}
+              className="w-full max-w-[260px] text-center font-mono text-2xl font-bold tracking-[0.35em] py-3 rounded-2xl border-2 border-amber-400 dark:border-amber-500 bg-amber-50/50 dark:bg-amber-950/30 text-slate-900 dark:text-white focus:outline-none focus:ring-4 focus:ring-amber-400/25 transition shadow-inner disabled:opacity-50"
             />
           </div>
+
+          {error && (
+            <div className="p-3 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 text-red-600 dark:text-red-400 text-xs flex items-center justify-center gap-2 animate-fade-in font-medium">
+              <AlertCircle className="w-4 h-4 shrink-0 text-red-500" />
+              <span>{error}</span>
+            </div>
+          )}
         </div>
 
         {/* Acciones con botón amarillo vivo */}
@@ -103,17 +131,28 @@ export const ModalValidarPin: React.FC<ModalValidarPinProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+            disabled={validando}
+            className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer disabled:opacity-50"
           >
             Cancelar
           </button>
           <button
             type="button"
             onClick={handleValidar}
-            className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-lg shadow-amber-500/30 transition flex items-center gap-2 cursor-pointer"
+            disabled={validando || pinInput.trim().length !== 6}
+            className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-lg shadow-amber-500/30 transition flex items-center gap-2 cursor-pointer disabled:opacity-50"
           >
-            <Check className="w-4 h-4" />
-            <span>Confirmar ingreso</span>
+            {validando ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Verificando PIN...</span>
+              </>
+            ) : (
+              <>
+                <Check className="w-4 h-4" />
+                <span>Confirmar ingreso</span>
+              </>
+            )}
           </button>
         </div>
 

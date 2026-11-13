@@ -400,6 +400,7 @@ interface FacturaEmailParams {
   emailDestino: string;
   nombreCliente: string;
   numeroFactura: string;
+  idReserva?: string;
   codigoCheckin?: string;
   montoTotal: number | string;
   tituloAlojamiento?: string;
@@ -414,6 +415,7 @@ async function enviarFacturaClienteEmail(params: FacturaEmailParams) {
     emailDestino,
     nombreCliente,
     numeroFactura,
+    idReserva,
     codigoCheckin,
     montoTotal,
     tituloAlojamiento,
@@ -461,6 +463,12 @@ async function enviarFacturaClienteEmail(params: FacturaEmailParams) {
         <!-- Detalle de la Factura Oficial -->
         <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-bottom:20px;font-size:12px">
           <table style="width:100%;border-collapse:collapse">
+            ${idReserva ? `
+            <tr>
+              <td style="color:#64748b;padding:5px 0"><b>Código de Reserva:</b></td>
+              <td style="text-align:right;font-family:monospace;font-weight:bold;color:#2563eb;padding:5px 0">#RES-${idReserva.replace(/^res-/i, '').slice(0, 8).toUpperCase()}</td>
+            </tr>
+            ` : ''}
             <tr>
               <td style="color:#64748b;padding:5px 0"><b>N° de Factura Oficial:</b></td>
               <td style="text-align:right;font-family:monospace;font-weight:bold;color:#0f172a;padding:5px 0">${numeroFactura}</td>
@@ -2960,6 +2968,7 @@ app.post(['/api/v1/pagos/webhook/bnb', '/api/v1/pagos/confirmar-con-factura'], e
         emailDestino: emailFinal,
         nombreCliente: clienteNombre || sesionActivaCentral?.usuario?.nombre || 'Huésped',
         numeroFactura,
+        idReserva: pago?.reservaId || req.body.reservaId,
         codigoCheckin: codigoCheckin,
         montoTotal: totalFinal,
         tituloAlojamiento: tituloAlojamiento,

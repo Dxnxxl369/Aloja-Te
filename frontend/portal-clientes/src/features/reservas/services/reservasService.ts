@@ -355,11 +355,11 @@ export const reservasService = {
     return filtradas;
   },
 
-  async confirmarPagoSaga(idReserva: string, pagoId: string, transaccionBancariaRef: string): Promise<ReservaResponse> {
+  async confirmarPagoSaga(idReserva: string, pagoId: string, transaccionBancariaRef: string, metodoPago?: string): Promise<ReservaResponse> {
     try {
       const response = await httpClient.post<ReservaResponse>(ENDPOINTS.RESERVAS.CONFIRMAR_PAGO(idReserva), {
         pagoId,
-        metodoPago: 'QR_SIMPLE_BNB',
+        metodoPago: metodoPago || 'QR_OFICIAL',
         transaccionBancariaRef,
       });
       if (response.data) return response.data;

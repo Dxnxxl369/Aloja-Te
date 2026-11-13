@@ -156,7 +156,8 @@ export const CheckoutPagoModal: React.FC<CheckoutPagoModalProps> = ({
         reservaConfirmada = await reservasService.confirmarPagoSaga(
           reserva.idReserva,
           pago.pagoId,
-          resultado.transaccionId || refBancaria
+          resultado.transaccionId || refBancaria,
+          metodoPago === 'TRANSFERENCIA' ? 'TRANSFERENCIA_BANCARIA' : 'QR_OFICIAL'
         );
       } catch (sagaErr) {
         console.warn('Saga MS-02 confirmación:', sagaErr);

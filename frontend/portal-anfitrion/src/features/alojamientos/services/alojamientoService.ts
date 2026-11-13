@@ -133,6 +133,7 @@ export const alojamientoService = {
             map.forEach((aloj, alojId) => {
               const reservasDelAloj = todasReservas.filter((res: any) =>
                 res.estado !== 'CANCELADA' &&
+                res.estado !== 'COMPLETADA' &&
                 (
                   res.idAlojamiento === alojId ||
                   res.alojamientoId === alojId ||
@@ -147,9 +148,10 @@ export const alojamientoService = {
                   huespedTelefono: res.telefono || '+591 77012345',
                   desde: res.checkIn || res.fechaInicio || new Date().toISOString().split('T')[0],
                   hasta: res.checkOut || res.fechaFin || new Date().toISOString().split('T')[0],
-                  pinSecreto: res.codigoCheckin || res.pin || '574034',
+                  pinSecreto: res.codigoCheckin || res.pin || '',
                   montoTotal: Number(res.importeTotal ?? res.montoTotal ?? 0),
-                  estado: (res.estado === 'EN_USO' || res.estado === 'CHECKIN_COMPLETADO') ? 'EN_USO' : 'PENDIENTE'
+                  metodoPago: res.metodoPago || (res.historialEventos?.find((e: any) => e.payload?.metodoPago)?.payload?.metodoPago) || 'Código QR Oficial',
+                  estado: (res.estado === 'CHECKIN_REALIZADO' || res.estado === 'EN_USO' || res.estado === 'CHECK_IN') ? 'EN_USO' : 'PENDIENTE'
                 }));
 
                 aloj.reservas = itemsMapeados;
@@ -159,6 +161,9 @@ export const alojamientoService = {
                 } else {
                   aloj.estadoOperativo = 'PENDIENTE';
                 }
+              } else {
+                aloj.reservas = [];
+                aloj.estadoOperativo = 'LIBRE';
               }
             });
           }

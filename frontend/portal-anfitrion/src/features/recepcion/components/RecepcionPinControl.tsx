@@ -6,6 +6,7 @@ import {
   Clock
 } from 'lucide-react';
 import { Alojamiento } from '../../../core/types/anfitrion.types';
+import { API_BASE_URL } from '../../../core/api/apiEndpoints';
 import { ModalValidarPin } from '../modals/ModalValidarPin';
 import { ModalAdvertenciaCheckout } from '../modals/ModalAdvertenciaCheckout';
 import { ModalCronogramaConsecutivo } from '../modals/ModalCronogramaConsecutivo';
@@ -42,11 +43,56 @@ export const RecepcionPinControl: React.FC<RecepcionPinControlProps> = ({
   const alojamientoCheckout = alojamientos.find(a => a.idAlojamiento === alojamientoCheckoutId) || null;
   const alojamientoCronograma = alojamientos.find(a => a.idAlojamiento === alojamientoCronogramaId) || null;
 
-  // Registrar ingreso: Cambia de PENDIENTE a EN_USO
-  const handleConfirmarIngreso = (idAlojamiento: string, _pin: string) => {
+  // Registrar ingreso: Valida PIN contra MS-02 y cambia a EN_USO
+  const handleConfirmarIngreso = async (idAlojamiento: string, pin: string): Promise<boolean> => {
     const target = alojamientos.find(a => a.idAlojamiento === idAlojamiento);
-    const huesped = target?.reservas?.[0]?.huespedNombre || 'huésped';
+    const reserva = target?.reservas?.[0];
+    const huesped = reserva?.huespedNombre || 'huésped';
 
+    if (!reserva) {
+      onMostrarToast('No se encontró una reserva activa para este alojamiento.');
+      return false;
+    }
+
+    const pinLimpio = pin.trim();
+    const pinEsperado = (reserva.pinSecreto || '').trim();
+
+    // 1. Verificación estricta del PIN de 6 dígitos
+    if (pinEsperado && pinLimpio !== pinEsperado) {
+      onMostrarToast('El código PIN ingresado es incorrecto.');
+      return false;
+    }
+
+    // 2. Notificar al microservicio de Reservas (MS-02)
+    if (reserva.idReserva) {
+      try {
+        const resp = await fetch(`${API_BASE_URL}/api/v1/reservas/${reserva.idReserva}/check-in`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({
+            codigoCheckin: pinLimpio
+          })
+        });
+
+        if (!resp.ok) {
+          const errData = await resp.json().catch(() => ({}));
+          const msg = errData.message || 'El código PIN de check-in es incorrecto.';
+          onMostrarToast(msg);
+          return false;
+        }
+      } catch (netErr) {
+        console.warn('[Recepcion] Error comunicando con backend para check-in:', netErr);
+        if (pinEsperado && pinLimpio !== pinEsperado) {
+          onMostrarToast('El código PIN ingresado es incorrecto.');
+          return false;
+        }
+      }
+    }
+
+    // 3. Confirmar ingreso y actualizar estado operativo a EN_USO
     const actualizada = alojamientos.map(a => {
       if (a.idAlojamiento === idAlojamiento) {
         const reservasActualizadas = (a.reservas || []).map((r, idx) =>
@@ -63,14 +109,32 @@ export const RecepcionPinControl: React.FC<RecepcionPinControlProps> = ({
 
     onActualizarAlojamientos(actualizada);
     setAlojamientoPinId(null);
-    onMostrarToast(`Ingreso registrado para ${huesped}.`);
+    onMostrarToast(`Ingreso confirmado con éxito para ${huesped}.`);
+    return true;
   };
 
-  // Registrar salida: Si hay siguiente reserva pasa a PENDIENTE, si no, a LIBRE
-  const handleConfirmarSalida = (idAlojamiento: string) => {
+  // Registrar salida: Notifica a MS-02 y libera la habitación
+  const handleConfirmarSalida = async (idAlojamiento: string) => {
     const target = alojamientos.find(a => a.idAlojamiento === idAlojamiento);
-    const huespedSaliente = target?.reservas?.[0]?.huespedNombre || 'huésped';
+    const reserva = target?.reservas?.[0];
+    const huespedSaliente = reserva?.huespedNombre || 'huésped';
 
+    // 1. Notificar al microservicio de Reservas (MS-02) la salida oficial
+    if (reserva?.idReserva) {
+      try {
+        await fetch(`${API_BASE_URL}/api/v1/reservas/${reserva.idReserva}/check-out`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        });
+      } catch (errOut) {
+        console.warn('[Recepcion] Error al sincronizar checkout con MS-02:', errOut);
+      }
+    }
+
+    // 2. Quitar reserva completada del flujo activo y actualizar estado operativo
     const actualizada = alojamientos.map(a => {
       if (a.idAlojamiento === idAlojamiento) {
         const reservas = [...(a.reservas || [])];
@@ -96,7 +160,7 @@ export const RecepcionPinControl: React.FC<RecepcionPinControlProps> = ({
 
     onActualizarAlojamientos(actualizada);
     setAlojamientoCheckoutId(null);
-    onMostrarToast(`Salida registrada para ${huespedSaliente}.`);
+    onMostrarToast(`Salida registrada para ${huespedSaliente}. Habitación liberada.`);
   };
 
   return (

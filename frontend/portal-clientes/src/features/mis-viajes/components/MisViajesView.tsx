@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ReservaResponse } from '../../reservas/types/reserva.types';
 import { CancelacionReservaModal } from '../../reservas/modals/CancelacionReservaModal';
 import { ConfirmarCheckoutModal } from '../../reservas/modals/ConfirmarCheckoutModal';
-import { KeyRound, Calendar, Copy, Check, Clock, User, LogOut, XCircle, Star, Sparkles, AlertCircle, ShieldCheck } from 'lucide-react';
+import { KeyRound, Calendar, Copy, Check, Clock, User, LogOut, XCircle, Star, Sparkles, AlertCircle, ShieldCheck, RefreshCw, History } from 'lucide-react';
 import { useAuth } from '../../../core/auth/AuthContext';
 
 interface MisViajesViewProps {
@@ -10,6 +10,7 @@ interface MisViajesViewProps {
   onNuevaReserva: () => void;
   onActualizarReservas?: (nuevas: ReservaResponse[]) => void;
   onDejarResena?: (alojamientoId: string, unidadId?: string) => void;
+  onRecargarReservas?: () => void;
 }
 
 type TabFiltro = 'TODAS' | 'PROXIMAS' | 'EN_CURSO' | 'CONCLUIDAS' | 'CANCELADAS';
@@ -19,10 +20,20 @@ export const MisViajesView: React.FC<MisViajesViewProps> = ({
   onNuevaReserva,
   onActualizarReservas,
   onDejarResena,
+  onRecargarReservas,
 }) => {
   const { user, openAuthModal } = useAuth();
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabFiltro>('TODAS');
+  const [refrescando, setRefrescando] = useState(false);
+
+  const handleRefrescar = async () => {
+    if (onRecargarReservas) {
+      setRefrescando(true);
+      await Promise.resolve(onRecargarReservas());
+      setTimeout(() => setRefrescando(false), 800);
+    }
+  };
 
   // Modales
   const [reservaACancelar, setReservaACancelar] = useState<ReservaResponse | null>(null);
@@ -87,7 +98,7 @@ export const MisViajesView: React.FC<MisViajesViewProps> = ({
       return reserva.estado === 'CONFIRMADA' || reserva.estado === 'PENDIENTE_PAGO';
     }
     if (activeTab === 'EN_CURSO') {
-      return reserva.estado === 'CHECKIN_REALIZADO' || (reserva.estado as string) === 'CHECK_IN';
+      return reserva.estado === 'CHECKIN_REALIZADO' || (reserva.estado as string) === 'CHECK_IN' || (reserva.estado as string) === 'EN_USO';
     }
     if (activeTab === 'CONCLUIDAS') {
       return reserva.estado === 'COMPLETADA';
@@ -101,7 +112,7 @@ export const MisViajesView: React.FC<MisViajesViewProps> = ({
   const conteos = {
     TODAS: reservas.length,
     PROXIMAS: reservas.filter(r => r.estado === 'CONFIRMADA' || r.estado === 'PENDIENTE_PAGO').length,
-    EN_CURSO: reservas.filter(r => r.estado === 'CHECKIN_REALIZADO' || (r.estado as string) === 'CHECK_IN').length,
+    EN_CURSO: reservas.filter(r => r.estado === 'CHECKIN_REALIZADO' || (r.estado as string) === 'CHECK_IN' || (r.estado as string) === 'EN_USO').length,
     CONCLUIDAS: reservas.filter(r => r.estado === 'COMPLETADA').length,
     CANCELADAS: reservas.filter(r => r.estado === 'CANCELADA').length,
   };
@@ -120,12 +131,27 @@ export const MisViajesView: React.FC<MisViajesViewProps> = ({
             </h2>
           </div>
 
-          <button
-            onClick={onNuevaReserva}
-            className="px-4 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-600/20 transition self-start sm:self-auto cursor-pointer"
-          >
-            + Explorar Destinos
-          </button>
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            {onRecargarReservas && (
+              <button
+                type="button"
+                onClick={handleRefrescar}
+                disabled={refrescando}
+                className="px-3.5 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold shadow-sm transition flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                title="Sincronizar reservas con el servidor"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${refrescando ? 'animate-spin text-blue-600' : 'text-slate-500'}`} />
+                <span>{refrescando ? 'Actualizando...' : 'Actualizar Estado'}</span>
+              </button>
+            )}
+
+            <button
+              onClick={onNuevaReserva}
+              className="px-4 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-600/20 transition cursor-pointer"
+            >
+              + Explorar Destinos
+            </button>
+          </div>
         </div>
         <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
           Consulta los detalles de tus estadías, presenta tu PIN en recepción o gestiona cambios y cancelaciones con garantía de reembolso.
@@ -138,7 +164,7 @@ export const MisViajesView: React.FC<MisViajesViewProps> = ({
               { id: 'TODAS', label: 'Todas las Reservas', count: conteos.TODAS },
               { id: 'PROXIMAS', label: 'Próximos Viajes', count: conteos.PROXIMAS },
               { id: 'EN_CURSO', label: 'En Curso', count: conteos.EN_CURSO },
-              { id: 'CONCLUIDAS', label: 'Concluidas', count: conteos.CONCLUIDAS },
+              { id: 'CONCLUIDAS', label: 'Historial / Concluidas', count: conteos.CONCLUIDAS },
               { id: 'CANCELADAS', label: 'Canceladas', count: conteos.CANCELADAS },
             ] as const
           ).map((tab) => (
@@ -191,7 +217,7 @@ export const MisViajesView: React.FC<MisViajesViewProps> = ({
         <div className="space-y-4">
           {reservasFiltradas.map((reserva) => {
             const esEnCurso =
-              reserva.estado === 'CHECKIN_REALIZADO' || (reserva.estado as string) === 'CHECK_IN';
+              reserva.estado === 'CHECKIN_REALIZADO' || (reserva.estado as string) === 'CHECK_IN' || (reserva.estado as string) === 'EN_USO';
             const esConfirmada =
               reserva.estado === 'CONFIRMADA' || reserva.estado === 'PENDIENTE_PAGO';
             const esCompletada = reserva.estado === 'COMPLETADA';

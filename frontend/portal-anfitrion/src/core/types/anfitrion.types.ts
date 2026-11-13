@@ -38,6 +38,7 @@ export interface ReservaItem {
   hasta: string;
   pinSecreto: string;
   montoTotal: number;
+  metodoPago?: string;
   estado: EstadoOperativo | 'CONFIRMADA';
 }
 
